@@ -1,31 +1,16 @@
 export const linksData = [
     {
         id: 1,
-        title: "Usmon"
+        title: "Home"
     },
 
     {
         id: 2,
-        title: "Usmon"
+        title: "About"
     },
 
     {
         id: 3,
-        title: "Usmon"
-    },
-
-    {
-        id: 4,
-        title: "Usmon"
-    },
-
-    {
-        id: 5,
-        title: "Usmon"
-    },
-
-    {
-        id: 6,
-        title: "Usmon"
-    },
+        title: "Contact"
+    }
 ]

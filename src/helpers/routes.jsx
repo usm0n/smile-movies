@@ -1,5 +1,6 @@
-import AboutLayout from "../layout/AboutLayout";
 import HomeLayout from "../layout/HomeLayout";
+import Favourites from "../pages/Favourites";
+import WatchLater from "../pages/WatchLater";
 export const routes = [
   {
     path: "/",
@@ -7,8 +8,13 @@ export const routes = [
   },
 
   {
-    path: "/about",
-    element: <AboutLayout />,
+    path: "/favourites",
+    element: <Favourites/>,
+  },
+
+  {
+    path: "/watch-later",
+    element: <WatchLater/>,
   }
 
 ];
