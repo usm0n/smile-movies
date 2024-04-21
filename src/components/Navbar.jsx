@@ -61,35 +61,42 @@ function Navbar() {
             </button>
           </div>
           <div className="nav-pages">
-            <div >
+            <div className="nav-all">
               <button className="nav-all_btn" onClick={toggleDropDown}>All</button>
             </div>
             <div className={down ? "nav-dropdown active" : "nav-dropdown"}>
-              <div className="nav-dropdown_content">
-                <h1>Usmon aaaaaaaaaaaaa</h1>
+              <div className={active ? "nav-dropdown_content active" : "nav-dropdown_content" && down ? "nav-dropdown_content active" : "nav-dropdown_content"}>
+                <Link className="nav-dropdown_link">Kinolar</Link>
+                <Link className="nav-dropdown_link">Seriallar</Link>
+                <Link className="nav-dropdown_link">Tarjima kinolar</Link>
+                <Link className="nav-dropdown_link">Yangi kinolar</Link>
+                <Link className="nav-dropdown_link">Multfilmlar</Link>
+                <Link className="nav-dropdown_link">Premium</Link>
               </div>
             </div>
-            <div className="nav-login_links">
-              <Link className="nav-login_link">Login /</Link>
-              <Link className="nav-login_link">Singup</Link>
-              <Link className="nav-user_icon">
-                <UserIcon/>
-              </Link>
-            </div>
-            <div className={active ? "nav-items_box active" : "nav-items_box"}>
-              <Link to="/watch-later" className="nav-favourites_link">
-                <ClockIcon />
-                <span className="nav-clock_text">
-                  Watch-later
-                </span>
-              </Link>
-              <Link to="/favourites" className="nav-favourites_link">
-                <StarIcon />
-                <span className="nav-favourites_text">
-                  Favourites
-                </span>
-              </Link>
+            <div className="nav-page_links">
+              <div className="nav-login_links">
+                <Link className="nav-login_link">Login /</Link>
+                <Link className="nav-login_link">Singup</Link>
+                <Link className="nav-user_icon">
+                  <UserIcon />
+                </Link>
+              </div>
+              <div className={active ? "nav-items_box active" : "nav-items_box"}>
+                <Link to="/watch-later" className="nav-favourites_link">
+                  <ClockIcon />
+                  <span className="nav-clock_text">
+                    Watch-later
+                  </span>
+                </Link>
+                <Link to="/favourites" className="nav-favourites_link">
+                  <StarIcon />
+                  <span className="nav-favourites_text">
+                    Favourites
+                  </span>
+                </Link>
 
+              </div>
             </div>
           </div>
           <div className="nav-items">

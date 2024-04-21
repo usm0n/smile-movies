@@ -149,10 +149,18 @@
     color: #000;
     font-weight: 600;
     @include adaptive-value("font-size", 18, 15);
+
+    @media screen and (max-width: 600px){
+      padding: 14px 0;
+    }
   }
 
   &-logo_image {
     @include adaptive-value("width", 120, 90);
+
+    @media screen and (max-width: 410px){
+      display: none;
+    }
   }
 
   &-menu {
@@ -210,6 +218,15 @@
     padding: 0 10px;
   }
 
+  &-page_links{
+    @include flex(center, unset);
+    gap: 15px;
+
+    @media screen and (max-width: 975px){
+      display: none;
+    }
+  }
+
   &-all_btn{
     border: none;
     color: $link-color;
@@ -236,15 +253,16 @@
       color: $gold-color;
     }
 
-    @media screen and (max-width: 875px){
-      display: none;
+    @media screen and (max-width: 1045px){
+      display: none
     }
+
   }
 
   &-user_icon{
     display: none;
 
-    @media screen and (max-width: 875px){
+    @media screen and (max-width: 1045px){
       display: block;
     }
   }
@@ -269,11 +287,10 @@
     // }
   }
 
-
   &-favourites_text{
-    @media screen and (max-width: 1080px){
-      display: none;
-    }
+    // @media screen and (max-width: 1080px){
+    //   display: none;
+    // }
 
     @media screen and (max-width: 970px){
       color: #fff;
@@ -296,18 +313,63 @@
   &-dropdown{
     position: absolute;
     top: 45px;
-    right: 150px;
+    right: 50px;
     opacity: 0;
     visibility: hidden;
     background-color: $navbar-background;
     width: 350px;
     height: 0;
     transition: all 0.2s ease-in-out;
+    padding: 18px;
+
+    @media screen and (max-width: 500px){
+      position: fixed;
+      right: 0;
+      top: 270px;
+      z-index: 999999;
+      width: 100%;
+      opacity: 1;
+      visibility: visible;
+      background-color: transparent;
+    }
 
     &.active{
       opacity: 1;
       visibility: visible;
-      height: 350px;
+      height: 240px;
+    }
+
+    &_content{
+      @include flex(start, unset);
+      flex-direction: column;
+      gap: 14px;
+      opacity: 0;
+      visibility: hidden;
+
+      &.active{
+        opacity: 1;
+        visibility: visible;
+      }
+    }
+
+    &_link{
+      color: $link-color;
+      @include adaptive-value('font-size', 18, 15);
+      font-weight: 400;
+      font-style: normal;
+      letter-spacing: 0.60px;
+      transition: all 0.2s ease-in-out;
+
+      &:hover{
+        text-decoration: underline;
+        color: $gold-color;
+      }
+    }
+  }
+
+  &-all{
+    @media screen and (max-width: 500px){
+      display: none;
     }
   }
 
@@ -315,29 +377,9 @@
     @include flex(center, unset);
     gap: 8px;
 
-    @media screen and (max-width: 970px){
-      position: fixed;
-      z-index: 9999;
-      right: 310px;
-      top: 210px;
-      flex-direction: column;
-      align-items: normal;
-      gap: 12px;
-      transition: all 0.3s ease-in-out;
-      opacity: 0;
-      visibility: hidden;
-      
-      &.active{
-        opacity: 1;
-        visibility: visible;
-      }
+    @media screen and (max-width: 975px){
+      display: none;
     }
-
-    @media screen and (max-width: 480px){
-      width: 100%;
-      left: 17px;
-    }
-
   }
 
   &-logo_img{
@@ -345,5 +387,33 @@
     z-index: 999999999999;
     width: 200px;
   }
+}
 
+.bottom-nav{
+  position: fixed;
+  bottom: 0;
+  z-index: 9999999999;
+  background-color: #000;
+  width: 100%;
+  padding: 15px;
+  display: none;
+
+  @media screen and (max-width: 975px){
+    display: block;
+  }
+
+  &_links{
+    @include flex(center, space-between);
+  }
+
+  &_link{
+    @include flex(center, center);
+    gap: 10px;
+    color: $link-color;
+
+    @media screen and (max-width: 560px){
+      flex-direction: column;
+      gap: 3px;
+    }
+  }
 }
