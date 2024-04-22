@@ -7,10 +7,14 @@
     &-slide {
         text-align: center;
         font-size: 18px;
-        background: #fff;
-        // display: flex;
-        // justify-content: center;
-        // align-items: center;
     }
 
+}
+
+.swiper-slide{
+    --add-bottom: 50px;
+    padding-bottom: var(--add-bottom);
+}
+.swiper-pagination [class^="swiper-pagination"]{
+    top: calc(50% - var(--add-bottom) / 2);
 }

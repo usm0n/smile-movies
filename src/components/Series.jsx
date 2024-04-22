@@ -9,22 +9,22 @@ function Series() {
     <section className="series">
         <div className="container">
             <div className="series-content">
-                    <h1 className='movie-title'>Seriallar</h1>
-                    <div className="movie-cards">
+                    <h1 className='movies-title'>Seriallar</h1>
+                    <div className="movies-cards">
                         {
                             seriesData.map((item) => (
-                                <div className="movie-card" key={item.id}>
-                                    <img src={item.img} className='movie-img' alt={item.name} />
-                                    <div className="movie-info">
-                                        <h1 className='movie-name'>{item.name} </h1>
-                                        <span className='movie-time'><SeriesIcon /> {item.parts} qism</span>
-                                        <span className='movie-date'>
-                                            <span className='movie-item'>
+                                <div className="movies-card" key={item.id}>
+                                    <img src={item.img} className='movies-img' alt={item.name} />
+                                    <div className="movies-info">
+                                        <h1 className='movies-name'>{item.name} </h1>
+                                        <span className='movies-time'><SeriesIcon /> {item.parts} qism</span>
+                                        <span className='movies-date'>
+                                            <span className='movies-item'>
                                                     <Calendar />
                                                  {item.date}
                                             </span> 
                                             
-                                            <button className='movie-icon'>
+                                            <button className='movies-icon'>
                                                 <Favourites />
                                             </button>
                                         </span>
