@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import Home from '../assets/icons/Home'
 import UserIcon from '../assets/icons/UserIcon'
 import ClockIcon from '../assets/icons/ClockIcon'
-import Star from '../assets/icons/SolidStarIcon'
+import Star from '../assets/icons/StarIcon'
 
 function BottomNavbar() {
   return (
@@ -20,7 +20,9 @@ function BottomNavbar() {
                         Watch later
                     </Link>
                     <Link to="/favourites" className='bottom-nav_link'>
-                        <Star/>
+                        <span className="bottom-nav_icon">
+                            <Star/>
+                        </span>
                         Favourites
                     </Link>
                     <Link className='bottom-nav_link'>

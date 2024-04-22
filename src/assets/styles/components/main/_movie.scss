@@ -1,0 +1,87 @@
+.movie{
+
+    padding-top: 120px;
+
+    &-content{
+        @include flex(start, unset);
+        gap: 40px;
+
+        @media screen and (max-width: 920px){
+            flex-direction: column;
+            align-items: center;
+        }
+    }
+
+    &-image{
+        width: 650px;
+        height: 500px;
+
+        @media screen and (max-width: 700px){
+            width: 100%;
+        }
+    }
+    
+    &-img{
+        border-radius: 12px;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    &-items{
+        @include flex(center, space-between);
+        gap: 15px;
+        padding-bottom: 60px;
+    }
+
+    &-name{
+        @include adaptive-value('font-size', 34, 30);
+        font-weight: 600;
+    }
+
+    &-btn{
+        border: none;
+        color: #000;
+        background-color: $gold-color;
+        padding: 16px;
+        border-radius: 16px;
+        font-size: 16px;
+        font-weight: 500;
+    }
+
+    &-number_info{
+        @include flex(start, unset);
+        gap: 25px;
+        padding-bottom: 40px
+    }
+
+    &-info_title{
+        @include flex(center, unset);
+        gap: 8px;
+    }
+
+    &-info_icon{
+        @include flex(center, unset)
+    }
+
+    &-info_icon svg{
+        fill: #fff;
+    }
+
+    &-subtitle{
+        font-size: 16px;
+        padding-bottom: 40px;
+        font-weight: 400;
+        width: 100%;
+        line-height: 30px;
+
+        @media screen and (max-width: 920px){
+            text-align: center;
+        }
+    }
+
+    &-country{
+        @include flex(start, center);
+        flex-direction: column;
+    }
+}
