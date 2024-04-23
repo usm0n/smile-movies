@@ -84,4 +84,56 @@
         @include flex(start, center);
         flex-direction: column;
     }
+    
+    &-video{
+
+        padding-top: 120px;
+
+        &_image{
+            width: 100%;
+            border-radius: 4px;
+        }
+    }
+
+    &-parts{
+        padding-top: 60px;
+        
+        &_select{
+            background-color: transparent;
+            color: #fff;
+            border: none;
+            font-size: 23px;
+            outline: none;
+            cursor: pointer;
+            @include flex(center, unset)
+        }
+
+        &_option{
+            background-color: $gold-color;
+            border: none;
+            color: #000;
+            
+            &:hover{
+                cursor: pointer;
+            }
+        }
+
+        &_part{
+            background-color: $gold-color;
+            width: 540px;
+            margin: 0 auto;
+            padding: 14px;
+            color: #000;
+            border-radius: 8px;
+            @include flex(center, unset);
+            font-size: 18px;
+        }
+        
+        &_box{
+            padding-top: 35px;
+            @include flex(center, space-between);
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+    }
 }

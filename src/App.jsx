@@ -4,17 +4,19 @@ import { Route, Routes } from "react-router-dom";
 import { routes } from "./helpers/routes";
 import Navbar from "./components/Navbar";
 import BottomNavbar from "./components/BottomNavbar";
+import Footer from "./components/Footer";
 
 function App() {
   return (
     <div className="wrapper">
       <Navbar />
-      <BottomNavbar/>
+      <BottomNavbar />
       <Routes>
         {routes.map((item) => (
           <Route path={item.path} element={item.element} key={item.path} />
         ))}
       </Routes>
+      <Footer/>
     </div>
   );
 }

@@ -71,7 +71,6 @@ function Navbar() {
                 <Link className="nav-dropdown_link">Tarjima kinolar</Link>
                 <Link className="nav-dropdown_link">Yangi kinolar</Link>
                 <Link className="nav-dropdown_link">Multfilmlar</Link>
-                <Link className="nav-dropdown_link">Premium</Link>
               </div>
             </div>
             <div className="nav-page_links">

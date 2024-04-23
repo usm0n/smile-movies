@@ -68,19 +68,4 @@ export const moviesData = [
         date: "2021.12.17",
     },
 
-    {
-        id: 9,
-        img: img2,
-        name: "Spider Main | No Way Home",
-        time: "2:41:02",
-        date: "2021.12.17",
-    },
-
-    {
-        id: 10,
-        img: img3,
-        name: "Spider Main | No Way Home",
-        time: "2:41:02",
-        date: "2021.12.17",
-    },
 ]

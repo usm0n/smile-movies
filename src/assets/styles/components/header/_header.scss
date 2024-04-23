@@ -36,7 +36,7 @@
     &-link{
         background-color: $gold-color;
         padding: 10px 25px;
-        border-radius: 3px;
+        border-radius: 50px;
         color: #000;
         font-weight: 700;
         @include flex(center, center);
@@ -46,7 +46,7 @@
         &_later{
             background-color: transparent;
             padding: 10px 25px;
-            border-radius: 3px;
+            border-radius: 50px;
             color: $link-color;
             font-weight: 700;
             @include flex(center, center);
@@ -64,7 +64,7 @@
 
     &-info{
         position: absolute;
-        bottom: 50px;
+        bottom: 100px;
 
         @media screen and (max-width: 975px){
             bottom: 100px;

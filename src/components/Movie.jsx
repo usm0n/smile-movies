@@ -1,8 +1,11 @@
 import React from 'react'
 import img from '../assets/images/movie.jpeg'
+import header from '../assets/images/header.jpeg'
 import Calendar from '../assets/icons/CalendarIcon'
 import Clock from '../assets/icons/ClockIcon'
 import Favourite from '../assets/icons/SolidStarIcon'
+import { Link } from 'react-router-dom'
+import VideoPlayerIcon from '../assets/icons/VideoPlayerIcon'
 
 function Movie() {
     return (
@@ -49,6 +52,53 @@ function Movie() {
                                 <h1 className='movie-release'>Date Release : 05 2023</h1>
                             </div>
                         </div>
+                    </div>
+
+                </div>
+
+                <div className="movie-video">
+                    <img src={header} className='movie-video_image' alt="" />
+                </div>
+
+                <div className="movie-parts">
+                    <select className='movie-parts_select'>
+                        <option className='movie-parts_option'>Season 1</option>
+                        <option className='movie-parts_option'>mustafo</option>
+                        <option className='movie-parts_option'>mustafo</option>
+                        <option className='movie-parts_option'>mustafo</option>
+                        <option className='movie-parts_option'>mustafo</option>
+                    </select>
+
+                    <div className="movie-parts_box">
+                        <Link className="movie-parts_part">
+                            <VideoPlayerIcon/>
+                            Episode 1: Freedom Day
+                        </Link>
+
+                        <Link className="movie-parts_part">
+                            <VideoPlayerIcon/>
+                            Episode 2: Freedom Day
+                        </Link>
+
+                        <Link className="movie-parts_part">
+                            <VideoPlayerIcon/>
+                            Episode 3: Freedom Day
+                        </Link>
+
+                        <Link className="movie-parts_part">
+                            <VideoPlayerIcon/>
+                            Episode 4: Freedom Day
+                        </Link>
+
+                        <Link className="movie-parts_part">
+                            <VideoPlayerIcon/>
+                            Episode 5: Freedom Day
+                        </Link>
+
+                        <Link className="movie-parts_part">
+                            <VideoPlayerIcon/>
+                            Episode 6: Freedom Day
+                        </Link>
                     </div>
                 </div>
             </div>
