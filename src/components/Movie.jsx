@@ -3,9 +3,12 @@ import img from '../assets/images/movie.jpeg'
 import header from '../assets/images/header.jpeg'
 import Calendar from '../assets/icons/CalendarIcon'
 import Clock from '../assets/icons/ClockIcon'
+import Like from '../assets/icons/Like'
+import DisLike from '../assets/icons/DisLike'
 import Favourite from '../assets/icons/SolidStarIcon'
 import { Link } from 'react-router-dom'
 import VideoPlayerIcon from '../assets/icons/VideoPlayerIcon'
+import User from '../assets/images/user.png'
 
 function Movie() {
     return (
@@ -99,6 +102,113 @@ function Movie() {
                             <VideoPlayerIcon/>
                             Episode 6: Freedom Day
                         </Link>
+                    </div>
+                </div>
+
+                <div className="movie-commets">
+                    <div className="movie-comment">
+                        <img src={User} className='movie-user_image' alt="Commet's user" />
+
+                        <div className="movie-comment_items">
+                            <h1 className='movie-comment_name'>Usmon</h1>
+                            <span className='movie-comment_date'>12/06/2020</span>
+                            <p className="movie-comment_text">Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo con</p>
+                            <div className="movie-buttons">
+                                <button className="movie-like_btn">
+                                    <Like/>
+                                    11
+                                </button>
+
+                                <button className="movie-like_btn">
+                                    <DisLike/>
+                                    11
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="movie-comment">
+                        <img src={User} className='movie-user_image' alt="Commet's user" />
+
+                        <div className="movie-comment_items">
+                            <h1 className='movie-comment_name'>Usmon</h1>
+                            <span className='movie-comment_date'>12/06/2020</span>
+                            <p className="movie-comment_text">Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo con</p>
+                            <div className="movie-buttons">
+                                <button className="movie-like_btn">
+                                    <Like/>
+                                    11
+                                </button>
+
+                                <button className="movie-like_btn">
+                                    <DisLike/>
+                                    11
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="movie-comment">
+                        <img src={User} className='movie-user_image' alt="Commet's user" />
+
+                        <div className="movie-comment_items">
+                            <h1 className='movie-comment_name'>Usmon</h1>
+                            <span className='movie-comment_date'>12/06/2020</span>
+                            <p className="movie-comment_text">Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo con</p>
+                            <div className="movie-buttons">
+                                <button className="movie-like_btn">
+                                    <Like/>
+                                    11
+                                </button>
+
+                                <button className="movie-like_btn">
+                                    <DisLike/>
+                                    11
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="movie-comment">
+                        <img src={User} className='movie-user_image' alt="Commet's user" />
+
+                        <div className="movie-comment_items">
+                            <h1 className='movie-comment_name'>Usmon</h1>
+                            <span className='movie-comment_date'>12/06/2020</span>
+                            <p className="movie-comment_text">Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo con</p>
+                            <div className="movie-buttons">
+                                <button className="movie-like_btn">
+                                    <Like/>
+                                    11
+                                </button>
+
+                                <button className="movie-like_btn">
+                                    <DisLike/>
+                                    11
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="movie-comment">
+                        <img src={User} className='movie-user_image' alt="Commet's user" />
+
+                        <div className="movie-comment_items">
+                            <h1 className='movie-comment_name'>Usmon</h1>
+                            <span className='movie-comment_date'>12/06/2020</span>
+                            <p className="movie-comment_text">Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo con</p>
+                            <div className="movie-buttons">
+                                <button className="movie-like_btn">
+                                    <Like/>
+                                    11
+                                </button>
+
+                                <button className="movie-like_btn">
+                                    <DisLike/>
+                                    11
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

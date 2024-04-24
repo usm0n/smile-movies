@@ -136,4 +136,48 @@
             gap: 20px;
         }
     }
+
+    &-commets{
+        padding-top: 130px;
+        @include flex(start, center);
+        gap: 35px;
+        flex-direction: column;
+    }
+
+    &-comment{
+        @include flex(center, unset);
+        gap: 20px;
+    }
+
+    &-user_image{
+        border-radius: 50%;
+        width: 100px;
+    }
+
+    &-comment_items{
+        @include flex(start, center);
+        flex-direction: column;
+        gap: 5px
+    }
+
+    &-buttons{
+        @include flex(center, start);
+        gap: 14px;
+    }
+
+    &-like_btn{
+        border: none;
+        color: #fff;
+        @include flex(center, center);
+        gap: 10px;
+        font-size: 15px;
+    }
+
+    &-comment_name{
+        font-size: 16px;
+    }
+
+    &-comment_date{
+        font-size: 16px;
+    }
 }
