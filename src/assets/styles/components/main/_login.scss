@@ -48,7 +48,7 @@
     &-form{
         @include flex(center, center);
         flex-direction: column;
-        width: 300px;
+        width: 350px;
         gap: 20px;
 
         @media screen and (max-width: 600px){

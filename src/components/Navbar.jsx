@@ -75,8 +75,8 @@ function Navbar() {
             </div>
             <div className="nav-page_links">
               <div className="nav-login_links">
-                <Link className="nav-login_link">Login /</Link>
-                <Link className="nav-login_link">Singup</Link>
+                <Link to="/login" className="nav-login_link">Login /</Link>
+                <Link to="/register" className="nav-login_link">Singup</Link>
                 <Link className="nav-user_icon">
                   <UserIcon />
                 </Link>
