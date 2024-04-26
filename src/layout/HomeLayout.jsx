@@ -4,6 +4,7 @@ import Header from "../components/Header";
 import Movies from "../components/Movies";
 import Series from "../components/Series";
 import NewMovies from '../components/NewMovies'
+import Footer from '../components/Footer'
 
 function HomeLayout() {
   return (
@@ -12,6 +13,8 @@ function HomeLayout() {
         <NewMovies/>
         <Movies/>
         <Series/>
+        <Footer/>
+
     </div>
   );
 }

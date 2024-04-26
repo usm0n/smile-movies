@@ -7,6 +7,7 @@ import BottomNavbar from "./components/BottomNavbar";
 import Footer from "./components/Footer";
 
 function App() {
+
   return (
     <div className="wrapper">
       <Navbar />
@@ -16,7 +17,6 @@ function App() {
           <Route path={item.path} element={item.element} key={item.path} />
         ))}
       </Routes>
-      <Footer/>
     </div>
   );
 }
