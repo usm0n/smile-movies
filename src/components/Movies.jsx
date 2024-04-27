@@ -29,9 +29,10 @@ function Movies() {
                   </Grid>
                 </>
               ) : (
-                allMovies.movies.map((movie) => (
-                  <MovieCard movie={movie} language={"uz"} />
-                ))
+                allMovies.movies
+                  .filter((m) => m.status.type === "movie").length > 0 ?
+                  allMovies.movies
+                  .filter((m) => m.status.type === "movie").map((movie) => <MovieCard movie={movie} language={"uz"} />) : <h1>Movies not found</h1>
               )}
             </div>
           </div>

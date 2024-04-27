@@ -1,183 +1,187 @@
-.movie{
+.movie {
+  &-container {
+    width: 70%;
+    margin: 0 auto;
+  }
 
+  padding-top: 120px;
+
+  &-content {
+    @include flex(start, unset);
+    @include adaptive-value("gap", 150, 50);
+    align-items: center;
+
+    @media screen and (max-width: 920px) {
+      flex-direction: column;
+    }
+  }
+
+  &-img {
+    width: 350px;
+    border-radius: 12px;
+    object-fit: cover;
+    background: center;
+  }
+
+  &-name {
+    @include adaptive-value("font-size", 34, 30);
+    font-weight: 500;
+    color: #ffffffe3;
+    letter-spacing: 3px;
+  }
+
+  &-info{
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+  }
+
+  &-btns{
+    display: flex;
+    gap: 20px;
+  }
+
+  &-btn {
+    @include adaptive-value("font-size", 16, 14);
+    border: none;
+    color: #000;
+    background-color: $gold-color;
+    padding: 12px;
+    border-radius: 50px;
+    font-weight: 500;
+  }
+
+  &-number_info {
+    @include flex(start, unset);
+    gap: 25px;
+    // padding-bottom: 40px;
+  }
+
+  &-info_title {
+    @include flex(center, unset);
+    gap: 5px;
+  }
+
+  &-info_icon {
+    @include flex(center, unset);
+  }
+
+  &-info_icon svg {
+    fill: #ffffff;
+  }
+
+  &-subtitle {
+    font-size: 16px;
+    color: #ffffffc6;
+    font-weight: 300;
+    letter-spacing: 1px;
+    width: 100%;
+    line-height: 30px;
+  }
+
+  &-country {
+    @include flex(start, center);
+    flex-direction: column;
+  }
+
+  &-video {
     padding-top: 120px;
 
-    &-content{
-        @include flex(start, unset);
-        gap: 40px;
+    &_image {
+      width: 100%;
+      border-radius: 4px;
+    }
+  }
 
-        @media screen and (max-width: 920px){
-            flex-direction: column;
-            align-items: center;
-        }
+  &-text{
+    @include flex(start, center);
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  &-parts {
+    padding-top: 60px;
+
+    &_select {
+      background-color: transparent;
+      color: #fff;
+      border: none;
+      font-size: 23px;
+      outline: none;
+      cursor: pointer;
+      @include flex(center, unset);
     }
 
-    &-image{
-        width: 650px;
-        height: 500px;
+    &_option {
+      background-color: $gold-color;
+      border: none;
+      color: #000;
 
-        @media screen and (max-width: 700px){
-            width: 100%;
-        }
-    }
-    
-    &-img{
-        border-radius: 12px;
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
+      &:hover {
+        cursor: pointer;
+      }
     }
 
-    &-items{
-        @include flex(center, space-between);
-        gap: 15px;
-        padding-bottom: 60px;
+    &_part {
+      background-color: $gold-color;
+      width: 540px;
+      margin: 0 auto;
+      padding: 14px;
+      color: #000;
+      border-radius: 8px;
+      @include flex(center, unset);
+      font-size: 18px;
     }
 
-    &-name{
-        @include adaptive-value('font-size', 34, 30);
-        font-weight: 600;
+    &_box {
+      padding-top: 35px;
+      @include flex(center, space-between);
+      flex-wrap: wrap;
+      gap: 20px;
     }
+  }
 
-    &-btn{
-        border: none;
-        color: #000;
-        background-color: $gold-color;
-        padding: 16px;
-        border-radius: 16px;
-        font-size: 16px;
-        font-weight: 500;
-    }
+  &-commets {
+    padding-top: 130px;
+    @include flex(start, center);
+    gap: 35px;
+    flex-direction: column;
+  }
 
-    &-number_info{
-        @include flex(start, unset);
-        gap: 25px;
-        padding-bottom: 40px
-    }
+  &-comment {
+    @include flex(center, unset);
+    gap: 20px;
+  }
 
-    &-info_title{
-        @include flex(center, unset);
-        gap: 8px;
-    }
+  &-user_image {
+    border-radius: 50%;
+    width: 100px;
+  }
 
-    &-info_icon{
-        @include flex(center, unset)
-    }
+  &-comment_items {
+    @include flex(start, center);
+    flex-direction: column;
+    gap: 5px;
+  }
 
-    &-info_icon svg{
-        fill: #fff;
-    }
+  &-buttons {
+    @include flex(center, start);
+    gap: 14px;
+  }
 
-    &-subtitle{
-        font-size: 16px;
-        padding-bottom: 40px;
-        font-weight: 400;
-        width: 100%;
-        line-height: 30px;
+  &-like_btn {
+    border: none;
+    color: #fff;
+    @include flex(center, center);
+    gap: 10px;
+    font-size: 15px;
+  }
 
-        @media screen and (max-width: 920px){
-            text-align: center;
-        }
-    }
+  &-comment_name {
+    font-size: 16px;
+  }
 
-    &-country{
-        @include flex(start, center);
-        flex-direction: column;
-    }
-    
-    &-video{
-
-        padding-top: 120px;
-
-        &_image{
-            width: 100%;
-            border-radius: 4px;
-        }
-    }
-
-    &-parts{
-        padding-top: 60px;
-        
-        &_select{
-            background-color: transparent;
-            color: #fff;
-            border: none;
-            font-size: 23px;
-            outline: none;
-            cursor: pointer;
-            @include flex(center, unset)
-        }
-
-        &_option{
-            background-color: $gold-color;
-            border: none;
-            color: #000;
-            
-            &:hover{
-                cursor: pointer;
-            }
-        }
-
-        &_part{
-            background-color: $gold-color;
-            width: 540px;
-            margin: 0 auto;
-            padding: 14px;
-            color: #000;
-            border-radius: 8px;
-            @include flex(center, unset);
-            font-size: 18px;
-        }
-        
-        &_box{
-            padding-top: 35px;
-            @include flex(center, space-between);
-            flex-wrap: wrap;
-            gap: 20px;
-        }
-    }
-
-    &-commets{
-        padding-top: 130px;
-        @include flex(start, center);
-        gap: 35px;
-        flex-direction: column;
-    }
-
-    &-comment{
-        @include flex(center, unset);
-        gap: 20px;
-    }
-
-    &-user_image{
-        border-radius: 50%;
-        width: 100px;
-    }
-
-    &-comment_items{
-        @include flex(start, center);
-        flex-direction: column;
-        gap: 5px
-    }
-
-    &-buttons{
-        @include flex(center, start);
-        gap: 14px;
-    }
-
-    &-like_btn{
-        border: none;
-        color: #fff;
-        @include flex(center, center);
-        gap: 10px;
-        font-size: 15px;
-    }
-
-    &-comment_name{
-        font-size: 16px;
-    }
-
-    &-comment_date{
-        font-size: 16px;
-    }
+  &-comment_date {
+    font-size: 16px;
+  }
 }

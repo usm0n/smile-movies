@@ -11,7 +11,9 @@ function MovieCard({ movie, language }) {
           alt={movie.title[language] + "image"}
         />
         <div className="movies-info">
-          <h1 className="movies-name">{movie.title[language]}</h1>
+          <h1 className="movies-name">
+            {movie.title[language].substring(0, 25)}
+          </h1>
           <span className="movies-date">
             <span className="movies-movie">{movie.releaseDate.year}</span>
           </span>
