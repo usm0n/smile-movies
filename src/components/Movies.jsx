@@ -1,48 +1,44 @@
-import React from 'react'
-import Clock from '../assets/icons/ClockIcon'
-import Calendar from '../assets/icons/CalendarIcon'
-import { moviesData } from '../data/moviesData'
-import Favourites from '../assets/icons/SolidStarIcon'
-import { Link } from 'react-router-dom'
+import React from "react";
+import { useAllMovies } from "../contexts/AllMovies";
+import MovieSkeletonCard from "./MovieSkeletonCard";
+import MovieCard from "./MovieCard";
+import { Grid } from "@mui/material";
 
 function Movies() {
-    return (
-        <section className="movies">
-            <div className="container">
-                <div className="movies-content">
-                    <h1 className='movies-title'>Tarjima kinolar</h1>
-                    <div className="movies-movies">
-                        <div className="movies-cards">
-                            {
-                                moviesData.map((item) => (
-                                    <Link to="/movie">
-                                        <div className="movies-card" key={item.id}>
-                                            <img src={item.img} className='movies-img' alt={item.name} />
-                                            <div className="movies-info">
-                                                <h1 className='movies-name'>{item.name} </h1>
-                                                <span className='movies-time'><Clock /> {item.time}</span>
-                                                <span className='movies-date'>
-                                                    <span className='movies-item'>
-                                                            <Calendar />
-                                                        {item.date}
-                                                    </span> 
-                                                    
-                                                    <button className='movies-icon'>
-                                                        <Favourites />
-                                                    </button>
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </Link>
-                                ))
-                            }
-                        </div>
-
-                    </div>
-                </div>
+  const allMovies = useAllMovies();
+  return (
+    <section className="movies">
+      <div className="container">
+        <div className="movies-content">
+          <h1 className="movies-title">Tarjima kinolar</h1>
+          <div className="movies-movies">
+            <div className="movies-cards">
+              {allMovies.isLoading ? (
+                <>
+                  <Grid item xs={12} sm={6} md={4} lg={3}>
+                    <MovieSkeletonCard />
+                  </Grid>
+                  <Grid item xs={12} sm={6} md={4} lg={3}>
+                    <MovieSkeletonCard />
+                  </Grid>
+                  <Grid item xs={12} sm={6} md={4} lg={3}>
+                    <MovieSkeletonCard />
+                  </Grid>
+                  <Grid item xs={12} sm={6} md={4} lg={3}>
+                    <MovieSkeletonCard />
+                  </Grid>
+                </>
+              ) : (
+                allMovies.movies.map((movie) => (
+                  <MovieCard movie={movie} language={"uz"} />
+                ))
+              )}
             </div>
-        </section>
-    )
+          </div>
+        </div>
+      </div>
+    </section>
+  );
 }
 
-export default Movies
+export default Movies;

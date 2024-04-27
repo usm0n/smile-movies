@@ -1,9 +1,9 @@
-import Movie from "../components/Movie";
+import Movie from "../pages/Movie";
 import HomeLayout from "../layout/HomeLayout";
-import Favourites from "../pages/Favourites";
-import Login from "../pages/Login";
-import Register from "../pages/Register";
-import WatchLater from "../pages/WatchLater";
+import Favourites from "../pages/utils/Favourites";
+import Login from "../pages/auth/Login";
+import Register from "../pages/auth/Register";
+import WatchLater from "../pages/utils/WatchLater";
 export const routes = [
   {
     path: "/",

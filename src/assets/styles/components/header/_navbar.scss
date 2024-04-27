@@ -57,7 +57,7 @@
 
   &-bg {
     position: fixed;
-    background-color: rgba(0, 0, 0, .8);
+    background-color: rgba(0, 0, 0, 0.8);
     height: 100vh;
     width: 100%;
     backdrop-filter: blur(2px);
@@ -135,9 +135,8 @@
     }
 
     @media screen and (max-width: 1200px) {
-      color: $navbar-background ;
+      color: $navbar-background;
     }
-
   }
 
   &-logo__list {
@@ -150,7 +149,7 @@
     font-weight: 600;
     @include adaptive-value("font-size", 18, 15);
 
-    @media screen and (max-width: 600px){
+    @media screen and (max-width: 600px) {
       padding: 14px 0;
     }
   }
@@ -158,7 +157,7 @@
   &-logo_image {
     @include adaptive-value("width", 120, 90);
 
-    @media screen and (max-width: 410px){
+    @media screen and (max-width: 410px) {
       display: none;
     }
   }
@@ -174,35 +173,38 @@
       display: block;
     }
   }
-  
-  &-search_bar{
+
+  &-search_bar {
     position: relative;
     width: 410px;
     height: 43px;
     background-color: #fff;
     border-radius: 25px;
+    display: flex;
+    align-items: center;
     border: 1px solid $navbar-background;
     color: $input-color;
     outline: none;
     font-size: 16px;
   }
-  
-  &-search_input{
-    position: absolute;
-    width: 100%;
+
+  &-search_input {
+    // position: absolute;
     border-radius: 25px;
     color: $input-color;
     outline: none;
     padding: 10px;
+    padding-left: 70px;
     padding-right: 50px;
     font-size: 16px;
     font-weight: 500;
-    &:focus{
+    border: none;
+    &:focus {
       border-color: $gold-color;
     }
   }
 
-  &-search_btn{
+  &-search_btn {
     position: absolute;
     right: 20px;
     top: 9px;
@@ -210,75 +212,88 @@
     background-color: transparent;
   }
 
-  &-pages{
+  &-pages {
     position: relative;
     @include flex(center, space-between);
-    gap: 20px;
     padding: 0 10px;
   }
 
-  &-page_links{
+  &-page_links {
     @include flex(center, unset);
-    gap: 15px;
+    gap: 35px;
 
-    @media screen and (max-width: 975px){
+    @media screen and (max-width: 975px) {
       display: none;
     }
   }
 
-  &-all_btn{
-    border: none;
-    color: $link-color;
-    font-weight: 500;
-    font-size: 17px;
-    transition: all 0.2s ease-in-out;
+  &-all {
+    @media screen and (max-width: 500px) {
+      display: none;
+    }
+    position: absolute;
+    background-color: #fff;
+    height: 100%;
+    width: 15%;
+    border-radius: 25px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 
-    &:hover{
-      color: $gold-color;
+    &_btn {
+      display: flex;
+      align-items: center;
+      border: none;
+      color: #000;
+      font-weight: 500;
+      font-size: 17px;
+      transition: all 0.2s ease-in-out;
+      &:hover {
+        color: $gold-color;
+      }
     }
   }
 
-  &-login_links{
+  &-login_links {
     @include flex(center, unset);
     gap: 1px;
   }
 
-  &-login_link{
+  &-login_link {
     color: $link-color;
     font-size: 17px;
     transition: all 0.2s ease-in-out;
 
-    &:hover{
+    &:hover {
       color: $gold-color;
     }
 
-    @media screen and (max-width: 1045px){
-      display: none
+    @media screen and (max-width: 1045px) {
+      display: none;
     }
-
   }
 
-  &-user_icon{
+  &-user_icon {
     display: none;
 
-    @media screen and (max-width: 1045px){
+    @media screen and (max-width: 1045px) {
       display: block;
     }
   }
 
-  &-favourites_link{
+  &-favourites_link {
     @include flex(center, unset);
     gap: 6px;
     color: $link-color;
     font-size: 17px;
     transition: all 0.2s ease-in-out;
 
-    &:hover{
+    &:hover {
       color: $gold-color;
     }
   }
 
-  &-favourites_link svg{
+  &-favourites_link svg {
     fill: #fff;
 
     // @media screen and (max-width: 970px){
@@ -286,30 +301,30 @@
     // }
   }
 
-  &-favourites_text{
+  &-favourites_text {
     // @media screen and (max-width: 1080px){
     //   display: none;
     // }
 
-    @media screen and (max-width: 970px){
+    @media screen and (max-width: 970px) {
       color: #fff;
       display: block;
       font-size: 20px;
       font-weight: 500;
-      letter-spacing: 0.70px;
+      letter-spacing: 0.7px;
     }
   }
 
-  &-clock_text{
-    @media screen and (max-width: 970px){
+  &-clock_text {
+    @media screen and (max-width: 970px) {
       color: #fff;
       font-size: 20px;
       font-weight: 500;
-      letter-spacing: 0.70px;
+      letter-spacing: 0.7px;
     }
   }
 
-  &-dropdown{
+  &-dropdown {
     position: absolute;
     top: 45px;
     right: 50px;
@@ -321,7 +336,7 @@
     transition: all 0.2s ease-in-out;
     padding: 18px;
 
-    @media screen and (max-width: 500px){
+    @media screen and (max-width: 500px) {
       position: fixed;
       right: 0;
       top: 270px;
@@ -332,63 +347,57 @@
       background-color: transparent;
     }
 
-    &.active{
+    &.active {
       opacity: 1;
       visibility: visible;
       height: 230px;
     }
 
-    &_content{
+    &_content {
       @include flex(start, unset);
       flex-direction: column;
       gap: 14px;
       opacity: 0;
       visibility: hidden;
 
-      &.active{
+      &.active {
         opacity: 1;
         visibility: visible;
       }
     }
 
-    &_link{
+    &_link {
       color: $link-color;
-      @include adaptive-value('font-size', 18, 15);
+      @include adaptive-value("font-size", 18, 15);
       font-weight: 400;
       font-style: normal;
-      letter-spacing: 0.60px;
+      letter-spacing: 0.6px;
       transition: all 0.2s ease-in-out;
 
-      &:hover{
+      &:hover {
         text-decoration: underline;
         color: $gold-color;
       }
     }
   }
 
-  &-all{
-    @media screen and (max-width: 500px){
-      display: none;
-    }
-  }
-
-  &-items_box{
+  &-items_box {
     @include flex(center, unset);
-    gap: 8px;
+    gap: 15px;
 
-    @media screen and (max-width: 975px){
+    @media screen and (max-width: 975px) {
       display: none;
     }
   }
 
-  &-logo_img{
+  &-logo_img {
     position: fixed;
     z-index: 999999999999;
     width: 200px;
   }
 }
 
-.bottom-nav{
+.bottom-nav {
   position: fixed;
   bottom: 0;
   z-index: 9999999999;
@@ -397,26 +406,26 @@
   padding: 15px;
   display: none;
 
-  @media screen and (max-width: 975px){
+  @media screen and (max-width: 975px) {
     display: block;
   }
 
-  &_links{
+  &_links {
     @include flex(center, space-between);
   }
 
-  &_link{
+  &_link {
     @include flex(center, center);
     gap: 10px;
     color: $link-color;
 
-    @media screen and (max-width: 560px){
+    @media screen and (max-width: 560px) {
       flex-direction: column;
       gap: 3px;
     }
   }
 
-  &_icon svg{
+  &_icon svg {
     fill: #fff;
   }
 }

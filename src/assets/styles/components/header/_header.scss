@@ -35,20 +35,20 @@
 
     &-link{
         background-color: $gold-color;
-        padding: 10px 25px;
+        padding: 10px 20px;
         border-radius: 50px;
         color: #000;
-        font-weight: 700;
+        font-weight: 600;
         @include flex(center, center);
         gap: 7px;
         font-size: 25px;
 
         &_later{
             background-color: transparent;
-            padding: 10px 25px;
+            padding: 10px 20px;
             border-radius: 50px;
             color: $link-color;
-            font-weight: 700;
+            font-weight: 600;
             @include flex(center, center);
             gap: 7px;
             font-size: 25px;

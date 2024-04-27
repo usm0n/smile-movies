@@ -5,9 +5,9 @@ import { routes } from "./helpers/routes";
 import Navbar from "./components/Navbar";
 import BottomNavbar from "./components/BottomNavbar";
 import Footer from "./components/Footer";
+import Movies from "./components/Movies";
 
 function App() {
-
   return (
     <div className="wrapper">
       <Navbar />

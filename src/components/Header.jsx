@@ -50,6 +50,7 @@ function Header() {
                 <div className="container">
                   <div className="header-info">
                     <h1 className='header-title'>{item.movieName}</h1>
+                    {/* <Skeleton variant='text' sx={{width: "100%", color: "white"}}/> */}
                     <div className="header-texts">
                       <div className="header-item">
                         <CalendarIcon />

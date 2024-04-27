@@ -21,7 +21,7 @@ function Movie() {
                     <div className="movie-info">
                         <div className="movie-items">
                             <h1 className='movie-name'>Silo</h1>
-                            <button className='movie-btn'>Add to favourite</button>
+                            <button className='movie-btn'>Add to Favourite</button>
                         </div>
                         <div className="movie-text">
                             <div className="movie-number_info">
