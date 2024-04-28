@@ -155,7 +155,7 @@
   }
 
   &-logo_image {
-    @include adaptive-value("width", 120, 90);
+    @include adaptive-value("width", 90, 60);
 
     @media screen and (max-width: 410px) {
       display: none;

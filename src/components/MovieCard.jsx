@@ -3,11 +3,11 @@ import { Link } from "react-router-dom";
 
 function MovieCard({ movie, language }) {
   return (
-    <Link to="/movie">
+    <Link to={`/${movie._id}`}>
       <div className="movies-card" key={movie._id}>
         <img
           src={movie.image.portrait}
-          className="movies-img"
+          className="movies-img" 
           alt={movie.title[language] + "image"}
         />
         <div className="movies-info">

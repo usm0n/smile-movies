@@ -1,11 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import "./assets/styles/Main.scss";
 import { Route, Routes } from "react-router-dom";
 import { routes } from "./helpers/routes";
 import Navbar from "./components/Navbar";
 import BottomNavbar from "./components/BottomNavbar";
-import Footer from "./components/Footer";
-import Movies from "./components/Movies";
 
 function App() {
   return (

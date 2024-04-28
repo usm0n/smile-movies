@@ -1,11 +1,14 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useAllMovies } from "../contexts/AllMovies";
 import MovieSkeletonCard from "./MovieSkeletonCard";
 import MovieCard from "./MovieCard";
 import { Grid } from "@mui/material";
 
 function Movies() {
-  const allMovies = useAllMovies();
+  const { allMovies } = useAllMovies();
+
+  console.log(allMovies);
+
   return (
     <section className="movies">
       <div className="container">
@@ -28,11 +31,13 @@ function Movies() {
                     <MovieSkeletonCard />
                   </Grid>
                 </>
-              ) : (
+              ) : allMovies.movies.filter((m) => m.status.type === "movie")
+                  .length > 0 ? (
                 allMovies.movies
-                  .filter((m) => m.status.type === "movie").length > 0 ?
-                  allMovies.movies
-                  .filter((m) => m.status.type === "movie").map((movie) => <MovieCard movie={movie} language={"uz"} />) : <h1>Movies not found</h1>
+                  .filter((m) => m.status.type === "movie")
+                  .map((movie) => <MovieCard movie={movie} language={"uz"} />)
+              ) : (
+                <h1>Movies not found</h1>
               )}
             </div>
           </div>

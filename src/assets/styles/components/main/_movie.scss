@@ -11,7 +11,7 @@
     @include adaptive-value("gap", 150, 50);
     align-items: center;
 
-    @media screen and (max-width: 920px) {
+    @media screen and (max-width: 1020px) {
       flex-direction: column;
     }
   }
@@ -23,37 +23,90 @@
     background: center;
   }
 
+  &-first-section {
+    @include flex(start, unset);
+    width: 100%;
+    align-items: center;
+    justify-content: space-between;
+
+    @media screen and (max-width: 700px) {
+      padding-bottom: 20px;
+    }
+
+    @media screen and (max-width: 500px) {
+      flex-direction: column;
+      gap: 20px;
+    }
+  }
+
+  &-like-dislike {
+    display: flex;
+    gap: 10px;
+  }
+
+  &-like {
+    border: none;
+    background: none;
+    color: #ffffffc6;
+    align-items: center;
+    display: flex;
+    gap: 5px;
+  }
+  &-dislike {
+    border: none;
+    background: none;
+    color: #ffffffc6;
+    align-items: center;
+    display: flex;
+    gap: 5px;
+  }
+
   &-name {
-    @include adaptive-value("font-size", 34, 30);
+    @include adaptive-value("font-size", 37, 30);
     font-weight: 500;
-    color: #ffffffe3;
+    color: #fff;
     letter-spacing: 3px;
   }
 
-  &-info{
+  &-info {
     display: flex;
     flex-direction: column;
     gap: 40px;
   }
 
-  &-btns{
+  &-btns {
     display: flex;
     gap: 20px;
+
+    @media screen and (max-width: 560px) {
+      flex-direction: column;
+    }
   }
 
   &-btn {
     @include adaptive-value("font-size", 16, 14);
+    padding: 10px 20px;
     border: none;
     color: #000;
     background-color: $gold-color;
-    padding: 12px;
     border-radius: 50px;
     font-weight: 500;
+    display: flex;
+    gap: 5px;
+    align-items: center;
+    transition: all 0.5s;
+    text-align: center;
+    &:hover {
+      opacity: 0.8;
+    }
   }
 
   &-number_info {
     @include flex(start, unset);
     gap: 25px;
+    width: 100%;
+    flex-wrap: wrap;
+    color: #ffffffc6;
     // padding-bottom: 40px;
   }
 
@@ -67,7 +120,7 @@
   }
 
   &-info_icon svg {
-    fill: #ffffff;
+    fill: #ffffffc6;
   }
 
   &-subtitle {
@@ -93,7 +146,7 @@
     }
   }
 
-  &-text{
+  &-text {
     @include flex(start, center);
     flex-direction: column;
     gap: 20px;

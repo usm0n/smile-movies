@@ -6,6 +6,7 @@ const AllMoviesContext = createContext({
   isLoading: false,
   isError: false,
   movies: [],
+  deleteAllMovies: () => {},
 });
 AllMoviesContext.displayName = "AllMoviesContext";
 
@@ -17,6 +18,16 @@ const AllMoviesProvider = ({ children }) => {
     isError: false,
     movies: [],
   });
+
+  const deleteAllMovies = async () => {
+    await movies.deleteAllMovies().then(() => {
+      setAllMovies({
+        isLoading: false,
+        isError: false,
+        movies: [],
+      });
+    });
+  };
 
   const getAllMovies = async () => {
     setAllMovies({
@@ -43,7 +54,7 @@ const AllMoviesProvider = ({ children }) => {
     getAllMovies();
   }, []);
   return (
-    <AllMoviesContext.Provider value={allMovies}>
+    <AllMoviesContext.Provider value={{ allMovies, deleteAllMovies }}>
       {children}
     </AllMoviesContext.Provider>
   );
