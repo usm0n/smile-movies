@@ -5,6 +5,7 @@
   }
 
   padding-top: 120px;
+  padding-bottom: 150px;
 
   &-content {
     @include flex(start, unset);
@@ -211,7 +212,7 @@
       flex-direction: column;
       gap: 20px;
       &-area {
-        width: 100vh;
+        @include adaptive-value("width", 800, 225);
         height: 100px;
         padding: 10px;
         line-height: 1.23543;
@@ -254,6 +255,14 @@
         border: none;
         width: max-content;
       }
+    }
+
+    &-empty-text {
+      @include adaptive-value("font-size", 17, 16);
+      font-weight: 300;
+      letter-spacing: 0.5px;
+      color: #86868b;
+      margin: 0 auto;
     }
   }
 

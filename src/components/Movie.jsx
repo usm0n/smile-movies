@@ -15,14 +15,17 @@ import ThumbUpOffAltIcon from "@mui/icons-material/ThumbUpOffAlt";
 import CheckIcon from "@mui/icons-material/Check";
 import StarBorderIcon from "@mui/icons-material/StarBorder";
 import StarIcon from "@mui/icons-material/Star";
-import ClockIcon from "../assets/icons/ClockIcon";
 import WatchLaterIcon from "@mui/icons-material/WatchLater";
+import AccessTimeIcon from "@mui/icons-material/AccessTime";
+import { useComments } from "../contexts/Comments";
+import Comment from "./Comment";
 
 function Movie({ movie, language }) {
   const [movieLanguage, setMovieLanguage] = useState(language);
-  const [commentValue, setCommentValue] = useState()
-  console.log(movieLanguage);
+  const [commentValue, setCommentValue] = useState();
 
+  const { getMovieId, allComments } = useComments();
+  console.log(allComments);
   const hanldeChangeLang = (e) => {
     setMovieLanguage(e.target.value);
   };
@@ -36,10 +39,7 @@ function Movie({ movie, language }) {
     </video>
   );
 
-  // useEffect(() => {
-  //   const lang = prompt("Choose language")
-  //   setMovieLanguage(lang)
-  // }, [])
+  getMovieId(movie._id);
   return (
     <section key={movie._id} className="movie">
       <div className="movie-container">
@@ -105,7 +105,7 @@ function Movie({ movie, language }) {
                 <StarBorderIcon /> Add to Favourite
               </button>
               <button className="movie-btn">
-                <ClockIcon /> Add to Watch Later
+                <AccessTimeIcon /> Add to Watch Later
               </button>
             </div>
           </div>
@@ -177,56 +177,26 @@ function Movie({ movie, language }) {
         <div className="movie-comments">
           <h1 className="movie-comments-title">Comments:</h1>
           <div className="movie-comments-posting">
-            <textarea value={commentValue} className="movie-comments-posting-area" placeholder="Write your comment"></textarea>
+            <textarea
+              value={commentValue}
+              className="movie-comments-posting-area"
+              placeholder="Write your comment"
+            ></textarea>
             <button className="movie-comments-posting-button">
               Post Comment
             </button>
           </div>
-          <div className="movie-comment">
-            <img src={User} className="movie-user_image" alt="Commet's user" />
-
-            <div className="movie-comment_items">
-              <h1 className="movie-comment_name">Usmon</h1>
-              <p className="movie-comment_text">
-                Ut enim ad minim veniam, quis nostrud exercitation ullamco
-                laboris nisi ut aliquip ex ea commodo con
-              </p>
-              <div className="movie-buttons">
-                <button className="movie-like_btn">
-                  <Like />
-                  11
-                </button>
-
-                <button className="movie-like_btn">
-                  <DisLike />
-                  11
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div className="movie-comment">
-            <img src={User} className="movie-user_image" alt="Commet's user" />
-
-            <div className="movie-comment_items">
-              <h1 className="movie-comment_name">Usmon</h1>
-              <p className="movie-comment_text">
-                Ut enim ad minim veniam, quis nostrud exercitation ullamco
-                laboris nisi ut aliquip ex ea commodo con
-              </p>
-              <div className="movie-buttons">
-                <button className="movie-like_btn">
-                  <Like />
-                  11
-                </button>
-
-                <button className="movie-like_btn">
-                  <DisLike />
-                  11
-                </button>
-              </div>
-            </div>
-          </div>
+          {allComments.isEmpty ? (
+            <h1 className="movie-comments-empty-text">
+              No one has commented on this movie!
+            </h1>
+          ) : (
+            !allComments.isLoading &&
+            allComments.comments &&
+            allComments.comments.map((comment) => {
+              return <Comment comment={comment} />;
+            })
+          )}
         </div>
       </div>
     </section>
