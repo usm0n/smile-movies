@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Calendar from "../assets/icons/CalendarIcon";
 import Clock from "../assets/icons/ClockIcon";
 import Like from "../assets/icons/Like";
@@ -21,6 +21,15 @@ import WatchLaterIcon from "@mui/icons-material/WatchLater";
 function Movie({ movie, language }) {
   const [movieLanguage, setMovieLanguage] = useState(language);
   console.log(movieLanguage);
+
+  const hanldeChangeLang = (e) => {
+    setMovieLanguage(e.target.value)
+  }
+
+  // useEffect(() => {
+  //   const lang = prompt("Choose language")
+  //   setMovieLanguage(lang)
+  // }, [])
   return (
     <section key={movie._id} className="movie">
       <div className="movie-container">
@@ -94,7 +103,7 @@ function Movie({ movie, language }) {
 
         <div className="movie-video">
           <select
-            onChange={(e) => setMovieLanguage(e.target.value)}
+            onChange={(e) => hanldeChangeLang(e)}
             className="movie-parts_select"
           >
             <option value={"uz"} className="movie-parts_option">
@@ -107,13 +116,27 @@ function Movie({ movie, language }) {
               Russian
             </option>
           </select>
-
-          <video poster={movie.image.fullscreen} controls width="100%">
-            <source src={movie.movie[movieLanguage]} type="video/mp4" />
-            <source src={movie.movie[movieLanguage]} type="video/ogg" />
-            <source src={movie.movie[movieLanguage]} type="video/webm" />
-            <p>Your browser does not support HTML5 video.</p>
-          </video>
+          {movieLanguage == "uz" &&
+            <video poster={movie.image.fullscreen} controls width="100%">
+              <source src={movie.movie[movieLanguage]} type="video/mp4" />
+              <source src={movie.movie[movieLanguage]} type="video/ogg" />
+              <source src={movie.movie[movieLanguage]} type="video/webm" />
+              <p>Your browser does not support HTML5 video.</p>
+            </video>}
+            {movieLanguage == "en" &&
+            <video poster={movie.image.fullscreen} controls width="100%">
+              <source src={movie.movie[movieLanguage]} type="video/mp4" />
+              <source src={movie.movie[movieLanguage]} type="video/ogg" />
+              <source src={movie.movie[movieLanguage]} type="video/webm" />
+              <p>Your browser does not support HTML5 video.</p>
+            </video>}
+            {movieLanguage == "ru" &&
+            <video poster={movie.image.fullscreen} controls width="100%">
+              <source src={movie.movie[movieLanguage]} type="video/mp4" />
+              <source src={movie.movie[movieLanguage]} type="video/ogg" />
+              <source src={movie.movie[movieLanguage]} type="video/webm" />
+              <p>Your browser does not support HTML5 video.</p>
+            </video>}
         </div>
 
         <div className="movie-parts">
