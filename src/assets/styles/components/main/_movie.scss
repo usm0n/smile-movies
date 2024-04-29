@@ -194,27 +194,87 @@
     }
   }
 
-  &-commets {
+  &-comments {
     padding-top: 130px;
     @include flex(start, center);
     gap: 35px;
     flex-direction: column;
+
+    &-title {
+      @include adaptive-value("font-size", 30, 25);
+      letter-spacing: 2px;
+      font-weight: 300;
+    }
+
+    &-posting {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      &-area {
+        width: 100vh;
+        height: 100px;
+        padding: 10px;
+        line-height: 1.23543;
+        font-weight: 400;
+        font-size: 14px;
+        resize: vertical;
+        min-height: 100px;
+        max-height: 150px;
+        color: #333;
+        text-align: left;
+        border: 1px solid #d6d6d6;
+        border-radius: 4px;
+        background: hsla(0, 0%, 100%, 0.945);
+        background-clip: padding-box;
+        transition: all 0.2s ease-in-out;
+
+        &:focus {
+          appearance: none;
+          border-color: #0070c9;
+          outline: 0;
+          box-shadow: 0 0 0 3px rgba(131, 192, 253, 0.5);
+        }
+
+        &::placeholder {
+          font-weight: 300;
+          color: #86868b;
+        }
+      }
+      &-button {
+        @include adaptive-value("font-size", 17, 16);
+        background-color: $gold-color;
+        border-radius: 22px;
+        line-height: 20px;
+        text-align: center;
+        align-content: center;
+        font-weight: 400;
+        letter-spacing: 0.5px;
+        height: 44px;
+        padding: 0px 30px;
+        border: none;
+        width: max-content;
+      }
+    }
   }
 
   &-comment {
     @include flex(center, unset);
-    gap: 20px;
+    gap: 30px;
+
+    &_name {
+      font-size: 20px;
+    }
+
+    &_items {
+      @include flex(start, center);
+      flex-direction: column;
+      gap: 8px;
+    }
   }
 
   &-user_image {
     border-radius: 50%;
     width: 100px;
-  }
-
-  &-comment_items {
-    @include flex(start, center);
-    flex-direction: column;
-    gap: 5px;
   }
 
   &-buttons {
@@ -228,10 +288,6 @@
     @include flex(center, center);
     gap: 10px;
     font-size: 15px;
-  }
-
-  &-comment_name {
-    font-size: 16px;
   }
 
   &-comment_date {

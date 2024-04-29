@@ -20,11 +20,21 @@ import WatchLaterIcon from "@mui/icons-material/WatchLater";
 
 function Movie({ movie, language }) {
   const [movieLanguage, setMovieLanguage] = useState(language);
+  const [commentValue, setCommentValue] = useState()
   console.log(movieLanguage);
 
   const hanldeChangeLang = (e) => {
-    setMovieLanguage(e.target.value)
-  }
+    setMovieLanguage(e.target.value);
+  };
+
+  const video = (
+    <video poster={movie.image.fullscreen} controls width="100%">
+      <source src={movie.movie[movieLanguage]} type="video/mp4" />
+      <source src={movie.movie[movieLanguage]} type="video/ogg" />
+      <source src={movie.movie[movieLanguage]} type="video/webm" />
+      <p>Your browser does not support HTML5 video.</p>
+    </video>
+  );
 
   // useEffect(() => {
   //   const lang = prompt("Choose language")
@@ -116,78 +126,67 @@ function Movie({ movie, language }) {
               Russian
             </option>
           </select>
-          {movieLanguage == "uz" &&
-            <video poster={movie.image.fullscreen} controls width="100%">
-              <source src={movie.movie[movieLanguage]} type="video/mp4" />
-              <source src={movie.movie[movieLanguage]} type="video/ogg" />
-              <source src={movie.movie[movieLanguage]} type="video/webm" />
-              <p>Your browser does not support HTML5 video.</p>
-            </video>}
-            {movieLanguage == "en" &&
-            <video poster={movie.image.fullscreen} controls width="100%">
-              <source src={movie.movie[movieLanguage]} type="video/mp4" />
-              <source src={movie.movie[movieLanguage]} type="video/ogg" />
-              <source src={movie.movie[movieLanguage]} type="video/webm" />
-              <p>Your browser does not support HTML5 video.</p>
-            </video>}
-            {movieLanguage == "ru" &&
-            <video poster={movie.image.fullscreen} controls width="100%">
-              <source src={movie.movie[movieLanguage]} type="video/mp4" />
-              <source src={movie.movie[movieLanguage]} type="video/ogg" />
-              <source src={movie.movie[movieLanguage]} type="video/webm" />
-              <p>Your browser does not support HTML5 video.</p>
-            </video>}
+          {movieLanguage == "uz" && video}
+          {movieLanguage == "en" && video}
+          {movieLanguage == "ru" && video}
         </div>
+        {movie.status.type == "series" && (
+          <div className="movie-parts">
+            <select className="movie-parts_select">
+              <option className="movie-parts_option">Season 1</option>
+              <option className="movie-parts_option">mustafo</option>
+              <option className="movie-parts_option">mustafo</option>
+              <option className="movie-parts_option">mustafo</option>
+              <option className="movie-parts_option">mustafo</option>
+            </select>
 
-        <div className="movie-parts">
-          <select className="movie-parts_select">
-            <option className="movie-parts_option">Season 1</option>
-            <option className="movie-parts_option">mustafo</option>
-            <option className="movie-parts_option">mustafo</option>
-            <option className="movie-parts_option">mustafo</option>
-            <option className="movie-parts_option">mustafo</option>
-          </select>
+            <div className="movie-parts_box">
+              <Link className="movie-parts_part">
+                <VideoPlayerIcon />
+                Episode 1: Freedom Day
+              </Link>
 
-          <div className="movie-parts_box">
-            <Link className="movie-parts_part">
-              <VideoPlayerIcon />
-              Episode 1: Freedom Day
-            </Link>
+              <Link className="movie-parts_part">
+                <VideoPlayerIcon />
+                Episode 2: Freedom Day
+              </Link>
 
-            <Link className="movie-parts_part">
-              <VideoPlayerIcon />
-              Episode 2: Freedom Day
-            </Link>
+              <Link className="movie-parts_part">
+                <VideoPlayerIcon />
+                Episode 3: Freedom Day
+              </Link>
 
-            <Link className="movie-parts_part">
-              <VideoPlayerIcon />
-              Episode 3: Freedom Day
-            </Link>
+              <Link className="movie-parts_part">
+                <VideoPlayerIcon />
+                Episode 4: Freedom Day
+              </Link>
 
-            <Link className="movie-parts_part">
-              <VideoPlayerIcon />
-              Episode 4: Freedom Day
-            </Link>
+              <Link className="movie-parts_part">
+                <VideoPlayerIcon />
+                Episode 5: Freedom Day
+              </Link>
 
-            <Link className="movie-parts_part">
-              <VideoPlayerIcon />
-              Episode 5: Freedom Day
-            </Link>
-
-            <Link className="movie-parts_part">
-              <VideoPlayerIcon />
-              Episode 6: Freedom Day
-            </Link>
+              <Link className="movie-parts_part">
+                <VideoPlayerIcon />
+                Episode 6: Freedom Day
+              </Link>
+            </div>
           </div>
-        </div>
+        )}
 
-        <div className="movie-commets">
+        <div className="movie-comments">
+          <h1 className="movie-comments-title">Comments:</h1>
+          <div className="movie-comments-posting">
+            <textarea value={commentValue} className="movie-comments-posting-area" placeholder="Write your comment"></textarea>
+            <button className="movie-comments-posting-button">
+              Post Comment
+            </button>
+          </div>
           <div className="movie-comment">
             <img src={User} className="movie-user_image" alt="Commet's user" />
 
             <div className="movie-comment_items">
               <h1 className="movie-comment_name">Usmon</h1>
-              <span className="movie-comment_date">12/06/2020</span>
               <p className="movie-comment_text">
                 Ut enim ad minim veniam, quis nostrud exercitation ullamco
                 laboris nisi ut aliquip ex ea commodo con
@@ -211,79 +210,6 @@ function Movie({ movie, language }) {
 
             <div className="movie-comment_items">
               <h1 className="movie-comment_name">Usmon</h1>
-              <span className="movie-comment_date">12/06/2020</span>
-              <p className="movie-comment_text">
-                Ut enim ad minim veniam, quis nostrud exercitation ullamco
-                laboris nisi ut aliquip ex ea commodo con
-              </p>
-              <div className="movie-buttons">
-                <button className="movie-like_btn">
-                  <Like />
-                  11
-                </button>
-
-                <button className="movie-like_btn">
-                  <DisLike />
-                  11
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div className="movie-comment">
-            <img src={User} className="movie-user_image" alt="Commet's user" />
-
-            <div className="movie-comment_items">
-              <h1 className="movie-comment_name">Usmon</h1>
-              <span className="movie-comment_date">12/06/2020</span>
-              <p className="movie-comment_text">
-                Ut enim ad minim veniam, quis nostrud exercitation ullamco
-                laboris nisi ut aliquip ex ea commodo con
-              </p>
-              <div className="movie-buttons">
-                <button className="movie-like_btn">
-                  <Like />
-                  11
-                </button>
-
-                <button className="movie-like_btn">
-                  <DisLike />
-                  11
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div className="movie-comment">
-            <img src={User} className="movie-user_image" alt="Commet's user" />
-
-            <div className="movie-comment_items">
-              <h1 className="movie-comment_name">Usmon</h1>
-              <span className="movie-comment_date">12/06/2020</span>
-              <p className="movie-comment_text">
-                Ut enim ad minim veniam, quis nostrud exercitation ullamco
-                laboris nisi ut aliquip ex ea commodo con
-              </p>
-              <div className="movie-buttons">
-                <button className="movie-like_btn">
-                  <Like />
-                  11
-                </button>
-
-                <button className="movie-like_btn">
-                  <DisLike />
-                  11
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div className="movie-comment">
-            <img src={User} className="movie-user_image" alt="Commet's user" />
-
-            <div className="movie-comment_items">
-              <h1 className="movie-comment_name">Usmon</h1>
-              <span className="movie-comment_date">12/06/2020</span>
               <p className="movie-comment_text">
                 Ut enim ad minim veniam, quis nostrud exercitation ullamco
                 laboris nisi ut aliquip ex ea commodo con

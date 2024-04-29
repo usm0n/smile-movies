@@ -71,25 +71,6 @@ const users = {
     }
   },
 
-  registerUser: async (user) => {
-    try {
-      const response = await api.post("/users/register", user);
-      return response;
-    } catch (error) {
-      console.log(error);
-      return error;
-    }
-  },
-  loginUser: async (user) => {
-    try {
-      const response = await api.post("/users/login", user);
-      return response;
-    } catch (error) {
-      console.log(error);
-      return error;
-    }
-  },
-
   verifyUser: async (id, token) => {
     try {
       const response = await api.get("/users/" + id + "/verify/" + token);
@@ -99,6 +80,7 @@ const users = {
       return error;
     }
   },
+  
   deleteVerifyTokenByUserId: async (id) => {
     try {
       const response = await api.delete("/users/deletetoken/" + id);

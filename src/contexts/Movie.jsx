@@ -13,9 +13,7 @@ const MovieContext = createContext({
 export const useMovie = () => useContext(MovieContext);
 
 export const MovieProvider = ({ children }) => {
-  const [movieById, setMovie] = useState({
-
-  });
+  const [movieById, setMovie] = useState({});
   const [movieId, setMovieId] = useState();
 
   const getMovieId = async (movieId) => {
