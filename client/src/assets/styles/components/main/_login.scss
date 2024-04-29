@@ -1,0 +1,87 @@
+.login{
+
+    &-bg{
+        position: relative;
+        width: 100%;
+
+        @media screen and (max-width: 600px){
+            display: none;
+        }
+    }
+    
+    &-img{
+        opacity: 0.4;
+        width: 100%;
+        height: 100vh;
+    }
+
+    &-content{
+        position: fixed;
+        top: 0;
+        left: 0;
+        @include flex(center, center);
+        width: 100%;
+        margin: 0 auto;
+        height: 100%;
+    }
+
+    &-card{
+        background-color: rgba(0,0,0, 0.75);
+        padding: 60px 40px;
+        border-radius: 6px;
+        @include flex(start, center);
+        flex-direction: column;
+        
+        @media screen and (max-width: 600px){
+            width: 100%;
+        }
+
+    }
+
+    &-title{
+        font-size: 30px;
+        font-weight: 600;
+        letter-spacing: 0.60px;
+        padding-bottom: 40px;
+    }
+
+    &-form{
+        @include flex(center, center);
+        flex-direction: column;
+        width: 350px;
+        gap: 20px;
+
+        @media screen and (max-width: 600px){
+            width: 100%;
+        }
+    }
+
+    &-input{
+        width: 100%;
+        background-color: rgba(0,0,0, 0.30);
+        border: 1px solid rgb(135, 135, 135);
+        padding: 12px 10px;
+        outline: none;
+        border-radius: 3px;
+        font-size: 17px;
+        color: #fff;
+        transition: all 0.2 ease-in-out;
+        font-weight: 400;
+
+        &:focus{
+            border-color: $gold-color;
+        }
+    }
+
+    &-btn{
+        width: 100%;
+        background-color: $gold-color;
+        padding: 11px 8px;
+        border: none;
+        font-size: 17px;
+        font-weight: 600;
+        border-radius: 4px;
+        color: #000;
+        text-align: center;
+    }
+}

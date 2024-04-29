@@ -1,0 +1,25 @@
+.new-movie{
+    padding-top: 70px;
+    
+    &_img{
+        background-color: black;
+        width: 110px;
+    }
+
+    &_card{
+        @include flex(center, center);
+        gap: 10px;
+    }
+
+    &_info{
+        @include flex(start, center);
+        flex-direction: column;
+        gap: 14px
+    }
+
+    &_title{
+        @include adaptive-value('font-size', 40, 26);
+        padding-bottom: 30px;
+        font-weight: 500;
+    }
+}

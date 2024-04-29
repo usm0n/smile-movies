@@ -1,0 +1,94 @@
+.movies{
+    padding-top: 130px;
+
+    &-title{
+        font-weight: 500;
+        @include adaptive-value('font-size', 40, 25);
+        padding-bottom: 35px;
+        padding-top: 50px
+    }
+
+    &-cards{
+        @include flex(center, center);
+        flex-wrap: wrap;
+        gap: 20px;
+    }
+
+    &-card{
+        width: 250px;
+        @include flex(start, unset);
+        flex-direction: column;
+        transition: all 0.2s ease-in-out;   
+        padding-top: 10px;
+
+        &:hover{
+            transform: scale(1.03);
+            cursor: pointer;
+        }
+    }
+
+    &-img{
+        width: 100%;
+        height: 400px;
+        border-radius: 5px;
+        object-fit: cover;
+        background: center;
+    }
+
+    &-info{
+        padding-top: 10px;
+        @include flex(start, unset);
+        flex-direction: column;
+        gap: 7px;
+        width: 100%
+    }
+
+    &-time{
+        @include flex(center, unset);
+        gap: 5px;
+        font-size: 17px;
+    }
+
+    &-movies{
+        @include flex(center, center);
+    }
+
+    &-movie{
+        @include flex(center, center);
+    }
+
+    &-date{
+        @include flex(center, space-between);
+        gap: 5px;
+        font-size: 17px;
+        width: 100%
+    }
+
+    &-name{
+        @include adaptive-value('font-size', 20, 18);
+        width: 100%;
+        font-weight: 500;
+    }
+
+    &-item{
+        @include flex(center, space-between);
+        border: none;
+        color: #fff;
+        gap: 5px;
+
+    }
+
+    &-icon{
+        border: none;
+    }
+
+    &-icon svg{
+        fill: #fff;
+        transition: all 0.2s ease-in-out;
+        border: none;
+
+        &:hover{
+            fill: $gold-color;
+        }
+    }
+}
