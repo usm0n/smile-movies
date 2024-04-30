@@ -25,21 +25,26 @@ function Movie({ movie, language }) {
   const [commentValue, setCommentValue] = useState();
 
   const { getMovieId, allComments } = useComments();
-  console.log(allComments);
+
   const hanldeChangeLang = (e) => {
     setMovieLanguage(e.target.value);
   };
 
   const video = (
-    <video poster={movie.image.fullscreen} controls width="100%">
-      <source src={movie.movie[movieLanguage]} type="video/mp4" />
-      <source src={movie.movie[movieLanguage]} type="video/ogg" />
-      <source src={movie.movie[movieLanguage]} type="video/webm" />
-      <p>Your browser does not support HTML5 video.</p>
-    </video>
+    <iframe
+      src={movie.movie[movieLanguage]}
+      width="100%"
+      className="movie-iframe"
+      frameborder="0"
+      allowFullScreen
+      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+    ></iframe>
   );
 
-  getMovieId(movie._id);
+  useEffect(() => {
+    getMovieId(movie._id);
+  }, []);
+  
   return (
     <section key={movie._id} className="movie">
       <div className="movie-container">
@@ -126,9 +131,11 @@ function Movie({ movie, language }) {
               Russian
             </option>
           </select>
-          {movieLanguage == "uz" && video}
-          {movieLanguage == "en" && video}
-          {movieLanguage == "ru" && video}
+          <div className="movie-movie-container">
+            {movieLanguage == "uz" && video}
+            {movieLanguage == "en" && video}
+            {movieLanguage == "ru" && video}
+          </div>
         </div>
         {movie.status.type == "series" && (
           <div className="movie-parts">

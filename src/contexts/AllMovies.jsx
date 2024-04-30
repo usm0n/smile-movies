@@ -3,9 +3,11 @@ import movies from "../service/api/movies.api.service";
 import shuffle from "../utilities/shuffle";
 
 const AllMoviesContext = createContext({
-  isLoading: false,
-  isError: false,
-  movies: [],
+  allMovies: {
+    isLoading: false,
+    isError: false,
+    movies: [],
+  },
   deleteAllMovies: () => {},
 });
 AllMoviesContext.displayName = "AllMoviesContext";

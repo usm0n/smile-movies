@@ -2,10 +2,14 @@ import { createContext, useContext, useEffect, useState } from "react";
 import comments from "../service/api/comments.api.service";
 
 const CommentsContext = createContext({
-  isLoading: false,
-  isError: false,
-  isEmpty: false,
-  comments: [],
+  allComments: {
+    isLoading: false,
+    isError: false,
+    isEmpty: false,
+    comments: [],
+  },
+  getCommentId: () => {},
+  getMovieId: () => {},
 });
 
 export const useComments = () => useContext(CommentsContext);

@@ -3,7 +3,7 @@ import User from "../assets/images/user.png";
 import Like from "../assets/icons/Like";
 import DisLike from "../assets/icons/DisLike";
 
-function Comment({comment}) {
+function Comment({ comment }) {
   return (
     <div className="movie-comment">
       <img src={User} className="movie-user_image" alt="Commet's user" />

@@ -1,4 +1,12 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
+import {
+  removeUserId,
+  setUserId,
+  userId,
+} from "../utilities/defaultFunctions";
+import users from "../service/api/users.api.service";
+import auth from "../service/api/auth.api.service";
+import { useNavigate } from "react-router-dom";
 
 const UserContext = createContext({
   isLoggedIn: false,
@@ -15,7 +23,14 @@ const UserContext = createContext({
 export const useUser = () => useContext(UserContext);
 
 const UserProvider = ({ children }) => {
+  const navigate = useNavigate();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isVerified, setIsVerified] = useState();
+  const [statusLogin, setStatusLogin] = useState({
+    buttonLoading: false,
+    isSuccess: false,
+    isError: false,
+  });
   const [isRealUser, setIsRealUser] = useState({
     loading: false,
     result: false,
@@ -23,7 +38,32 @@ const UserProvider = ({ children }) => {
   const [user, setUser] = useState({});
 
   const loginUser = async (email, password) => {
-    
+    setStatusLogin({
+      buttonLoading: true,
+      isSuccess: false,
+      isError: false,
+    });
+    await auth.loginUser({ email, password }).then((res) => {
+      if (res.data) {
+        if (res.data.message == "Login successful") {
+          setStatusLogin({
+            buttonLoading: false,
+            isSuccess: true,
+            isError: false,
+          });
+          setIsLoggedIn(true);
+          setUser(res.data.user);
+          setUserId(res.data.user._id);
+          navigate("/");
+        } else {
+          setStatusLogin({
+            buttonLoading: false,
+            isSuccess: true,
+            isError: false,
+          });
+        }
+      }
+    });
   };
 
   const registerUser = async (email, password) => {
@@ -32,7 +72,48 @@ const UserProvider = ({ children }) => {
 
   const logoutUser = async () => {
     setIsLoggedIn(false);
+    setUser({});
+    removeUserId();
+    window.location.reload();
   };
+
+  useEffect(() => {
+    if (userId) {
+      setIsLoggedIn(true);
+      setIsRealUser({
+        loading: true,
+        result: false,
+      });
+      users.getUserById(userId).then((user) => {
+        if (user.data) {
+          setIsRealUser({
+            loading: false,
+            result: true,
+          });
+          setUser(user.data);
+          if (!user.data.isVerified) {
+            setIsVerified(false);
+            navigate("/verify-email");
+          } else {
+            setIsVerified(true);
+            navigate("/");
+          }
+        } else {
+          setIsRealUser({
+            loading: false,
+            result: false,
+          });
+        }
+      });
+    } else {
+      setIsLoggedIn(false);
+      setIsRealUser({
+        loading: false,
+        result: false,
+      });
+      setUser({});
+    }
+  }, []);
 
   return (
     <UserContext.Provider
