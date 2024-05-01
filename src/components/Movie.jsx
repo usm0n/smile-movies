@@ -23,7 +23,7 @@ import { useUser } from "../contexts/User";
 import { Alert, Snackbar } from "@mui/material";
 
 function Movie({ movie, language }) {
-  const [movieLanguage, setMovieLanguage] = useState(language);
+  const [movieLanguage, setMovieLanguage] = useState("en");
   const [postCommentComment, setPostCommentComment] = useState();
   const [postCommentName, setPostCommentName] = useState();
 
@@ -40,9 +40,7 @@ function Movie({ movie, language }) {
       src={movie.movie[movieLanguage]}
       width="100%"
       className="movie-iframe"
-      frameborder="0"
       allowFullScreen
-      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
     ></iframe>
   );
 
@@ -126,11 +124,11 @@ function Movie({ movie, language }) {
             onChange={(e) => hanldeChangeLang(e)}
             className="movie-parts_select"
           >
-            <option value={"uz"} className="movie-parts_option">
-              Uzbek
-            </option>
             <option value={"en"} className="movie-parts_option">
               English
+            </option>
+            <option value={"uz"} className="movie-parts_option">
+              Uzbek
             </option>
             <option value={"ru"} className="movie-parts_option">
               Russian
