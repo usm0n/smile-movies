@@ -1,104 +1,154 @@
-.header{
-    padding-top: 70px;
+.header {
+  padding-top: 70px;
 
-    &-bg{
-        position: relative;
-        height: 90vh;
-        width: 100%;
-        object-fit: cover;
-        background-position: center;
+  &-bg {
+    position: relative;
+    height: 90vh;
+    width: 100%;
+    object-fit: cover;
+    background-position: center;
+
+    @media screen and (max-width: 750px) {
+      display: none;
     }
 
-    &-items{
-        position: absolute;
-        top: 200px;
+    &.portrait {
+      display: none;
+
+      @media screen and (max-width: 750px) {
+        display: block;
+        // width: 500px;
+        border-radius: 23px;
         margin: 0 auto;
-        width: 100%;
-        @include flex(center, center);
-        padding-top: 50px;
+      }
+    }
+  }
 
-        @media screen and (max-width: 600px){
-            padding-top: unset;
-        }
+  &-items {
+    position: absolute;
+    bottom: 100px;
+    left: 100px;
+    gap: 30px;
+    margin: 0 auto;
+    width: 50%;
+    flex-direction: column;
+    @include flex(start, center);
+    padding-top: 50px;
+
+    @media screen and (max-width: 650px) {
+      @include flex(center, center);
     }
 
-    &-links{
-        @include flex(center, center);
-        gap: 20px;
-        width: 100%;
-        margin: 0 auto;
+    @media screen and (max-width: 600px) {
+      padding-top: unset;
+    }
+  }
 
-        @media screen and (max-width: 460px){
-            flex-direction: column;
-        }
+  &-links {
+    @include flex(start, start);
+    gap: 20px;
+    flex-wrap: wrap;
+
+    @media screen and (max-width: 650px) {
+      @include flex(center, center);
     }
 
-    &-link{
+    @media screen and (max-width: 460px) {
+      flex-direction: column;
+    }
+  }
+
+  &-desc {
+    text-align: start;
+    font-weight: 200;
+    color: #ffffffd6;
+    line-height: 28px;
+    letter-spacing: 0.5px;
+
+    @media screen and (max-width: 670px) {
+      text-align: center;
+      margin: 0 auto;
+    }
+  }
+
+  &-link {
+    background-color: $gold-color;
+    padding: 10px 25px;
+    border-radius: 50px;
+    color: #000;
+    align-items: center;
+    @include flex(center, center);
+    gap: 7px;
+    font-size: 20px;
+    font-weight: 300;
+    letter-spacing: 1px;
+
+    &_later {
+      background-color: transparent;
+      padding: 10px 25px;
+      border-radius: 50px;
+      color: #ffffff;
+      align-items: center;
+      @include flex(center, center);
+      border: 0.5px solid $gold-color;
+      gap: 7px;
+      font-size: 20px;
+      font-weight: 300;
+      letter-spacing: 1px;
+      transition: all 0.2s ease-in-out;
+
+      &:hover {
         background-color: $gold-color;
-        padding: 10px 20px;
-        border-radius: 50px;
         color: #000;
-        font-weight: 600;
-        @include flex(center, center);
-        gap: 7px;
-        font-size: 25px;
-
-        &_later{
-            background-color: transparent;
-            padding: 10px 20px;
-            border-radius: 50px;
-            color: $link-color;
-            font-weight: 600;
-            @include flex(center, center);
-            gap: 7px;
-            font-size: 25px;
-            border: 1px solid $gold-color;
-            transition: all 0.2s ease-in-out;
-
-            &:hover{
-                background-color: $gold-color;
-                color: #000;
-            }
-        }
+      }
     }
+  }
 
-    &-info{
-        position: absolute;
-        bottom: 100px;
+  &-info {
+    @include flex(start, center);
+    flex-direction: column;
+    gap: 10px;
 
-        @media screen and (max-width: 975px){
-            bottom: 100px;
-        }
-
-        @media screen and (max-width: 460px){
-            display: none;
-        }
+    @media screen and (max-width: 975px) {
+      bottom: 100px;
     }
+  }
 
-    &-title{
-        font-size: 32px;
-        font-weight: 700;
-        line-height: 48px;
-        text-align: left;
-        color: #fff;
-        padding-bottom: 20px
-    }
+  &-title {
+    @include flex(start, center);
+    font-size: 35px;
+    font-weight: 200;
+    letter-spacing: 1px;
+    line-height: 48px;
+    text-align: left;
+    color: #fff;
 
-    &-texts{
-        @include flex(center, unset);
-        gap: 20px;
+    @media screen and (max-width: 650px) {
+        text-align: center;
+        margin: 0 auto;
     }
+  }
 
-    &-item{
-        @include flex(center, unset);
-        gap: 6px;
-    }
+  &-texts {
+    @include flex(center, unset);
+    gap: 20px;
 
-    &-year{
-        color: #fff;
+    @media screen and (max-width: 650px) {
+        text-align: center;
+        margin: 0 auto;
     }
+  }
 
-    &-icon svg{
-        fill: #fff
-    }
+  &-item {
+    @include flex(center, unset);
+    gap: 6px;
+  }
+
+  &-year {
+    color: #fff;
+  }
+
+  &-icon svg {
+    fill: #fff;
+  }
 }

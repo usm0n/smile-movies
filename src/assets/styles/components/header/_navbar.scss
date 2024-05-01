@@ -228,17 +228,12 @@
   }
 
   &-all {
-    @media screen and (max-width: 500px) {
-      display: none;
-    }
     position: absolute;
-    background-color: #fff;
     height: 100%;
     width: 15%;
+    left: 20px;
+    top: 9px;
     border-radius: 25px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
 
     &_btn {
       display: flex;

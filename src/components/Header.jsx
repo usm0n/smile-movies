@@ -5,7 +5,9 @@ import VideoPlayerIcon from "../assets/icons/VideoPlayerIcon";
 import ClockIcon from "../assets/icons/ClockIcon";
 import SolidStarIcon from "../assets/icons/SolidStarIcon";
 import CalendarIcon from "../assets/icons/CalendarIcon";
+import PlayCircleFilledOutlinedIcon from '@mui/icons-material/PlayCircleFilledOutlined';
 import { Box, Skeleton } from "@mui/material";
+import WatchLater from "@mui/icons-material/WatchLater";
 
 import "swiper/css";
 import "swiper/css/effect-fade";
@@ -43,18 +45,12 @@ function Header({ isLoading, movies, language }) {
                   className="header-bg"
                   alt=""
                 />
+                <img
+                  src={movie.image.portrait}
+                  className="header-bg portrait"
+                  alt=""
+                />
                 <div className="header-items">
-                  <div className="header-links">
-                    <Link to={`/${movie._id}`} className="header-link">
-                      Watch Now <VideoPlayerIcon />
-                    </Link>
-                    <Link className="header-link_later">
-                      Watch Later <ClockIcon />{" "}
-                    </Link>
-                  </div>
-                </div>
-
-                <div className="container">
                   <div className="header-info">
                     <h1 className="header-title">{movie.title[language]}</h1>
                     <div className="header-texts">
@@ -66,7 +62,7 @@ function Header({ isLoading, movies, language }) {
                       </div>
 
                       <div className="header-item">
-                        <ClockIcon />
+                        <WatchLater/>
                         <span className="header-year">
                           {movie.duration.hour}:{movie.duration.min}:00
                         </span>
@@ -80,7 +76,17 @@ function Header({ isLoading, movies, language }) {
                       </div>
                     </div>
                   </div>
+                  <div className="header-links">
+                    <Link to={`/${movie._id}`} className="header-link">
+                      Watch Now <PlayCircleFilledOutlinedIcon/>
+                    </Link>
+                    <Link className="header-link_later">
+                      Watch Later <WatchLater/>{" "}
+                    </Link>
+                  </div>
                 </div>
+
+                <div className="container"></div>
               </SwiperSlide>
             ))}
         </Swiper>
