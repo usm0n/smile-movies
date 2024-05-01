@@ -120,6 +120,20 @@
     }
   }
 
+  &-delete_btn {
+    border: none;
+    color: #fff;
+    @include flex(center, center);
+    gap: 10px;
+    font-size: 15px;
+    transition: all 0.5s;
+
+    &:hover {
+      opacity: 0.8;
+      color: #e80000;
+    }
+  }
+
   &-number_info {
     @include flex(start, unset);
     gap: 25px;
@@ -165,6 +179,18 @@
     &_image {
       width: 100%;
       border-radius: 4px;
+    }
+
+    &-language {
+      @include flex(start, start);
+      align-items: center;
+      gap: 10px;
+
+      &-text{
+        @include adaptive-value("font-size", 25, 17);
+        font-weight: 200;
+        letter-spacing: 1px
+      }
     }
   }
 

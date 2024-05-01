@@ -23,7 +23,7 @@ import { useUser } from "../contexts/User";
 import { Alert, Snackbar } from "@mui/material";
 
 function Movie({ movie, language }) {
-  const [movieLanguage, setMovieLanguage] = useState("en");
+  const [movieLanguage, setMovieLanguage] = useState(language);
   const [postCommentComment, setPostCommentComment] = useState();
   const [postCommentName, setPostCommentName] = useState();
 
@@ -35,7 +35,7 @@ function Movie({ movie, language }) {
     setMovieLanguage(e.target.value);
   };
 
-  const video = (
+  const iframe = (
     <iframe
       src={movie.movie[movieLanguage]}
       width="100%"
@@ -120,24 +120,33 @@ function Movie({ movie, language }) {
         </div>
 
         <div className="movie-video">
-          <select
-            onChange={(e) => hanldeChangeLang(e)}
-            className="movie-parts_select"
-          >
-            <option value={"en"} className="movie-parts_option">
-              English
-            </option>
-            <option value={"uz"} className="movie-parts_option">
-              Uzbek
-            </option>
-            <option value={"ru"} className="movie-parts_option">
-              Russian
-            </option>
-          </select>
+          <div className="movie-video-language">
+            <h1 className="movie-video-language-text">Language:</h1>
+            <select
+              onChange={(e) => hanldeChangeLang(e)}
+              className="movie-parts_select"
+            >
+              {movie.movie.uz && (
+                <option value={"uz"} className="movie-parts_option">
+                  Uzbek
+                </option>
+              )}
+              {movie.movie.en && (
+                <option value={"en"} className="movie-parts_option">
+                  English
+                </option>
+              )}
+              {movie.movie.ru && (
+                <option value={"ru"} className="movie-parts_option">
+                  Russian
+                </option>
+              )}
+            </select>
+          </div>
           <div className="movie-movie-container">
-            {movieLanguage == "uz" && video}
-            {movieLanguage == "en" && video}
-            {movieLanguage == "ru" && video}
+            {movieLanguage == "uz" && iframe}
+            {movieLanguage == "en" && iframe}
+            {movieLanguage == "ru" && iframe}
           </div>
         </div>
         {movie.status.type == "series" && (
@@ -188,10 +197,7 @@ function Movie({ movie, language }) {
           <h1 className="movie-comments-title">Comments:</h1>
           <div className="movie-comments-posting">
             {postCommentStatus.isSuccess && (
-              <Snackbar
-                open={open}
-                autoHideDuration={6000}
-              >
+              <Snackbar open={open} autoHideDuration={6000}>
                 <Alert
                   severity="success"
                   variant="filled"
@@ -202,10 +208,7 @@ function Movie({ movie, language }) {
               </Snackbar>
             )}
             {postCommentStatus.isError && (
-              <Snackbar
-                open={open}
-                autoHideDuration={6000}
-              >
+              <Snackbar open={open} autoHideDuration={6000}>
                 <Alert severity="error" variant="filled" sx={{ width: "100%" }}>
                   Error at posting comment
                 </Alert>
@@ -227,10 +230,18 @@ function Movie({ movie, language }) {
               placeholder="Write your comment"
             ></textarea>
             <button
-              disabled={!postCommentComment || !postCommentName}
+              disabled={
+                !postCommentComment ||
+                !postCommentName ||
+                postCommentStatus.buttonLoading ||
+                postCommentStatus.isSuccess
+              }
               onClick={() => postComment(postCommentName, postCommentComment)}
               className={
-                !postCommentComment || !postCommentName
+                !postCommentComment ||
+                !postCommentName ||
+                postCommentStatus.buttonLoading ||
+                postCommentStatus.isSuccess
                   ? "movie-comments-posting-button disabled"
                   : "movie-comments-posting-button"
               }
@@ -246,8 +257,8 @@ function Movie({ movie, language }) {
           ) : (
             !allComments.isLoading &&
             allComments.comments &&
-            allComments.comments.map((comment) => {
-              return <Comment comment={comment} />;
+            allComments.comments.map((comment, index) => {
+              return <Comment comment={comment} index={index} />;
             })
           )}
         </div>

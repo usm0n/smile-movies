@@ -13,13 +13,18 @@ const CommentsContext = createContext({
     isError: false,
     isSuccess: false,
   },
+  deleteCommentStatus: {
+    buttonLoading: false,
+    isError: false,
+    isSuccess: false,
+  },
   getCommentId: (commentId) => {},
   getMovieId: (movieId) => {},
   postComment: (firstname, comment) => {},
+  deleteComment: () => {},
 });
 
 export const useComments = () => useContext(CommentsContext);
-
 const CommentsProvider = ({ children }) => {
   const [allComments, setAllComments] = useState({
     isLoading: false,
@@ -27,6 +32,12 @@ const CommentsProvider = ({ children }) => {
     isEmpty: false,
     comments: [],
   });
+  const [deleteCommentStatus, setDeleteCommentStatus] = useState({
+    buttonLoading: false,
+    isError: false,
+    isSuccess: false,
+  });
+
   const [postCommentStatus, setPostCommentStatus] = useState({
     buttonLoading: false,
     isError: false,
@@ -61,6 +72,30 @@ const CommentsProvider = ({ children }) => {
       })
       .catch(() => {
         setPostCommentStatus({
+          buttonLoading: false,
+          isError: true,
+          isSuccess: false,
+        });
+      });
+  };
+
+  const deleteComment = async () => {
+    setDeleteCommentStatus({
+      buttonLoading: true,
+      isError: false,
+      isSuccess: false,
+    });
+    await comments
+      .deleteComment(movieId, commentId)
+      .then(() => {
+        setDeleteCommentStatus({
+          buttonLoading: false,
+          isError: false,
+          isSuccess: true,
+        });
+      })
+      .catch(() => {
+        setDeleteCommentStatus({
           buttonLoading: false,
           isError: true,
           isSuccess: false,
@@ -122,6 +157,8 @@ const CommentsProvider = ({ children }) => {
         getMovieId,
         postComment,
         postCommentStatus,
+        deleteComment,
+        deleteCommentStatus,
       }}
     >
       {children}

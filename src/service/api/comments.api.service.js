@@ -43,7 +43,7 @@ const comments = {
   deleteComment: async (movieId, commentId) => {
     try {
       const response = await api.delete(
-        "/movies/" + movieId + "/comment/" + commentId
+        "/movies/" + movieId + "/deleteComment/" + commentId
       );
       return response;
     } catch (error) {

@@ -14,12 +14,9 @@ import "swiper/css/navigation";
 
 import { EffectFade, Autoplay, Pagination, Navigation } from "swiper/modules";
 import { Link } from "react-router-dom";
-import { swiperData } from "../data/swiperData";
-import { useAllMovies } from "../contexts/AllMovies";
 
-function Header() {
-  const { allMovies } = useAllMovies();
-  return !allMovies.isLoading ? (
+function Header({ isLoading, movies, language }) {
+  return !isLoading ? (
     <section className="header">
       <>
         <Swiper
@@ -37,7 +34,7 @@ function Header() {
           modules={[Autoplay, EffectFade, Pagination, Navigation]}
           className="mySwiper"
         >
-          {allMovies.movies
+          {movies
             .filter((m) => m.status.isTrending)
             .map((movie, key) => (
               <SwiperSlide>
@@ -59,7 +56,7 @@ function Header() {
 
                 <div className="container">
                   <div className="header-info">
-                    <h1 className="header-title">{movie.title.uz}</h1>
+                    <h1 className="header-title">{movie.title[language]}</h1>
                     <div className="header-texts">
                       <div className="header-item">
                         <CalendarIcon />
@@ -87,18 +84,21 @@ function Header() {
               </SwiperSlide>
             ))}
         </Swiper>
+        {movies.filter((m) => m.status.isTrending).length === 0 && (
+          <h1 style={{ textAlign: "center" }}>There's no Trending Movies</h1>
+        )}
       </>
     </section>
   ) : (
-      <Skeleton
-        variant="rectangular"
-        animation="pulse"
-        sx={{
-          backgroundColor: "#ffffff2f",
-          width: "100%",
-          height: "85vh",
-        }}
-      />
+    <Skeleton
+      variant="rectangular"
+      animation="pulse"
+      sx={{
+        backgroundColor: "#ffffff2f",
+        width: "100%",
+        height: "85vh",
+      }}
+    />
   );
 }
 

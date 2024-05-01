@@ -2,6 +2,7 @@ import React, { useEffect } from "react";
 import { useMovie } from "../contexts/Movie";
 import MovieComponent from "../components/Movie";
 import { useParams } from "react-router-dom";
+import MovieSkeleton from "../components/MovieSkeleton";
 
 function Movie() {
   const { movieById, getMovieId } = useMovie();
@@ -9,13 +10,17 @@ function Movie() {
   useEffect(() => {
     getMovieId(movieId);
   }, [movieId]);
-  return (
+  return !movieById.isLoading ? (
     <>
       {movieById.movie && !movieById.isLoading && (
         <MovieComponent movie={movieById.movie} language={"uz"} />
       )}
     </>
-  );
+  ) : (
+    <>
+      <MovieSkeleton />
+    </>
+  )
 }
 
 export default Movie;

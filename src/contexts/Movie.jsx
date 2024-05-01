@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useState } from "react";
 import movies from "../service/api/movies.api.service";
 
 const MovieContext = createContext({
-  movie: {
+  movieById: {
     isLoading: false,
     isError: false,
     movie: {},

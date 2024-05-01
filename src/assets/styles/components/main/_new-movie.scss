@@ -1,25 +1,47 @@
-.new-movie{
-    padding-top: 70px;
-    
-    &_img{
-        background-color: black;
-        width: 110px;
-    }
+.new-movie {
+  padding-top: 50px;
 
-    &_card{
-        @include flex(center, center);
-        gap: 10px;
-    }
+  &_img {
+    background-color: black;
+    width: 110px;
+  }
 
-    &_info{
-        @include flex(start, center);
-        flex-direction: column;
-        gap: 14px
-    }
+  &_card {
+    @include flex(center, center);
+    gap: 10px;
+    flex-direction: column;
+  }
 
-    &_title{
-        @include adaptive-value('font-size', 40, 26);
-        padding-bottom: 30px;
-        font-weight: 500;
-    }
+  &_info {
+    @include flex(start, center);
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  &_name{
+    letter-spacing: 1px;
+    font-weight: 300;
+  }
+
+  &_parts {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    letter-spacing: 1px;
+    font-weight: 300;
+  }
+
+  &_date {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    letter-spacing: 1px;
+    font-weight: 300;
+  }
+
+  &_title {
+    @include adaptive-value("font-size", 40, 26);
+    padding-bottom: 30px;
+    font-weight: 500;
+  }
 }

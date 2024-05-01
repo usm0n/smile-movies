@@ -4,12 +4,12 @@ import MovieSkeletonCard from "./MovieCardSkeleton";
 import MovieCard from "./MovieCard";
 import { Grid } from "@mui/material";
 
-function Movies({ allMovies, language }) {
+function Cartoons({ allMovies, language }) {
   return (
     <section className="movies">
       <div className="container">
         <div className="movies-content">
-          <h1 className="movies-title">Kinolar</h1>
+          <h1 className="movies-title">Multifilmlar</h1>
           <div className="movies-movies">
             <div className="movies-cards">
               {allMovies.isLoading ? (
@@ -27,15 +27,13 @@ function Movies({ allMovies, language }) {
                     <MovieSkeletonCard />
                   </Grid>
                 </>
-              ) : allMovies.movies.filter((m) => m.status.type === "movie")
+              ) : allMovies.movies.filter((m) => m.status.type === "cartoon")
                   .length > 0 ? (
                 allMovies.movies
-                  .filter((m) => m.status.type === "movie")
-                  .map((movie) => (
-                    <MovieCard movie={movie} language={language} />
-                  ))
+                  .filter((m) => m.status.type === "cartoon")
+                  .map((movie) => <MovieCard movie={movie} language={language} />)
               ) : (
-                <h1>Movies not found</h1>
+                <h1>Cartoons not found</h1>
               )}
             </div>
           </div>
@@ -45,4 +43,4 @@ function Movies({ allMovies, language }) {
   );
 }
 
-export default Movies;
+export default Cartoons;

@@ -7,7 +7,7 @@ function MovieCard({ movie, language }) {
       <div className="movies-card" key={movie._id}>
         <img
           src={movie.image.portrait}
-          className="movies-img" 
+          className="movies-img"
           alt={movie.title[language] + "image"}
         />
         <div className="movies-info">

@@ -1,5 +1,3 @@
-import { useNavigate } from "react-router-dom";
-
 export const language = localStorage.getItem("language");
 export const setLanguage = (language) => {
   localStorage.setItem("language", language);
