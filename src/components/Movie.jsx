@@ -19,12 +19,17 @@ import WatchLaterIcon from "@mui/icons-material/WatchLater";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import { useComments } from "../contexts/Comments";
 import Comment from "./Comment";
+import { useUser } from "../contexts/User";
+import { Alert, Snackbar } from "@mui/material";
 
 function Movie({ movie, language }) {
   const [movieLanguage, setMovieLanguage] = useState(language);
-  const [commentValue, setCommentValue] = useState();
+  const [postCommentComment, setPostCommentComment] = useState();
+  const [postCommentName, setPostCommentName] = useState();
 
-  const { getMovieId, allComments } = useComments();
+  const { getMovieId, allComments, postComment, postCommentStatus } =
+    useComments();
+  const { isLoggedIn, isRealUser } = useUser();
 
   const hanldeChangeLang = (e) => {
     setMovieLanguage(e.target.value);
@@ -44,7 +49,7 @@ function Movie({ movie, language }) {
   useEffect(() => {
     getMovieId(movie._id);
   }, []);
-  
+
   return (
     <section key={movie._id} className="movie">
       <div className="movie-container">
@@ -184,13 +189,56 @@ function Movie({ movie, language }) {
         <div className="movie-comments">
           <h1 className="movie-comments-title">Comments:</h1>
           <div className="movie-comments-posting">
+            {postCommentStatus.isSuccess && (
+              <Snackbar
+                open={open}
+                autoHideDuration={6000}
+              >
+                <Alert
+                  severity="success"
+                  variant="filled"
+                  sx={{ width: "100%" }}
+                >
+                  Comment posted successfully
+                </Alert>
+              </Snackbar>
+            )}
+            {postCommentStatus.isError && (
+              <Snackbar
+                open={open}
+                autoHideDuration={6000}
+              >
+                <Alert severity="error" variant="filled" sx={{ width: "100%" }}>
+                  Error at posting comment
+                </Alert>
+              </Snackbar>
+            )}
+            {!isLoggedIn && !isRealUser.result && (
+              <input
+                onChange={(e) => setPostCommentName(e.target.value)}
+                value={postCommentName}
+                className="movie-comments-posting-input"
+                placeholder="Your name"
+                type="text"
+              />
+            )}
             <textarea
-              value={commentValue}
+              onChange={(e) => setPostCommentComment(e.target.value)}
+              value={postCommentComment}
               className="movie-comments-posting-area"
               placeholder="Write your comment"
             ></textarea>
-            <button className="movie-comments-posting-button">
-              Post Comment
+            <button
+              disabled={!postCommentComment || !postCommentName}
+              onClick={() => postComment(postCommentName, postCommentComment)}
+              className={
+                !postCommentComment || !postCommentName
+                  ? "movie-comments-posting-button disabled"
+                  : "movie-comments-posting-button"
+              }
+            >
+              {postCommentStatus.buttonLoading && "Loading..."}
+              {!postCommentStatus.buttonLoading && "Post Comment"}
             </button>
           </div>
           {allComments.isEmpty ? (

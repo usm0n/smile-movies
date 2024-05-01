@@ -10,7 +10,7 @@ function Comment({ comment }) {
 
       <div className="movie-comment_items">
         <h1 className="movie-comment_name">
-          {comment.firstname} {comment.lastname}
+          {comment.firstname}
         </h1>
         <p className="movie-comment_text">{comment.comment}</p>
         <div className="movie-buttons">

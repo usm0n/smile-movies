@@ -27,11 +27,11 @@ const comments = {
     }
   },
 
-  postComment: async (movieId, userId, comment) => {
+  postComment: async (movieId, data) => {
     try {
       const response = await api.post(
-        "/movies/" + movieId + "/commentAs" + userId,
-        comment
+        "/movies/" + movieId + "/postComment",
+        data
       );
       return response;
     } catch (error) {
@@ -53,4 +53,4 @@ const comments = {
   },
 };
 
-export default comments
+export default comments;

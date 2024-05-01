@@ -233,6 +233,28 @@
       display: flex;
       flex-direction: column;
       gap: 20px;
+
+      &-input {
+        padding: 10px;
+        line-height: 1.23543;
+        font-weight: 400;
+        font-size: 14px;
+        color: #333;
+        text-align: left;
+        border: 1px solid #d6d6d6;
+        border-radius: 4px;
+        background: hsla(0, 0%, 100%, 0.945);
+        background-clip: padding-box;
+        transition: all 0.2s ease-in-out;
+
+        &:focus {
+          appearance: none;
+          border-color: #0070c9;
+          outline: 0;
+          box-shadow: 0 0 0 3px rgba(131, 192, 253, 0.5);
+        }
+      }
+
       &-area {
         @include adaptive-value("width", 800, 225);
         height: 100px;
@@ -276,6 +298,11 @@
         padding: 0px 30px;
         border: none;
         width: max-content;
+
+        &.disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
       }
     }
 

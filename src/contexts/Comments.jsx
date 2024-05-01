@@ -8,8 +8,14 @@ const CommentsContext = createContext({
     isEmpty: false,
     comments: [],
   },
-  getCommentId: () => {},
-  getMovieId: () => {},
+  postCommentStatus: {
+    buttonLoading: false,
+    isError: false,
+    isSuccess: false,
+  },
+  getCommentId: (commentId) => {},
+  getMovieId: (movieId) => {},
+  postComment: (firstname, comment) => {},
 });
 
 export const useComments = () => useContext(CommentsContext);
@@ -20,6 +26,11 @@ const CommentsProvider = ({ children }) => {
     isError: false,
     isEmpty: false,
     comments: [],
+  });
+  const [postCommentStatus, setPostCommentStatus] = useState({
+    buttonLoading: false,
+    isError: false,
+    isSuccess: false,
   });
   const [commentId, setCommentId] = useState();
   const [movieId, setMovieId] = useState();
@@ -32,6 +43,31 @@ const CommentsProvider = ({ children }) => {
     setMovieId(movieId);
   };
 
+  const postComment = async (firstname, comment) => {
+    setPostCommentStatus({
+      buttonLoading: true,
+      isError: false,
+      isSuccess: false,
+    });
+    await comments
+      .postComment(movieId, { firstname: firstname, comment: comment })
+      .then((res) => {
+        console.log(res);
+        setPostCommentStatus({
+          buttonLoading: false,
+          isError: false,
+          isSuccess: true,
+        });
+      })
+      .catch(() => {
+        setPostCommentStatus({
+          buttonLoading: false,
+          isError: true,
+          isSuccess: false,
+        });
+      });
+  };
+
   useEffect(() => {
     setAllComments({
       isLoading: true,
@@ -42,13 +78,23 @@ const CommentsProvider = ({ children }) => {
     comments
       .getComments(movieId)
       .then((comment) => {
-        if (comment.response.data.message == "Comments not found") {
-          setAllComments({
-            isLoading: false,
-            isError: false,
-            isEmpty: true,
-            comments: [],
-          });
+        console.log(comment);
+        if (!comment.data) {
+          if (comment.response.data.message == "Comments not found") {
+            setAllComments({
+              isLoading: false,
+              isError: false,
+              isEmpty: true,
+              comments: [],
+            });
+          } else {
+            setAllComments({
+              isLoading: false,
+              isError: true,
+              isEmpty: false,
+              comments: [],
+            });
+          }
         } else {
           setAllComments({
             isLoading: false,
@@ -69,7 +115,15 @@ const CommentsProvider = ({ children }) => {
   }, [movieId]);
 
   return (
-    <CommentsContext.Provider value={{ getCommentId, allComments, getMovieId }}>
+    <CommentsContext.Provider
+      value={{
+        getCommentId,
+        allComments,
+        getMovieId,
+        postComment,
+        postCommentStatus,
+      }}
+    >
       {children}
     </CommentsContext.Provider>
   );
