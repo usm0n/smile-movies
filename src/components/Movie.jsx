@@ -50,6 +50,11 @@ function Movie({ movie, language }) {
 
   return (
     <section key={movie._id} className="movie">
+      <img
+        src={movie.image.fullscreen}
+        alt=""
+        className="movie-img-fullscreen"
+      />
       <div className="movie-container">
         <div className="movie-content">
           <img
