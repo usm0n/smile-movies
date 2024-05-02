@@ -21,6 +21,9 @@ function Register() {
                             <input type="password" placeholder='Password' className='login-input' />
 
                             <Link to="/register" className='login-btn'>Register</Link>
+                            <h1>
+                                Already have an accaunt? <Link to="/login" className='login-register-link'>Sign in</Link>
+                            </h1>
                         </form>
                     </div>
                 </div>

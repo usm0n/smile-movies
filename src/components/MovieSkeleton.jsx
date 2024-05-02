@@ -1,5 +1,6 @@
 import { Box, Skeleton } from "@mui/material";
 import React from "react";
+import CommentsSkeleton from "./CommentsSkeleton";
 
 function MovieSkeleton() {
   return (
@@ -170,6 +171,7 @@ function MovieSkeleton() {
             ></Skeleton>
           </Box>
         </Box>
+        <CommentsSkeleton />
       </Box>
     </Box>
   );

@@ -2,6 +2,7 @@
   &-bg {
     position: relative;
     width: 100%;
+    filter: blur(5px);
 
     @media screen and (max-width: 600px) {
       display: none;

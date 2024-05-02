@@ -4,10 +4,11 @@
   z-index: 9999999;
   width: 100%;
   box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;
-  margin-bottom: 50px;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
 
   &-container {
-    background-color: $navbar-background;
+    background-color: #0000002e;
     max-width: 1360px;
     min-width: 100%;
     margin: 0 auto;

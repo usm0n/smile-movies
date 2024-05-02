@@ -37,7 +37,10 @@ function Login() {
               </div>
               <h1>
                 Don't have an accaunt?{" "}
-                <Link to="/register" className="login-register-link">Sign up</Link> now
+                <Link to="/register" className="login-register-link">
+                  Sign up
+                </Link>{" "}
+                now
               </h1>
             </form>
           </div>
