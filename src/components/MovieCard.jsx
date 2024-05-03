@@ -12,7 +12,7 @@ function MovieCard({ movie, language }) {
         />
         <div className="movies-info">
           <h1 className="movies-name">
-            {movie.title[language].substring(0, 25)}
+            {movie.title[language] && movie.title[language].substring(0, 25)}
           </h1>
           <span className="movies-date">
             <span className="movies-movie">{movie.releaseDate.year}</span>

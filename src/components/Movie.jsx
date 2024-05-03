@@ -136,7 +136,7 @@ function Movie({ movie, language }) {
             >
               {movie.movie[language] && (
                 <option className="movie-parts_option" value={language}>
-                  {language.toUpperCase()}
+                  {language && language.toUpperCase()}
                 </option>
               )}
               {movie.movie.uz && language !== "uz" && (

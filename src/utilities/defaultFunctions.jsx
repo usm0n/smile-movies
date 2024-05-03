@@ -1,4 +1,6 @@
-export const language = localStorage.getItem("language");
+export const language = !localStorage.getItem("language")
+  ? "uz"
+  : localStorage.getItem("language").trim();
 export const setLanguage = (language) => {
   localStorage.setItem("language", language);
 };

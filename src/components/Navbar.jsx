@@ -198,7 +198,7 @@ function Navbar() {
               className="nav-translate-btn"
             >
               <TranslateIcon />
-              {language.toUpperCase()}
+              {language && language.toUpperCase()}
             </Link>
             <div
               className={
