@@ -6,7 +6,7 @@ const SvgComponent = () => (
     height={24}
     viewBox="0 0 24 24"
     style={{
-      fill: "#000",
+      fill: "#fff",
       transform: "",
       msfilter: "",
     }}

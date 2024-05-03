@@ -46,6 +46,9 @@ function Movie({ movie, language }) {
 
   useEffect(() => {
     getMovieId(movie._id);
+    if (!movie.movie[language]) {
+      setMovieLanguage("uz");
+    }
   }, []);
 
   return (
@@ -131,19 +134,24 @@ function Movie({ movie, language }) {
               onChange={(e) => hanldeChangeLang(e)}
               className="movie-parts_select"
             >
-              {movie.movie.uz && (
+              {movie.movie[language] && (
+                <option className="movie-parts_option" value={language}>
+                  {language.toUpperCase()}
+                </option>
+              )}
+              {movie.movie.uz && language !== "uz" && (
                 <option value={"uz"} className="movie-parts_option">
-                  Uzbek
+                  UZ
                 </option>
               )}
-              {movie.movie.en && (
+              {movie.movie.en && language !== "en" && (
                 <option value={"en"} className="movie-parts_option">
-                  English
+                  EN
                 </option>
               )}
-              {movie.movie.ru && (
+              {movie.movie.ru && language !== "ru" && (
                 <option value={"ru"} className="movie-parts_option">
-                  Russian
+                  RU
                 </option>
               )}
             </select>

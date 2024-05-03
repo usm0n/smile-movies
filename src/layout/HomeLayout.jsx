@@ -7,6 +7,7 @@ import NewMovies from "../components/NewMovies";
 import Footer from "../components/Footer";
 import { useAllMovies } from "../contexts/AllMovies";
 import Cartoons from "../components/Cartoons";
+import { language } from "../utilities/defaultFunctions";
 
 function HomeLayout() {
   const { allMovies } = useAllMovies();
@@ -15,16 +16,16 @@ function HomeLayout() {
       <Header
         isLoading={allMovies.isLoading}
         movies={allMovies.movies}
-        language={"uz"}
+        language={language}
       />
       <NewMovies
         movies={allMovies.movies}
         isLoading={allMovies.isLoading}
-        language={"uz"}
+        language={language}
       />
-      <Movies allMovies={allMovies} language={"uz"} />
-      <Cartoons allMovies={allMovies} language={"uz"} />
-      <Series allMovies={allMovies} language={"uz"} />
+      <Movies allMovies={allMovies} language={language} />
+      <Cartoons allMovies={allMovies} language={language} />
+      <Series allMovies={allMovies} language={language} />
       {/* <Footer /> */}
     </div>
   );
