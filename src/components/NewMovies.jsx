@@ -11,88 +11,115 @@ import "swiper/css/navigation";
 import { Autoplay, Pagination, Navigation } from "swiper/modules";
 import { Link } from "react-router-dom";
 import WatchLater from "@mui/icons-material/WatchLater";
+import NewMoviesSkeleton from "./NewMoviesSkeleton";
+import { Grid } from "@mui/material";
 
 function NewMovies({ movies, isLoading, language }) {
   return (
-    !isLoading && (
-      <section className="new-movie">
-        <div className="container">
-          <h1 className="new-movie_title">Yangi</h1>
-          <>
-            <Swiper
-              slidesPerView={4}
-              spaceBetween={30}
-              breakpoints={{
-                280: {
-                  slidesPerView: 1,
-                  spaceBetween: 70,
-                },
+    <section className="new-movie">
+      <div className="container">
+        <h1 className="new-movie_title">Yangi</h1>
+        <>
+          <Swiper
+            slidesPerView={4}
+            spaceBetween={30}
+            breakpoints={{
+              280: {
+                slidesPerView: 1,
+                spaceBetween: 70,
+              },
 
-                500: {
-                  slidesPerView: 2,
-                  spaceBetween: 70,
-                },
+              500: {
+                slidesPerView: 2,
+                spaceBetween: 70,
+              },
 
-                870: {
-                  slidesPerView: 3,
-                  spaceBetween: 70,
-                },
+              870: {
+                slidesPerView: 3,
+                spaceBetween: 70,
+              },
 
-                1200: {
-                  slidesPerView: 4,
-                  spaceBetween: 70,
-                },
-              }}
-              autoplay={{
-                delay: 2500,
-                disableOnInteraction: false,
-              }}
-              loop={true}
-              pagination={{
-                clickable: true,
-              }}
-              modules={[Autoplay, Pagination, Navigation]}
-              className="mySwiper"
-            >
-              {movies
-                .filter((m) => m.status.isNew == true)
-                .map((movie) => {
-                  return (
-                    <>
-                      <SwiperSlide>
-                        <Link to={`/${movie._id}`} className="new-movie_card">
-                          <img
-                            src={movie.image.portrait}
-                            className="new-movie_img"
-                            alt="Flash Movie"
-                          />
-                          <div className="new-movie_info">
-                            <h1 className="new-movie_name">
-                              {movie.title[language]}
-                            </h1>
-                            <p className="new-movie_parts">
-                              <WatchLater /> {movie.duration.hour}:
-                              {movie.duration.min}:00
-                            </p>
-                            <p className="new-movie_date">
-                              <CalendarMonthIcon />
-                              {movie.releaseDate.day}.{movie.releaseDate.month}.
-                              {movie.releaseDate.year}
-                            </p>
-                          </div>
-                        </Link>
-                      </SwiperSlide>
-                    </>
-                  );
-                })}
-              {movies.filter((m) => m.status.isNew).length == 0 && (
-                <h1 style={{ textAlign: "center" }}>There's no new Movies</h1>
-              )}
-            </Swiper>
-          </>
-        </div>
-      </section>
-    )
+              1200: {
+                slidesPerView: 4,
+                spaceBetween: 70,
+              },
+            }}
+            autoplay={{
+              delay: 2500,
+              disableOnInteraction: false,
+            }}
+            loop={true}
+            pagination={{
+              clickable: true,
+            }}
+            modules={[Autoplay, Pagination, Navigation]}
+            className="mySwiper"
+          >
+            {isLoading ? (
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  flexWrap: "wrap",
+                }}
+              >
+                <Grid item xs={12} sm={6} md={4} lg={3}>
+                  <NewMoviesSkeleton />
+                </Grid>
+                <Grid item xs={12} sm={6} md={4} lg={3}>
+                  <NewMoviesSkeleton />
+                </Grid>
+                <Grid item xs={12} sm={6} md={4} lg={3}>
+                  <NewMoviesSkeleton />
+                </Grid>
+                <Grid item xs={12} sm={6} md={4} lg={3}>
+                  <NewMoviesSkeleton />
+                </Grid>
+              </div>
+            ) : (
+              <>
+                {movies
+                  .filter((m) => m.status.isNew == true)
+                  .map((movie) => {
+                    return (
+                      <>
+                        <SwiperSlide>
+                          <Link to={`/${movie._id}`} className="new-movie_card">
+                            <img
+                              src={movie.image.portrait}
+                              className="new-movie_img"
+                              alt="Flash Movie"
+                            />
+                            <div className="new-movie_info">
+                              <h1 className="new-movie_name">
+                                {movie.title[language]}
+                              </h1>
+                              <p className="new-movie_parts">
+                                <WatchLater /> {movie.duration.hour}:
+                                {movie.duration.min}:00
+                              </p>
+                              <p className="new-movie_date">
+                                <CalendarMonthIcon />
+                                {movie.releaseDate.day}.
+                                {movie.releaseDate.month}.
+                                {movie.releaseDate.year}
+                              </p>
+                            </div>
+                          </Link>
+                        </SwiperSlide>
+                      </>
+                    );
+                  })}
+                {movies.filter((m) => m.status.isNew).length == 0 && (
+                  <h1 style={{ textAlign: "center" }}>There's no new Movies</h1>
+                )}
+              </>
+            )}
+          </Swiper>
+        </>
+      </div>
+    </section>
   );
 }
 

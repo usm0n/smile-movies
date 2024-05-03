@@ -115,6 +115,33 @@
     }
   }
 
+  &-menu-profile {
+
+    &_down {
+      top: 0;
+      position: absolute;
+      background: #fff;
+      color: #000;
+      transform: translateX(-70%);
+      padding: 10px;
+      border-radius: 5px;
+      margin-top: 80px;
+      display: none;
+      visibility: hidden;
+      display: none;
+
+      &.show {
+        display: block;
+        visibility: visible;
+      }
+    }
+
+    &-item {
+      display: flex;
+      gap: 10px;
+    }
+  }
+
   &-items {
     @include flex(center, unset);
     gap: 20px;
@@ -177,25 +204,27 @@
 
   &-search_bar {
     position: relative;
-    width: 410px;
-    height: 43px;
-    background-color: #fff;
     border-radius: 25px;
     display: flex;
     align-items: center;
-    border: 1px solid $navbar-background;
     color: $input-color;
+    width: 410px;
+    height: 43px;
     outline: none;
     font-size: 16px;
   }
 
   &-search_input {
+    border: 1px solid $navbar-background;
+    width: 410px;
+    height: 43px;
+    background-color: #fff;
     // position: absolute;
     border-radius: 25px;
     color: $input-color;
     outline: none;
     padding: 10px;
-    padding-left: 70px;
+    padding-left: 20px;
     padding-right: 50px;
     font-size: 16px;
     font-weight: 500;
@@ -224,29 +253,7 @@
     gap: 35px;
 
     @media screen and (max-width: 975px) {
-      display: none;
-    }
-  }
-
-  &-all {
-    position: absolute;
-    height: 100%;
-    width: 15%;
-    left: 20px;
-    top: 9px;
-    border-radius: 25px;
-
-    &_btn {
-      display: flex;
-      align-items: center;
-      border: none;
-      color: #000;
-      font-weight: 500;
-      font-size: 17px;
-      transition: all 0.2s ease-in-out;
-      &:hover {
-        color: $gold-color;
-      }
+      // display: none;
     }
   }
 
@@ -262,10 +269,6 @@
 
     &:hover {
       color: $gold-color;
-    }
-
-    @media screen and (max-width: 1045px) {
-      display: none;
     }
   }
 
@@ -291,33 +294,6 @@
 
   &-favourites_link svg {
     fill: #fff;
-
-    // @media screen and (max-width: 970px){
-    //   fill: #000;
-    // }
-  }
-
-  &-favourites_text {
-    // @media screen and (max-width: 1080px){
-    //   display: none;
-    // }
-
-    @media screen and (max-width: 970px) {
-      color: #fff;
-      display: block;
-      font-size: 20px;
-      font-weight: 500;
-      letter-spacing: 0.7px;
-    }
-  }
-
-  &-clock_text {
-    @media screen and (max-width: 970px) {
-      color: #fff;
-      font-size: 20px;
-      font-weight: 500;
-      letter-spacing: 0.7px;
-    }
   }
 
   &-dropdown {
@@ -390,38 +366,5 @@
     position: fixed;
     z-index: 999999999999;
     width: 200px;
-  }
-}
-
-.bottom-nav {
-  position: fixed;
-  bottom: 0;
-  z-index: 9999999999;
-  background-color: #000;
-  width: 100%;
-  padding: 15px;
-  display: none;
-
-  @media screen and (max-width: 975px) {
-    display: block;
-  }
-
-  &_links {
-    @include flex(center, space-between);
-  }
-
-  &_link {
-    @include flex(center, center);
-    gap: 10px;
-    color: $link-color;
-
-    @media screen and (max-width: 560px) {
-      flex-direction: column;
-      gap: 3px;
-    }
-  }
-
-  &_icon svg {
-    fill: #fff;
   }
 }

@@ -1,16 +1,19 @@
 export const linksData = [
     {
         id: 1,
-        title: "Home"
+        title: "Home",
+        path: "/"
     },
 
     {
         id: 2,
-        title: "About"
+        title: "About",
+        path: "/about"
     },
 
     {
         id: 3,
-        title: "Contact"
+        title: "Contact",
+        path: "/contact"
     }
 ]

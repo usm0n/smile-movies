@@ -1,18 +1,39 @@
 import React, { useState } from "react";
 import { linksData } from "../data/linksData";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import MenuIcon from "../assets/icons/MenuIcon";
 import Search from "../assets/icons/Search";
 import CloseIcon from "../assets/icons/CloseIcon";
 import ClockIcon from "../assets/icons/ClockIcon";
-import StarIcon from "../assets/icons/StarIcon";
 import UserIcon from "../assets/icons/UserIcon";
 import logo from "../assets/images/logo.png";
+import Tooltip from "@mui/material/Tooltip";
 import DropdownIcon from "../assets/icons/DropdownIcon";
+import {
+  Avatar,
+  Box,
+  Divider,
+  IconButton,
+  ListItemIcon,
+  Menu,
+  MenuItem,
+  Typography,
+} from "@mui/material";
+import PersonAdd from "@mui/icons-material/PersonAdd";
+import Settings from "@mui/icons-material/Settings";
+import Logout from "@mui/icons-material/Logout";
+import { useUser } from "../contexts/User";
+import WatchLater from "@mui/icons-material/WatchLater";
+import StarIcon from "@mui/icons-material/Star";
+import AccountCircleIcon from "@mui/icons-material/AccountCircle";
+import LoginIcon from "@mui/icons-material/Login";
 
 function Navbar() {
   const [active, setActive] = useState(false);
   const [down, setDown] = useState(false);
+  const [profileMenu, setProfileMenu] = useState(null);
+
+  const { isLoggedIn } = useUser();
 
   const menuClose = () => {
     setActive(false);
@@ -27,6 +48,8 @@ function Navbar() {
   const toggleDropDown = () => {
     setDown(!down);
   };
+
+  const navigate = useNavigate();
 
   return (
     <nav className="nav">
@@ -55,7 +78,7 @@ function Navbar() {
                   key={item.id}
                   className="nav-link"
                   onClick={menuClose}
-                  to={item.title}
+                  to={item.path}
                 >
                   {item.title}
                 </Link>
@@ -63,41 +86,6 @@ function Navbar() {
             </ul>
           </div>
           <div className="nav-search_bar">
-            <div className="nav-all">
-              <button className="nav-all_btn" onClick={toggleDropDown}>
-                <h1>All</h1>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="24"
-                  height="24"
-                  className="ipc-icon ipc-icon--arrow-drop-down ipc-btn__icon ipc-btn__icon--post navbar__flyout__text-button-post-icon"
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                  role="presentation"
-                >
-                  <path fill="none" d="M0 0h24v24H0V0z"></path>
-                  <path d="M8.71 11.71l2.59 2.59c.39.39 1.02.39 1.41 0l2.59-2.59c.63-.63.18-1.71-.71-1.71H9.41c-.89 0-1.33 1.08-.7 1.71z"></path>
-                </svg>
-              </button>
-            </div>
-            <div className={down ? "nav-dropdown active" : "nav-dropdown"}>
-              <div
-                className={
-                  active
-                    ? "nav-dropdown_content active"
-                    : "nav-dropdown_content" && down
-                    ? "nav-dropdown_content active"
-                    : "nav-dropdown_content"
-                }
-              >
-                <Link className="nav-dropdown_link">Kinolar</Link>
-                <Link className="nav-dropdown_link">Seriallar</Link>
-                <Link className="nav-dropdown_link">Tarjima kinolar</Link>
-                <Link className="nav-dropdown_link">Yangi kinolar</Link>
-                <Link className="nav-dropdown_link">Multfilmlar</Link>
-              </div>
-            </div>
-
             <input
               placeholder="Search"
               type="text"
@@ -110,25 +98,84 @@ function Navbar() {
           <div className="nav-pages">
             <div className="nav-page_links">
               <div className="nav-login_links">
-                <Link to="/login" className="nav-login_link">
-                  Sign in
-                </Link>
-                <Link to={"/login"} className="nav-user_icon">
-                  <UserIcon />
-                </Link>
+                <div
+                  style={{
+                    position: "relative",
+                  }}
+                >
+                  <Tooltip
+                    className="nav-menu-profile"
+                    title="Account settings"
+                  >
+                    <IconButton
+                      onClick={() => setProfileMenu(!profileMenu)}
+                      size="small"
+                      sx={{ ml: 2 }}
+                      aria-haspopup="true"
+                    >
+                      <Avatar sx={{ width: 32, height: 32 }}></Avatar>
+                    </IconButton>
+                  </Tooltip>
+                  <div
+                    className={
+                      profileMenu
+                        ? "nav-menu-profile_down show"
+                        : "nav-menu-profile_down"
+                    }
+                  >
+                    {isLoggedIn ? (
+                      <>
+                        <MenuItem>
+                          <ListItemIcon>
+                            <AccountCircleIcon fontSize="small" />
+                          </ListItemIcon>
+                          UserName
+                        </MenuItem>
+                        <Divider />
+                        <MenuItem to="/watch-later">
+                          <ListItemIcon>
+                            <WatchLater fontSize="small" />
+                          </ListItemIcon>
+                          Watch Later
+                        </MenuItem>
+                        <MenuItem to="/favourites">
+                          <ListItemIcon>
+                            <StarIcon fontSize="small" />
+                          </ListItemIcon>
+                          Favourites
+                        </MenuItem>
+                        <MenuItem>
+                          <ListItemIcon>
+                            <Settings fontSize="small" />
+                          </ListItemIcon>
+                          Settings
+                        </MenuItem>
+                        <MenuItem>
+                          <ListItemIcon>
+                            <Logout fontSize="small" />
+                          </ListItemIcon>
+                          Logout
+                        </MenuItem>
+                      </>
+                    ) : (
+                      <MenuItem
+                        onClick={() => {
+                          navigate("/login");
+                          setProfileMenu(false);
+                        }}
+                      >
+                        <ListItemIcon>
+                          <LoginIcon fontSize="small" />
+                        </ListItemIcon>
+                        Sign in
+                      </MenuItem>
+                    )}
+                  </div>
+                </div>
               </div>
               <div
                 className={active ? "nav-items_box active" : "nav-items_box"}
-              >
-                <Link to="/watch-later" className="nav-favourites_link">
-                  <ClockIcon />
-                  <span className="nav-clock_text">Watch Later</span>
-                </Link>
-                <Link to="/favourites" className="nav-favourites_link">
-                  <StarIcon />
-                  <span className="nav-favourites_text">Favourites</span>
-                </Link>
-              </div>
+              ></div>
             </div>
           </div>
           <div className="nav-items">

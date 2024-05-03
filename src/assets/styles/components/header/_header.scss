@@ -14,12 +14,12 @@
 
     &.portrait {
       display: none;
+      border-radius: 23px;
+      margin: 0 auto;
 
       @media screen and (max-width: 750px) {
         display: block;
         // width: 500px;
-        border-radius: 23px;
-        margin: 0 auto;
       }
     }
   }
@@ -27,13 +27,9 @@
   &-items {
     position: absolute;
     bottom: 100px;
-    left: 100px;
-    gap: 30px;
-    margin: 0 auto;
-    width: 50%;
+    height: 100%;
+    width: 100%;
     flex-direction: column;
-    @include flex(start, center);
-    padding-top: 50px;
 
     @media screen and (max-width: 650px) {
       @include flex(center, center);
@@ -45,13 +41,12 @@
   }
 
   &-links {
-    @include flex(start, start);
+    @include flex(center, center);
+    position: absolute;
+    height: 100vh;
     gap: 20px;
+    width: 100%;
     flex-wrap: wrap;
-
-    @media screen and (max-width: 650px) {
-      @include flex(center, center);
-    }
 
     @media screen and (max-width: 460px) {
       flex-direction: column;
@@ -64,11 +59,6 @@
     color: #ffffffd6;
     line-height: 28px;
     letter-spacing: 0.5px;
-
-    @media screen and (max-width: 670px) {
-      text-align: center;
-      margin: 0 auto;
-    }
   }
 
   &-link {
@@ -107,10 +97,13 @@
   &-info {
     @include flex(start, center);
     flex-direction: column;
+    position: absolute;
+    bottom: 0;
+    left: 100px;
     gap: 10px;
 
-    @media screen and (max-width: 975px) {
-      bottom: 100px;
+    @media screen and (max-width: 750px) {
+      display: none;
     }
   }
 
