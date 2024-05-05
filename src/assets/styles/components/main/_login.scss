@@ -76,6 +76,44 @@
       outline: 0;
       box-shadow: 0 0 0 3px rgba(131, 192, 253, 0.5);
     }
+
+    &.error {
+      border-color: #e30000;
+
+      &:focus {
+        appearance: none;
+        border-color: #e30000;
+        outline: 0;
+        box-shadow: 0 0 0 3px rgba(253, 131, 131, 0.5);
+      }
+    }
+
+    &.warning {
+      border-color: #ff9900;
+
+      &:focus {
+        appearance: none;
+        border-color: #ff9900;
+        outline: 0;
+        box-shadow: 0 0 0 3px rgba(255, 153, 0, 0.5);
+      }
+    }
+
+    &.success {
+      border-color: #00c853;
+
+      &:focus {
+        appearance: none;
+        border-color: #00c853;
+        outline: 0;
+        box-shadow: 0 0 0 3px rgba(0, 200, 83, 0.5);
+      }
+    }
+
+    &.disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
   }
 
   &-btn {
@@ -88,6 +126,11 @@
     border-radius: 4px;
     color: #000;
     text-align: center;
+
+    &.disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
   }
 
   &-register-link:hover {

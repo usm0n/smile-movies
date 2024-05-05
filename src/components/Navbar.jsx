@@ -17,6 +17,7 @@ import {
   ListItemIcon,
   Menu,
   MenuItem,
+  Skeleton,
   Typography,
 } from "@mui/material";
 import PersonAdd from "@mui/icons-material/PersonAdd";
@@ -36,11 +37,23 @@ function Navbar() {
   const [profileMenu, setProfileMenu] = useState(null);
   const [translateMenu, setTranslateMenu] = useState(false);
 
-  const { isLoggedIn } = useUser();
+  const { isLoggedIn, user, isRealUser, logoutUser } = useUser();
+
+  console.log(isRealUser);
+  console.log(user);
 
   const menuClose = () => {
     setActive(false);
     document.body.classList.remove("hidden");
+  };
+
+  const profileMenuOpen = () => {
+    setProfileMenu(!profileMenu);
+    setTranslateMenu(false);
+  };
+  const translateMenuOpen = () => {
+    setTranslateMenu(!translateMenu);
+    setProfileMenu(false);
   };
 
   const menuOpen = () => {
@@ -105,9 +118,9 @@ function Navbar() {
             </button>
           </div>
           <div className="nav-search_bar mobile">
-            <button className="nav-search_btn mobile">
+            <Link to={"/search"} className="nav-search_btn mobile">
               <Search />
-            </button>
+            </Link>
           </div>
           <div className="nav-pages">
             <div className="nav-page_links">
@@ -122,7 +135,7 @@ function Navbar() {
                     title="Account settings"
                   >
                     <IconButton
-                      onClick={() => setProfileMenu(!profileMenu)}
+                      onClick={() => profileMenuOpen()}
                       size="small"
                       sx={{ mr: 1 }}
                       aria-haspopup="true"
@@ -143,7 +156,16 @@ function Navbar() {
                           <ListItemIcon>
                             <AccountCircleIcon fontSize="small" />
                           </ListItemIcon>
-                          UserName
+                          {isRealUser.loading ? (
+                            <Skeleton
+                              sx={{
+                                width: "100%",
+                                height: "100%",
+                              }}
+                            />
+                          ) : (
+                            user.firstname
+                          )}
                         </MenuItem>
                         <Divider />
                         <MenuItem to="/watch-later">
@@ -164,7 +186,7 @@ function Navbar() {
                           </ListItemIcon>
                           Settings
                         </MenuItem>
-                        <MenuItem>
+                        <MenuItem onClick={() => logoutUser()}>
                           <ListItemIcon>
                             <Logout fontSize="small" />
                           </ListItemIcon>
@@ -194,7 +216,7 @@ function Navbar() {
           </div>
           <div className="nav-translate">
             <Link
-              onClick={() => setTranslateMenu(!translateMenu)}
+              onClick={() => translateMenuOpen()}
               className="nav-translate-btn"
             >
               <TranslateIcon />
@@ -214,6 +236,7 @@ function Navbar() {
               >
                 Uzbek
               </MenuItem>
+              <Divider />
               <MenuItem
                 className="nav-translate-down-link"
                 onClick={() => {
@@ -223,6 +246,7 @@ function Navbar() {
               >
                 English
               </MenuItem>
+              <Divider />
               <MenuItem
                 className="nav-translate-down-link"
                 onClick={() => {

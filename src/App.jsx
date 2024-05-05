@@ -3,9 +3,11 @@ import "./assets/styles/Main.scss";
 import { Route, Routes } from "react-router-dom";
 import { routes } from "./helpers/routes";
 import Navbar from "./components/Navbar";
+import { useUser } from "./contexts/User";
+import NotRealUser from "./components/NotRealUser";
 
 function App() {
-  return (
+  const wrapper = (
     <div className="wrapper">
       <Navbar />
       <Routes>
@@ -14,6 +16,16 @@ function App() {
         ))}
       </Routes>
     </div>
+  );
+  const { isRealUser, isLoggedIn } = useUser();
+  return isLoggedIn ? (
+    isRealUser.result || isRealUser.loading ? (
+      wrapper
+    ) : (
+      <NotRealUser />
+    )
+  ) : (
+    wrapper
   );
 }
 

@@ -1,21 +1,30 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import {
-  removeUserId,
-  setUserId,
-  userId,
-} from "../utilities/defaultFunctions";
+import { removeUserId, setUserId, userId } from "../utilities/defaultFunctions";
 import users from "../service/api/users.api.service";
 import auth from "../service/api/auth.api.service";
 import { useNavigate } from "react-router-dom";
 
 const UserContext = createContext({
   isLoggedIn: false,
+  isVerified: false,
   isRealUser: {
     loading: false,
     result: false,
   },
+  setStatusLogin: {
+    isEmpty: false,
+    buttonLoading: false,
+    isSuccess: false,
+    isError: false,
+  },
+  statusLogin: {
+    isEmpty: false,
+    buttonLoading: false,
+    isSuccess: false,
+    isError: false,
+  },
   user: {},
-  loginUser: () => {},
+  loginUser: (e, email, password) => {},
   registerUser: () => {},
   logoutUser: () => {},
 });
@@ -25,8 +34,9 @@ export const useUser = () => useContext(UserContext);
 const UserProvider = ({ children }) => {
   const navigate = useNavigate();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [isVerified, setIsVerified] = useState();
+  const [isVerified, setIsVerified] = useState(false);
   const [statusLogin, setStatusLogin] = useState({
+    isEmpty: false,
     buttonLoading: false,
     isSuccess: false,
     isError: false,
@@ -37,33 +47,52 @@ const UserProvider = ({ children }) => {
   });
   const [user, setUser] = useState({});
 
-  const loginUser = async (email, password) => {
-    setStatusLogin({
-      buttonLoading: true,
-      isSuccess: false,
-      isError: false,
-    });
-    await auth.loginUser({ email, password }).then((res) => {
-      if (res.data) {
-        if (res.data.message == "Login successful") {
-          setStatusLogin({
-            buttonLoading: false,
-            isSuccess: true,
-            isError: false,
-          });
-          setIsLoggedIn(true);
-          setUser(res.data.user);
-          setUserId(res.data.user._id);
-          navigate("/");
+  const loginUser = async (e, email, password) => {
+    e.preventDefault();
+    if (!email.trim() || !password.trim()) {
+      setStatusLogin({
+        isEmpty: true,
+        buttonLoading: false,
+        isSuccess: false,
+        isError: false,
+      });
+    } else {
+      setStatusLogin({
+        isEmpty: false,
+        buttonLoading: true,
+        isSuccess: false,
+        isError: false,
+      });
+      await auth.loginUser({ email, password }).then((res) => {
+        if (res.data) {
+          if (res.data.message == "Login successful") {
+            setStatusLogin({
+              buttonLoading: false,
+              isSuccess: true,
+              isError: false,
+            });
+            setIsLoggedIn(true);
+            setUser(res.data.user);
+            setUserId(res.data.user._id);
+            navigate("/");
+            window.location.reload();
+          } else {
+            setStatusLogin({
+              buttonLoading: false,
+              isSuccess: false,
+              isError: false,
+            });
+            setIsVerified(false);
+          }
         } else {
           setStatusLogin({
             buttonLoading: false,
-            isSuccess: true,
-            isError: false,
+            isSuccess: false,
+            isError: true,
           });
         }
-      }
-    });
+      });
+    }
   };
 
   const registerUser = async (email, password) => {
@@ -120,7 +149,10 @@ const UserProvider = ({ children }) => {
       value={{
         isLoggedIn,
         isRealUser,
+        isVerified,
         user,
+        statusLogin,
+        setStatusLogin,
         loginUser,
         registerUser,
         logoutUser,
