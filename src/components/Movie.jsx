@@ -23,13 +23,13 @@ import { useUser } from "../contexts/User";
 import { Alert, Snackbar } from "@mui/material";
 
 function Movie({ movie, language }) {
-  const [movieLanguage, setMovieLanguage] = useState(language);
-  const [postCommentComment, setPostCommentComment] = useState();
-  const [postCommentName, setPostCommentName] = useState();
-
   const { getMovieId, allComments, postComment, postCommentStatus } =
     useComments();
-  const { isLoggedIn, isRealUser } = useUser();
+  const { isLoggedIn, isRealUser, user } = useUser();
+  
+  const [movieLanguage, setMovieLanguage] = useState(language);
+  const [postCommentComment, setPostCommentComment] = useState();
+  const [postCommentName, setPostCommentName] = useState(user.firstname);
 
   const hanldeChangeLang = (e) => {
     setMovieLanguage(e.target.value);
@@ -227,7 +227,7 @@ function Movie({ movie, language }) {
                 </Alert>
               </Snackbar>
             )}
-            {!isLoggedIn && !isRealUser.result && (
+            {!isLoggedIn && (
               <input
                 onChange={(e) => setPostCommentName(e.target.value)}
                 value={postCommentName}

@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import bg from "../../assets/images/login-bg.png";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useUser } from "../../contexts/User";
 import { Alert, Snackbar, buttonBaseClasses } from "@mui/material";
 
@@ -8,6 +8,8 @@ function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const { loginUser, statusLogin, setStatusLogin, isLoggedIn } = useUser();
+
+  const navigate = useNavigate();
 
   const handleInput = (e) => {
     setStatusLogin({
@@ -22,6 +24,11 @@ function Login() {
       setPassword(e.target.value);
     }
   };
+  useEffect(() => {
+    if (isLoggedIn) {
+      navigate("/");
+    }
+  });
   return (
     <section className="login">
       <div className="login-bg">
@@ -116,10 +123,12 @@ function Login() {
               />
 
               <button
-                disabled={statusLogin.buttonLoading}
+                disabled={statusLogin.buttonLoading || statusLogin.isSuccess}
                 onClick={(e) => loginUser(e, email, password)}
                 className={
-                  statusLogin.buttonLoading ? "login-btn disabled" : "login-btn"
+                  statusLogin.buttonLoading || statusLogin.isSuccess
+                    ? "login-btn disabled"
+                    : "login-btn"
                 }
               >
                 {statusLogin.buttonLoading ? "Loading..." : "Sign in"}

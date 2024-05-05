@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import img from "../assets/images/header.jpeg";
 import VideoPlayerIcon from "../assets/icons/VideoPlayerIcon";
@@ -15,11 +15,27 @@ import "swiper/css/pagination";
 import "swiper/css/navigation";
 
 import { EffectFade, Autoplay, Pagination, Navigation } from "swiper/modules";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { dialog } from "../utilities/defaultFunctions";
 
 function Header({ isLoading, movies, language }) {
+  const [open, setOpen] = useState();
+  const navigate = useNavigate();
+  const handleClick = () => {
+    navigate("/login", { replace: true });
+  };
+  const handleClose = () => {
+    setOpen(false);
+  };
   return !isLoading ? (
     <section className="header">
+      {dialog(
+        "You are not logged in!",
+        "To add to Watch Later, you must sign in or sign up first.",
+        open,
+        handleClose,
+        handleClick
+      )}
       <>
         <Swiper
           slidesPerView={1}
@@ -76,14 +92,17 @@ function Header({ isLoading, movies, language }) {
                       </div>
                     </div>
                   </div>
-                <div className="header-links">
-                  <Link to={`/${movie._id}`} className="header-link">
-                    Watch Now <PlayCircleFilledOutlinedIcon />
-                  </Link>
-                  <Link className="header-link_later">
-                    Watch Later <WatchLater />{" "}
-                  </Link>
-                </div>
+                  <div className="header-links">
+                    <Link to={`/${movie._id}`} className="header-link">
+                      Watch Now <PlayCircleFilledOutlinedIcon />
+                    </Link>
+                    <Link
+                      onClick={() => setOpen(true)}
+                      className="header-link_later"
+                    >
+                      Watch Later <WatchLater />{" "}
+                    </Link>
+                  </div>
                 </div>
 
                 <div className="container"></div>

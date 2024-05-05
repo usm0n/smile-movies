@@ -7,7 +7,8 @@ const MovieContext = createContext({
     isError: false,
     movie: {},
   },
-  getMovieById: () => {},
+  
+  getMovieId: () => {},
 });
 
 export const useMovie = () => useContext(MovieContext);

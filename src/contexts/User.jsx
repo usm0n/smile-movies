@@ -71,11 +71,17 @@ const UserProvider = ({ children }) => {
               isSuccess: true,
               isError: false,
             });
-            setIsLoggedIn(true);
-            setUser(res.data.user);
-            setUserId(res.data.user._id);
-            navigate("/");
-            window.location.reload();
+            setTimeout(() => {
+              setIsLoggedIn(true);
+              setUser(res.data.user);
+              setUserId(res.data.user._id);
+              setIsRealUser({
+                loading: false,
+                result: true,
+              });
+              navigate("/");
+              window.location.reload();
+            }, 3000);
           } else {
             setStatusLogin({
               buttonLoading: false,
@@ -125,7 +131,6 @@ const UserProvider = ({ children }) => {
             navigate("/verify-email");
           } else {
             setIsVerified(true);
-            navigate("/");
           }
         } else {
           setIsRealUser({

@@ -1,3 +1,12 @@
+import {
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+} from "@mui/material";
+
 export const language = !localStorage.getItem("language")
   ? "uz"
   : localStorage.getItem("language").trim();
@@ -10,3 +19,25 @@ export const removeUserId = () => localStorage.removeItem("userId");
 export const setUserId = (userId) => {
   localStorage.setItem("userId", userId);
 };
+
+export const dialog = (title, text, open, close, agree) => (
+  <Dialog
+    open={open}
+    onClose={close}
+    aria-labelledby="alert-dialog-title"
+    aria-describedby="alert-dialog-description"
+  >
+    <DialogTitle id="alert-dialog-title">{title}</DialogTitle>
+    <DialogContent>
+      <DialogContentText id="alert-dialog-description">
+        {text}
+      </DialogContentText>
+    </DialogContent>
+    <DialogActions>
+      <Button onClick={close}>Cancel</Button>
+      <Button onClick={agree} autoFocus>
+        Ok
+      </Button>
+    </DialogActions>
+  </Dialog>
+);
