@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useState } from "react";
 import movies from "../service/api/movies.api.service";
 import shuffle from "../utilities/shuffle";
 
-const AllMoviesContext = createContext({
+const MoviesContext = createContext({
   allMovies: {
     isLoading: false,
     isError: false,
@@ -10,11 +10,11 @@ const AllMoviesContext = createContext({
   },
   deleteAllMovies: () => {},
 });
-AllMoviesContext.displayName = "AllMoviesContext";
+MoviesContext.displayName = "MoviesContext";
 
-export const useAllMovies = () => useContext(AllMoviesContext);
+export const useAllMovies = () => useContext(MoviesContext);
 
-const AllMoviesProvider = ({ children }) => {
+const MoviesProvider = ({ children }) => {
   const [allMovies, setAllMovies] = useState({
     isLoading: false,
     isError: false,
@@ -56,10 +56,10 @@ const AllMoviesProvider = ({ children }) => {
     getAllMovies();
   }, []);
   return (
-    <AllMoviesContext.Provider value={{ allMovies, deleteAllMovies }}>
+    <MoviesContext.Provider value={{ allMovies, deleteAllMovies }}>
       {children}
-    </AllMoviesContext.Provider>
+    </MoviesContext.Provider>
   );
 };
 
-export default AllMoviesProvider;
+export default MoviesProvider;

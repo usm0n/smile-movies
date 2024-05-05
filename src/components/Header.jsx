@@ -31,7 +31,7 @@ function Header({ isLoading, movies, language }) {
     <section className="header">
       {dialog(
         "You are not logged in!",
-        "To add to Watch Later, you must sign in or sign up first.",
+        "To add to Watch Later, you must sign in first.",
         open,
         handleClose,
         handleClick

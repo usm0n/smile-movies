@@ -5,7 +5,7 @@ import Movies from "../components/Movies";
 import Series from "../components/Series";
 import NewMovies from "../components/NewMovies";
 import Footer from "../components/Footer";
-import { useAllMovies } from "../contexts/AllMovies";
+import { useAllMovies } from "../contexts/Movies";
 import Cartoons from "../components/Cartoons";
 import { language } from "../utilities/defaultFunctions";
 

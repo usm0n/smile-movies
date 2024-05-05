@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { useAllMovies } from "../contexts/AllMovies";
+import { useAllMovies } from "../contexts/Movies";
 import MovieSkeletonCard from "./MovieCardSkeleton";
 import MovieCard from "./MovieCard";
 import { Grid } from "@mui/material";
