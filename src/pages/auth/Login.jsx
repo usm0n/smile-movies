@@ -3,6 +3,7 @@ import bg from "../../assets/images/login-bg.png";
 import { Link, useNavigate } from "react-router-dom";
 import { useUser } from "../../contexts/User";
 import { Alert, Snackbar, buttonBaseClasses } from "@mui/material";
+import { snackbar } from "../../utilities/defaultFunctions";
 
 function Login() {
   const [email, setEmail] = useState("");
@@ -35,51 +36,9 @@ function Login() {
         <img src={bg} className="login-img" alt="" />
       </div>
       <div className="container">
-        {statusLogin.isEmpty && (
-          <Snackbar
-            anchorOrigin={{ vertical: "top", horizontal: "center" }}
-            open={open}
-            autoHideDuration={6000}
-          >
-            <Alert
-              severity={"warning"}
-              variant="filled"
-              sx={{ marginTop: "60px" }}
-            >
-              Please fill inputs
-            </Alert>
-          </Snackbar>
-        )}
-        {statusLogin.isSuccess && (
-          <Snackbar
-            anchorOrigin={{ vertical: "top", horizontal: "center" }}
-            open={open}
-            autoHideDuration={6000}
-          >
-            <Alert
-              severity={"success"}
-              variant="filled"
-              sx={{ marginTop: "60px" }}
-            >
-              Login success
-            </Alert>
-          </Snackbar>
-        )}
-        {statusLogin.isError && (
-          <Snackbar
-            anchorOrigin={{ vertical: "top", horizontal: "center" }}
-            open={open}
-            autoHideDuration={6000}
-          >
-            <Alert
-              severity={"error"}
-              variant="filled"
-              sx={{ marginTop: "60px" }}
-            >
-              Error at Login (User not found)
-            </Alert>
-          </Snackbar>
-        )}
+        {statusLogin.isEmpty && snackbar("warning", "Please fill inputs")}
+        {statusLogin.isSuccess && snackbar("success", "Login success")}
+        {statusLogin.isError && snackbar("error", "User not found")}
         <div className="login-content">
           <div className="login-card">
             <h1 className="login-title">Login</h1>

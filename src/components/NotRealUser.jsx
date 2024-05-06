@@ -6,11 +6,13 @@ import BuildIcon from "@mui/icons-material/Build";
 import logo from "../assets/images/logo.png";
 
 function NotRealUser() {
-  const { logoutUser } = useUser();
+  const { logoutUser, statusLogout } = useUser();
   return (
     <div className="notrealuser">
       <img className="notrealuser-img" src={logo} alt="" />
-      <h1 className="notrealuser-title">You are not a <span className="notrealuser-title-span">Real User</span></h1>
+      <h1 className="notrealuser-title">
+        You are not a <span className="notrealuser-title-span">Real User</span>
+      </h1>
       <p className="notrealuser-desc">
         You are not a real user, so you can't watch movies and series until log
         out or log in again
@@ -26,7 +28,7 @@ function NotRealUser() {
         </Link>
         <Link className="notrealuser-btn" onClick={() => logoutUser()}>
           <BuildIcon />
-          Fix
+          {statusLogout.loading ? "Fixing..." : "Fix"}
         </Link>
       </div>
     </div>

@@ -1,0 +1,37 @@
+.watch-later {
+  padding-top: 90px;
+  width: 80%;
+  margin: 0 auto;
+
+  &-info {
+    &_title {
+      font-size: 45px;
+      font-weight: 300;
+      letter-spacing: 2px;
+      color: #ffffffe2;
+      margin-bottom: 20px;
+    }
+
+    &_fullname {
+      font-size: 18px;
+      font-weight: 300;
+      letter-spacing: 1px;
+      color: #ffffff82;
+      margin-bottom: 20px;
+    }
+
+    &_count-of-videos {
+      font-size: 18px;
+      font-weight: 300;
+      letter-spacing: 1px;
+      color: #ffffff82;
+      margin-bottom: 20px;
+    }
+  }
+
+  &-movies{
+    display: flex;
+    flex-direction: column;
+    gap: 50px;
+  }
+}

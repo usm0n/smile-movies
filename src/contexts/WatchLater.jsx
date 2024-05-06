@@ -121,6 +121,7 @@ const WatchLaterProvider = ({ children }) => {
         });
       });
   };
+  console.log(watchlater);
 
   useEffect(() => {
     setWatchLater({
@@ -139,11 +140,11 @@ const WatchLaterProvider = ({ children }) => {
             isError: false,
             result: [],
           });
-        } else if (result.response.data) {
+        } else if (result.response) {
           setWatchLater({
             loading: false,
             isEmpty: false,
-            isError: false,
+            isError: true,
             result: [],
           });
         } else {
@@ -155,7 +156,7 @@ const WatchLaterProvider = ({ children }) => {
           });
         }
       })
-      .catch(() => {
+      .catch((res) => {
         setWatchLater({
           loading: false,
           isEmpty: false,

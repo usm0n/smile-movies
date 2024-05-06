@@ -168,7 +168,7 @@ function Navbar() {
                           )}
                         </MenuItem>
                         <Divider />
-                        <MenuItem to="/watch-later">
+                        <MenuItem onClick={() => navigate("/watch-later")}>
                           <ListItemIcon>
                             <WatchLater fontSize="small" />
                           </ListItemIcon>

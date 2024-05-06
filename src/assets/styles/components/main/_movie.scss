@@ -1,4 +1,5 @@
 .movie {
+  overflow-x: hidden;
   &-container {
     width: 80%;
     margin: 0 auto;
@@ -41,6 +42,7 @@
     border-radius: 12px;
     object-fit: cover;
     background: center;
+    border: 0.1px solid #000;
 
     &-fullscreen {
       width: 100%;
