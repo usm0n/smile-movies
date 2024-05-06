@@ -72,6 +72,7 @@
     font-size: 20px;
     font-weight: 300;
     letter-spacing: 1px;
+    transition: all 0.2s ease-in-out;
 
     &_later {
       background-color: transparent;
@@ -80,17 +81,26 @@
       color: #ffffff;
       align-items: center;
       @include flex(center, center);
-      border: 0.5px solid $gold-color;
+      border: 1px solid $gold-color;
       gap: 7px;
       font-size: 20px;
       font-weight: 300;
       letter-spacing: 1px;
       transition: all 0.2s ease-in-out;
 
+      &.disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
       &:hover {
         background-color: $gold-color;
         color: #000;
       }
+    }
+
+    &:hover {
+      opacity: 0.8;
     }
   }
 
@@ -117,8 +127,8 @@
     color: #fff;
 
     @media screen and (max-width: 650px) {
-        text-align: center;
-        margin: 0 auto;
+      text-align: center;
+      margin: 0 auto;
     }
   }
 
@@ -127,8 +137,8 @@
     gap: 20px;
 
     @media screen and (max-width: 650px) {
-        text-align: center;
-        margin: 0 auto;
+      text-align: center;
+      margin: 0 auto;
     }
   }
 

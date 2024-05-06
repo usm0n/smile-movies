@@ -14,20 +14,21 @@ const WatchLaterContext = createContext({
     loading: false,
     isSuccess: false,
     isError: false,
+    isAlreadyIn: false,
   },
   statusRemoveWatchLater: {
     loading: false,
     isSuccess: false,
     isError: false,
+    isNotFound: false,
   },
   addWatchLater: (movieId) => {},
-  removeWatchLater: () => {},
+  removeWatchLater: (movieId) => {},
 });
 
-export const useWatchLater = useContext(WatchLaterContext);
+export const useWatchLater = () => useContext(WatchLaterContext);
 
 const WatchLaterProvider = ({ children }) => {
-  const navigate = useNavigate();
   const [watchlater, setWatchLater] = useState({
     loading: false,
     isEmpty: false,
@@ -38,11 +39,13 @@ const WatchLaterProvider = ({ children }) => {
     loading: false,
     isSuccess: false,
     isError: false,
+    isAlreadyIn: false,
   });
   const [statusRemoveWatchLater, setStatusRemoveWatchLater] = useState({
     loading: false,
     isSuccess: false,
     isError: false,
+    isNotFound: false,
   });
 
   const addWatchLater = (movieId) => {
@@ -50,21 +53,34 @@ const WatchLaterProvider = ({ children }) => {
       loading: true,
       isSuccess: false,
       isError: false,
+      isAlreadyIn: false,
     });
     users
       .addMovieToWatchLater(userId, movieId)
-      .then(() => {
-        setStatusAddWatchLater({
-          loading: false,
-          isSuccess: true,
-          isError: false,
-        });
+      .then((res) => {
+        if (!res.data) {
+          setStatusAddWatchLater({
+            loading: false,
+            isSuccess: false,
+            isError: false,
+            isAlreadyIn: true,
+          });
+        } else {
+          setStatusAddWatchLater({
+            loading: false,
+            isSuccess: true,
+            isError: false,
+            isAlreadyIn: false,
+          });
+        }
       })
-      .catch(() => {
+      .catch((err) => {
+        console.log(err);
         setStatusAddWatchLater({
           loading: false,
           isSuccess: false,
           isError: true,
+          isAlreadyIn: false,
         });
       });
   };
@@ -74,21 +90,34 @@ const WatchLaterProvider = ({ children }) => {
       loading: true,
       isSuccess: false,
       isError: false,
+      isNotFound: false,
     });
     users
       .removeMovieFromWatchLater(userId, movieId)
-      .then(() => {
-        setStatusRemoveWatchLater({
-          loading: false,
-          isSuccess: true,
-          isError: false,
-        });
+      .then((res) => {
+        console.log(res);
+        if (res.response) {
+          setStatusRemoveWatchLater({
+            loading: false,
+            isSuccess: false,
+            isError: false,
+            isNotFound: true,
+          });
+        } else {
+          setStatusRemoveWatchLater({
+            loading: false,
+            isSuccess: true,
+            isError: false,
+            isNotFound: false,
+          });
+        }
       })
       .catch(() => {
         setStatusRemoveWatchLater({
           loading: false,
           isSuccess: false,
           isError: true,
+          isNotFound: false,
         });
       });
   };
@@ -149,3 +178,5 @@ const WatchLaterProvider = ({ children }) => {
     </WatchLaterContext.Provider>
   );
 };
+
+export default WatchLaterProvider;

@@ -23,6 +23,9 @@ const UserContext = createContext({
     isSuccess: false,
     isError: false,
   },
+  statusLogout: {
+    loading: false,
+  },
   user: {},
   loginUser: (e, email, password) => {},
   registerUser: () => {},
@@ -40,6 +43,9 @@ const UserProvider = ({ children }) => {
     buttonLoading: false,
     isSuccess: false,
     isError: false,
+  });
+  const [statusLogout, setStatusLogout] = useState({
+    loading: false,
   });
   const [isRealUser, setIsRealUser] = useState({
     loading: false,
@@ -106,10 +112,15 @@ const UserProvider = ({ children }) => {
   };
 
   const logoutUser = async () => {
-    setIsLoggedIn(false);
-    setUser({});
-    removeUserId();
-    window.location.reload();
+    setStatusLogout({
+      loading: true,
+    });
+    setTimeout(() => {
+      setIsLoggedIn(false);
+      setUser({});
+      removeUserId();
+      window.location.reload();
+    }, 2000);
   };
 
   useEffect(() => {
@@ -161,6 +172,7 @@ const UserProvider = ({ children }) => {
         loginUser,
         registerUser,
         logoutUser,
+        statusLogout,
       }}
     >
       {children}

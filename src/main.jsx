@@ -6,6 +6,7 @@ import MovieProvider from "./contexts/Movie.jsx";
 import CommentsProvider from "./contexts/Comments.jsx";
 import UserProvider from "./contexts/User.jsx";
 import MoviesProvider from "./contexts/Movies.jsx";
+import WatchLaterProvider from "./contexts/WatchLater.jsx";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <>
@@ -14,7 +15,9 @@ ReactDOM.createRoot(document.getElementById("root")).render(
         <MovieProvider>
           <CommentsProvider>
             <UserProvider>
-              <App />
+              <WatchLaterProvider>
+                <App />
+              </WatchLaterProvider>
             </UserProvider>
           </CommentsProvider>
         </MovieProvider>

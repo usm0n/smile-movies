@@ -37,7 +37,7 @@ function Navbar() {
   const [profileMenu, setProfileMenu] = useState(null);
   const [translateMenu, setTranslateMenu] = useState(false);
 
-  const { isLoggedIn, user, isRealUser, logoutUser } = useUser();
+  const { isLoggedIn, user, isRealUser, logoutUser, statusLogout } = useUser();
 
   console.log(isRealUser);
   console.log(user);
@@ -190,7 +190,7 @@ function Navbar() {
                           <ListItemIcon>
                             <Logout fontSize="small" />
                           </ListItemIcon>
-                          Logout
+                          {statusLogout.loading ? "Logging out..." : "Log out"}
                         </MenuItem>
                       </>
                     ) : (

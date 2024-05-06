@@ -4,7 +4,7 @@ import Clock from "../assets/icons/ClockIcon";
 import Like from "../assets/icons/Like";
 import DisLike from "../assets/icons/DisLike";
 import Favourite from "../assets/icons/SolidStarIcon";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import VideoPlayerIcon from "../assets/icons/VideoPlayerIcon";
 import User from "../assets/images/user.png";
 import PublicIcon from "@mui/icons-material/Public";
@@ -21,15 +21,45 @@ import { useComments } from "../contexts/Comments";
 import Comment from "./Comment";
 import { useUser } from "../contexts/User";
 import { Alert, Snackbar } from "@mui/material";
+import { useWatchLater } from "../contexts/WatchLater";
+import { dialog, snackbar } from "../utilities/defaultFunctions";
 
 function Movie({ movie, language }) {
   const { getMovieId, allComments, postComment, postCommentStatus } =
     useComments();
-  const { isLoggedIn, isRealUser, user } = useUser();
-  
+  const {
+    addWatchLater,
+    removeWatchLater,
+    statusAddWatchLater,
+    statusRemoveWatchLater,
+  } = useWatchLater();
+  const { isLoggedIn, user } = useUser();
+  const navigate = useNavigate();
+
   const [movieLanguage, setMovieLanguage] = useState(language);
   const [postCommentComment, setPostCommentComment] = useState();
   const [postCommentName, setPostCommentName] = useState(user.firstname);
+  const [watchlaterDialog, setWatchlaterDialog] = useState();
+
+  const handleAddToWatchLater = (movieId) => {
+    if (!isLoggedIn) {
+      setWatchlaterDialog(true);
+    } else {
+      addWatchLater(movieId);
+    }
+  };
+
+  const handleRemoveFromWatchLater = (movieId) => {
+    removeWatchLater(movieId);
+  };
+
+  const handleOpenWatchLaterDialog = () => {
+    navigate("/login");
+  };
+
+  const handleCloseWatchLaterDialog = () => {
+    setWatchlaterDialog(false);
+  };
 
   const hanldeChangeLang = (e) => {
     setMovieLanguage(e.target.value);
@@ -53,6 +83,25 @@ function Movie({ movie, language }) {
 
   return (
     <section key={movie._id} className="movie">
+      {dialog(
+        "Please sign In!",
+        "To add to Watch Later you must log in first.",
+        watchlaterDialog,
+        handleCloseWatchLaterDialog,
+        handleOpenWatchLaterDialog
+      )}
+      {statusAddWatchLater.isSuccess &&
+        snackbar("success", "Added to Watch Later")}
+      {statusAddWatchLater.isError &&
+        snackbar("error", "Error at adding to Watch Later")}
+      {statusAddWatchLater.isAlreadyIn &&
+        snackbar("warning", "Movie already added to Watch Later")}
+      {statusRemoveWatchLater.isSuccess &&
+        snackbar("success", "Removed from Watch Later")}
+      {statusRemoveWatchLater.isError &&
+        snackbar("error", "Error at removing from Watch Later")}
+      {statusRemoveWatchLater.isNotFound &&
+        snackbar("warning", "Movie not found in Watch Later")}
       <img
         src={movie.image.fullscreen}
         alt=""
@@ -120,9 +169,49 @@ function Movie({ movie, language }) {
               <button className="movie-btn">
                 <StarBorderIcon /> Add to Favourite
               </button>
-              <button className="movie-btn">
-                <AccessTimeIcon /> Add to Watch Later
-              </button>
+              {user.watchlater && user.watchlater.includes(movie._id) ? (
+                <button
+                  onClick={() => handleRemoveFromWatchLater(movie._id)}
+                  disabled={
+                    statusRemoveWatchLater.loading ||
+                    statusRemoveWatchLater.isSuccess
+                  }
+                  className={
+                    statusRemoveWatchLater.loading || statusRemoveWatchLater.isSuccess
+                      ? "movie-btn disabled"
+                      : "movie-btn"
+                  }
+                >
+                  {statusRemoveWatchLater.loading ? (
+                    "Loading..."
+                  ) : (
+                    <>
+                      <CheckIcon /> In Watch Later{" "}
+                    </>
+                  )}
+                </button>
+              ) : (
+                <button
+                  onClick={() => handleAddToWatchLater(movie._id)}
+                  disabled={
+                    statusAddWatchLater.loading ||
+                    statusAddWatchLater.isSuccess
+                  }
+                  className={
+                    statusAddWatchLater.loading || statusAddWatchLater.isSuccess
+                      ? "movie-btn disabled"
+                      : "movie-btn"
+                  }
+                >
+                  {statusAddWatchLater.loading ? (
+                    "Loading..."
+                  ) : (
+                    <>
+                      <AccessTimeIcon /> Add to Watch Later{" "}
+                    </>
+                  )}
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -210,22 +299,10 @@ function Movie({ movie, language }) {
           <h1 className="movie-comments-title">Comments:</h1>
           <div className="movie-comments-posting">
             {postCommentStatus.isSuccess && (
-              <Snackbar open={open} autoHideDuration={6000}>
-                <Alert
-                  severity="success"
-                  variant="filled"
-                  sx={{ width: "100%" }}
-                >
-                  Comment posted successfully
-                </Alert>
-              </Snackbar>
+              snackbar("success", "Your comment posted successfully")
             )}
             {postCommentStatus.isError && (
-              <Snackbar open={open} autoHideDuration={6000}>
-                <Alert severity="error" variant="filled" sx={{ width: "100%" }}>
-                  Error at posting comment
-                </Alert>
-              </Snackbar>
+              snackbar("error", "An error has occurred")
             )}
             {!isLoggedIn && (
               <input

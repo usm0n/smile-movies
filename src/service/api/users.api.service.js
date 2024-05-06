@@ -80,7 +80,7 @@ const users = {
       return error;
     }
   },
-  
+
   deleteVerifyTokenByUserId: async (id) => {
     try {
       const response = await api.delete("/users/deletetoken/" + id);
@@ -103,6 +103,17 @@ const users = {
   getFavourites: async (userId) => {
     try {
       const response = await api.get("/users/" + userId + "/favourites");
+      return response;
+    } catch (error) {
+      console.log(error);
+      return error;
+    }
+  },
+  isInFavourites: async (userId, movieId) => {
+    try {
+      const response = await api.get(
+        "/users/" + userId + "/isInFavourites/" + movieId
+      );
       return response;
     } catch (error) {
       console.log(error);
@@ -133,6 +144,17 @@ const users = {
   getWatchLater: async (userId) => {
     try {
       const response = await api.get("/users/" + userId + "/watchlater");
+      return response;
+    } catch (error) {
+      console.log(error);
+      return error;
+    }
+  },
+  isInWatchLater: async (userId, movieId) => {
+    try {
+      const response = await api.get(
+        "/users/" + userId + "/isInWatchLater/" + movieId
+      );
       return response;
     } catch (error) {
       console.log(error);

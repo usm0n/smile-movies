@@ -1,10 +1,12 @@
 import {
+  Alert,
   Button,
   Dialog,
   DialogActions,
   DialogContent,
   DialogContentText,
   DialogTitle,
+  Snackbar,
 } from "@mui/material";
 
 export const language = !localStorage.getItem("language")
@@ -40,4 +42,15 @@ export const dialog = (title, text, open, close, agree) => (
       </Button>
     </DialogActions>
   </Dialog>
+);
+
+export const snackbar = (severity, text) => (
+  <Snackbar
+    anchorOrigin={{ vertical: "top", horizontal: "center" }}
+    open={open}
+  >
+    <Alert severity={severity} variant="filled" sx={{ marginTop: "70px" }}>
+      {text}
+    </Alert>
+  </Snackbar>
 );
