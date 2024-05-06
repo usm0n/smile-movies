@@ -4,6 +4,7 @@ import Favourites from "../pages/utils/Favourites";
 import Login from "../pages/auth/Login";
 import Register from "../pages/auth/Register";
 import WatchLater from "../pages/utils/WatchLater";
+import Admin from '../pages/admin/Admin'
 export const routes = [
   {
     path: "/",
@@ -33,6 +34,11 @@ export const routes = [
   {
     path: "/register",
     element: <Register/>
+  },
+
+  {
+    path: "/admin",
+    element: <Admin/>
   }
 
 ];

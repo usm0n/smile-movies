@@ -1,0 +1,91 @@
+.admin{
+
+    &-input{
+        border: 1px solid $gold-color;
+        width: 350px;
+        height: 550px;
+        padding: 20px;
+        border-radius: 12px;
+    }
+
+    &-name_input{
+        width: 100%;
+        background-color: transparent;
+        padding: 7px;
+        color: #fff;
+        border: none;
+        border: 1px solid #fff;
+        outline: none;
+        @include adaptive-value("font-size", 37, 30);
+        font-weight: 500;
+        letter-spacing: 3px;
+
+        &.active{
+            border: none;
+        }
+    }
+
+    &-check_input{
+        width: 90px;
+        background-color: transparent;
+        border: 1px solid #fff;
+        font-weight: 500;
+        outline: none;
+        color: #fff;
+        font-size: 16px;
+        letter-spacing: 1px;
+        line-height: 30px;
+    
+        &.active{
+            border: none;
+        }
+    }
+
+    &-grade_input{
+        width: 30px;
+        background-color: transparent;
+        border: 1px solid #fff;
+        font-weight: 500;
+        outline: none;
+        color: #fff;
+        font-size: 16px;
+        letter-spacing: 1px;
+        line-height: 30px;
+
+        &.active{
+            border: none;
+        }
+    }
+
+    &-country_input{
+        width: 80px;
+        background-color: transparent;
+        border: 1px solid #fff;
+        font-weight: 500;
+        outline: none;
+        color: #fff;
+        font-size: 16px;
+        letter-spacing: 1px;
+        line-height: 30px;
+
+        &.active{
+            border: none;
+        }
+    }
+
+    &-check{
+        width: 100px;
+        background-color: transparent;
+        border: 1px solid #fff;
+        font-weight: 500;
+        outline: none;
+        color: #fff;
+        font-size: 16px;
+        letter-spacing: 1px;
+        line-height: 30px;
+
+        &.active{
+            border: none;
+        }
+    }
+}
