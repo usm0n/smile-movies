@@ -1,13 +1,24 @@
 .footer{
     margin-top: 130px;
+    padding-bottom: 50px;
+    background-color: #1B1B1B;
 
     &-image{
-        @include adaptive-value('width', 300, 250);
+        @include adaptive-value('width', 130, 76);
+
+        @media screen and (max-width: 420px){
+            display: none;
+        }
     }
 
     &-content{
         @include flex(center, space-between);
         gap: 15px;
+
+        @media screen and (max-width: 420px){
+            justify-content: center;
+            gap: unset;
+        }
     }
 
     &-links{
@@ -39,6 +50,10 @@
                     fill: $gold-color;
                 }
             }
+        }
+
+        @media screen and (max-width: 550px){
+            display: none;
         }
     }
 

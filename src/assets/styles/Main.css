@@ -660,11 +660,11 @@ input::-webkit-inner-spin-button {
   margin-top: 130px;
 }
 .footer-image {
-  width: 300px;
+  width: 130px;
 }
 @media (max-width: 1260px) {
   .footer-image {
-    width: calc(250px + 50 * (100vw - 320px) / 940);
+    width: calc(90px + 40 * (100vw - 320px) / 940);
   }
 }
 .footer-content {
@@ -1484,10 +1484,139 @@ input::-webkit-inner-spin-button {
 }
 
 .notrealuser {
-  width: 100%;
-  height: 100%;
+  width: 80%;
+  height: 100vh;
+  display: flex;
+  margin: 0 auto;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 30px;
+}
+.notrealuser-img {
+  width: 200px;
+}
+.notrealuser-title {
+  text-align: center;
+  font-size: 40px;
+  font-weight: 300;
+  letter-spacing: 2px;
+}
+.notrealuser-desc {
+  text-align: center;
+  font-size: 20px;
+  font-weight: 100;
+  color: rgba(255, 255, 255, 0.6862745098);
+  line-height: 28px;
+  letter-spacing: 1px;
+}
+.notrealuser-btns {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.notrealuser-btn {
   display: flex;
   justify-content: center;
   align-items: center;
-  color: #000;
+  gap: 10px;
+  width: 200px;
+  height: 50px;
+  border-radius: 50px;
+  border: 1px solid rgba(255, 255, 255, 0.6862745098);
+  font-size: 20px;
+  font-weight: 300;
+  letter-spacing: 1px;
+  color: rgba(255, 255, 255, 0.6862745098);
+  transition: all 0.2s ease-in-out;
+  cursor: pointer;
+}
+.notrealuser-btn:hover {
+  background-color: rgba(255, 255, 255, 0.6862745098);
+  border: none;
+  color: #000000;
+}
+
+.admin-input {
+  border: 1px solid #ffd700;
+  width: 350px;
+  height: 550px;
+  padding: 20px;
+  border-radius: 12px;
+}
+.admin-name_input {
+  width: 100%;
+  background-color: transparent;
+  padding: 7px;
+  color: #fff;
+  border: none;
+  border: 1px solid #fff;
+  outline: none;
+  font-size: 37px;
+  font-weight: 500;
+  letter-spacing: 3px;
+}
+@media (max-width: 1260px) {
+  .admin-name_input {
+    font-size: calc(30px + 7 * (100vw - 320px) / 940);
+  }
+}
+.admin-name_input.active {
+  border: none;
+}
+.admin-check_input {
+  width: 90px;
+  background-color: transparent;
+  border: 1px solid #fff;
+  font-weight: 500;
+  outline: none;
+  color: #fff;
+  font-size: 16px;
+  letter-spacing: 1px;
+  line-height: 30px;
+}
+.admin-check_input.active {
+  border: none;
+}
+.admin-grade_input {
+  width: 30px;
+  background-color: transparent;
+  border: 1px solid #fff;
+  font-weight: 500;
+  outline: none;
+  color: #fff;
+  font-size: 16px;
+  letter-spacing: 1px;
+  line-height: 30px;
+}
+.admin-grade_input.active {
+  border: none;
+}
+.admin-country_input {
+  width: 80px;
+  background-color: transparent;
+  border: 1px solid #fff;
+  font-weight: 500;
+  outline: none;
+  color: #fff;
+  font-size: 16px;
+  letter-spacing: 1px;
+  line-height: 30px;
+}
+.admin-country_input.active {
+  border: none;
+}
+.admin-check {
+  width: 100px;
+  background-color: transparent;
+  border: 1px solid #fff;
+  font-weight: 500;
+  outline: none;
+  color: #fff;
+  font-size: 16px;
+  letter-spacing: 1px;
+  line-height: 30px;
+}
+.admin-check.active {
+  border: none;
 }/*# sourceMappingURL=Main.css.map */

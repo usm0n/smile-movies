@@ -26,7 +26,7 @@ function HomeLayout() {
       <Movies allMovies={allMovies} language={language} />
       <Cartoons allMovies={allMovies} language={language} />
       <Series allMovies={allMovies} language={language} />
-      {/* <Footer /> */}
+      <Footer />
     </div>
   );
 }
