@@ -37,18 +37,6 @@ function Search() {
                 <Grid key={i} item xs={12} sm={6} md={4} lg={3}>
                   <MovieCard movie={m} language={language} />
                 </Grid>
-                <Grid key={i} item xs={12} sm={6} md={4} lg={3}>
-                  <MovieCard movie={m} language={language} />
-                </Grid>
-                <Grid key={i} item xs={12} sm={6} md={4} lg={3}>
-                  <MovieCard movie={m} language={language} />
-                </Grid>
-                <Grid key={i} item xs={12} sm={6} md={4} lg={3}>
-                  <MovieCard movie={m} language={language} />
-                </Grid>
-                <Grid key={i} item xs={12} sm={6} md={4} lg={3}>
-                  <MovieCard movie={m} language={language} />
-                </Grid>
               </>
             );
           })}
