@@ -36,11 +36,10 @@ function Navbar() {
   const [down, setDown] = useState(false);
   const [profileMenu, setProfileMenu] = useState(null);
   const [translateMenu, setTranslateMenu] = useState(false);
+  const [searchMenu, setSearchMenu] = useState(false);
+  const [searchValue, setSearchValue] = useState();
 
   const { isLoggedIn, user, isRealUser, logoutUser, statusLogout } = useUser();
-
-  console.log(isRealUser);
-  console.log(user);
 
   const menuClose = () => {
     setActive(false);
@@ -61,6 +60,18 @@ function Navbar() {
     document.body.classList.add("hidden");
   };
 
+  const handleSearchValue = (e) => {
+    setSearchValue(e.target.value);
+  };
+
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    if (searchValue.length > 3) {
+      setSearchMenu(false);
+      navigate(`/search/${searchValue}`);
+    }
+  };
+
   const toggleDropDown = () => {
     setDown(!down);
   };
@@ -69,10 +80,31 @@ function Navbar() {
 
   return (
     <nav className="nav">
-      <div
-        className={active ? "nav-bg show" : "nav-bg"}
-        onClick={menuClose}
-      ></div>
+      <form
+        onSubmit={handleSearchSubmit}
+        className={
+          searchMenu ? "nav-search_bar_down show" : "nav-search_bar_down"
+        }
+      >
+        <input
+          onChange={(e) => handleSearchValue(e)}
+          placeholder="Search"
+          className="nav-search_bar_down-input"
+          type="text"
+        />
+        <button
+          onClick={handleSearchSubmit}
+          className="nav-search_bar_down-btn-search"
+        >
+          <Search />
+        </button>
+        <button
+          onClick={() => setSearchMenu(false)}
+          className="nav-search_bar_down-btn"
+        >
+          <CloseIcon />
+        </button>
+      </form>
       <div className="nav-container">
         <div className="nav-content">
           <div className="nav-items">
@@ -106,9 +138,9 @@ function Navbar() {
               ))}
             </ul>
           </div>
-          <div className="nav-search_bar">
+          <form onSubmit={handleSearchSubmit} className="nav-search_bar">
             <input
-              onClick={() => navigate("/search")}
+              onChange={handleSearchValue}
               placeholder="Search"
               type="text"
               className="nav-search_input"
@@ -116,9 +148,12 @@ function Navbar() {
             <button className="nav-search_btn">
               <Search />
             </button>
-          </div>
+          </form>
           <div className="nav-search_bar mobile">
-            <Link to={"/search"} className="nav-search_btn mobile">
+            <Link
+              onClick={() => setSearchMenu(true)}
+              className="nav-search_btn mobile"
+            >
               <Search />
             </Link>
           </div>
@@ -209,9 +244,6 @@ function Navbar() {
                   </div>
                 </div>
               </div>
-              <div
-                className={active ? "nav-items_box active" : "nav-items_box"}
-              ></div>
             </div>
           </div>
           <div className="nav-translate">

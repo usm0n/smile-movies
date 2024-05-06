@@ -4,7 +4,8 @@ import Favourites from "../pages/utils/Favourites";
 import Login from "../pages/auth/Login";
 import Register from "../pages/auth/Register";
 import WatchLater from "../pages/utils/WatchLater";
-import Admin from '../pages/admin/Admin'
+import Admin from "../pages/admin/Admin";
+import Search from "../pages/Search";
 export const routes = [
   {
     path: "/",
@@ -13,32 +14,36 @@ export const routes = [
 
   {
     path: "/favourites",
-    element: <Favourites/>,
+    element: <Favourites />,
   },
 
   {
     path: "/watch-later",
-    element: <WatchLater/>,
+    element: <WatchLater />,
   },
 
   {
     path: "/:movieId",
-    element: <Movie/>
+    element: <Movie />,
   },
 
   {
     path: "/login",
-    element: <Login/>
+    element: <Login />,
   },
 
   {
     path: "/register",
-    element: <Register/>
+    element: <Register />,
   },
 
   {
     path: "/admin",
-    element: <Admin/>
-  }
+    element: <Admin />,
+  },
 
+  {
+    path: "/search/:value",
+    element: <Search />,
+  },
 ];

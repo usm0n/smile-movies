@@ -44,6 +44,12 @@ const UserProvider = ({ children }) => {
     isSuccess: false,
     isError: false,
   });
+  const [statusRegister, setStatusRegister] = useState({
+    isEmpty: false,
+    buttonLoading: false,
+    isSuccess: false,
+    isError: false,
+  });
   const [statusLogout, setStatusLogout] = useState({
     loading: false,
   });
@@ -107,9 +113,7 @@ const UserProvider = ({ children }) => {
     }
   };
 
-  const registerUser = async (email, password) => {
-    setIsLoggedIn(true);
-  };
+  const registerUser = async (firstname, email, password, cpassword) => {};
 
   const logoutUser = async () => {
     setStatusLogout({
