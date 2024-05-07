@@ -209,7 +209,7 @@ function Navbar() {
                           </ListItemIcon>
                           Watch Later
                         </MenuItem>
-                        <MenuItem to="/favourites">
+                        <MenuItem onClick={() => navigate("/favourites")}>
                           <ListItemIcon>
                             <StarIcon fontSize="small" />
                           </ListItemIcon>
