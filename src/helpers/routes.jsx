@@ -7,6 +7,8 @@ import WatchLater from "../pages/utils/WatchLater";
 import Admin from "../pages/admin/Admin";
 import Search from "../pages/Search";
 import AboutLayout from "../layout/AboutLayout";
+import Contact from "../pages/components/contact/Contact";
+import ContactLayout from "../layout/ContactLayout";
 export const routes = [
   {
     path: "/",
@@ -52,4 +54,9 @@ export const routes = [
     path: "/about",
     element: <AboutLayout />,
   },
+
+  {
+    path: "/contact",
+    element: <ContactLayout/>
+  }
 ];
