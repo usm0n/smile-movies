@@ -1,0 +1,64 @@
+.about {
+    position: relative;
+
+    &::before {
+        display: block;
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: rgba(40, 42, 45, .7);
+    }
+
+    &-content {
+        position: absolute;
+        @include flex(center, center);
+        height: 100%;
+        top: 0;
+    }
+
+    &-bg {
+        position: relative;
+        width: 100%;
+        background-position: center center;
+
+        &::before {
+            display: block;
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(40, 42, 45, .7);
+            height: 100vh;
+        }
+
+        &_img {
+            width: 100%;
+            min-height: 100vh;
+            opacity: 0.6;
+            object-fit: cover;
+            background-size: cover;
+        }
+    }
+
+    &-text {
+        width: 550px;
+
+        @media screen and (max-width: 620px){
+            width: 100%;
+        }
+    }
+
+    &-title {
+        @include adaptive-value('font-size', 50, 30);
+        width: 100%;
+        font-weight: 400;
+        font-style: normal;
+        color: #fff;
+        line-height: 1.4em;
+        text-shadow: 2px 7px 5px rgba(0, 0, 0, 0.3),
+            0px -4px 10px rgba(0, 0, 0, 0.3);
+    }
+}

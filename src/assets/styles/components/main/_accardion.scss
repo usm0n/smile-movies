@@ -1,0 +1,78 @@
+.accardion{
+    width: 100%;
+
+    &-section{
+        margin-top: 60px;    
+        padding: 70px 0;
+        width: 100%;
+        background-color: $footer-background;
+        @include flex(center, center);
+        flex-direction: column;
+        gap: 30px;
+    }
+    
+    &-body{
+        width: 100%;
+        max-height: 0;
+        transition: max-height 0.4s ease-in-out;
+        overflow: hidden;
+        @include adaptive-value('font-size', 18, 17);
+        font-style: normal;
+        letter-spacing: 0.82px;
+        color: #000;
+        font-weight: 400;
+        line-height: 30px;
+        letter-spacing: 0.78px;
+        margin-top: 10px;    
+
+        &.show{
+            max-height: 300px;
+        }
+
+        @media screen and (max-width: 550px){
+            width: 100%;
+        }
+    }
+
+    &-content{
+        background-color: #fff;
+        width: 100%;
+        border-radius: 6px;
+        padding: 15px 20px;
+        @include flex(center, start);
+        cursor: pointer;
+    }
+
+    &-name{
+        font-size: 24px;
+        color: #000;
+    }
+
+    &-title{
+        padding-bottom: 30px;
+        text-align: center;
+        color: #fff;
+        @include adaptive-value('font-size', 45, 30);
+        letter-spacing: 0.78px;
+    }
+
+    &-items{
+        @include flex(center, space-between);
+        gap: 10px;
+        width: 100%;
+    }
+
+    &-box{
+        width: 100%;
+    }
+
+    &-button{
+        border: none;
+        font-size: 25px;
+        transition: all 0.2s ease-in-out;
+        &.active{
+            transform: rotate(45deg);
+
+        }
+    }
+}

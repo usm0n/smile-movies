@@ -6,6 +6,7 @@ import Register from "../pages/auth/Register";
 import WatchLater from "../pages/utils/WatchLater";
 import Admin from "../pages/admin/Admin";
 import Search from "../pages/Search";
+import AboutLayout from "../layout/AboutLayout";
 export const routes = [
   {
     path: "/",
@@ -45,5 +46,10 @@ export const routes = [
   {
     path: "/search/:value",
     element: <Search />,
+  },
+
+  {
+    path: "/about",
+    element: <AboutLayout />,
   },
 ];
