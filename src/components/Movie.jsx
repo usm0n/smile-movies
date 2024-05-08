@@ -14,15 +14,14 @@ import ThumbDownOffAltIcon from "@mui/icons-material/ThumbDownOffAlt";
 import ThumbUpOffAltIcon from "@mui/icons-material/ThumbUpOffAlt";
 import CheckIcon from "@mui/icons-material/Check";
 import StarBorderIcon from "@mui/icons-material/StarBorder";
-import StarIcon from "@mui/icons-material/Star";
 import WatchLaterIcon from "@mui/icons-material/WatchLater";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import { useComments } from "../contexts/Comments";
 import Comment from "./Comment";
 import { useUser } from "../contexts/User";
-import { Alert, Snackbar } from "@mui/material";
 import { useWatchLater } from "../contexts/WatchLater";
 import { dialog, snackbar } from "../utilities/defaultFunctions";
+import { useFavourites } from "../contexts/Favourites";
 
 function Movie({ movie, language }) {
   const { getMovieId, allComments, postComment, postCommentStatus } =
@@ -34,12 +33,20 @@ function Movie({ movie, language }) {
     statusRemoveWatchLater,
   } = useWatchLater();
   const { isLoggedIn, user } = useUser();
+  const {
+    addFavourites,
+    favourites,
+    removeFavourites,
+    statusAddFavourites,
+    statusRemoveFavourites,
+  } = useFavourites();
   const navigate = useNavigate();
 
   const [movieLanguage, setMovieLanguage] = useState(language);
   const [postCommentComment, setPostCommentComment] = useState();
   const [postCommentName, setPostCommentName] = useState(user.firstname);
   const [watchlaterDialog, setWatchlaterDialog] = useState();
+  const [favouritesDialog, setFavouritesDialog] = useState();
 
   const handleAddToWatchLater = (movieId) => {
     if (!isLoggedIn) {
@@ -48,17 +55,31 @@ function Movie({ movie, language }) {
       addWatchLater(movieId);
     }
   };
-
   const handleRemoveFromWatchLater = (movieId) => {
     removeWatchLater(movieId);
   };
-
   const handleOpenWatchLaterDialog = () => {
     navigate("/login");
   };
-
   const handleCloseWatchLaterDialog = () => {
     setWatchlaterDialog(false);
+  };
+
+  const handleAddToFavourites = (movieId) => {
+    if (!isLoggedIn) {
+      setFavouritesDialog(true);
+    } else {
+      addFavourites(movieId);
+    }
+  };
+  const handleRemoveFromFavourites = (movieId) => {
+    removeFavourites(movieId);
+  };
+  const handleOpenFavouritesDialog = () => {
+    navigate("/login");
+  };
+  const handleCloseFavouritesDialog = () => {
+    setFavouritesDialog(false);
   };
 
   const hanldeChangeLang = (e) => {
@@ -76,9 +97,6 @@ function Movie({ movie, language }) {
 
   useEffect(() => {
     getMovieId(movie._id);
-    if (!movie.movie[language]) {
-      setMovieLanguage("uz");
-    }
   }, []);
 
   return (
@@ -88,6 +106,13 @@ function Movie({ movie, language }) {
         "To add to Watch Later you must log in first.",
         watchlaterDialog,
         handleCloseWatchLaterDialog,
+        handleOpenWatchLaterDialog
+      )}
+      {dialog(
+        "Please Sign In",
+        "To add to Favourites you must log in first",
+        favouritesDialog,
+        handleCloseFavouritesDialog,
         handleOpenWatchLaterDialog
       )}
       {statusAddWatchLater.isSuccess &&
@@ -102,6 +127,19 @@ function Movie({ movie, language }) {
         snackbar("error", "Error at removing from Watch Later")}
       {statusRemoveWatchLater.isNotFound &&
         snackbar("warning", "Movie not found in Watch Later")}
+
+      {statusAddFavourites.isSuccess &&
+        snackbar("success", "Added to Favorites")}
+      {statusAddFavourites.isError &&
+        snackbar("error", "Error at adding to Favorites")}
+      {statusAddFavourites.isAlreadyIn &&
+        snackbar("warning", "Movie already added to Favourites")}
+      {statusRemoveFavourites.isSuccess &&
+        snackbar("success", "Removed from Favourites")}
+      {statusRemoveFavourites.isError &&
+        snackbar("error", "Error at removing from Favourites")}
+      {statusRemoveFavourites.isNotFound &&
+        snackbar("warning", "Movie not found in Favourites")}
       <img
         src={movie.image.fullscreen}
         alt=""
@@ -166,9 +204,49 @@ function Movie({ movie, language }) {
               </p>
             </div>
             <div className="movie-btns">
-              <button className="movie-btn">
-                <StarBorderIcon /> Add to Favourite
-              </button>
+              {user.favourites && user.favourites.includes(movie._id) ? (
+                <button
+                  onClick={() => handleRemoveFromFavourites(movie._id)}
+                  disabled={
+                    statusRemoveFavourites.loading ||
+                    statusRemoveFavourites.isSuccess
+                  }
+                  className={
+                    statusRemoveFavourites.loading ||
+                    statusRemoveFavourites.isSuccess
+                      ? "movie-btn disabled"
+                      : "movie-btn"
+                  }
+                >
+                  {statusRemoveFavourites.loading ? (
+                    "Loading..."
+                  ) : (
+                    <>
+                      <Favourite /> In Favourites{" "}
+                    </>
+                  )}
+                </button>
+              ) : (
+                <button
+                  onClick={() => handleAddToFavourites(movie._id)}
+                  disabled={
+                    statusAddFavourites.loading || statusAddFavourites.isSuccess
+                  }
+                  className={
+                    statusAddFavourites.loading || statusAddFavourites.isSuccess
+                      ? "movie-btn disabled"
+                      : "movie-btn"
+                  }
+                >
+                  {statusAddFavourites.loading ? (
+                    "Loading..."
+                  ) : (
+                    <>
+                      <StarBorderIcon /> Add to Favourites{" "}
+                    </>
+                  )}
+                </button>
+              )}
               {user.watchlater && user.watchlater.includes(movie._id) ? (
                 <button
                   onClick={() => handleRemoveFromWatchLater(movie._id)}
@@ -177,7 +255,8 @@ function Movie({ movie, language }) {
                     statusRemoveWatchLater.isSuccess
                   }
                   className={
-                    statusRemoveWatchLater.loading || statusRemoveWatchLater.isSuccess
+                    statusRemoveWatchLater.loading ||
+                    statusRemoveWatchLater.isSuccess
                       ? "movie-btn disabled"
                       : "movie-btn"
                   }
@@ -186,7 +265,7 @@ function Movie({ movie, language }) {
                     "Loading..."
                   ) : (
                     <>
-                      <CheckIcon /> In Watch Later{" "}
+                      <WatchLaterIcon /> In Watch Later{" "}
                     </>
                   )}
                 </button>
@@ -194,8 +273,7 @@ function Movie({ movie, language }) {
                 <button
                   onClick={() => handleAddToWatchLater(movie._id)}
                   disabled={
-                    statusAddWatchLater.loading ||
-                    statusAddWatchLater.isSuccess
+                    statusAddWatchLater.loading || statusAddWatchLater.isSuccess
                   }
                   className={
                     statusAddWatchLater.loading || statusAddWatchLater.isSuccess
@@ -298,12 +376,10 @@ function Movie({ movie, language }) {
         <div className="movie-comments">
           <h1 className="movie-comments-title">Comments:</h1>
           <div className="movie-comments-posting">
-            {postCommentStatus.isSuccess && (
-              snackbar("success", "Your comment posted successfully")
-            )}
-            {postCommentStatus.isError && (
-              snackbar("error", "An error has occurred")
-            )}
+            {postCommentStatus.isSuccess &&
+              snackbar("success", "Your comment posted successfully")}
+            {postCommentStatus.isError &&
+              snackbar("error", "An error has occurred")}
             {!isLoggedIn && (
               <input
                 onChange={(e) => setPostCommentName(e.target.value)}
