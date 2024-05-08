@@ -20,6 +20,8 @@
         padding: 30px;
         border-radius: 4px;
         color: #000;
+        @include flex(start, space-between);
+        gap: 20px
     }
 
     &-title{
@@ -30,7 +32,7 @@
     }
 
     &-form{
-        @media screen and (max-width: 415px){
+        @media screen and (max-width: 900px){
             width: 100%;
         }
     }
@@ -51,7 +53,7 @@
         border: 1px solid $contact-input;
         padding: 14px 6px;
         height: 35px;
-        width: 300px;
+        width: 100%;
         border-radius: 4px;
         outline: none;
         transition: all 0.2s ease-in-out;
@@ -62,9 +64,6 @@
             border-color: $gold-color;
         }
 
-        @media screen and (max-width: 415px){
-            width: 100%;
-        }
     }
 
     &-submit{
@@ -92,6 +91,40 @@
 
         &.active{
             color: green;
+        }
+    }
+
+    &-social{
+        @media screen and (max-width: 900px){
+            display: none;
+        }
+
+
+        &_title{
+            width: 500px;
+            font-weight: 500;
+            letter-spacing: 0.78px;
+            @include adaptive-value('font-size', 20, 18);
+            line-height: 28px;
+            padding-top: 20px;
+
+            @media screen and (max-width: 1000px){
+                width: 400px;
+            }
+        }
+    }
+
+    &-links{
+        padding-top: 50px;
+        @include flex(start, center);
+        flex-direction: column;
+        gap: 24px;
+    }
+
+    &-link{
+
+        &_image{
+            width: 50px;
         }
     }
     
