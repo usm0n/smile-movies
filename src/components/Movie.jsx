@@ -22,6 +22,7 @@ import { useUser } from "../contexts/User";
 import { useWatchLater } from "../contexts/WatchLater";
 import { dialog, snackbar } from "../utilities/defaultFunctions";
 import { useFavourites } from "../contexts/Favourites";
+import { ToggleButton, ToggleButtonGroup } from "@mui/material";
 
 function Movie({ movie, language }) {
   const { getMovieId, allComments, postComment, postCommentStatus } =
@@ -42,7 +43,6 @@ function Movie({ movie, language }) {
   } = useFavourites();
   const navigate = useNavigate();
 
-  const [movieLanguage, setMovieLanguage] = useState(language);
   const [postCommentComment, setPostCommentComment] = useState();
   const [postCommentName, setPostCommentName] = useState(user.firstname);
   const [watchlaterDialog, setWatchlaterDialog] = useState();
@@ -53,6 +53,9 @@ function Movie({ movie, language }) {
       setWatchlaterDialog(true);
     } else {
       addWatchLater(movieId);
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
     }
   };
   const handleRemoveFromWatchLater = (movieId) => {
@@ -70,6 +73,9 @@ function Movie({ movie, language }) {
       setFavouritesDialog(true);
     } else {
       addFavourites(movieId);
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
     }
   };
   const handleRemoveFromFavourites = (movieId) => {
@@ -82,13 +88,9 @@ function Movie({ movie, language }) {
     setFavouritesDialog(false);
   };
 
-  const hanldeChangeLang = (e) => {
-    setMovieLanguage(e.target.value);
-  };
-
   const iframe = (
     <iframe
-      src={movie.movie[movieLanguage]}
+      src={movie.movie}
       width="100%"
       className="movie-iframe"
       allowFullScreen
@@ -113,7 +115,7 @@ function Movie({ movie, language }) {
         "To add to Favourites you must log in first",
         favouritesDialog,
         handleCloseFavouritesDialog,
-        handleOpenWatchLaterDialog
+        handleOpenFavouritesDialog
       )}
       {statusAddWatchLater.isSuccess &&
         snackbar("success", "Added to Watch Later")}
@@ -145,6 +147,11 @@ function Movie({ movie, language }) {
         alt=""
         className="movie-img-fullscreen"
       />
+      <ToggleButtonGroup color="primary" exclusive aria-label="Platform">
+        <ToggleButton value="web">Web</ToggleButton>
+        <ToggleButton value="android">Android</ToggleButton>
+        <ToggleButton value="ios">iOS</ToggleButton>
+      </ToggleButtonGroup>
       <div className="movie-container">
         <div className="movie-content">
           <img
@@ -295,83 +302,8 @@ function Movie({ movie, language }) {
         </div>
 
         <div className="movie-video">
-          <div className="movie-video-language">
-            <h1 className="movie-video-language-text">Language:</h1>
-            <select
-              onChange={(e) => hanldeChangeLang(e)}
-              className="movie-parts_select"
-            >
-              {movie.movie[language] && (
-                <option className="movie-parts_option" value={language}>
-                  {language && language.toUpperCase()}
-                </option>
-              )}
-              {movie.movie.uz && language !== "uz" && (
-                <option value={"uz"} className="movie-parts_option">
-                  UZ
-                </option>
-              )}
-              {movie.movie.en && language !== "en" && (
-                <option value={"en"} className="movie-parts_option">
-                  EN
-                </option>
-              )}
-              {movie.movie.ru && language !== "ru" && (
-                <option value={"ru"} className="movie-parts_option">
-                  RU
-                </option>
-              )}
-            </select>
-          </div>
-          <div className="movie-movie-container">
-            {movieLanguage == "uz" && iframe}
-            {movieLanguage == "en" && iframe}
-            {movieLanguage == "ru" && iframe}
-          </div>
+          <div className="movie-movie-container">{iframe}</div>
         </div>
-        {movie.status.type == "series" && (
-          <div className="movie-parts">
-            <select className="movie-parts_select">
-              <option className="movie-parts_option">Season 1</option>
-              <option className="movie-parts_option">mustafo</option>
-              <option className="movie-parts_option">mustafo</option>
-              <option className="movie-parts_option">mustafo</option>
-              <option className="movie-parts_option">mustafo</option>
-            </select>
-
-            <div className="movie-parts_box">
-              <Link className="movie-parts_part">
-                <VideoPlayerIcon />
-                Episode 1: Freedom Day
-              </Link>
-
-              <Link className="movie-parts_part">
-                <VideoPlayerIcon />
-                Episode 2: Freedom Day
-              </Link>
-
-              <Link className="movie-parts_part">
-                <VideoPlayerIcon />
-                Episode 3: Freedom Day
-              </Link>
-
-              <Link className="movie-parts_part">
-                <VideoPlayerIcon />
-                Episode 4: Freedom Day
-              </Link>
-
-              <Link className="movie-parts_part">
-                <VideoPlayerIcon />
-                Episode 5: Freedom Day
-              </Link>
-
-              <Link className="movie-parts_part">
-                <VideoPlayerIcon />
-                Episode 6: Freedom Day
-              </Link>
-            </div>
-          </div>
-        )}
 
         <div className="movie-comments">
           <h1 className="movie-comments-title">Comments:</h1>

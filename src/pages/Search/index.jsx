@@ -4,6 +4,7 @@ import { useAllMovies } from "../../contexts/Movies";
 import { Box, Grid, Typography } from "@mui/material";
 import MovieCard from "../../components/MovieCard";
 import { language } from "../../utilities/defaultFunctions";
+import MovieSkeletonCard from "../../components/MovieCardSkeleton";
 
 function Search() {
   const { value } = useParams();
@@ -20,8 +21,23 @@ function Search() {
   return (
     <div className="search">
       <h1 className="search-title">Search: {value}</h1>
-
-      {!prods.length ? (
+      {allMovies.isLoading ? (
+        <>
+          <Grid
+            sx={{ display: "flex", flexWrap: "wrap" }}
+            item
+            xs={12}
+            sm={6}
+            md={4}
+            lg={3}
+          >
+            <MovieSkeletonCard />
+            <MovieSkeletonCard />
+            <MovieSkeletonCard />
+            <MovieSkeletonCard />
+          </Grid>
+        </>
+      ) : !prods.length ? (
         <h1 className="search-not-found">No results found for "{value}"</h1>
       ) : (
         <Grid

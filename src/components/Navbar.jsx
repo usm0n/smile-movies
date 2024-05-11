@@ -33,17 +33,22 @@ import { language, setLanguage } from "../utilities/defaultFunctions";
 
 function Navbar() {
   const [active, setActive] = useState(false);
-  const [down, setDown] = useState(false);
   const [profileMenu, setProfileMenu] = useState(null);
   const [translateMenu, setTranslateMenu] = useState(false);
   const [searchMenu, setSearchMenu] = useState(false);
   const [searchValue, setSearchValue] = useState();
 
-  const { isLoggedIn, user, isRealUser, logoutUser, statusLogout } = useUser();
+  const { isLoggedIn, user, isRealUser, logoutUser, statusLogout, isAdmin } =
+    useUser();
 
   const menuClose = () => {
     setActive(false);
     document.body.classList.remove("hidden");
+  };
+
+  const menuNavigation = (link) => {
+    setProfileMenu(false);
+    navigate(link);
   };
 
   const profileMenuOpen = () => {
@@ -70,10 +75,6 @@ function Navbar() {
       setSearchMenu(false);
       navigate(`/search/${searchValue}`);
     }
-  };
-
-  const toggleDropDown = () => {
-    setDown(!down);
   };
 
   const navigate = useNavigate();
@@ -175,7 +176,7 @@ function Navbar() {
                       sx={{ mr: 1 }}
                       aria-haspopup="true"
                     >
-                      <Avatar sx={{ width: 32, height: 32 }}></Avatar>
+                      <Avatar sx={{ width: 32, height: 32 }}>{user.firstname ? user.firstname.slice(0, 1) : null}</Avatar>
                     </IconButton>
                   </Tooltip>
                   <div
@@ -203,13 +204,15 @@ function Navbar() {
                           )}
                         </MenuItem>
                         <Divider />
-                        <MenuItem onClick={() => navigate("/watch-later")}>
+                        <MenuItem
+                          onClick={() => menuNavigation("/watch-later")}
+                        >
                           <ListItemIcon>
                             <WatchLater fontSize="small" />
                           </ListItemIcon>
                           Watch Later
                         </MenuItem>
-                        <MenuItem onClick={() => navigate("/favourites")}>
+                        <MenuItem onClick={() => menuNavigation("/favourites")}>
                           <ListItemIcon>
                             <StarIcon fontSize="small" />
                           </ListItemIcon>
@@ -227,11 +230,22 @@ function Navbar() {
                           </ListItemIcon>
                           {statusLogout.loading ? "Logging out..." : "Log out"}
                         </MenuItem>
+                        {isAdmin.result && (
+                          <>
+                            <Divider />
+                            <MenuItem onClick={() => menuNavigation("/admin")}>
+                              <ListItemIcon>
+                                <AccountCircleIcon fontSize="small" />
+                              </ListItemIcon>
+                              Admin
+                            </MenuItem>
+                          </>
+                        )}
                       </>
                     ) : (
                       <MenuItem
                         onClick={() => {
-                          navigate("/login");
+                          menuNavigation("/login");
                           setProfileMenu(false);
                         }}
                       >

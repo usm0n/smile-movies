@@ -26,6 +26,10 @@ const UserContext = createContext({
   statusLogout: {
     loading: false,
   },
+  isAdmin: {
+    loading: false,
+    result: false,
+  },
   user: {},
   loginUser: (e, email, password) => {},
   registerUser: () => {},
@@ -38,6 +42,10 @@ const UserProvider = ({ children }) => {
   const navigate = useNavigate();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isVerified, setIsVerified] = useState(false);
+  const [isAdmin, setIsAdmin] = useState({
+    loading: false,
+    result: false,
+  });
   const [statusLogin, setStatusLogin] = useState({
     isEmpty: false,
     buttonLoading: false,
@@ -134,6 +142,10 @@ const UserProvider = ({ children }) => {
         loading: true,
         result: false,
       });
+      setIsAdmin({
+        loading: true,
+        result: false,
+      });
       users.getUserById(userId).then((user) => {
         if (user.data) {
           setIsRealUser({
@@ -141,6 +153,10 @@ const UserProvider = ({ children }) => {
             result: true,
           });
           setUser(user.data);
+          setIsAdmin({
+            loading: false,
+            result: true,
+          });
           if (!user.data.isVerified) {
             setIsVerified(false);
             navigate("/verify-email");
@@ -177,6 +193,7 @@ const UserProvider = ({ children }) => {
         registerUser,
         logoutUser,
         statusLogout,
+        isAdmin,
       }}
     >
       {children}

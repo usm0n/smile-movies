@@ -1,91 +1,110 @@
-.admin{
+.admin {
+  &-input {
+    border: 1px solid $gold-color;
+    width: 350px;
+    height: 550px;
+    padding: 20px;
+    border-radius: 12px;
+  }
 
-    &-input{
-        border: 1px solid $gold-color;
-        width: 350px;
-        height: 550px;
-        padding: 20px;
-        border-radius: 12px;
+  &-name_input {
+    width: 100%;
+    background-color: transparent;
+    padding: 7px;
+    border: none;
+    border: 0.1px solid #ffffffb2;
+    border-radius: 10px;
+    outline: none;
+    @include adaptive-value("font-size", 37, 30);
+    font-weight: 500;
+    color: #fff;
+    letter-spacing: 3px;
+
+    &.active {
+      border: none;
     }
+  }
 
-    &-name_input{
-        width: 100%;
-        background-color: transparent;
-        padding: 7px;
-        color: #fff;
-        border: none;
-        border: 1px solid #fff;
-        outline: none;
-        @include adaptive-value("font-size", 37, 30);
-        font-weight: 500;
-        letter-spacing: 3px;
+  &-check_input {
+    width: 90px;
+    background-color: transparent;
+    border: 0.1px solid #ffffffb7;
+    border-radius: 10px;
+    font-weight: 500;
+    outline: none;
+    color: #fff;
+    font-size: 16px;
+    letter-spacing: 1px;
+    line-height: 30px;
 
-        &.active{
-            border: none;
-        }
+    &.active {
+      border: none;
     }
+  }
 
-    &-check_input{
-        width: 90px;
-        background-color: transparent;
-        border: 1px solid #fff;
-        font-weight: 500;
-        outline: none;
-        color: #fff;
-        font-size: 16px;
-        letter-spacing: 1px;
-        line-height: 30px;
-    
-        &.active{
-            border: none;
-        }
+  &-grade_input {
+    width: 30px;
+    background-color: transparent;
+    border: 0.1px solid #ffffffa4;
+    border-radius: 10px;
+    font-weight: 500;
+    outline: none;
+    color: #fff;
+    font-size: 16px;
+    letter-spacing: 1px;
+    line-height: 30px;
+
+    &.active {
+      border: none;
     }
+  }
 
-    &-grade_input{
-        width: 30px;
-        background-color: transparent;
-        border: 1px solid #fff;
-        font-weight: 500;
-        outline: none;
-        color: #fff;
-        font-size: 16px;
-        letter-spacing: 1px;
-        line-height: 30px;
+  &-country_input {
+    width: 80px;
+    background-color: transparent;
+    border: 0.1px solid #ffffffbd;
+    border-radius: 10px;
+    font-weight: 500;
+    outline: none;
+    color: #fff;
+    font-size: 16px;
+    letter-spacing: 1px;
+    line-height: 30px;
 
-        &.active{
-            border: none;
-        }
+    &.active {
+      border: none;
     }
+  }
 
-    &-country_input{
-        width: 80px;
-        background-color: transparent;
-        border: 1px solid #fff;
-        font-weight: 500;
-        outline: none;
-        color: #fff;
-        font-size: 16px;
-        letter-spacing: 1px;
-        line-height: 30px;
+  &-check {
+    width: 100px;
+    background-color: transparent;
+    border: 0.1px solid #ffffffb6;
+    border-radius: 10px;
+    font-weight: 500;
+    outline: none;
+    color: #fff;
+    font-size: 16px;
+    letter-spacing: 1px;
+    line-height: 30px;
 
-        &.active{
-            border: none;
-        }
+    &.active {
+      border: none;
     }
+  }
 
-    &-check{
-        width: 100px;
-        background-color: transparent;
-        border: 1px solid #fff;
-        font-weight: 500;
-        outline: none;
-        color: #fff;
-        font-size: 16px;
-        letter-spacing: 1px;
-        line-height: 30px;
-
-        &.active{
-            border: none;
-        }
-    }
+  &-subtitle{
+    padding: 10px;
+    font-size: 16px;
+    color: #ffffffc6;
+    font-weight: 300;
+    letter-spacing: 1px;
+    width: 100%;
+    height: 150px;
+    line-height: 30px;
+    background-color: transparent;
+    border: 0.1px solid #ffffffa4;
+    border-radius: 10px;
+    resize: none;
+  }
 }
