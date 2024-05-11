@@ -23,16 +23,91 @@ import Calendar from "../../assets/icons/CalendarIcon";
 
 function AddMovie() {
   const [active, setActive] = useState(false);
+  const [toggleValue, setToggleValue] = useState({
+    img: "portrait",
+    title: "uz",
+  });
+  const [addMovieValue, setAddMovieValue] = useState({
+    image: {
+      portrait: "",
+      fullscreen: "",
+    },
+    title: {
+      uz: "",
+      ru: "",
+      en: "",
+    },
+  });
+
+  const handleToggleValue = (e, name) => {
+    setToggleValue({
+      ...toggleValue,
+      [name]: e.target.value,
+    });
+  };
+
+  const handleImageInput = (e) => {
+    setAddMovieValue({
+      ...addMovieValue,
+      image: {
+        ...addMovieValue.image,
+        [e.target.name]: e.target.value,
+      },
+    });
+  };
+
+  const handleTitleInput = (e) => {
+    setAddMovieValue({
+      ...addMovieValue,
+      title: {
+        ...addMovieValue.title,
+        [e.target.name]: e.target.value,
+      },
+    });
+  };
 
   const watchActive = () => {
     setActive(true);
   };
-
+  
   return (
     <section className="movie">
       <div className="movie-container">
         <div className="movie-content">
-          <textarea className="admin-input" placeholder="" />
+          <div className="admin-change-img">
+            <ToggleButtonGroup
+              color="info"
+              value={toggleValue.img}
+              name="img"
+              onChange={(e) => handleToggleValue(e, "img")}
+              sx={{
+                backgroundColor: "gold",
+              }}
+              exclusive
+              aria-label="Platform"
+            >
+              <ToggleButton value="portrait">Portrait</ToggleButton>
+              <ToggleButton value="fullscreen">Full Screen</ToggleButton>
+            </ToggleButtonGroup>
+            {toggleValue.img == "portrait" && (
+              <textarea
+                onChange={handleImageInput}
+                name="portrait"
+                value={addMovieValue.image.portrait}
+                placeholder="Portrait photo link"
+                className="admin-input"
+              />
+            )}
+            {toggleValue.img == "fullscreen" && (
+              <textarea
+                name="fullscreen"
+                onChange={handleImageInput}
+                value={addMovieValue.image.fullscreen}
+                placeholder="Full Screen photo link"
+                className="admin-input"
+              />
+            )}
+          </div>
           <div className="movie-info">
             <div className="movie-text">
               <div
@@ -41,12 +116,59 @@ function AddMovie() {
                 }}
                 className="movie-first-section"
               >
-                <input
-                  type="text"
-                  className={
-                    active ? "admin-name_input active" : "admin-name_input"
-                  }
-                />
+                <div className="admin-change-title">
+                  <ToggleButtonGroup
+                    color="info"
+                    value={toggleValue.title}
+                    name="title"
+                    onChange={(e) => handleToggleValue(e, "title")}
+                    sx={{
+                      backgroundColor: "gold",
+                    }}
+                    exclusive
+                    aria-label="Platform"
+                  >
+                    <ToggleButton value="uz">Uzbek</ToggleButton>
+                    <ToggleButton value="ru">Russian</ToggleButton>
+                    <ToggleButton value="en">English</ToggleButton>
+                  </ToggleButtonGroup>
+                  {toggleValue.title === "uz" && (
+                    <input
+                      value={addMovieValue.title.uz}
+                      name="uz"
+                      type="text"
+                      onChange={handleTitleInput}
+                      placeholder={`${toggleValue.title.toUpperCase()} Movie Title`}
+                      className={
+                        active ? "admin-name_input active" : "admin-name_input"
+                      }
+                    />
+                  )}
+                  {toggleValue.title === "ru" && (
+                    <input
+                      value={addMovieValue.title.ru}
+                      name="ru"
+                      type="text"
+                      onChange={handleTitleInput}
+                      placeholder={`${toggleValue.title.toUpperCase()} Movie Title`}
+                      className={
+                        active ? "admin-name_input active" : "admin-name_input"
+                      }
+                    />
+                  )}
+                  {toggleValue.title === "en" && (
+                    <input
+                      value={addMovieValue.title.en}
+                      name="en"
+                      type="text"
+                      onChange={handleTitleInput}
+                      placeholder={`${toggleValue.title.toUpperCase()} Movie Title`}
+                      className={
+                        active ? "admin-name_input active" : "admin-name_input"
+                      }
+                    />
+                  )}
+                </div>
                 <div className="movie-like-dislike">
                   <button className="movie-like">
                     <ThumbUpOffAltIcon />0

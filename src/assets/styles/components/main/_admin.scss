@@ -1,10 +1,28 @@
 .admin {
   &-input {
     border: 1px solid $gold-color;
+    color: #fff;
     width: 350px;
     height: 550px;
     padding: 20px;
+    background-color: transparent;
     border-radius: 12px;
+    outline: none;
+  }
+  &-change {
+    &-img {
+      display: flex;
+      flex-direction: column;
+      align-items: start;
+      gap: 20px;
+    }
+
+    &-title{
+        display: flex;
+      flex-direction: column;
+      align-items: start;
+      gap: 20px;
+    }
   }
 
   &-name_input {
@@ -93,7 +111,7 @@
     }
   }
 
-  &-subtitle{
+  &-subtitle {
     padding: 10px;
     font-size: 16px;
     color: #ffffffc6;
@@ -106,5 +124,9 @@
     border: 0.1px solid #ffffffa4;
     border-radius: 10px;
     resize: none;
+
+    &.active {
+      border: none;
+    }
   }
 }
