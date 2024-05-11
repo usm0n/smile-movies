@@ -1,8 +1,5 @@
 import React, { useState } from 'react'
 import Img from '../../../assets/images/contact-bg.jpg'
-import Instagram from '../../../assets/images/instagram-icon.webp'
-import Telegram from '../../../assets/images/telegram-icon.jpg'
-import Youtube from '../../../assets/images/youtube-logo.png'
 
 function Contact() {
   const [uName, setUName] = useState('');
@@ -112,25 +109,6 @@ function Contact() {
             {error && <p className={active ? "contact-error active" : "contact-error"}>{error}</p>}
             <button onClick={sendMessage} className='contact-submit'>Send</button>
           </form>
-
-          <div className="contact-social">
-            <p className='contact-social_title'>
-              Agar saytimizda xato va kamchiliklarni ko'rgan  bo'lsangiz bizga xabar berishingiz mumkin. Biz sizning so'rovingizni ko'rib chiqamiz va tez orada tuzatishga harakat qilamiz.
-            </p>
-            <ul className='contact-links'>
-              <a href="" className='contact-link'>
-                <img src={Instagram} className='contact-link_image' alt="" />
-              </a>
-
-              <a href="" className='contact-link'>
-                <img src={Telegram} className='contact-link_image' alt="" />
-              </a>
-
-              <a href="" className='contact-link'>
-                <img src={Youtube} className='contact-link_image' alt="" />
-              </a>
-            </ul>
-          </div>
         </div>
       </div>
     </section>

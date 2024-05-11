@@ -147,11 +147,6 @@ function Movie({ movie, language }) {
         alt=""
         className="movie-img-fullscreen"
       />
-      <ToggleButtonGroup color="primary" exclusive aria-label="Platform">
-        <ToggleButton value="web">Web</ToggleButton>
-        <ToggleButton value="android">Android</ToggleButton>
-        <ToggleButton value="ios">iOS</ToggleButton>
-      </ToggleButtonGroup>
       <div className="movie-container">
         <div className="movie-content">
           <img
