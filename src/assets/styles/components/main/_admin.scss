@@ -170,7 +170,7 @@
     }
   }
 
-  &-addmovie-btn{
+  &-addmovie-btn {
     position: fixed;
     bottom: 30px;
     right: 30px;
@@ -191,13 +191,28 @@
     border: none;
     transition: ease-in-out 0.3s;
 
-    &:hover{
-        opacity: 0.9;
+    &:hover {
+      opacity: 0.9;
     }
 
-    &.disabled{
-        opacity: 0.5;
-        cursor: not-allowed;
+    &.disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+
+  &-video {
+    display: flex;
+    flex-direction: column;
+    align-items: start;
+    gap: 30px;
+
+    &-area {
+      background-color: transparent;
+      padding: 20px;
+      font-size: 20px;
+      color: #ffffffb7;
+      resize: none;
     }
   }
 }

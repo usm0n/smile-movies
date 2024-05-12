@@ -1,5 +1,5 @@
 import React from 'react'
-import About from '../pages/components/about/About'
+import About from '../pages/components/about/index'
 import Info from '../pages/components/about/Info'
 import Accardion from '../pages/components/about/AccardionContext'
 import Footer from '../components/Footer'

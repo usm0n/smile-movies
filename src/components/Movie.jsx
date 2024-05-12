@@ -23,8 +23,9 @@ import { useWatchLater } from "../contexts/WatchLater";
 import { dialog, snackbar } from "../utilities/defaultFunctions";
 import { useFavourites } from "../contexts/Favourites";
 import { ToggleButton, ToggleButtonGroup } from "@mui/material";
+import { language } from "../utilities/defaultFunctions";
 
-function Movie({ movie, language }) {
+function Movie({ movie }) {
   const { getMovieId, allComments, postComment, postCommentStatus } =
     useComments();
   const {

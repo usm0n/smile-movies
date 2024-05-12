@@ -16,7 +16,7 @@ function Movie() {
   return !movieById.isLoading ? (
     <>
       {movieById.movie && !movieById.isLoading && (
-        <MovieComponent movie={movieById.movie} language={language} />
+        <MovieComponent movie={movieById.movie} />
       )}
     </>
   ) : (
