@@ -4,23 +4,18 @@ import { Link, useNavigate } from "react-router-dom";
 import MenuIcon from "../assets/icons/MenuIcon";
 import Search from "../assets/icons/Search";
 import CloseIcon from "../assets/icons/CloseIcon";
-import ClockIcon from "../assets/icons/ClockIcon";
-import UserIcon from "../assets/icons/UserIcon";
 import logo from "../assets/images/logo.png";
 import Tooltip from "@mui/material/Tooltip";
-import DropdownIcon from "../assets/icons/DropdownIcon";
 import {
+  Autocomplete,
   Avatar,
-  Box,
   Divider,
   IconButton,
   ListItemIcon,
-  Menu,
   MenuItem,
   Skeleton,
-  Typography,
+  TextField,
 } from "@mui/material";
-import PersonAdd from "@mui/icons-material/PersonAdd";
 import Settings from "@mui/icons-material/Settings";
 import Logout from "@mui/icons-material/Logout";
 import { useUser } from "../contexts/User";
@@ -30,6 +25,7 @@ import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import LoginIcon from "@mui/icons-material/Login";
 import TranslateIcon from "@mui/icons-material/Translate";
 import { language, setLanguage } from "../utilities/defaultFunctions";
+import { useAllMovies } from "../contexts/Movies";
 
 function Navbar() {
   const [active, setActive] = useState(false);
@@ -40,6 +36,8 @@ function Navbar() {
 
   const { isLoggedIn, user, isRealUser, logoutUser, statusLogout, isAdmin } =
     useUser();
+
+  const { allMovies } = useAllMovies();
 
   const menuClose = () => {
     setActive(false);
@@ -71,27 +69,46 @@ function Navbar() {
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
-    if (searchValue.length > 3) {
-      setSearchMenu(false);
-      navigate(`/search/${searchValue}`);
-    }
+    setSearchMenu(false);
+    navigate(`/search/${searchValue}`);
   };
+
+  console.log(searchValue);
 
   const navigate = useNavigate();
 
   return (
     <nav className="nav">
       <form
-        onSubmit={handleSearchSubmit}
         className={
           searchMenu ? "nav-search_bar_down show" : "nav-search_bar_down"
         }
       >
-        <input
-          onChange={(e) => handleSearchValue(e)}
-          placeholder="Search"
-          className="nav-search_bar_down-input"
-          type="text"
+        <Autocomplete
+          sx={{
+            backgroundColor: "#fff",
+            width: "95%",
+            margin: "0 auto",
+            borderRadius: "5px",
+          }}
+          disableClearable
+          freeSolo
+          options={allMovies.movies}
+          onChange={(e, value) => setSearchValue(value.title[language])}
+          getOptionLabel={(option) => `${option.title[language]}`}
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              InputProps={{
+                ...params.InputProps,
+                type: "search",
+              }}
+              onChange={handleSearchValue}
+              placeholder="Search"
+              type="text"
+              className="nav-search_bar_down-input"
+            />
+          )}
         />
         <button
           onClick={handleSearchSubmit}
@@ -140,12 +157,31 @@ function Navbar() {
             </ul>
           </div>
           <form onSubmit={handleSearchSubmit} className="nav-search_bar">
-            <input
-              onChange={handleSearchValue}
-              placeholder="Search"
-              type="text"
-              className="nav-search_input"
+            <Autocomplete
+              disableClearable
+              freeSolo
+              options={allMovies.movies}
+              onChange={(e, value) => setSearchValue(value.title[language])}
+              getOptionLabel={(option) => `${option.title[language]}`}
+              renderInput={(params) => (
+                <TextField
+                  sx={{
+                    backgroundColor: "#fff",
+                    width: "410px",
+                    borderRadius: "5px",
+                  }}
+                  {...params}
+                  InputProps={{
+                    ...params.InputProps,
+                    type: "search",
+                  }}
+                  onChange={handleSearchValue}
+                  placeholder="Search"
+                  type="text"
+                />
+              )}
             />
+
             <button className="nav-search_btn">
               <Search />
             </button>
@@ -176,7 +212,9 @@ function Navbar() {
                       sx={{ mr: 1 }}
                       aria-haspopup="true"
                     >
-                      <Avatar sx={{ width: 32, height: 32 }}>{user.firstname ? user.firstname.slice(0, 1) : null}</Avatar>
+                      <Avatar sx={{ width: 32, height: 32 }}>
+                        {user.firstname ? user.firstname.slice(0, 1) : null}
+                      </Avatar>
                     </IconButton>
                   </Tooltip>
                   <div

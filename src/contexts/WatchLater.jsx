@@ -132,7 +132,7 @@ const WatchLaterProvider = ({ children }) => {
     users
       .getWatchLater(userId)
       .then((result) => {
-        if (result.data.length == 0) {
+        if (!result.data.length) {
           setWatchLater({
             loading: false,
             isEmpty: true,

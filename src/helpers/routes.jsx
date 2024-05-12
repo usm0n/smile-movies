@@ -27,7 +27,7 @@ export const routes = [
   },
 
   {
-    path: "/:movieId",
+    path: "/movie/:movieId",
     element: <Movie />,
   },
 

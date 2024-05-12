@@ -85,7 +85,7 @@ function NewMovies({ movies, isLoading, language }) {
                     return (
                       <>
                         <SwiperSlide>
-                          <Link to={`/${movie._id}`} className="new-movie_card">
+                          <Link to={`/movie/${movie._id}`} className="new-movie_card">
                             <img
                               src={movie.image.portrait}
                               className="new-movie_img"

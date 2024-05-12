@@ -127,7 +127,7 @@ const FavouritesProvider = ({ children }) => {
     users
       .getFavourites(userId)
       .then((result) => {
-        if (result.data.length == 0) {
+        if (!result.data.length) {
           setFavourites({
             loading: false,
             isEmpty: true,

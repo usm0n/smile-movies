@@ -1,7 +1,14 @@
-import React, { useState } from "react";
+import React, { Children, useState } from "react";
 import WatchLaterIcon from "@mui/icons-material/WatchLater";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
-import { ToggleButton, ToggleButtonGroup } from "@mui/material";
+import {
+  FormControl,
+  InputLabel,
+  MenuItem,
+  Select,
+  ToggleButton,
+  ToggleButtonGroup,
+} from "@mui/material";
 import { LoadingButton } from "@mui/lab";
 import ThumbDownOffAltIcon from "@mui/icons-material/ThumbDownOffAlt";
 import ThumbUpOffAltIcon from "@mui/icons-material/ThumbUpOffAlt";
@@ -15,7 +22,9 @@ import {
   currentDay,
   currentMonth,
   currentYear,
+  snackbar,
 } from "../../utilities/defaultFunctions";
+import { useMovie } from "../../contexts/Movie";
 
 function AddMovie() {
   const [active, setActive] = useState(false);
@@ -24,6 +33,7 @@ function AddMovie() {
     title: "uz",
     video: "movie",
     page: "standart",
+    notes: "uz",
   });
   const [addMovieValue, setAddMovieValue] = useState({
     title: {
@@ -78,6 +88,12 @@ function AddMovie() {
     trailer: "",
   });
 
+  const [status, setStatus] = useState({
+    isEmpty: false,
+  });
+
+  const { addMovie, statusAddMovie } = useMovie();
+
   const handleToggleValue = (e, name) => {
     setToggleValue({
       ...toggleValue,
@@ -86,6 +102,7 @@ function AddMovie() {
   };
 
   const handleExtraInput = (e, parent) => {
+    setStatus({ isEmpty: false });
     setAddMovieValue({
       ...addMovieValue,
       [parent]: {
@@ -96,20 +113,62 @@ function AddMovie() {
   };
 
   const handleInput = (e) => {
+    setStatus({ isEmpty: false });
     setAddMovieValue({
       ...addMovieValue,
       [e.target.name]: e.target.value,
     });
   };
 
+  const isNotTrim =
+    !addMovieValue.country.en.trim() ||
+    !addMovieValue.country.ru.trim() ||
+    !addMovieValue.country.uz.trim() ||
+    !addMovieValue.credit.en.trim() ||
+    !addMovieValue.credit.ru.trim() ||
+    !addMovieValue.credit.uz.trim() ||
+    !addMovieValue.description.en.trim() ||
+    !addMovieValue.description.ru.trim() ||
+    !addMovieValue.description.uz.trim() ||
+    !addMovieValue.image.fullscreen.trim() ||
+    !addMovieValue.image.portrait.trim() ||
+    !addMovieValue.movie.trim() ||
+    !addMovieValue.title.en.trim() ||
+    !addMovieValue.title.ru.trim() ||
+    !addMovieValue.title.uz.trim() ||
+    !addMovieValue.releaseDate.day.trim() ||
+    !addMovieValue.releaseDate.month.trim() ||
+    !addMovieValue.releaseDate.year.trim() ||
+    !addMovieValue.trailer.trim() ||
+    !addMovieValue.duration.hour.trim() ||
+    !addMovieValue.duration.min.trim() ||
+    addMovieValue.rating.like < 0 ||
+    addMovieValue.rating.dislike < 0 ||
+    !addMovieValue.rating.imdb.trim();
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setStatus({ isEmpty: false });
+    if (isNotTrim) {
+      setStatus({ isEmpty: true });
+    } else {
+      addMovie(addMovieValue);
+    }
+  };
+
   return (
     <section className="movie">
+      {status.isEmpty && snackbar("warning", "Please fill all fields")}
+      {statusAddMovie.isSuccess &&
+        snackbar("success", "Movie added successfully")}
+      {statusAddMovie.isError && snackbar("error", "Something went wrong")}
       <div
         style={{
           position: "fixed",
           top: "80px",
           width: "100%",
           display: "flex",
+          zIndex: "999",
         }}
       >
         <ToggleButtonGroup
@@ -128,6 +187,25 @@ function AddMovie() {
           <ToggleButton value="extra">Extra</ToggleButton>
         </ToggleButtonGroup>
       </div>
+      <button
+        onClick={(e) => handleSubmit(e)}
+        disabled={
+          isNotTrim || statusAddMovie.isSuccess || statusAddMovie.loading
+        }
+        className={
+          isNotTrim || statusAddMovie.isSuccess || statusAddMovie.loading
+            ? "admin-addmovie-btn disabled"
+            : "admin-addmovie-btn"
+        }
+      >
+        {statusAddMovie.loading ? (
+          "Loading..."
+        ) : (
+          <>
+            <AddIcon /> Add Movie
+          </>
+        )}
+      </button>
       {toggleValue.page == "standart" && (
         <div className="movie-container">
           <div className="movie-content">
@@ -351,9 +429,6 @@ function AddMovie() {
                   <AccessTimeIcon /> Add to Watch Later
                 </button>
               </div>
-              <button className="admin-addmovie-btn">
-                <AddIcon /> Add Movie
-              </button>
             </div>
           </div>
           <div className="movie-video">
@@ -375,14 +450,14 @@ function AddMovie() {
                 </ToggleButtonGroup>
                 <textarea
                   onChange={(e) => handleInput(e)}
-                  name="movie"
+                  name={toggleValue.video}
                   value={
                     toggleValue.video == "movie"
                       ? addMovieValue.movie
                       : addMovieValue.trailer
                   }
                   placeholder={
-                    toggleValue.video == "movie" ? "Video Link" : "Trailer Link"
+                    toggleValue.video == "movie" ? "Movie Link" : "Trailer Link"
                   }
                   width="100%"
                   className="movie-iframe admin-video-area"
@@ -393,7 +468,121 @@ function AddMovie() {
         </div>
       )}
       {toggleValue.page == "extra" && (
-        <div className="movie-container"></div>
+        <div className="movie-container">
+          <div className="admin-extra">
+            <div className="admin-extra-status">
+              <h1 className="admin-extra-status-title">Status:</h1>
+              <div className="admin-extra-status-props">
+                <div className="admin-extra-status-prop">
+                  <h1 className="admin-extra-status-prop-title">isNew:</h1>
+                  <FormControl
+                    variant="filled"
+                    sx={{
+                      m: 1,
+                      minWidth: 120,
+                      backgroundColor: "#fff",
+                      borderRadius: "5px",
+                    }}
+                  >
+                    <InputLabel id="demo-simple-select-label">isNew</InputLabel>
+                    <Select
+                      labelId="demo-simple-select-label"
+                      id="demo-simple-select"
+                      name="isNew"
+                      value={addMovieValue.status.isNew}
+                      label="isNew"
+                      onChange={(e) => handleExtraInput(e, "status")}
+                    >
+                      <MenuItem value={"true"}>True</MenuItem>
+                      <MenuItem value={"false"}>False</MenuItem>
+                    </Select>
+                  </FormControl>
+                </div>
+                <div className="admin-extra-status-prop">
+                  <h1 className="admin-extra-status-prop-title">isTrending:</h1>
+                  <FormControl
+                    variant="filled"
+                    sx={{
+                      m: 1,
+                      minWidth: 120,
+                      backgroundColor: "#fff",
+                      borderRadius: "5px",
+                    }}
+                  >
+                    <InputLabel id="demo-simple-select-label">
+                      isTrending
+                    </InputLabel>
+                    <Select
+                      labelId="demo-simple-select-label"
+                      id="demo-simple-select"
+                      name="isTrending"
+                      value={addMovieValue.status.isTrending}
+                      label="isTrending"
+                      onChange={(e) => handleExtraInput(e, "status")}
+                    >
+                      <MenuItem value={"true"}>True</MenuItem>
+                      <MenuItem value={"false"}>False</MenuItem>
+                    </Select>
+                  </FormControl>
+                </div>
+                <div className="admin-extra-status-prop">
+                  <h1 className="admin-extra-status-prop-title">Type:</h1>
+                  <FormControl
+                    variant="filled"
+                    sx={{
+                      m: 1,
+                      minWidth: 120,
+                      backgroundColor: "#fff",
+                      borderRadius: "5px",
+                    }}
+                  >
+                    <InputLabel id="demo-simple-select-label">Type</InputLabel>
+                    <Select
+                      labelId="demo-simple-select-label"
+                      id="demo-simple-select"
+                      name="type"
+                      value={addMovieValue.status.type}
+                      label="type"
+                      onChange={(e) => handleExtraInput(e, "status")}
+                    >
+                      <MenuItem value={"movie"}>Movie</MenuItem>
+                      <MenuItem value={"series"}>Series</MenuItem>
+                      <MenuItem value={"cartoon"}>Cartoon</MenuItem>
+                    </Select>
+                  </FormControl>
+                </div>
+              </div>
+            </div>
+            <div className="admin-extra-notes">
+              <h1 className="admin-extra-notes-title">Notes:</h1>
+              <div className="admin-extra-notes-main">
+                <ToggleButtonGroup
+                  color="info"
+                  value={toggleValue.notes}
+                  name="notes"
+                  onChange={(e) => handleToggleValue(e, "notes")}
+                  sx={{
+                    backgroundColor: "gold",
+                  }}
+                  exclusive
+                  aria-label="Platform"
+                >
+                  <ToggleButton value="uz">Uzbek</ToggleButton>
+                  <ToggleButton value="ru">Russian</ToggleButton>
+                  <ToggleButton value="en">English</ToggleButton>
+                </ToggleButtonGroup>
+                <textarea
+                  onChange={(e) => handleExtraInput(e, "notes")}
+                  value={addMovieValue.notes[toggleValue.notes]}
+                  name={toggleValue.notes}
+                  placeholder={`Note for ${toggleValue.notes}`}
+                  width="100%"
+                  className="admin-extra-notes-area"
+                ></textarea>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </section>
   );

@@ -31,7 +31,7 @@ function Header({
   user,
 }) {
   const [open, setOpen] = useState();
-  
+
   const navigate = useNavigate();
 
   const handleClick = () => {
@@ -138,7 +138,7 @@ function Header({
                     </div>
                   </div>
                   <div className="header-links">
-                    <Link to={`/${movie._id}`} className="header-link">
+                    <Link to={`/movie/${movie._id}`} className="header-link">
                       <PlayCircleFilledOutlinedIcon /> Watch now
                     </Link>
                     {user.watchlater && user.watchlater.includes(movie._id) ? (

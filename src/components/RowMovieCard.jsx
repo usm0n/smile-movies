@@ -8,7 +8,7 @@ import { Link } from "react-router-dom";
 
 function RowMovieCard({ movie }) {
   return (
-    <Link to={`/${movie._id}`} className="row-movie-card">
+    <Link to={`/movie/${movie._id}`} className="row-movie-card">
       <img src={movie.image.portrait} alt="" className="row-movie-card_img" />
       <div className="row-movie-card_info">
         <h1 className="row-movie-card_info-title">{movie.title[language]}</h1>
