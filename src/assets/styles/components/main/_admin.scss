@@ -13,14 +13,14 @@
     &-img {
       display: flex;
       flex-direction: column;
-      align-items: start;
+      align-items: center;
       gap: 20px;
     }
 
-    &-title{
-        display: flex;
+    &-title {
+      display: flex;
       flex-direction: column;
-      align-items: start;
+      align-items: center;
       gap: 20px;
     }
   }
@@ -44,7 +44,8 @@
   }
 
   &-check_input {
-    width: 90px;
+    width: 100px;
+    padding-left: 5px;
     background-color: transparent;
     border: 0.1px solid #ffffffb7;
     border-radius: 10px;
@@ -60,8 +61,45 @@
     }
   }
 
+  &-month_input {
+    width: 35px;
+    padding-left: 5px;
+    background-color: transparent;
+    border: 0.1px solid #ffffffa4;
+    border-radius: 10px;
+    font-weight: 500;
+    outline: none;
+    color: #fff;
+    font-size: 16px;
+    letter-spacing: 1px;
+    line-height: 30px;
+
+    &.active {
+      border: none;
+    }
+  }
+
+  &-year_input {
+    width: 60px;
+    padding-left: 5px;
+    background-color: transparent;
+    border: 0.1px solid #ffffffa4;
+    border-radius: 10px;
+    font-weight: 500;
+    outline: none;
+    color: #fff;
+    font-size: 16px;
+    letter-spacing: 1px;
+    line-height: 30px;
+
+    &.active {
+      border: none;
+    }
+  }
+
   &-grade_input {
-    width: 30px;
+    width: 40px;
+    padding-left: 5px;
     background-color: transparent;
     border: 0.1px solid #ffffffa4;
     border-radius: 10px;
@@ -78,6 +116,7 @@
   }
 
   &-country_input {
+    padding-left: 5px;
     width: 80px;
     background-color: transparent;
     border: 0.1px solid #ffffffbd;
@@ -95,7 +134,8 @@
   }
 
   &-check {
-    width: 100px;
+    padding-left: 5px;
+    width: 110px;
     background-color: transparent;
     border: 0.1px solid #ffffffb6;
     border-radius: 10px;
@@ -127,6 +167,37 @@
 
     &.active {
       border: none;
+    }
+  }
+
+  &-addmovie-btn{
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 150px;
+    height: 40px;
+    text-align: center;
+    justify-content: center;
+    display: flex;
+    align-items: center;
+    background-color: $gold-color;
+    border-radius: 23px;
+    font-weight: 500;
+    outline: none;
+    color: #000;
+    font-size: 16px;
+    letter-spacing: 1px;
+    line-height: 30px;
+    border: none;
+    transition: ease-in-out 0.3s;
+
+    &:hover{
+        opacity: 0.9;
+    }
+
+    &.disabled{
+        opacity: 0.5;
+        cursor: not-allowed;
     }
   }
 }

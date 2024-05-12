@@ -54,3 +54,10 @@ export const snackbar = (severity, text) => (
     </Alert>
   </Snackbar>
 );
+
+export const currentYear = new Date().getFullYear();
+export const currentMonth = new Date().getMonth();
+export const currentDay = new Date().getDate();
+export const currentDate = `${new Date().getDate()}.${new Date().getMonth()}.${new Date().getFullYear()}`;
+export const currentTime = `${new Date().getHours()}:${new Date().getMinutes()}:${new Date().getSeconds()}`;
+export const currentDateTime = `${new Date().getDate()}.${new Date().getMonth()}.${new Date().getFullYear()} ${new Date().getHours()}:${new Date().getMinutes()}:${new Date().getSeconds()}`;
