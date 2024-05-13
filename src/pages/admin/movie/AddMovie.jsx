@@ -22,6 +22,8 @@ import {
   currentDay,
   currentMonth,
   currentYear,
+  removeLocalDraft,
+  setUserId,
   snackbar,
 } from "../../../utilities/defaultFunctions";
 import { useMovie } from "../../../contexts/Movie";
@@ -37,55 +39,55 @@ function AddMovie() {
   });
   const [addMovieValue, setAddMovieValue] = useState({
     title: {
-      uz: "",
-      ru: "",
-      en: "",
+      uz: localStorage.getItem("titleDraft uz") || "",
+      ru: localStorage.getItem("titleDraft ru") || "",
+      en: localStorage.getItem("titleDraft en") || "",
     },
     notes: {
-      uz: "",
-      ru: "",
-      en: "",
+      uz: localStorage.getItem("notesDraft uz") || "",
+      ru: localStorage.getItem("notesDraft ru") || "",
+      en: localStorage.getItem("notesDraft en") || "",
     },
     description: {
-      uz: "",
-      ru: "",
-      en: "",
+      uz: localStorage.getItem("descriptionDraft uz") || "",
+      ru: localStorage.getItem("descriptionDraft ru") || "",
+      en: localStorage.getItem("descriptionDraft en") || "",
     },
     releaseDate: {
-      day: "",
-      month: "",
-      year: "",
+      day: localStorage.getItem("releaseDateDraft day") || "",
+      month: localStorage.getItem("releaseDateDraft month") || "",
+      year: localStorage.getItem("releaseDateDraft year") || "",
     },
     duration: {
-      hour: "",
-      min: "",
+      hour: localStorage.getItem("durationDraft hour") || "",
+      min: localStorage.getItem("durationDraft min") || "",
     },
     rating: {
-      like: 0,
-      dislike: 0,
-      imdb: "N/A",
+      like: localStorage.getItem("ratingDraft like") || 0,
+      dislike: localStorage.getItem("ratingDraft dislike") || 0,
+      imdb: localStorage.getItem("ratingDraft imdb") || "N/A",
     },
     country: {
-      uz: "",
-      ru: "",
-      en: "",
+      uz: localStorage.getItem("countryDraft uz") || "",
+      ru: localStorage.getItem("countryDraft ru") || "",
+      en: localStorage.getItem("countryDraft en") || "",
     },
     credit: {
-      uz: "",
-      ru: "",
-      en: "",
+      uz: localStorage.getItem("creditDraft uz") || "",
+      ru: localStorage.getItem("creditDraft ru") || "",
+      en: localStorage.getItem("creditDraft en") || "",
     },
     image: {
-      portrait: "",
-      fullscreen: "",
+      portrait: localStorage.getItem("imageDraft portrait") || "",
+      fullscreen: localStorage.getItem("imageDraft fullscreen") || "",
     },
     status: {
-      isNew: false,
-      isTrending: false,
-      type: "movie",
+      isNew: localStorage.getItem("statusDraft isNew") || "",
+      isTrending: localStorage.getItem("statusDraft isTrending") || "",
+      type: localStorage.getItem("statusDraft type") || "",
     },
-    movie: "",
-    trailer: "",
+    movie: localStorage.getItem("movieDraft") || "",
+    trailer: localStorage.getItem("trailerDraft") || "",
   });
 
   const [status, setStatus] = useState({
@@ -110,6 +112,7 @@ function AddMovie() {
         [e.target.name]: e.target.value,
       },
     });
+    localStorage.setItem(`${parent}Draft ${e.target.name}`, e.target.value);
   };
 
   const handleInput = (e) => {
@@ -118,6 +121,7 @@ function AddMovie() {
       ...addMovieValue,
       [e.target.name]: e.target.value,
     });
+    localStorage.setItem(`${e.target.name}Draft`, e.target.value);
   };
 
   const isNotTrim =
@@ -153,6 +157,7 @@ function AddMovie() {
       setStatus({ isEmpty: true });
     } else {
       addMovie(addMovieValue);
+      removeLocalDraft();
     }
   };
 

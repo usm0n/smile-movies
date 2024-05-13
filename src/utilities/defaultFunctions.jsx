@@ -22,6 +22,39 @@ export const setUserId = (userId) => {
   localStorage.setItem("userId", userId);
 };
 
+export const removeLocalDraft = () => {
+  localStorage.removeItem("titleDraft uz");
+  localStorage.removeItem("titleDraft ru");
+  localStorage.removeItem("titleDraft en");
+  localStorage.removeItem("notesDraft uz");
+  localStorage.removeItem("notesDraft ru");
+  localStorage.removeItem("notesDraft en");
+  localStorage.removeItem("descriptionDraft uz");
+  localStorage.removeItem("descriptionDraft ru");
+  localStorage.removeItem("descriptionDraft en");
+  localStorage.removeItem("releaseDateDraft day");
+  localStorage.removeItem("releaseDateDraft month");
+  localStorage.removeItem("releaseDateDraft year");
+  localStorage.removeItem("durationDraft hour");
+  localStorage.removeItem("durationDraft min");
+  localStorage.removeItem("ratingDraft like");
+  localStorage.removeItem("ratingDraft dislike");
+  localStorage.removeItem("ratingDraft imdb");
+  localStorage.removeItem("countryDraft uz");
+  localStorage.removeItem("countryDraft ru");
+  localStorage.removeItem("countryDraft en");
+  localStorage.removeItem("creditDraft uz");
+  localStorage.removeItem("creditDraft ru");
+  localStorage.removeItem("creditDraft en");
+  localStorage.removeItem("imageDraft portrait");
+  localStorage.removeItem("imageDraft fullscreen");
+  localStorage.removeItem("statusDraft isNew");
+  localStorage.removeItem("statusDraft isTrending");
+  localStorage.removeItem("statusDraft type");
+  localStorage.removeItem("movieDraft");
+  localStorage.removeItem("trailerDraft");
+};
+
 export const dialog = (title, text, open, close, agree) => (
   <Dialog
     open={open}
