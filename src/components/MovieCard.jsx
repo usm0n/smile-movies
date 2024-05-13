@@ -1,9 +1,9 @@
 import React from "react";
 import { Link } from "react-router-dom";
 
-function MovieCard({ movie, language }) {
+function MovieCard({ linkTo, movie, language }) {
   return (
-    <Link to={`/movie/${movie._id}`}>
+    <Link to={linkTo}>
       <div className="movies-card" key={movie._id}>
         <img
           src={movie.image.portrait}

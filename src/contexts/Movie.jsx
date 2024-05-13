@@ -14,8 +14,15 @@ const MovieContext = createContext({
     isSuccess: false,
   },
 
-  getMovieId: () => {},
+  statusEditMovie: {
+    loading: false,
+    isError: false,
+    isSuccess: false,
+  },
+
+  getMovieId: (movieId) => {},
   addMovie: () => {},
+  editMovie: (data) => {},
 });
 
 export const useMovie = () => useContext(MovieContext);
@@ -23,6 +30,11 @@ export const useMovie = () => useContext(MovieContext);
 const MovieProvider = ({ children }) => {
   const [movieById, setMovie] = useState({});
   const [statusAddMovie, setStatusAddMovie] = useState({
+    loading: false,
+    isError: false,
+    isSuccess: false,
+  });
+  const [statusEditMovie, setStatusEditMovie] = useState({
     loading: false,
     isError: false,
     isSuccess: false,
@@ -73,6 +85,46 @@ const MovieProvider = ({ children }) => {
       });
   };
 
+  const editMovie = async (movie) => {
+    setStatusEditMovie({
+      loading: true,
+      isError: false,
+      isSuccess: false,
+    });
+    await movies
+      .updateMovieById(movieId, movie)
+      .then(() => {
+        setStatusEditMovie({
+          loading: false,
+          isError: false,
+          isSuccess: true,
+        });
+        setTimeout(() => {
+          window.location.reload();
+          setStatusEditMovie({
+            loading: false,
+            isError: false,
+            isSuccess: false,
+          });
+        }, 1500);
+      })
+      .catch(() => {
+        setStatusEditMovie({
+          loading: false,
+          isError: true,
+          isSuccess: false,
+        });
+        setTimeout(() => {
+          window.location.reload();
+          setStatusEditMovie({
+            loading: false,
+            isError: false,
+            isSuccess: false,
+          });
+        }, 1500);
+      });
+  };
+
   useEffect(() => {
     setMovie({
       isLoading: true,
@@ -99,7 +151,14 @@ const MovieProvider = ({ children }) => {
 
   return (
     <MovieContext.Provider
-      value={{ movieById, getMovieId, addMovie, statusAddMovie }}
+      value={{
+        movieById,
+        getMovieId,
+        addMovie,
+        statusAddMovie,
+        statusEditMovie,
+        editMovie,
+      }}
     >
       {children}
     </MovieContext.Provider>

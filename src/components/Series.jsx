@@ -32,7 +32,11 @@ function Cartoons({ allMovies, language }) {
                 allMovies.movies
                   .filter((m) => m.status.type === "series")
                   .map((movie) => (
-                    <MovieCard movie={movie} language={language} />
+                    <MovieCard
+                      linkTo={`/movie/${movie._id}`}
+                      movie={movie}
+                      language={language}
+                    />
                   ))
               ) : (
                 <h1>Series not found</h1>

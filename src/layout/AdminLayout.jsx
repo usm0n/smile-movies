@@ -1,10 +1,8 @@
 import React, { useEffect } from "react";
 import AdminMenu from "../components/AdminMenu";
-import Admin from "../pages/admin/AddMovie";
 import { AdminRoutes } from "../helpers/admin.routes";
 import { Route, Routes, useNavigate } from "react-router-dom";
 import { routes } from "../helpers/routes";
-import AddMovie from "../pages/admin/AddMovie";
 import { useUser } from "../contexts/User";
 import { Backdrop, CircularProgress } from "@mui/material";
 
@@ -14,9 +12,9 @@ function AdminLayout() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!isAdmin.result) {
-      navigate("/");
-    }
+    // if (!isAdmin.loading && !isAdmin.result) {
+    //   navigate("/");
+    // }
   }, []);
   return !isAdmin.loading ? (
     <>

@@ -9,7 +9,9 @@ import AboutLayout from "../layout/AboutLayout";
 import Contact from "../pages/components/contact/Contact";
 import ContactLayout from "../layout/ContactLayout";
 import AdminLayout from "../layout/AdminLayout";
-import AddMovie from "../pages/admin/AddMovie";
+import EditMovie from "../pages/admin/movie/EditMovie";
+import SearchEditMovie from "../pages/Search/EditMovie";
+import EditMovieComp from "../components/EditMovie";
 export const routes = [
   {
     path: "/",
@@ -47,6 +49,16 @@ export const routes = [
   },
 
   {
+    path: "/admin/edit-movie/:movieId",
+    element: <EditMovieComp />,
+  },
+
+  {
+    path: "/admin/edit-movie/search/:value",
+    element: <SearchEditMovie />,
+  },
+
+  {
     path: "/search/:value",
     element: <Search />,
   },
@@ -58,6 +70,6 @@ export const routes = [
 
   {
     path: "/contact",
-    element: <ContactLayout/>
-  }
+    element: <ContactLayout />,
+  },
 ];

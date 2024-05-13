@@ -24,6 +24,7 @@ import { dialog, snackbar } from "../utilities/defaultFunctions";
 import { useFavourites } from "../contexts/Favourites";
 import { ToggleButton, ToggleButtonGroup } from "@mui/material";
 import { language } from "../utilities/defaultFunctions";
+import { Helmet } from "react-helmet";
 
 function Movie({ movie }) {
   const { getMovieId, allComments, postComment, postCommentStatus } =
@@ -104,6 +105,9 @@ function Movie({ movie }) {
 
   return (
     <section key={movie._id} className="movie">
+      <Helmet>
+        <title>Smile Movie | {movie.title[language]}</title>
+      </Helmet>
       {dialog(
         "Please sign In!",
         "To add to Watch Later you must log in first.",
