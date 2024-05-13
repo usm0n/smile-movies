@@ -43,7 +43,7 @@ function WatchLater() {
                 width: "100px",
               }}
             />
-          ) : watchlater.isEmpty ? (
+          ) : watchlater.result.length == 0 ? (
             "No movies"
           ) : watchlater.result.length == 1 ? (
             <>{watchlater.result.length} movie</>

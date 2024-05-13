@@ -9,6 +9,7 @@ import Tooltip from "@mui/material/Tooltip";
 import {
   Autocomplete,
   Avatar,
+  Badge,
   Divider,
   IconButton,
   ListItemIcon,
@@ -26,6 +27,7 @@ import LoginIcon from "@mui/icons-material/Login";
 import TranslateIcon from "@mui/icons-material/Translate";
 import { language, setLanguage } from "../utilities/defaultFunctions";
 import { useAllMovies } from "../contexts/Movies";
+import { useWatchLater } from "../contexts/WatchLater";
 
 function Navbar() {
   const [active, setActive] = useState(false);
@@ -38,6 +40,7 @@ function Navbar() {
     useUser();
 
   const { allMovies } = useAllMovies();
+  const { watchlater } = useWatchLater();
 
   const menuClose = () => {
     setActive(false);
@@ -242,14 +245,21 @@ function Navbar() {
                           )}
                         </MenuItem>
                         <Divider />
-                        <MenuItem
-                          onClick={() => menuNavigation("/watch-later")}
+                        <Badge
+                          color="warning"
+                          badgeContent={
+                            watchlater.result.length
+                          }
                         >
-                          <ListItemIcon>
-                            <WatchLater fontSize="small" />
-                          </ListItemIcon>
-                          Watch Later
-                        </MenuItem>
+                          <MenuItem
+                            onClick={() => menuNavigation("/watch-later")}
+                          >
+                            <ListItemIcon>
+                              <WatchLater fontSize="small" />
+                            </ListItemIcon>
+                            Watch Later
+                          </MenuItem>
+                        </Badge>
                         <MenuItem onClick={() => menuNavigation("/favourites")}>
                           <ListItemIcon>
                             <StarIcon fontSize="small" />

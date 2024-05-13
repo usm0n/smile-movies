@@ -43,7 +43,7 @@ function Favorites() {
                 width: "100px",
               }}
             />
-          ) : favourites.isEmpty ? (
+          ) : favourites.result.length == 0 ? (
             "No movies"
           ) : favourites.result.length == 1 ? (
             <>{favourites.result.length} movie</>

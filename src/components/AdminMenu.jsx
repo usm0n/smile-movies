@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import {
+  Avatar,
   Box,
   Button,
   Divider,
@@ -13,10 +14,17 @@ import {
 import MenuIcon from "@mui/icons-material/Menu";
 import { AdminRoutes } from "../helpers/admin.routes";
 import { useNavigate } from "react-router-dom";
+import Home from "@mui/icons-material/Home";
 
-function AdminMenu() {
+function AdminMenu({ user }) {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
+
+  const handleClick = (navigate) => {
+    navigate(navigate);
+    setOpen(false);
+  };
+
   return (
     <>
       <Button
@@ -40,18 +48,29 @@ function AdminMenu() {
       >
         <Box sx={{ width: 250 }} role="presentation">
           <List>
-            {AdminRoutes.map((item, index) => (
-              <ListItem
-                onClick={() => navigate(item.path)}
-                key={item}
-                disablePadding
-              >
-                <ListItemButton>
-                  <ListItemIcon>{<item.icon/>}</ListItemIcon>
-                  <ListItemText primary={item.title} />
-                </ListItemButton>
-              </ListItem>
-            ))}
+            <ListItem
+              sx={{ pl: 2, gap: 1 }}
+              onClick={() => handleClick("/admin")}
+              disablePadding
+            >
+              <Avatar sx={{ width: 56, height: 56 }}>
+                {user.firstname.slice(0, 1)}
+              </Avatar>
+              <Box>
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    flexWrap: "wrap",
+                    gap: "5px",
+                  }}
+                >
+                  <ListItemText primary={user.firstname} />
+                  <ListItemText primary={user.lastname} />
+                </Box>
+                Admin
+              </Box>
+            </ListItem>
           </List>
         </Box>
       </Drawer>

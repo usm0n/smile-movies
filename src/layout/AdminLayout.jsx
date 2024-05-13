@@ -7,7 +7,7 @@ import { useUser } from "../contexts/User";
 import { Backdrop, CircularProgress } from "@mui/material";
 
 function AdminLayout() {
-  const { isAdmin } = useUser();
+  const { isAdmin, user } = useUser();
 
   const navigate = useNavigate();
 
@@ -18,15 +18,11 @@ function AdminLayout() {
   }, []);
   return !isAdmin.loading ? (
     <>
-      <AdminMenu />
+      {isAdmin.result && <AdminMenu user={user} />}
       <Routes>
         {AdminRoutes.map((item) => {
           return (
-            <Route
-              path={item.path}
-              element={<item.element />}
-              key={item.path}
-            />
+            <Route path={item.path} element={item.element} key={item.path} />
           );
         })}
       </Routes>
