@@ -11,6 +11,7 @@ import ContactLayout from "../layout/ContactLayout";
 import AdminLayout from "../layout/AdminLayout";
 import EditMovie from "../pages/admin/movie/EditMovie";
 import SearchEditMovie from "../pages/Search/EditMovie";
+import Premium from '../pages/components/Premium'
 export const routes = [
   {
     path: "/",
@@ -71,4 +72,9 @@ export const routes = [
     path: "/contact",
     element: <ContactLayout />,
   },
+
+  {
+    path: "/premium",
+    element: <Premium/>
+  }
 ];
