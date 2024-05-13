@@ -1,25 +1,36 @@
 import { Autocomplete, TextField } from "@mui/material";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useAllMovies } from "../../../contexts/Movies";
 import { language } from "../../../utilities/defaultFunctions";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import SearchEditMovie from "../../Search/EditMovie";
+import EditMovieComp from "../../../components/EditMovie";
+import { useMovie } from "../../../contexts/Movie";
 
 function EditMovie() {
   const { allMovies } = useAllMovies();
+  const { getMovieId, movieById } = useMovie();
   const navigate = useNavigate();
   const [searchValue, setSearchValue] = useState();
 
+  const { movieId } = useParams();
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    navigate(`/admin/edit-movie/search/${searchValue}`);
+    if (searchValue.length > 3) {
+      navigate(`/admin/edit-movie/search/${searchValue}`);
+    }
   };
 
-  return (
+  useEffect(() => {
+    getMovieId(movieId);
+  }, []);
+
+  return !movieId ? (
     <div className="admin-edit-movie">
       <form onSubmit={handleSubmit} className="admin-edit-movie-search-bar">
         <h1 className="admin-edit-movie-search-bar-title">
-          Search for edit movie:
+          Enter Movie Name that you want to edit
         </h1>
         <Autocomplete
           sx={{
@@ -49,6 +60,10 @@ function EditMovie() {
         />
       </form>
     </div>
+  ) : (
+    !movieById.isLoading && movieById.movie && (
+      <EditMovieComp movie={movieById.movie} />
+    )
   );
 }
 

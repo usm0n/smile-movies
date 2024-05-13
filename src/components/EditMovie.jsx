@@ -5,6 +5,7 @@ import {
   Button,
   FormControl,
   InputLabel,
+  ListItemIcon,
   MenuItem,
   Select,
   ToggleButton,
@@ -28,11 +29,11 @@ import {
 import { useMovie } from "../contexts/Movie";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { useNavigate, useParams } from "react-router-dom";
+import Edit from "@mui/icons-material/Edit";
 
-function EditMovie() {
-  const { editMovie, statusEditMovie, getMovieId, movieById } = useMovie();
+function EditMovie({ movie }) {
+  const { editMovie, statusEditMovie, getMovieId } = useMovie();
 
-  const movie = !movieById.isLoading && movieById.movie ? movieById.movie : "";
   const [active, setActive] = useState(false);
   const [toggleValue, setToggleValue] = useState({
     image: "portrait",
@@ -41,65 +42,63 @@ function EditMovie() {
     page: "standart",
     notes: "uz",
   });
-  const [addMovieValue, setAddMovieValue] = useState({
+  const [editMovieValue, seteditMovieValue] = useState({
     title: {
       uz: movie.title.uz,
-      ru: "",
-      en: "",
+      ru: movie.title.ru,
+      en: movie.title.en,
     },
     notes: {
-      uz: "",
-      ru: "",
-      en: "",
+      uz: movie.notes.uz,
+      ru: movie.notes.ru,
+      en: movie.notes.en,
     },
     description: {
-      uz: "",
-      ru: "",
-      en: "",
+      uz: movie.description.uz,
+      ru: movie.description.ru,
+      en: movie.description.en,
     },
     releaseDate: {
-      day: "",
-      month: "",
-      year: "",
+      day: movie.releaseDate.day,
+      month: movie.releaseDate.month,
+      year: movie.releaseDate.year,
     },
     duration: {
-      hour: "",
-      min: "",
+      hour: movie.duration.hour,
+      min: movie.duration.min,
     },
     rating: {
-      like: 0,
-      dislike: 0,
-      imdb: "N/A",
+      like: movie.rating.like,
+      dislike: movie.rating.dislike,
+      imdb: movie.rating.imdb,
     },
     country: {
-      uz: "",
-      ru: "",
-      en: "",
+      uz: movie.country.uz,
+      ru: movie.country.ru,
+      en: movie.country.en,
     },
     credit: {
-      uz: "",
-      ru: "",
-      en: "",
+      uz: movie.credit.uz,
+      ru: movie.credit.ru,
+      en: movie.credit.en,
     },
     image: {
-      portrait: "",
-      fullscreen: "",
+      portrait: movie.image.portrait,
+      fullscreen: movie.image.fullscreen,
     },
     status: {
-      isNew: false,
-      isTrending: false,
-      type: "movie",
+      isNew: movie.status.isNew,
+      isTrending: movie.status.isTrending,
+      type: movie.status.type,
     },
-    movie: "",
-    trailer: "",
+    movie: movie.movie,
+    trailer: movie.trailer,
   });
 
   const { movieId } = useParams();
-
   const [status, setStatus] = useState({
     isEmpty: false,
   });
-
   const navigate = useNavigate();
 
   const handleToggleValue = (e, name) => {
@@ -111,10 +110,10 @@ function EditMovie() {
 
   const handleExtraInput = (e, parent) => {
     setStatus({ isEmpty: false });
-    setAddMovieValue({
-      ...addMovieValue,
+    seteditMovieValue({
+      ...editMovieValue,
       [parent]: {
-        ...addMovieValue[parent],
+        ...editMovieValue[parent],
         [e.target.name]: e.target.value,
       },
     });
@@ -122,37 +121,37 @@ function EditMovie() {
 
   const handleInput = (e) => {
     setStatus({ isEmpty: false });
-    setAddMovieValue({
-      ...addMovieValue,
+    seteditMovieValue({
+      ...editMovieValue,
       [e.target.name]: e.target.value,
     });
   };
 
   const isNotTrim =
-    !addMovieValue.country.en.trim() ||
-    !addMovieValue.country.ru.trim() ||
-    !addMovieValue.country.uz.trim() ||
-    !addMovieValue.credit.en.trim() ||
-    !addMovieValue.credit.ru.trim() ||
-    !addMovieValue.credit.uz.trim() ||
-    !addMovieValue.description.en.trim() ||
-    !addMovieValue.description.ru.trim() ||
-    !addMovieValue.description.uz.trim() ||
-    !addMovieValue.image.fullscreen.trim() ||
-    !addMovieValue.image.portrait.trim() ||
-    !addMovieValue.movie.trim() ||
-    !addMovieValue.title.en.trim() ||
-    !addMovieValue.title.ru.trim() ||
-    !addMovieValue.title.uz.trim() ||
-    !addMovieValue.releaseDate.day.trim() ||
-    !addMovieValue.releaseDate.month.trim() ||
-    !addMovieValue.releaseDate.year.trim() ||
-    !addMovieValue.trailer.trim() ||
-    !addMovieValue.duration.hour.trim() ||
-    !addMovieValue.duration.min.trim() ||
-    addMovieValue.rating.like < 0 ||
-    addMovieValue.rating.dislike < 0 ||
-    !addMovieValue.rating.imdb.trim();
+    !editMovieValue.country.en.trim() ||
+    !editMovieValue.country.ru.trim() ||
+    !editMovieValue.country.uz.trim() ||
+    !editMovieValue.credit.en.trim() ||
+    !editMovieValue.credit.ru.trim() ||
+    !editMovieValue.credit.uz.trim() ||
+    !editMovieValue.description.en.trim() ||
+    !editMovieValue.description.ru.trim() ||
+    !editMovieValue.description.uz.trim() ||
+    !editMovieValue.image.fullscreen.trim() ||
+    !editMovieValue.image.portrait.trim() ||
+    !editMovieValue.movie.trim() ||
+    !editMovieValue.title.en.trim() ||
+    !editMovieValue.title.ru.trim() ||
+    !editMovieValue.title.uz.trim() ||
+    !editMovieValue.releaseDate.day.trim() ||
+    !editMovieValue.releaseDate.month.trim() ||
+    !editMovieValue.releaseDate.year.trim() ||
+    !editMovieValue.trailer.trim() ||
+    !editMovieValue.duration.hour.trim() ||
+    !editMovieValue.duration.min.trim() ||
+    editMovieValue.rating.like < 0 ||
+    editMovieValue.rating.dislike < 0 ||
+    !editMovieValue.rating.imdb.trim();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -160,7 +159,7 @@ function EditMovie() {
     if (isNotTrim) {
       setStatus({ isEmpty: true });
     } else {
-      editMovie(addMovieValue);
+      editMovie(editMovieValue);
     }
   };
 
@@ -186,7 +185,7 @@ function EditMovie() {
       </Button>
       {status.isEmpty && snackbar("warning", "Please fill all fields")}
       {statusEditMovie.isSuccess &&
-        snackbar("success", "Movie added successfully")}
+        snackbar("success", "Movie edited successfully")}
       {statusEditMovie.isError && snackbar("error", "Something went wrong")}
       <div
         style={{
@@ -228,7 +227,8 @@ function EditMovie() {
           "Loading..."
         ) : (
           <>
-            <AddIcon /> Edit
+            <Edit />
+            Edit
           </>
         )}
       </button>
@@ -253,7 +253,7 @@ function EditMovie() {
               <textarea
                 onChange={(e) => handleExtraInput(e, "image")}
                 name={toggleValue.image}
-                value={addMovieValue.image[toggleValue.image]}
+                value={editMovieValue.image[toggleValue.image]}
                 placeholder={`${toggleValue.image} photo link`}
                 className="admin-input"
               />
@@ -283,7 +283,7 @@ function EditMovie() {
                       <ToggleButton value="en">English</ToggleButton>
                     </ToggleButtonGroup>
                     <input
-                      value={addMovieValue.title[toggleValue.title]}
+                      value={editMovieValue.title[toggleValue.title]}
                       name={toggleValue.title}
                       type="text"
                       onChange={(e) => handleExtraInput(e, "title")}
@@ -297,7 +297,7 @@ function EditMovie() {
                     <button className="movie-like">
                       <ThumbUpOffAltIcon />
                       <input
-                        value={addMovieValue.rating.like}
+                        value={editMovieValue.rating.like}
                         name="like"
                         type="text"
                         onChange={(e) => handleExtraInput(e, "rating")}
@@ -308,7 +308,7 @@ function EditMovie() {
                     <button className="movie-dislike">
                       <ThumbDownOffAltIcon />
                       <input
-                        value={addMovieValue.rating.dislike}
+                        value={editMovieValue.rating.dislike}
                         name="dislike"
                         type="text"
                         onChange={(e) => handleExtraInput(e, "rating")}
@@ -322,7 +322,7 @@ function EditMovie() {
                   <span className="movie-info_title">
                     <Calendar />
                     <input
-                      value={addMovieValue.releaseDate.day}
+                      value={editMovieValue.releaseDate.day}
                       name="day"
                       type="text"
                       onChange={(e) => handleExtraInput(e, "releaseDate")}
@@ -334,7 +334,7 @@ function EditMovie() {
                       }
                     />
                     <input
-                      value={addMovieValue.releaseDate.month}
+                      value={editMovieValue.releaseDate.month}
                       name="month"
                       type="text"
                       onChange={(e) => handleExtraInput(e, "releaseDate")}
@@ -346,7 +346,7 @@ function EditMovie() {
                       }
                     />
                     <input
-                      value={addMovieValue.releaseDate.year}
+                      value={editMovieValue.releaseDate.year}
                       name="year"
                       type="text"
                       onChange={(e) => handleExtraInput(e, "releaseDate")}
@@ -360,7 +360,7 @@ function EditMovie() {
                   <span className="movie-info_title">
                     <WatchLaterIcon />
                     <input
-                      value={addMovieValue.duration.hour}
+                      value={editMovieValue.duration.hour}
                       name="hour"
                       type="text"
                       onChange={(e) => handleExtraInput(e, "duration")}
@@ -373,7 +373,7 @@ function EditMovie() {
                     />
                     :
                     <input
-                      value={addMovieValue.duration.min}
+                      value={editMovieValue.duration.min}
                       name="min"
                       type="text"
                       onChange={(e) => handleExtraInput(e, "duration")}
@@ -392,7 +392,7 @@ function EditMovie() {
                     </span>
                     <input
                       onChange={(e) => handleExtraInput(e, "rating")}
-                      value={addMovieValue.rating.imdb}
+                      value={editMovieValue.rating.imdb}
                       name="imdb"
                       placeholder="imdb"
                       type="text"
@@ -410,7 +410,7 @@ function EditMovie() {
                     </span>
                     <input
                       onChange={(e) => handleExtraInput(e, "country")}
-                      value={addMovieValue.country[toggleValue.title]}
+                      value={editMovieValue.country[toggleValue.title]}
                       name={toggleValue.title}
                       placeholder={toggleValue.title.toUpperCase()}
                       type="text"
@@ -427,7 +427,7 @@ function EditMovie() {
                     <input
                       onChange={(e) => handleExtraInput(e, "credit")}
                       placeholder={`${toggleValue.title.toUpperCase()} credit`}
-                      value={addMovieValue.credit[toggleValue.title]}
+                      value={editMovieValue.credit[toggleValue.title]}
                       name={toggleValue.title}
                       type="text"
                       className={active ? "admin-check active" : "admin-check"}
@@ -438,7 +438,7 @@ function EditMovie() {
               <p className="movie-subtitle">
                 <textarea
                   onChange={(e) => handleExtraInput(e, "description")}
-                  value={addMovieValue.description[toggleValue.title]}
+                  value={editMovieValue.description[toggleValue.title]}
                   name={toggleValue.title}
                   placeholder={`${toggleValue.title.toUpperCase()} description`}
                   id=""
@@ -479,8 +479,8 @@ function EditMovie() {
                   name={toggleValue.video}
                   value={
                     toggleValue.video == "movie"
-                      ? addMovieValue.movie
-                      : addMovieValue.trailer
+                      ? editMovieValue.movie
+                      : editMovieValue.trailer
                   }
                   placeholder={
                     toggleValue.video == "movie" ? "Movie Link" : "Trailer Link"
@@ -515,7 +515,7 @@ function EditMovie() {
                       labelId="demo-simple-select-label"
                       id="demo-simple-select"
                       name="isNew"
-                      value={addMovieValue.status.isNew}
+                      value={editMovieValue.status.isNew}
                       label="isNew"
                       onChange={(e) => handleExtraInput(e, "status")}
                     >
@@ -542,7 +542,7 @@ function EditMovie() {
                       labelId="demo-simple-select-label"
                       id="demo-simple-select"
                       name="isTrending"
-                      value={addMovieValue.status.isTrending}
+                      value={editMovieValue.status.isTrending}
                       label="isTrending"
                       onChange={(e) => handleExtraInput(e, "status")}
                     >
@@ -567,7 +567,7 @@ function EditMovie() {
                       labelId="demo-simple-select-label"
                       id="demo-simple-select"
                       name="type"
-                      value={addMovieValue.status.type}
+                      value={editMovieValue.status.type}
                       label="type"
                       onChange={(e) => handleExtraInput(e, "status")}
                     >
@@ -599,7 +599,7 @@ function EditMovie() {
                 </ToggleButtonGroup>
                 <textarea
                   onChange={(e) => handleExtraInput(e, "notes")}
-                  value={addMovieValue.notes[toggleValue.notes]}
+                  value={editMovieValue.notes[toggleValue.notes]}
                   name={toggleValue.notes}
                   placeholder={`Note for ${toggleValue.notes}`}
                   width="100%"

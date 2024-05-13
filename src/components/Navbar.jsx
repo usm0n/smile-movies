@@ -75,8 +75,6 @@ function Navbar() {
     }
   };
 
-  console.log(searchValue);
-
   const navigate = useNavigate();
 
   return (
