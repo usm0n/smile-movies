@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import Img from '../../../assets/images/contact-bg.jpg'
+import { Helmet } from 'react-helmet';
 
 function Contact() {
   const [uName, setUName] = useState('');
@@ -80,13 +81,17 @@ function Contact() {
   };
   return (
     <section className="contact">
+      <Helmet>
+        <title>Smile Movie | Contact</title>
+      </Helmet>
       <div className="contact-bg">
         <img src={Img} alt="" className="contact-bg_img" />
       </div>
       <div className="container">
         <div className="contact-content">
+          <h1 className="contact-title">Fikr va takliflar uchun</h1>
+          {error && <p className={active ? "contact-error active" : "contact-error"}>{error}</p>}
           <form className="contact-form">
-            <h1 className="contact-title">Fikr va takliflar uchun</h1>
             <div className="contact-items" data-aos="fade-down">
               <label className="contact-name">Name *</label>
               <input value={uName} required onChange={handleInputChange} type="text" className='contact-input' />
@@ -106,7 +111,6 @@ function Contact() {
               <label className='contact-name'>Message *</label>
               <input type="text" value={message} onChange={handleMessageChange} className='contact-input' />
             </div>
-            {error && <p className={active ? "contact-error active" : "contact-error"}>{error}</p>}
             <button onClick={sendMessage} className='contact-submit'>Send</button>
           </form>
         </div>
