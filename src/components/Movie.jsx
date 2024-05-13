@@ -57,11 +57,14 @@ function Movie({ movie }) {
       addWatchLater(movieId);
       setTimeout(() => {
         window.location.reload();
-      }, 1000);
+      }, 1500);
     }
   };
   const handleRemoveFromWatchLater = (movieId) => {
     removeWatchLater(movieId);
+    setTimeout(() => {
+      window.location.reload();
+    }, 1500);
   };
   const handleOpenWatchLaterDialog = () => {
     navigate("/login");
@@ -77,11 +80,14 @@ function Movie({ movie }) {
       addFavourites(movieId);
       setTimeout(() => {
         window.location.reload();
-      }, 1000);
+      }, 1500);
     }
   };
   const handleRemoveFromFavourites = (movieId) => {
     removeFavourites(movieId);
+    setTimeout(() => {
+      window.location.reload();
+    }, 1500);
   };
   const handleOpenFavouritesDialog = () => {
     navigate("/login");
@@ -334,7 +340,12 @@ function Movie({ movie }) {
                 postCommentStatus.buttonLoading ||
                 postCommentStatus.isSuccess
               }
-              onClick={() => postComment(postCommentName, postCommentComment)}
+              onClick={() => {
+                postComment(postCommentName, postCommentComment);
+                setTimeout(() => {
+                  window.location.reload()
+                }, 1500)
+              }}
               className={
                 !postCommentComment ||
                 !postCommentName ||

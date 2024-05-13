@@ -51,7 +51,7 @@ function Search() {
             return (
               <>
                 <Grid key={i} item xs={12} sm={6} md={4} lg={3}>
-                  <MovieCard linkTo={m._id} movie={m} language={language} />
+                  <MovieCard linkTo={`/movie/${m._id}`} movie={m} language={language} />
                 </Grid>
               </>
             );

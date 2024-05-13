@@ -45,7 +45,7 @@ function Header({
       addWatchLater(movieId);
       setTimeout(() => {
         window.location.reload();
-      }, 2000);
+      }, 1500);
     }
   };
 
@@ -53,7 +53,7 @@ function Header({
     removeWatchLater(movieId);
     setTimeout(() => {
       window.location.reload();
-    }, 2000);
+    }, 1500);
   };
 
   const handleClose = () => {

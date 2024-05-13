@@ -4,7 +4,13 @@ import Like from "../assets/icons/Like";
 import DisLike from "../assets/icons/DisLike";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import { useComments } from "../contexts/Comments";
-import { Alert, Backdrop, CircularProgress, Snackbar } from "@mui/material";
+import {
+  Alert,
+  Avatar,
+  Backdrop,
+  CircularProgress,
+  Snackbar,
+} from "@mui/material";
 
 function Comment({ comment, index }) {
   const { getCommentId, deleteComment, deleteCommentStatus } = useComments();
@@ -28,7 +34,15 @@ function Comment({ comment, index }) {
           </Alert>
         </Snackbar>
       )} */}
-      <img src={User} className="movie-user_image" alt="Commet's user" />
+      <Avatar
+        sx={{
+          width: 56,
+          height: 56,
+        }}
+        className="movie-user_image"
+      >
+        {comment.firstname.slice(0, 1)}
+      </Avatar>
 
       <div className="movie-comment_items">
         <h1 className="movie-comment_name">{comment.firstname}</h1>
