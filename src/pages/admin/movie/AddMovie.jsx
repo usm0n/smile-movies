@@ -82,9 +82,9 @@ function AddMovie() {
       fullscreen: localStorage.getItem("imageDraft fullscreen") || "",
     },
     status: {
-      isNew: localStorage.getItem("statusDraft isNew") || "",
-      isTrending: localStorage.getItem("statusDraft isTrending") || "",
-      type: localStorage.getItem("statusDraft type") || "",
+      isNew: localStorage.getItem("statusDraft isNew") || false,
+      isTrending: localStorage.getItem("statusDraft isTrending") || false,
+      type: localStorage.getItem("statusDraft type") || "movie",
     },
     movie: localStorage.getItem("movieDraft") || "",
     trailer: localStorage.getItem("trailerDraft") || "",

@@ -20,9 +20,16 @@ const MovieContext = createContext({
     isSuccess: false,
   },
 
+  statusDeleteMovie: {
+    loading: false,
+    isError: false,
+    isSuccess: false,
+  },
+
   getMovieId: (movieId) => {},
   addMovie: () => {},
   editMovie: (data) => {},
+  deleteMovie: (movieId) => {},
 });
 
 export const useMovie = () => useContext(MovieContext);
@@ -35,6 +42,11 @@ const MovieProvider = ({ children }) => {
     isSuccess: false,
   });
   const [statusEditMovie, setStatusEditMovie] = useState({
+    loading: false,
+    isError: false,
+    isSuccess: false,
+  });
+  const [statusDeleteMovie, setStatusDeleteMovie] = useState({
     loading: false,
     isError: false,
     isSuccess: false,
@@ -125,6 +137,46 @@ const MovieProvider = ({ children }) => {
       });
   };
 
+  const deleteMovie = async (movieId) => {
+    setStatusDeleteMovie({
+      loading: true,
+      isError: false,
+      isSuccess: false,
+    });
+    await movies
+      .deleteMovieById(movieId)
+      .then(() => {
+        setStatusDeleteMovie({
+          loading: false,
+          isError: false,
+          isSuccess: true,
+        });
+        setTimeout(() => {
+          window.location.reload();
+          setStatusDeleteMovie({
+            loading: false,
+            isError: false,
+            isSuccess: false,
+          });
+        }, 1500);
+      })
+      .catch(() => {
+        setStatusDeleteMovie({
+          loading: false,
+          isError: true,
+          isSuccess: false,
+        });
+        setTimeout(() => {
+          window.location.reload();
+          setStatusDeleteMovie({
+            loading: false,
+            isError: false,
+            isSuccess: false,
+          });
+        }, 1500);
+      });
+  };
+
   useEffect(() => {
     setMovie({
       isLoading: true,
@@ -158,6 +210,8 @@ const MovieProvider = ({ children }) => {
         statusAddMovie,
         statusEditMovie,
         editMovie,
+        deleteMovie,
+        statusDeleteMovie,
       }}
     >
       {children}

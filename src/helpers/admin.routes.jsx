@@ -8,20 +8,20 @@ import EditMovie from "../pages/admin/movie/EditMovie";
 export const AdminRoutes = [
   {
     title: "Main",
-    icon: <HomeIcon/>,
+    icon: <HomeIcon />,
     path: "",
-    element: <Index/>,
+    element: <Index />,
   },
   {
     title: "Add Movie",
-    icon: <AddIcon/>,
+    icon: <AddIcon />,
     path: "add-movie",
-    element: <AddMovie/>,
+    element: <AddMovie />,
   },
   {
     title: "Edit Movie",
-    icon: <EditIcon/>,
+    icon: <EditIcon />,
     path: "edit-movie",
-    element: <EditMovie/>,
+    element: <EditMovie />,
   },
 ];
