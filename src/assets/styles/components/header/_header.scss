@@ -1,9 +1,8 @@
 .header {
-  // padding-top: 70px;
 
   &-bg {
     position: relative;
-    height: 90vh;
+    height: 100vh;
     width: 100%;
     object-fit: cover;
     background-position: center;
@@ -45,6 +44,7 @@
     position: absolute;
     height: 100vh;
     gap: 20px;
+    padding-top: 100px;
     width: 100%;
     flex-wrap: wrap;
 

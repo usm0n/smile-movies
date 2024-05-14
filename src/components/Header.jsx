@@ -83,6 +83,13 @@ function Header({
         snackbar("warning", "Movie not found in Watch Later")}
       <>
         <Swiper
+          style={{
+            "--swiper-pagination-color": "#FFBA08",
+            "--swiper-pagination-bullet-inactive-color": "#999999",
+            "--swiper-pagination-bullet-inactive-opacity": "1",
+            "--swiper-pagination-bullet-size": "10px",
+            "--swiper-pagination-bullet-horizontal-gap": "5px"
+          }}
           slidesPerView={1}
           effect={"fade"}
           spaceBetween={30}
@@ -150,7 +157,7 @@ function Header({
                         onClick={() => handleRemoveWatchLater(movie._id)}
                         className={
                           statusRemoveWatchLater.loading ||
-                          statusRemoveWatchLater.isSuccess
+                            statusRemoveWatchLater.isSuccess
                             ? "header-link_later disabled"
                             : "header-link_later"
                         }
@@ -172,7 +179,7 @@ function Header({
                         onClick={() => handleAddWatchLater(movie._id)}
                         className={
                           statusAddWatchLater.loading ||
-                          statusAddWatchLater.isSuccess
+                            statusAddWatchLater.isSuccess
                             ? "header-link_later disabled"
                             : "header-link_later"
                         }

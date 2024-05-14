@@ -15,5 +15,6 @@ export const linksData = [
         id: 3,
         title: "Contact",
         path: "/contact"
-    }
+    },
+
 ]

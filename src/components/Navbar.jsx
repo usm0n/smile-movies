@@ -82,6 +82,7 @@ function Navbar() {
 
   return (
     <nav className="nav">
+      <div className={active ? "nav-bg show" : "nav-bg"} onClick={menuClose}></div>
       <form
         className={
           searchMenu ? "nav-search_bar_down show" : "nav-search_bar_down"
