@@ -28,13 +28,13 @@ function Footer() {
           </div>
 
           <div className="footer-social">
-            <a href="#" className="footer-social_link">
+            <a href="https://www.instagram.com/smile_movie_uz?igsh=bTIwbHRvNzJ4OGs2" className="footer-social_link">
               <Instagram />
             </a>
-            <a href="#" className="footer-social_link">
+            <a href="https://t.me/smile_kino_uz" className="footer-social_link">
               <Telegram />
             </a>
-            <a href="#" className="footer-social_link">
+            <a href="https://youtube.com/@smile_movies_org?si=EQR5mseECK3RI40Q" className="footer-social_link">
               <Youtube />
             </a>
           </div>

@@ -208,7 +208,6 @@ function Navbar() {
                 >
                   <Tooltip
                     className="nav-menu-profile"
-                    title="Account settings"
                   >
                     <IconButton
                       onClick={() => profileMenuOpen()}
