@@ -5,6 +5,9 @@ import Index from "../pages/admin";
 import EditIcon from "@mui/icons-material/Edit";
 import EditMovie from "../pages/admin/movie/EditMovie";
 import SearchEditMovie from "../pages/Search/EditMovie";
+import DeleteMovie from "../pages/admin/movie/DeleteMovie";
+import SearchDeleteMovie from "../pages/Search/DeleteMovie";
+import DeleteMovieComp from "../components/DeleteMovie";
 
 export const AdminRoutes = [
   {
@@ -32,7 +35,23 @@ export const AdminRoutes = [
     element: <EditMovie />,
   },
   {
+    title: "Search Edit Movie",
     path: "edit-movie/search/:value",
     element: <SearchEditMovie />,
+  },
+  {
+    title: "Delete Movie",
+    path: "delete-movie",
+    element: <DeleteMovie />,
+  },
+  {
+    title: "Delete Movie",
+    path: "delete-movie/:movieId",
+    element: <DeleteMovieComp />,
+  },
+  {
+    title: "Search Delete Movie",
+    path: "delete-movie/search/:value",
+    element: <SearchDeleteMovie />,
   },
 ];
