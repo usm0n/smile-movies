@@ -9,8 +9,6 @@ import AboutLayout from "../layout/AboutLayout";
 import Contact from "../pages/components/contact/Contact";
 import ContactLayout from "../layout/ContactLayout";
 import AdminLayout from "../layout/AdminLayout";
-import EditMovie from "../pages/admin/movie/EditMovie";
-import SearchEditMovie from "../pages/Search/EditMovie";
 import Premium from '../pages/components/Premium'
 export const routes = [
   {
@@ -46,16 +44,6 @@ export const routes = [
   {
     path: "/admin/*",
     element: <AdminLayout />,
-  },
-
-  {
-    path: "/admin/edit-movie/:movieId",
-    element: <EditMovie />,
-  },
-
-  {
-    path: "/admin/edit-movie/search/:value",
-    element: <SearchEditMovie />,
   },
 
   {

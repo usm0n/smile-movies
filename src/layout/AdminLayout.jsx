@@ -12,9 +12,9 @@ function AdminLayout() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // if (!isAdmin.loading && !isAdmin.result) {
-    //   navigate("/");
-    // }
+    if (!isAdmin.loading && !isAdmin.result) {
+      navigate("/");
+    }
   }, []);
   return !isAdmin.loading ? (
     <>

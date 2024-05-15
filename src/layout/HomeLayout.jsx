@@ -1,5 +1,4 @@
 import React from "react";
-import Navbar from "../components/Navbar";
 import Header from "../components/Header";
 import Movies from "../components/Movies";
 import Series from "../components/Series";
@@ -10,15 +9,16 @@ import Cartoons from "../components/Cartoons";
 import { language } from "../utilities/defaultFunctions";
 import { useWatchLater } from "../contexts/WatchLater";
 import { useUser } from "../contexts/User";
-import Box from '@mui/material/Box';
-import Alert from '@mui/material/Alert';
-import IconButton from '@mui/material/IconButton';
-import Collapse from '@mui/material/Collapse';
-import Button from '@mui/material/Button';
-import CloseIcon from '@mui/icons-material/Close';
+import Box from "@mui/material/Box";
+import Alert from "@mui/material/Alert";
+import IconButton from "@mui/material/IconButton";
+import Collapse from "@mui/material/Collapse";
+import CloseIcon from "@mui/icons-material/Close";
 
 function HomeLayout() {
-  const [open, setOpen] = React.useState(true);
+  const [open, setOpen] = React.useState(
+    sessionStorage.getItem("headerAlert") || true
+  );
   const { allMovies } = useAllMovies();
   const {
     addWatchLater,
@@ -30,8 +30,16 @@ function HomeLayout() {
   return (
     <div>
       <div className="warning">
-        <Box sx={{ width: '350px', position: 'fixed', top: '50px', zIndex: '99999999999', right: '10px' }}>
-          <Collapse in={open}>
+        <Box
+          sx={{
+            width: "350px",
+            position: "fixed",
+            top: "50px",
+            zIndex: "99999999999",
+            right: "10px",
+          }}
+        >
+          <Collapse in={open == true}>
             <Alert
               severity="warning"
               action={
@@ -40,6 +48,7 @@ function HomeLayout() {
                   color="inherit"
                   size="small"
                   onClick={() => {
+                    sessionStorage.setItem("headerAlert", false);
                     setOpen(false);
                   }}
                 >
@@ -48,10 +57,10 @@ function HomeLayout() {
               }
               sx={{ mb: 2 }}
             >
-              Web saytimiz test rejimda ishlayapti xato va kamchiliklar uzur so'raymiz
+              Web saytimiz test rejimda ishlayapti xato va kamchiliklar uzur
+              so'raymiz
             </Alert>
           </Collapse>
-
         </Box>
       </div>
       <Header

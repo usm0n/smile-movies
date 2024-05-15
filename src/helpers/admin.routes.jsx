@@ -4,6 +4,7 @@ import HomeIcon from "@mui/icons-material/Home";
 import Index from "../pages/admin";
 import EditIcon from "@mui/icons-material/Edit";
 import EditMovie from "../pages/admin/movie/EditMovie";
+import SearchEditMovie from "../pages/Search/EditMovie";
 
 export const AdminRoutes = [
   {
@@ -23,5 +24,15 @@ export const AdminRoutes = [
     icon: <EditIcon />,
     path: "edit-movie",
     element: <EditMovie />,
+  },
+  {
+    title: "Edit Movie",
+    icon: <EditIcon />,
+    path: "edit-movie/:movieId",
+    element: <EditMovie />,
+  },
+  {
+    path: "edit-movie/search/:value",
+    element: <SearchEditMovie />,
   },
 ];
