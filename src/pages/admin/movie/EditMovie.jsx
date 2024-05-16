@@ -17,7 +17,7 @@ function EditMovie() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (searchValue.length > 3) {
+    if (searchValue.length) {
       navigate(`/admin/edit-movie/search/${searchValue}`);
     }
   };

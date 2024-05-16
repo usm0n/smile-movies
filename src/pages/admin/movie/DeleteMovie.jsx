@@ -17,7 +17,7 @@ function DeleteMovie() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (searchValue.length > 3) {
+    if (searchValue.length) {
       navigate(`/admin/delete-movie/search/${searchValue.toLowerCase()}`);
     }
   };
@@ -26,7 +26,7 @@ function DeleteMovie() {
     getMovieId(movieId);
   }, []);
 
-  return !movieId ? (
+  return (
     <div className="admin-edit-movie">
       <form onSubmit={handleSubmit} className="admin-edit-movie-search-bar">
         <h1 className="admin-edit-movie-search-bar-title">
@@ -60,11 +60,7 @@ function DeleteMovie() {
         />
       </form>
     </div>
-  ) : (
-    !movieById.isLoading && movieById.movie && (
-      <EditMovieComp movie={movieById.movie} />
-    )
-  );
+  )
 }
 
 export default DeleteMovie;

@@ -72,7 +72,7 @@ function Navbar() {
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
-    if (searchValue.length > 2) {
+    if (searchValue.length) {
       setSearchMenu(false);
       navigate(`/search/${searchValue}`);
     }

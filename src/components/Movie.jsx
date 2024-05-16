@@ -22,9 +22,10 @@ import { useUser } from "../contexts/User";
 import { useWatchLater } from "../contexts/WatchLater";
 import { dialog, snackbar } from "../utilities/defaultFunctions";
 import { useFavourites } from "../contexts/Favourites";
-import { ToggleButton, ToggleButtonGroup } from "@mui/material";
+import { Button, ToggleButton, ToggleButtonGroup } from "@mui/material";
 import { language } from "../utilities/defaultFunctions";
 import { Helmet } from "react-helmet";
+import ArrowBack from "@mui/icons-material/ArrowBack";
 
 function Movie({ movie }) {
   const { getMovieId, allComments, postComment, postCommentStatus } =
@@ -114,6 +115,25 @@ function Movie({ movie }) {
       <Helmet>
         <title>Smile Movie | {movie.title[language]}</title>
       </Helmet>
+      <Button
+      onClick={() => navigate(-1)}
+        sx={{
+          position: "fixed",
+          top: "90px",
+          left: "20px",
+          zIndex: "1000",
+          color: "black",
+          backgroundColor: "gold",
+          borderRadius: "50px",
+          transition: "ease-in-out 0.2s",
+          "&:hover": {
+            backgroundColor: "gold",
+            opacity: "0.8"
+          }
+        }}
+      >
+        <ArrowBack />
+      </Button>
       {dialog(
         "Please sign In!",
         "To add to Watch Later you must log in first.",
@@ -343,8 +363,8 @@ function Movie({ movie }) {
               onClick={() => {
                 postComment(postCommentName, postCommentComment);
                 setTimeout(() => {
-                  window.location.reload()
-                }, 1500)
+                  window.location.reload();
+                }, 1500);
               }}
               className={
                 !postCommentComment ||
