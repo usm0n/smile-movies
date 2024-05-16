@@ -1,0 +1,50 @@
+{
+    "SearchPlaceholder": "Search",
+    "MenuWatchLaterText": "Watch Later",
+    "MenuFavouritesText": "Favourites",
+    "MenuSettingsText": "Settings",
+    "MenuLogoutText": "Logout",
+    "MenuLoginText": "Login",
+
+
+    "HeaderWatchNowText": "Watch now",
+    "NewMoviesTitle": "New",
+    "MoviesTitle": "Movies",
+    "CartoonsTitle": "Cartoons",
+    "SeriesTitle": "Series",
+
+    "AddToFavourites": "Add to Favourites",
+
+    "CommentsTitle": "Comments",
+    "CommentInputPlaceholder": "Write your comment",
+    "SendCommentButtonText": "Post",
+
+    "AdminPanelTitle": "This is Admin Panel",
+    "AdminPanelSubtitle": "src/pages/admin/index.jsx",
+    "AdminMenuMainTitle": "Main",
+    "AdminAddMovieText": "Add Movie",
+    "AdminEditMovieText": "Edit Movie",
+    "AdminDeleteMovieText": "Delete Movie",
+
+    "AboutPageTitle": "No need to go to the cinema anymore",
+    "AboutPageSubtitle": "Our website offers you an online cinema. We wish you a pleasant holiday.",
+    "AboutOurWebsiteText": "About our website.",
+    "AboutOutWebsiteSubtitle": "We have created online cinema Smile Movie by collecting movies, series and cartoons in one place. You will be able to watch the latest premieres in Uzbek, English and Russian on our website. Smlie movie always share the best to its users. Stay away from us!",
+    "AboutUsers": "Users",
+    "AboutMovies": "Movies",
+    "AboutSeries": "Series",
+    "AboutQuestions": "Frequently asked questions",
+    "AboutQuestionName1": "Is your website safe?",
+    "AboutQuestion1": "Yes, of course our website is safe. You can use it freely. Even if you open a personal account on our website, your personal information in the account will be kept confidential. Therefore, you can easily watch movies or series. We wish you a pleasant holiday.",
+    "AboutQuestionName2": "Where can I find new movies?",
+    "AboutQuestion2": "Go to Home to find new movies. You can find it there if you scroll down to the bottom of the homepage. If you want to search for the movie yourself, there is a search icon at the top. By pressing this button, you can write the name of the movie, series or cartoon you want to search for.",
+    "AboutQuestionName3": "Are your movies good quality?",
+    "AboutQuestion3": "Of course, you can watch movies in any format on our website.",
+
+    "ContactFormTitle": "For comments and suggestions",
+    "ContactInputName1": "Name",
+    "ContactInputName2": "Phone Number",
+    "ContactInputName3": "Email",
+    "ContactInputName4": "Message",
+    "ContactSendButtonText": "Send"
+}

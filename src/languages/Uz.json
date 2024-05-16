@@ -1,0 +1,50 @@
+{
+    "SearchPlaceholder": "Qidirish",
+    "MenuWatchLaterText": "Keyinroq ko'rish",
+    "MenuFavouritesText": "Sevimlilar",
+    "MenuSettingsText": "Sozlamar",
+    "MenuLogoutText": "Chiqish",
+    "MenuLoginText": "Kirish",
+
+
+    "HeaderWatchNowText": "Ko'rish",
+    "NewMoviesTitle": "Yangi",
+    "MoviesTitle": "Kinolar",
+    "CartoonsTitle": "Multfilmlar",
+    "SeriesTitle": "Seriallar",
+
+    "AddToFavourites": "Sevimlilarga qo'shish",
+
+    "CommentsTitle": "Izohlar",
+    "CommentInputPlaceholder": "Izohingizni yozing",
+    "SendCommentButtonText": "Yuborish",
+
+    "AdminPanelTitle": "Bu Admin Panel",
+    "AdminPanelSubtitle": "Siz administratorsiz, shuning uchun siz filmlar, foydalanuvchilarni sozlashingiz, shuningdek, yangi administratorlar va boshqalarni qo'shishingiz mumkin...",
+    "AdminMenuMainTitle": "Asosiy",
+    "AdminAddMovieText": "Kino qo'shish",
+    "AdminEditMovieText": "Kinoni O'zgartirish",
+    "AdminDeleteMovieText": "Kinoni O'chirish",
+
+    "AboutPageTitle": "Endi kinoteatrga borish shart emas",
+    "AboutPageSubtitle": "Bizning web sayt sizga onlayn kinoteatrni taklif etadi. Maroqli hordiq tilaymiz.",
+    "AboutOurWebsiteText": "Bizning web sayt haqida.",
+    "AboutOutWebsiteSubtitle": "Biz kinolar, seriallar va multfilmlarni bir joyga yig'gan holda Smile Movie onlayn kinoteatirini yaratdik. Siz bizning web saytda oxirgi premyeralarni O'zbek, Ingliz va Rus tillarida tomosha qilishingiz mumkin bo'ladi. Smlie movie o'z foydalanuvchilariga har doim eng yaxshisini ulashadi. Bizdan uzoqlashmang!",
+    "AboutUsers": "Foydalanuvchilar",
+    "AboutMovies": "Kinolar",
+    "AboutSeries": "Seriallar",
+    "AboutQuestions": "Ko'p beriladigan savollar",
+    "AboutQuestionName1": "Web saytingiz xafsizmi?",
+    "AboutQuestion1": "Xa albatta bizning web saytimiz xafsiz. Bemalol foydalanishingiz mumkin. Siz bizning web saytda shaxsiy akkaunt ochsangiz ham akkauntdagi shaxsiy ma'lumotlaringiz sir saqlanadi. Shuning uchun bemalol kino yoki seriallarni tomosha qilishingiz mumkin. Maroqli hordiq tilaymiz.",
+    "AboutQuestionName2": "Yangi kinolarni qayerdan topaman?",
+    "AboutQuestion2": "Yangi kinolarni topish uchun Bosh sahifaga o'ting. Bosh sahifaning ozgina pastrog'iga tushsangiz o'sha yerdan topishingiz mumkin. Agar o'zingiz kinoni qidirmoqchi bo'sangiz tepada qidiruv belgisi bor. Shu tugmani bosib qidirmoqchi bo'lgan kino, serial yoki multfilmingiz nomi yozishingiz mumkin.",
+    "AboutQuestionName3": "Kinolaringiz sifatlimi?",
+    "AboutQuestion3": "Albatta bizning web saytda hohlagan formatda kinolarni tomosha qilishingiz mumkin.",
+
+    "ContactFormTitle": "Fikr va takliflar uchun",
+    "ContactInputName1": "Ism",
+    "ContactInputName2": "TelefonRaqami",
+    "ContactInputName3": "Email",
+    "ContactInputName4": "Izoh",
+    "ContactSendButtonText": "Yuborish"
+}

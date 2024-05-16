@@ -8,6 +8,7 @@ import UserProvider from "./contexts/User.jsx";
 import MoviesProvider from "./contexts/Movies.jsx";
 import WatchLaterProvider from "./contexts/WatchLater.jsx";
 import FavouritesProvider from "./contexts/Favourites.jsx";
+import TranslationProvider from "./provider/TranslationProvider.jsx";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <>
@@ -18,7 +19,9 @@ ReactDOM.createRoot(document.getElementById("root")).render(
             <UserProvider>
               <WatchLaterProvider>
                 <FavouritesProvider>
-                  <App />
+                  <TranslationProvider >
+                    <App />
+                  </TranslationProvider>
                 </FavouritesProvider>
               </WatchLaterProvider>
             </UserProvider>

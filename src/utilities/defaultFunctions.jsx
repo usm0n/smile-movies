@@ -8,12 +8,14 @@ import {
   DialogTitle,
   Snackbar,
 } from "@mui/material";
+import { useTranslation } from "react-i18next";
 
 export const language = !localStorage.getItem("language")
   ? "uz"
   : localStorage.getItem("language").trim();
 export const setLanguage = (language) => {
   localStorage.setItem("language", language);
+
 };
 
 export const userId = localStorage.getItem("userId");

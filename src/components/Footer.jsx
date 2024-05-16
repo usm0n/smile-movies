@@ -6,6 +6,7 @@ import Telegram from "../assets/icons/Telegram";
 import Youtube from "../assets/icons/YouTube";
 
 function Footer() {
+  
   return (
     <section className="footer">
       <div className="container">

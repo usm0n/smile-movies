@@ -6,7 +6,7 @@ function Info() {
     <section className="info">
         <div className="container">
             <div className="info-content">
-                <h1 className='info-title'>Bizning web sayt haqida?</h1>
+                <h1 className='info-title'>Bizning web sayt haqida</h1>
                 <p className="info-subtitle">Biz kinolar, seriallar va multfilmlarni bir joyga yig'gan holda Smile Movie onlayn kinoteatirini yaratdik. Siz bizning web saytda oxirgi premyeralarni O'zbek, Ingliz va Rus tillarida tomosha qilishingiz mumkin bo'ladi. Smlie movie o'z foydalanuvchilariga har doim eng yaxshisini ulashadi. Bizdan uzoqlashmang!</p>
 
                 <div className="info-about">
