@@ -23,6 +23,28 @@ const UserContext = createContext({
     isSuccess: false,
     isError: false,
   },
+  statusRegister: {
+    isEmpty: false,
+    buttonLoading: false,
+    isSuccess: false,
+    isError: false,
+    isConflict: false,
+    confirmPassword: false,
+  },
+  setStatusRegister: {
+    isEmpty: false,
+    buttonLoading: false,
+    isSuccess: false,
+    isError: false,
+    isConflict: false,
+    confirmPassword: false,
+  },
+  statusVerifyUser: {
+    loading: false,
+    isError: false,
+    isIncorrect: false,
+    isSuccess: false,
+  },
   statusLogout: {
     loading: false,
   },
@@ -31,8 +53,9 @@ const UserContext = createContext({
     result: false,
   },
   user: {},
+  verifyUser: (token) => {},
   loginUser: (e, email, password) => {},
-  registerUser: () => {},
+  registerUser: (e, firstname, email, password, cpassword) => {},
   logoutUser: () => {},
 });
 
@@ -54,6 +77,8 @@ const UserProvider = ({ children }) => {
   });
   const [statusRegister, setStatusRegister] = useState({
     isEmpty: false,
+    confirmPassword: false,
+    isConflict: false,
     buttonLoading: false,
     isSuccess: false,
     isError: false,
@@ -64,6 +89,12 @@ const UserProvider = ({ children }) => {
   const [isRealUser, setIsRealUser] = useState({
     loading: false,
     result: false,
+  });
+  const [statusVerifyUser, setStatusVerifyUser] = useState({
+    loading: false,
+    isError: false,
+    isIncorrect: false,
+    isSuccess: false,
   });
   const [user, setUser] = useState({});
 
@@ -85,31 +116,22 @@ const UserProvider = ({ children }) => {
       });
       await auth.loginUser({ email, password }).then((res) => {
         if (res.data) {
-          if (res.data.message == "Login successful") {
-            setStatusLogin({
-              buttonLoading: false,
-              isSuccess: true,
-              isError: false,
+          setStatusLogin({
+            buttonLoading: false,
+            isSuccess: true,
+            isError: false,
+          });
+          setTimeout(() => {
+            setIsLoggedIn(true);
+            setUser(res.data.user);
+            setUserId(res.data.user._id);
+            setIsRealUser({
+              loading: false,
+              result: true,
             });
-            setTimeout(() => {
-              setIsLoggedIn(true);
-              setUser(res.data.user);
-              setUserId(res.data.user._id);
-              setIsRealUser({
-                loading: false,
-                result: true,
-              });
-              navigate("/");
-              window.location.reload();
-            }, 3000);
-          } else {
-            setStatusLogin({
-              buttonLoading: false,
-              isSuccess: false,
-              isError: false,
-            });
-            setIsVerified(false);
-          }
+            navigate("/");
+            window.location.reload();
+          }, 3000);
         } else {
           setStatusLogin({
             buttonLoading: false,
@@ -121,7 +143,77 @@ const UserProvider = ({ children }) => {
     }
   };
 
-  const registerUser = async (firstname, email, password, cpassword) => {};
+  const registerUser = async (e, firstname, email, password, cpassword) => {
+    e.preventDefault();
+    if (
+      !firstname.trim() ||
+      !email.trim() ||
+      !password.trim() ||
+      !cpassword.trim()
+    ) {
+      setStatusRegister({
+        isEmpty: true,
+        confirmPassword: false,
+        buttonLoading: false,
+        isSuccess: false,
+        isError: false,
+      });
+    } else if (password !== cpassword) {
+      setStatusRegister({
+        isEmpty: false,
+        confirmPassword: true,
+        buttonLoading: false,
+        isSuccess: false,
+        isError: false,
+      });
+    } else {
+      setStatusRegister({
+        isEmpty: false,
+        confirmPassword: false,
+        buttonLoading: true,
+        isSuccess: false,
+        isError: false,
+      });
+      await auth
+        .registerUser({ firstname, email, password })
+        .then((res) => {
+          if (res.response) {
+            setStatusRegister({
+              isConflict: true,
+              buttonLoading: false,
+              isSuccess: false,
+              isError: false,
+            });
+          } else {
+            if (res.data) {
+              setStatusRegister({
+                buttonLoading: false,
+                isSuccess: true,
+                isError: false,
+              });
+              setTimeout(() => {
+                setIsVerified(false);
+                setUser(req.data.user);
+                window.location.reload();
+              }, 2500);
+            } else {
+              setStatusRegister({
+                buttonLoading: false,
+                isSuccess: false,
+                isError: true,
+              });
+            }
+          }
+        })
+        .catch((err) => {
+          setStatusRegister({
+            buttonLoading: false,
+            isSuccess: false,
+            isError: true,
+          });
+        });
+    }
+  };
 
   const logoutUser = async () => {
     setStatusLogout({
@@ -133,6 +225,46 @@ const UserProvider = ({ children }) => {
       removeUserId();
       window.location.reload();
     }, 2000);
+  };
+
+  const verifyUser = async (token) => {
+    setStatusVerifyUser({
+      loading: true,
+      isError: false,
+      isSuccess: false,
+      isIncorrect: false,
+    });
+    await users
+      .verifyUser(userId, token)
+      .then((res) => {
+        if (res.data) {
+          setStatusVerifyUser({
+            loading: false,
+            isError: false,
+            isSuccess: true,
+            isIncorrect: false,
+          });
+          setTimeout(() => {
+            setIsVerified(true);
+            window.location.reload();
+          }, 2000);
+        } else {
+          setStatusVerifyUser({
+            loading: false,
+            isError: false,
+            isSuccess: false,
+            isIncorrect: true,
+          });
+        }
+      })
+      .catch(() => {
+        setStatusVerifyUser({
+          loading: false,
+          isError: true,
+          isSuccess: false,
+          isIncorrect: false,
+        });
+      });
   };
 
   useEffect(() => {
@@ -153,13 +285,19 @@ const UserProvider = ({ children }) => {
             result: true,
           });
           setUser(user.data);
-          setIsAdmin({
-            loading: false,
-            result: true,
-          });
+          if (user.data.isAdmin) {
+            setIsAdmin({
+              loading: false,
+              result: true,
+            });
+          } else {
+            setIsAdmin({
+              loading: false,
+              result: false,
+            });
+          }
           if (!user.data.isVerified) {
             setIsVerified(false);
-            navigate("/verify-email");
           } else {
             setIsVerified(true);
           }
@@ -191,9 +329,13 @@ const UserProvider = ({ children }) => {
         setStatusLogin,
         loginUser,
         registerUser,
+        statusRegister,
+        setStatusRegister,
         logoutUser,
         statusLogout,
         isAdmin,
+        statusVerifyUser,
+        verifyUser,
       }}
     >
       {children}

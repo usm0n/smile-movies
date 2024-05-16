@@ -90,7 +90,11 @@ function Login() {
                     : "login-btn"
                 }
               >
-                {statusLogin.buttonLoading ? "Loading..." : "Sign in"}
+                {statusLogin.buttonLoading
+                  ? "Loading..."
+                  : statusLogin.isSuccess
+                  ? "Signing in..."
+                  : "Sign in"}
               </button>
               <div className="login-remember">
                 <input

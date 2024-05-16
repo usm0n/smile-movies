@@ -6,10 +6,11 @@ import Register from "../pages/auth/Register";
 import WatchLater from "../pages/utils/WatchLater";
 import Search from "../pages/Search";
 import AboutLayout from "../layout/AboutLayout";
-import Contact from "../pages/components/contact/Contact";
 import ContactLayout from "../layout/ContactLayout";
 import AdminLayout from "../layout/AdminLayout";
 import Premium from '../pages/components/Premium'
+import VerifyEmail from "../components/VerifyEmail"
+
 export const routes = [
   {
     path: "/",

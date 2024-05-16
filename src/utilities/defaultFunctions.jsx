@@ -8,7 +8,6 @@ import {
   DialogTitle,
   Snackbar,
 } from "@mui/material";
-import { useTranslation } from "react-i18next";
 
 export const language = !localStorage.getItem("language")
   ? "uz"

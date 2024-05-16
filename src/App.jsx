@@ -5,6 +5,7 @@ import { routes } from "./helpers/routes";
 import Navbar from "./components/Navbar";
 import { useUser } from "./contexts/User";
 import NotRealUser from "./components/NotRealUser";
+import VerifyEmail from "./components/VerifyEmail";
 
 function App() {
   const wrapper = (
@@ -17,10 +18,14 @@ function App() {
       </Routes>
     </div>
   );
-  const { isRealUser, isLoggedIn } = useUser();
+  const { isRealUser, isLoggedIn, isVerified } = useUser();
   return isLoggedIn ? (
     isRealUser.result || isRealUser.loading ? (
-      wrapper
+      isVerified ? (
+        wrapper
+      ) : (
+        <VerifyEmail />
+      )
     ) : (
       <NotRealUser />
     )
