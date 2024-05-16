@@ -6,7 +6,10 @@ import { useNavigate } from "react-router-dom";
 
 const UserContext = createContext({
   isLoggedIn: false,
-  isVerified: false,
+  isVerified: {
+    loading: false,
+    result: false,
+  },
   isRealUser: {
     loading: false,
     result: false,
@@ -45,6 +48,17 @@ const UserContext = createContext({
     isIncorrect: false,
     isSuccess: false,
   },
+  setStatusVerifyUser: {
+    loading: false,
+    isError: false,
+    isIncorrect: false,
+    isSuccess: false,
+  },
+  statusResendCode: {
+    loading: false,
+    isError: false,
+    isSuccess: false,
+  },
   statusLogout: {
     loading: false,
   },
@@ -53,6 +67,7 @@ const UserContext = createContext({
     result: false,
   },
   user: {},
+  resendToken: () => {},
   verifyUser: (token) => {},
   loginUser: (e, email, password) => {},
   registerUser: (e, firstname, email, password, cpassword) => {},
@@ -64,7 +79,10 @@ export const useUser = () => useContext(UserContext);
 const UserProvider = ({ children }) => {
   const navigate = useNavigate();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [isVerified, setIsVerified] = useState(false);
+  const [isVerified, setIsVerified] = useState({
+    loading: false,
+    result: false,
+  });
   const [isAdmin, setIsAdmin] = useState({
     loading: false,
     result: false,
@@ -96,8 +114,12 @@ const UserProvider = ({ children }) => {
     isIncorrect: false,
     isSuccess: false,
   });
+  const [statusResendCode, setStatusResendCode] = useState({
+    loading: false,
+    isSuccess: false,
+    isError: false,
+  });
   const [user, setUser] = useState({});
-
   const loginUser = async (e, email, password) => {
     e.preventDefault();
     if (!email.trim() || !password.trim()) {
@@ -192,7 +214,10 @@ const UserProvider = ({ children }) => {
                 isError: false,
               });
               setTimeout(() => {
-                setIsVerified(false);
+                setIsVerified({
+                  loading: false,
+                  result: false,
+                });
                 setUser(req.data.user);
                 window.location.reload();
               }, 2500);
@@ -245,7 +270,10 @@ const UserProvider = ({ children }) => {
             isIncorrect: false,
           });
           setTimeout(() => {
-            setIsVerified(true);
+            setIsVerified({
+              loading: false,
+              result: true,
+            });
             window.location.reload();
           }, 2000);
         } else {
@@ -263,6 +291,38 @@ const UserProvider = ({ children }) => {
           isError: true,
           isSuccess: false,
           isIncorrect: false,
+        });
+      });
+  };
+
+  const resendToken = async () => {
+    setStatusResendCode({
+      loading: true,
+      isSuccess: false,
+      isError: false,
+    });
+    await users
+      .resendToken(userId)
+      .then((res) => {
+        if (res.data) {
+          setStatusResendCode({
+            loading: false,
+            isSuccess: true,
+            isError: false,
+          });
+        } else {
+          setStatusResendCode({
+            loading: false,
+            isSuccess: false,
+            isError: true,
+          });
+        }
+      })
+      .catch(() => {
+        setStatusResendCode({
+          loading: false,
+          isSuccess: false,
+          isError: true,
         });
       });
   };
@@ -336,6 +396,9 @@ const UserProvider = ({ children }) => {
         isAdmin,
         statusVerifyUser,
         verifyUser,
+        setStatusVerifyUser,
+        resendToken,
+        statusResendCode,
       }}
     >
       {children}
