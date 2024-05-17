@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { linksData } from "../data/linksData";
 import { Link, useNavigate } from "react-router-dom";
 import MenuIcon from "../assets/icons/MenuIcon";
@@ -38,9 +39,9 @@ function Navbar() {
 
   const { isLoggedIn, user, isRealUser, logoutUser, statusLogout, isAdmin } =
     useUser();
-
   const { allMovies } = useAllMovies();
   const { watchlater } = useWatchLater();
+  const { t } = useTranslation();
 
   const menuClose = () => {
     setActive(false);
@@ -72,7 +73,7 @@ function Navbar() {
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
-    if (searchValue.length > 2) {
+    if (searchValue.length) {
       setSearchMenu(false);
       navigate(`/search/${searchValue}`);
     }
@@ -82,7 +83,10 @@ function Navbar() {
 
   return (
     <nav className="nav">
-      <div className={active ? "nav-bg show" : "nav-bg"} onClick={menuClose}></div>
+      <div
+        className={active ? "nav-bg show" : "nav-bg"}
+        onClick={menuClose}
+      ></div>
       <form
         className={
           searchMenu ? "nav-search_bar_down show" : "nav-search_bar_down"
@@ -108,7 +112,7 @@ function Navbar() {
                 type: "search",
               }}
               onChange={handleSearchValue}
-              placeholder="Search"
+              placeholder={t("SearchPlaceholder")}
               type="text"
               className="nav-search_bar_down-input"
             />
@@ -155,7 +159,7 @@ function Navbar() {
                   onClick={menuClose}
                   to={item.path}
                 >
-                  {item.title}
+                  {item[language].title}
                 </Link>
               ))}
             </ul>
@@ -180,7 +184,7 @@ function Navbar() {
                     type: "search",
                   }}
                   onChange={handleSearchValue}
-                  placeholder="Search"
+                  placeholder={t("SearchPlaceholder")}
                   type="text"
                 />
               )}
@@ -206,9 +210,7 @@ function Navbar() {
                     position: "relative",
                   }}
                 >
-                  <Tooltip
-                    className="nav-menu-profile"
-                  >
+                  <Tooltip className="nav-menu-profile">
                     <IconButton
                       onClick={() => profileMenuOpen()}
                       size="small"
@@ -247,9 +249,7 @@ function Navbar() {
                         <Divider />
                         <Badge
                           color="warning"
-                          badgeContent={
-                            watchlater.result.length
-                          }
+                          badgeContent={watchlater.result.length}
                         >
                           <MenuItem
                             onClick={() => menuNavigation("/watch-later")}
@@ -257,26 +257,28 @@ function Navbar() {
                             <ListItemIcon>
                               <WatchLater fontSize="small" />
                             </ListItemIcon>
-                            Watch Later
+                            {t("MenuWatchLaterText")}
                           </MenuItem>
                         </Badge>
                         <MenuItem onClick={() => menuNavigation("/favourites")}>
                           <ListItemIcon>
                             <StarIcon fontSize="small" />
                           </ListItemIcon>
-                          Favourites
+                          {t("MenuFavouritesText")}
                         </MenuItem>
                         <MenuItem>
                           <ListItemIcon>
                             <Settings fontSize="small" />
                           </ListItemIcon>
-                          Settings
+                          {t("MenuSettingsText")}
                         </MenuItem>
                         <MenuItem onClick={() => logoutUser()}>
                           <ListItemIcon>
                             <Logout fontSize="small" />
                           </ListItemIcon>
-                          {statusLogout.loading ? "Logging out..." : "Log out"}
+                          {statusLogout.loading
+                            ? t("MenuLogoutLoadingText")
+                            : t("MenuLogoutText")}
                         </MenuItem>
                         {isAdmin.result && (
                           <>
@@ -300,7 +302,7 @@ function Navbar() {
                         <ListItemIcon>
                           <LoginIcon fontSize="small" />
                         </ListItemIcon>
-                        Sign in
+                        {t("MenuLoginText")}
                       </MenuItem>
                     )}
                   </div>

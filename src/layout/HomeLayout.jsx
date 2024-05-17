@@ -14,6 +14,7 @@ import Alert from "@mui/material/Alert";
 import IconButton from "@mui/material/IconButton";
 import Collapse from "@mui/material/Collapse";
 import CloseIcon from "@mui/icons-material/Close";
+import { Snackbar } from "@mui/material";
 
 function HomeLayout() {
   const [open, setOpen] = React.useState(
@@ -30,38 +31,32 @@ function HomeLayout() {
   return (
     <div>
       <div className="warning">
-        <Box
-          sx={{
-            width: "350px",
-            position: "fixed",
-            top: "50px",
-            zIndex: "99999999999",
-            right: "10px",
-          }}
+        <Snackbar
+          anchorOrigin={{ vertical: "top", horizontal: "center" }}
+          open={open == true}
         >
-          <Collapse in={open == true}>
-            <Alert
-              severity="warning"
-              action={
-                <IconButton
-                  aria-label="close"
-                  color="inherit"
-                  size="small"
-                  onClick={() => {
-                    sessionStorage.setItem("headerAlert", false);
-                    setOpen(false);
-                  }}
-                >
-                  <CloseIcon fontSize="inherit" />
-                </IconButton>
-              }
-              sx={{ mb: 2 }}
-            >
-              Web saytimiz test rejimda ishlayapti xato va kamchiliklar uzur
-              so'raymiz
-            </Alert>
-          </Collapse>
-        </Box>
+          <Alert
+            open={false}
+            severity="warning"
+            action={
+              <IconButton
+                aria-label="close"
+                color="inherit"
+                size="small"
+                onClick={() => {
+                  sessionStorage.setItem("headerAlert", false);
+                  setOpen(false);
+                }}
+              >
+                <CloseIcon fontSize="inherit" />
+              </IconButton>
+            }
+            sx={{ position: "absolute", top: "80px", width: "350px", display: "flex", alignItems: "center" }}
+          >
+            Web saytimiz test rejimda ishlayapti xato va kamchiliklar uchun uzur
+            so'raymiz
+          </Alert>
+        </Snackbar>
       </div>
       <Header
         addWatchLater={addWatchLater}

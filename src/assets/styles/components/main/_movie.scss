@@ -89,6 +89,17 @@
     align-items: center;
     display: flex;
     gap: 5px;
+    text-shadow: 0px 0px 10px rgba(0, 0, 0, 0.648);
+
+    & > svg {
+      fill: #ffffffc6;
+      transition: all 0.2s ease-in-out;
+      border: none;
+
+      &:hover {
+        fill: $gold-color;
+      }
+    }
   }
   &-dislike {
     border: none;
@@ -97,12 +108,23 @@
     align-items: center;
     display: flex;
     gap: 5px;
+    text-shadow: 0px 0px 10px rgba(0, 0, 0, 0.648);
+    & > svg {
+      fill: #ffffffc6;
+      transition: all 0.2s ease-in-out;
+      border: none;
+
+      &:hover {
+        fill: $gold-color;
+      }
+    }
   }
 
   &-name {
     @include adaptive-value("font-size", 37, 30);
     font-weight: 500;
     color: #fff;
+    text-shadow: 0px 0px 20px rgba(0, 0, 0, 0.648);
     letter-spacing: 3px;
   }
 
@@ -134,6 +156,7 @@
     align-items: center;
     transition: all 0.5s;
     text-align: center;
+
     &:hover {
       opacity: 0.8;
     }
@@ -164,6 +187,7 @@
     width: 100%;
     flex-wrap: wrap;
     color: #ffffffc6;
+    text-shadow: 0px 0px 10px rgba(0, 0, 0, 0.648);
     // padding-bottom: 40px;
   }
 
@@ -172,12 +196,18 @@
     gap: 5px;
   }
 
+  &-info_title svg {
+    fill: #ffffffc6;
+    text-shadow: 0px 0px 10px rgba(0, 0, 0, 0.648);
+  }
+
   &-info_icon {
     @include flex(center, unset);
   }
 
   &-info_icon svg {
     fill: #ffffffc6;
+    text-shadow: 0px 0px 10px rgba(0, 0, 0, 0.648);
   }
 
   &-subtitle {
@@ -186,6 +216,7 @@
     font-weight: 300;
     letter-spacing: 1px;
     width: 100%;
+    text-shadow: 0px 0px 10px rgba(0, 0, 0, 0.648);
     line-height: 30px;
   }
 
@@ -210,10 +241,10 @@
       align-items: center;
       gap: 10px;
 
-      &-text{
+      &-text {
         @include adaptive-value("font-size", 25, 17);
         font-weight: 200;
-        letter-spacing: 1px
+        letter-spacing: 1px;
       }
     }
   }

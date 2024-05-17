@@ -8,8 +8,8 @@ import Search from "../pages/Search";
 import AboutLayout from "../layout/AboutLayout";
 import ContactLayout from "../layout/ContactLayout";
 import AdminLayout from "../layout/AdminLayout";
-import Premium from '../pages/components/Premium'
-import VerifyEmail from "../components/VerifyEmail"
+import Premium from "../pages/components/Premium";
+import VerifyEmail from "../components/VerifyEmail";
 
 export const routes = [
   {
@@ -49,7 +49,7 @@ export const routes = [
 
   {
     path: "/search/:value",
-    element: <Search />,
+    element: <Search backTo={"/"} linkTo={`/movie`} />,
   },
 
   {
@@ -64,6 +64,6 @@ export const routes = [
 
   {
     path: "/premium",
-    element: <Premium/>
-  }
+    element: <Premium />,
+  },
 ];

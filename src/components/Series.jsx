@@ -3,13 +3,14 @@ import { useAllMovies } from "../contexts/Movies";
 import MovieSkeletonCard from "./MovieCardSkeleton";
 import MovieCard from "./MovieCard";
 import { Grid } from "@mui/material";
+import { t } from "i18next";
 
 function Cartoons({ allMovies, language }) {
   return (
     <section className="movies">
       <div className="container">
         <div className="movies-content">
-          <h1 className="movies-title">Seriallar</h1>
+          <h1 className="movies-title">{t("SeriesTitle")}</h1>
           <div className="movies-movies">
             <div className="movies-cards">
               {allMovies.isLoading ? (
@@ -39,7 +40,7 @@ function Cartoons({ allMovies, language }) {
                     />
                   ))
               ) : (
-                <h1>Series not found</h1>
+                <h1>{t("NoSeries")}</h1>
               )}
             </div>
           </div>

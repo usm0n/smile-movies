@@ -13,12 +13,13 @@ import { Link } from "react-router-dom";
 import WatchLater from "@mui/icons-material/WatchLater";
 import NewMoviesSkeleton from "./NewMoviesSkeleton";
 import { Grid } from "@mui/material";
+import { t } from "i18next";
 
 function NewMovies({ movies, isLoading, language }) {
   return (
     <section className="new-movie">
       <div className="container">
-        <h1 className="new-movie_title">Yangi</h1>
+        <h1 className="new-movie_title">{t("NewMoviesTitle")}</h1>
         <>
           <Swiper
             slidesPerView={4}
@@ -112,7 +113,7 @@ function NewMovies({ movies, isLoading, language }) {
                     );
                   })}
                 {movies.filter((m) => m.status.isNew).length == 0 && (
-                  <h1 style={{ textAlign: "center" }}>There's no new Movies</h1>
+                  <h1 style={{ textAlign: "center" }}>{t("NoNewMovies")}</h1>
                 )}
               </>
             )}

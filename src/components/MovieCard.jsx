@@ -12,7 +12,8 @@ function MovieCard({ linkTo, movie, language }) {
         />
         <div className="movies-info">
           <h1 className="movies-name">
-            {movie.title[language] && movie.title[language].substring(0, 25)}
+            {movie.title[language] && movie.title[language].substring(0, 20)}
+            {movie.title[language].length > 20 ? "..." : ""}
           </h1>
           <span className="movies-date">
             <span className="movies-movie">{movie.releaseDate.year}</span>

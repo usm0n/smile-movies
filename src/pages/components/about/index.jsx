@@ -1,6 +1,7 @@
 import React from 'react'
 import Bg from '../../../assets/images/header-bg.png'
 import { Link } from 'react-router-dom'
+import { t } from 'i18next'
 
 function About() {
   return (
@@ -12,12 +13,12 @@ function About() {
         <div className="about-content">
           <div className="about-text">
             <h1 className='about-title'>
-              No need to go to the cinema anymore
+              {t("AboutPageTitle")}
             </h1>
             <p className="about-subtitle">
-              Our website offers you an online cinema. We wish you a pleasant holiday
+              {t("AboutPageSubtitle")}
             </p>
-            <Link to="/" className='about-link'>Watch now</Link>
+            <Link to="/" className='about-link'>{t("HeaderWatchNowText")}</Link>
           </div>
         </div>
       </div>

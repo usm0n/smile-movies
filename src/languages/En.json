@@ -4,28 +4,30 @@
     "MenuFavouritesText": "Favourites",
     "MenuSettingsText": "Settings",
     "MenuLogoutText": "Logout",
+    "MenuLogoutLoadingText": "Logging out...",
     "MenuLoginText": "Login",
-
-
     "HeaderWatchNowText": "Watch now",
+    "HeaderInWatchLaterText": "In Watch Later",
     "NewMoviesTitle": "New",
+    "NoNewMovies": "There are no new movies yet",
     "MoviesTitle": "Movies",
+    "NoMovies": "There are no movies yet",
     "CartoonsTitle": "Cartoons",
+    "NoCartoons": "There are no Cartoons yet",
     "SeriesTitle": "Series",
-
     "AddToFavourites": "Add to Favourites",
-
+    "InFavourites": "In Favorites",
     "CommentsTitle": "Comments",
+    "CommentsNameInputPlaceholder": "Write your name",
     "CommentInputPlaceholder": "Write your comment",
     "SendCommentButtonText": "Post",
-
+    "NoComments": "No one has commented on this movie yet",
     "AdminPanelTitle": "This is Admin Panel",
     "AdminPanelSubtitle": "src/pages/admin/index.jsx",
     "AdminMenuMainTitle": "Main",
     "AdminAddMovieText": "Add Movie",
     "AdminEditMovieText": "Edit Movie",
     "AdminDeleteMovieText": "Delete Movie",
-
     "AboutPageTitle": "No need to go to the cinema anymore",
     "AboutPageSubtitle": "Our website offers you an online cinema. We wish you a pleasant holiday.",
     "AboutOurWebsiteText": "About our website.",
@@ -40,11 +42,22 @@
     "AboutQuestion2": "Go to Home to find new movies. You can find it there if you scroll down to the bottom of the homepage. If you want to search for the movie yourself, there is a search icon at the top. By pressing this button, you can write the name of the movie, series or cartoon you want to search for.",
     "AboutQuestionName3": "Are your movies good quality?",
     "AboutQuestion3": "Of course, you can watch movies in any format on our website.",
-
     "ContactFormTitle": "For comments and suggestions",
     "ContactInputName1": "Name",
     "ContactInputName2": "Phone Number",
     "ContactInputName3": "Email",
     "ContactInputName4": "Message",
-    "ContactSendButtonText": "Send"
+    "ContactSendButtonText": "Send",
+    "AddedToWatchLater": "Added to Watch Later",
+    "ErrorAtAddWatchLater": "Error at adding to Watch Later",
+    "AlreadyInWatchLater": "Movie already added to Watch Later",
+    "RemovedFromWatchLater": "Removed from Watch Later",
+    "ErrorAtRemoveWatchLater": "Error at removing from Watch Later",
+    "NotFoundWatchLater": "Movie not found in Watch Later",
+    "AddedToFavourites": "Added to Favorites",
+    "ErrorAtAddFavourites": "Error at adding to Favorites",
+    "AlreadyInFavourites": "Movie already added to Favourites",
+    "RemovedFromFavourites": "Removed from Favourites",
+    "ErrorAtRemoveFavourites": "Error at removing from Favourites",
+    "NotFoundFavourites": "Movie not found in Favourites"
 }

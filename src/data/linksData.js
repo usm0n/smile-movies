@@ -1,20 +1,43 @@
 export const linksData = [
-    {
-        id: 1,
-        title: "Home",
-        path: "/"
+  {
+    uz: {
+      title: "Bosh Sahifa",
     },
-
-    {
-        id: 2,
-        title: "About",
-        path: "/about"
+    en: {
+      title: "Home Page",
     },
-
-    {
-        id: 3,
-        title: "Contact",
-        path: "/contact"
+    ru: {
+      title: "Главная страница",
     },
+    id: 1,
+    path: "/",
+  },
 
-]
+  {
+    uz: {
+      title: "Biz Haqimizda",
+    },
+    ru: {
+      title: "О нас",
+    },
+    en: {
+      title: "About Us",
+    },
+    id: 2,
+    path: "/about",
+  },
+
+  {
+    uz: {
+      title: "Bog'lanish",
+    },
+    ru: {
+      title: "Связь",
+    },
+    en: {
+      title: "Contact",
+    },
+    id: 3,
+    path: "/contact",
+  },
+];

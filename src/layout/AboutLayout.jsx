@@ -9,7 +9,7 @@ function AboutLayout() {
   return (
     <div className="about-section">
       <Helmet>
-        <title>Smile Movie | About</title>
+        <title>Smile Movie - About</title>
       </Helmet>
       <About/>
       <Info/>

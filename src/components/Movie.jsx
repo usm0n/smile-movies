@@ -26,6 +26,7 @@ import { Button, ToggleButton, ToggleButtonGroup } from "@mui/material";
 import { language } from "../utilities/defaultFunctions";
 import { Helmet } from "react-helmet";
 import ArrowBack from "@mui/icons-material/ArrowBack";
+import { t } from "i18next";
 
 function Movie({ movie }) {
   const { getMovieId, allComments, postComment, postCommentStatus } =
@@ -116,7 +117,7 @@ function Movie({ movie }) {
         <title>Smile Movie | {movie.title[language]}</title>
       </Helmet>
       <Button
-      onClick={() => navigate(-1)}
+        onClick={() => navigate(-1)}
         sx={{
           position: "fixed",
           top: "90px",
@@ -128,8 +129,8 @@ function Movie({ movie }) {
           transition: "ease-in-out 0.2s",
           "&:hover": {
             backgroundColor: "gold",
-            opacity: "0.8"
-          }
+            opacity: "0.8",
+          },
         }}
       >
         <ArrowBack />
@@ -149,30 +150,30 @@ function Movie({ movie }) {
         handleOpenFavouritesDialog
       )}
       {statusAddWatchLater.isSuccess &&
-        snackbar("success", "Added to Watch Later")}
+        snackbar("success", t("AddedToWatchLater"))}
       {statusAddWatchLater.isError &&
-        snackbar("error", "Error at adding to Watch Later")}
+        snackbar("error", t("ErrorAtAddWatchLater"))}
       {statusAddWatchLater.isAlreadyIn &&
-        snackbar("warning", "Movie already added to Watch Later")}
+        snackbar("warning", t("AlreadyInWatchLater"))}
       {statusRemoveWatchLater.isSuccess &&
-        snackbar("success", "Removed from Watch Later")}
+        snackbar("success", t("RemovedFromWatchLater"))}
       {statusRemoveWatchLater.isError &&
-        snackbar("error", "Error at removing from Watch Later")}
+        snackbar("error", t("ErrorAtRemoveWatchLater"))}
       {statusRemoveWatchLater.isNotFound &&
-        snackbar("warning", "Movie not found in Watch Later")}
+        snackbar("warning", t("NotFoundWatchLater"))}
 
       {statusAddFavourites.isSuccess &&
-        snackbar("success", "Added to Favorites")}
+        snackbar("success", t("AddedToFavourites"))}
       {statusAddFavourites.isError &&
-        snackbar("error", "Error at adding to Favorites")}
+        snackbar("error", t("ErrorAtAddFavourites"))}
       {statusAddFavourites.isAlreadyIn &&
-        snackbar("warning", "Movie already added to Favourites")}
+        snackbar("warning", t("AlreadyInFavourites"))}
       {statusRemoveFavourites.isSuccess &&
-        snackbar("success", "Removed from Favourites")}
+        snackbar("success", t("RemovedFromFavourites"))}
       {statusRemoveFavourites.isError &&
-        snackbar("error", "Error at removing from Favourites")}
+        snackbar("error", t("ErrorAtRemoveFavourites"))}
       {statusRemoveFavourites.isNotFound &&
-        snackbar("warning", "Movie not found in Favourites")}
+        snackbar("warning", t("NotFoundFavourites"))}
       <img
         src={movie.image.fullscreen}
         alt=""
@@ -255,7 +256,8 @@ function Movie({ movie }) {
                     "Loading..."
                   ) : (
                     <>
-                      <Favourite /> In Favourites{" "}
+                      <Favourite />
+                      {t("InFavourites")}
                     </>
                   )}
                 </button>
@@ -275,7 +277,7 @@ function Movie({ movie }) {
                     "Loading..."
                   ) : (
                     <>
-                      <StarBorderIcon /> Add to Favourites{" "}
+                      <StarBorderIcon /> {t("AddToFavourites")}
                     </>
                   )}
                 </button>
@@ -298,7 +300,7 @@ function Movie({ movie }) {
                     "Loading..."
                   ) : (
                     <>
-                      <WatchLaterIcon /> In Watch Later{" "}
+                      <WatchLaterIcon /> {t("HeaderInWatchLaterText")}
                     </>
                   )}
                 </button>
@@ -318,7 +320,7 @@ function Movie({ movie }) {
                     "Loading..."
                   ) : (
                     <>
-                      <AccessTimeIcon /> Add to Watch Later{" "}
+                      <AccessTimeIcon /> {t("MenuWatchLaterText")}
                     </>
                   )}
                 </button>
@@ -332,7 +334,7 @@ function Movie({ movie }) {
         </div>
 
         <div className="movie-comments">
-          <h1 className="movie-comments-title">Comments:</h1>
+          <h1 className="movie-comments-title">{t("CommentsTitle")}</h1>
           <div className="movie-comments-posting">
             {postCommentStatus.isSuccess &&
               snackbar("success", "Your comment posted successfully")}
@@ -343,7 +345,7 @@ function Movie({ movie }) {
                 onChange={(e) => setPostCommentName(e.target.value)}
                 value={postCommentName}
                 className="movie-comments-posting-input"
-                placeholder="Your name"
+                placeholder={t("CommentsNameInputPlaceholder")}
                 type="text"
               />
             )}
@@ -351,7 +353,7 @@ function Movie({ movie }) {
               onChange={(e) => setPostCommentComment(e.target.value)}
               value={postCommentComment}
               className="movie-comments-posting-area"
-              placeholder="Write your comment"
+              placeholder={t("CommentInputPlaceholder")}
             ></textarea>
             <button
               disabled={
@@ -376,12 +378,12 @@ function Movie({ movie }) {
               }
             >
               {postCommentStatus.buttonLoading && "Loading..."}
-              {!postCommentStatus.buttonLoading && "Post Comment"}
+              {!postCommentStatus.buttonLoading && t("SendCommentButtonText")}
             </button>
           </div>
           {allComments.isEmpty ? (
             <h1 className="movie-comments-empty-text">
-              No one has commented on this movie!
+              {t("NoComments")}
             </h1>
           ) : (
             !allComments.isLoading &&

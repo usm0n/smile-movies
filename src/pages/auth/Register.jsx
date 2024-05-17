@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import bg from "../../assets/images/login-bg.png";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useUser } from "../../contexts/User";
 import { snackbar } from "../../utilities/defaultFunctions";
 
@@ -12,6 +12,8 @@ function Register() {
     password: "",
     cpassword: "",
   });
+  const { isLoggedIn } = useUser();
+  const navigate = useNavigate();
 
   const handleInput = (e) => {
     setStatusRegister({
@@ -37,6 +39,12 @@ function Register() {
       registerValue.cpassword
     );
   };
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      navigate("/");
+    }
+  });
 
   return (
     <section className="register">

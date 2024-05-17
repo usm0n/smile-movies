@@ -18,6 +18,7 @@ import { EffectFade, Autoplay, Pagination, Navigation } from "swiper/modules";
 import { Link, useNavigate } from "react-router-dom";
 import { dialog, snackbar } from "../utilities/defaultFunctions";
 import Check from "@mui/icons-material/Check";
+import { t } from "i18next";
 
 function Header({
   isLoading,
@@ -70,17 +71,17 @@ function Header({
         handleClick
       )}
       {statusAddWatchLater.isSuccess &&
-        snackbar("success", "Added to Watch Later")}
+        snackbar("success", t("AddedToWatchLater"))}
       {statusAddWatchLater.isError &&
-        snackbar("error", "Error at adding to Watch Later")}
+        snackbar("error", t("ErrorAtAddWatchLater"))}
       {statusAddWatchLater.isAlreadyIn &&
-        snackbar("warning", "Movie already added to Watch Later")}
+        snackbar("warning", t("AlreadyInWatchLater"))}
       {statusRemoveWatchLater.isSuccess &&
-        snackbar("success", "Removed from Watch Later")}
+        snackbar("success", t("RemovedFromWatchLater"))}
       {statusRemoveWatchLater.isError &&
-        snackbar("error", "Error at removing from Watch Later")}
+        snackbar("error", t("ErrorAtRemoveWatchLater"))}
       {statusRemoveWatchLater.isNotFound &&
-        snackbar("warning", "Movie not found in Watch Later")}
+        snackbar("warning", t("NotFoundWatchLater"))}
       <>
         <Swiper
           style={{
@@ -88,7 +89,7 @@ function Header({
             "--swiper-pagination-bullet-inactive-color": "#999999",
             "--swiper-pagination-bullet-inactive-opacity": "1",
             "--swiper-pagination-bullet-size": "10px",
-            "--swiper-pagination-bullet-horizontal-gap": "5px"
+            "--swiper-pagination-bullet-horizontal-gap": "5px",
           }}
           slidesPerView={1}
           effect={"fade"}
@@ -146,7 +147,7 @@ function Header({
                   </div>
                   <div className="header-links">
                     <Link to={`/movie/${movie._id}`} className="header-link">
-                      <PlayCircleFilledOutlinedIcon /> Watch now
+                      <PlayCircleFilledOutlinedIcon /> {t("HeaderWatchNowText")}
                     </Link>
                     {user.watchlater && user.watchlater.includes(movie._id) ? (
                       <button
@@ -157,7 +158,7 @@ function Header({
                         onClick={() => handleRemoveWatchLater(movie._id)}
                         className={
                           statusRemoveWatchLater.loading ||
-                            statusRemoveWatchLater.isSuccess
+                          statusRemoveWatchLater.isSuccess
                             ? "header-link_later disabled"
                             : "header-link_later"
                         }
@@ -166,7 +167,7 @@ function Header({
                           "Loading..."
                         ) : (
                           <>
-                            <Check /> In Watch Later
+                            <Check /> {t("HeaderInWatchLaterText")}
                           </>
                         )}
                       </button>
@@ -179,7 +180,7 @@ function Header({
                         onClick={() => handleAddWatchLater(movie._id)}
                         className={
                           statusAddWatchLater.loading ||
-                            statusAddWatchLater.isSuccess
+                          statusAddWatchLater.isSuccess
                             ? "header-link_later disabled"
                             : "header-link_later"
                         }
@@ -189,7 +190,7 @@ function Header({
                         ) : (
                           <>
                             <WatchLater />
-                            Watch Later
+                            {t("MenuWatchLaterText")}
                           </>
                         )}
                       </button>

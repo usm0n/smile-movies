@@ -17,7 +17,6 @@
 &-card {
     @include flex(center, center);
     margin: 0 auto;
-    width: max-content;
     flex-direction: column;
     gap: 15px;
     transition: all 0.2s ease-in-out;
@@ -40,7 +39,7 @@
     @include flex(start, unset);
     flex-direction: column;
     gap: 7px;
-    width: 100%;
+    width: 270px;
   }
 
   &-time {

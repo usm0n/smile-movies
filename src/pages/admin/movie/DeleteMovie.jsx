@@ -3,8 +3,6 @@ import React, { useEffect, useState } from "react";
 import { useAllMovies } from "../../../contexts/Movies";
 import { language } from "../../../utilities/defaultFunctions";
 import { useNavigate, useParams } from "react-router-dom";
-import SearchEditMovie from "../../Search/EditMovie";
-import EditMovieComp from "../../../components/EditMovie";
 import { useMovie } from "../../../contexts/Movie";
 
 function DeleteMovie() {

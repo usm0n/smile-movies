@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import Img from '../../../assets/images/contact-bg.jpg'
 import { Helmet } from 'react-helmet';
+import { t } from 'i18next';
 
 function Contact() {
   const [uName, setUName] = useState('');
@@ -89,29 +90,29 @@ function Contact() {
       </div>
       <div className="container">
         <div className="contact-content">
-          <h1 className="contact-title">Fikr va takliflar uchun</h1>
+          <h1 className="contact-title">{t("ContactFormTitle")}</h1>
           {error && <p className={active ? "contact-error active" : "contact-error"}>{error}</p>}
           <form className="contact-form">
             <div className="contact-items" data-aos="fade-down">
-              <label className="contact-name">Name *</label>
+              <label className="contact-name">{t("ContactInputName1")} *</label>
               <input value={uName} required onChange={handleInputChange} type="text" className='contact-input' />
             </div>
 
             <div className="contact-items" data-aos="fade-down">
-              <label className='contact-name'>Phone Number *</label>
+              <label className='contact-name'>{t("ContactInputName2")} *</label>
               <input type="number" required value={phone} onChange={handlePhoneChange} className='contact-input' />
             </div>
 
             <div className="contact-items" data-aos="fade-down">
-              <label className='contact-name'>Email </label>
+              <label className='contact-name'>{t("ContactInputName3")} </label>
               <input type="text" value={email} onChange={handleEmailChange} className='contact-input' />
             </div>
 
             <div className="contact-items" data-aos="fade-down">
-              <label className='contact-name'>Message *</label>
+              <label className='contact-name'>{t("ContactInputName4")} *</label>
               <input type="text" value={message} onChange={handleMessageChange} className='contact-input' />
             </div>
-            <button onClick={sendMessage} className='contact-submit'>Send</button>
+            <button onClick={sendMessage} className='contact-submit'>{t("ContactSendButtonText")}</button>
           </form>
         </div>
       </div>
