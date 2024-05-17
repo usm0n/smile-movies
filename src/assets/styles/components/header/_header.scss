@@ -1,5 +1,4 @@
 .header {
-
   &-bg {
     position: relative;
     height: 100vh;
@@ -87,6 +86,7 @@
       font-weight: 300;
       letter-spacing: 1px;
       transition: all 0.2s ease-in-out;
+      text-shadow: 0px 0px 10px #000000ab;
 
       &.disabled {
         opacity: 0.5;

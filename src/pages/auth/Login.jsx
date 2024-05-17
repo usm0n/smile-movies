@@ -2,12 +2,25 @@ import React, { useEffect, useState } from "react";
 import bg from "../../assets/images/login-bg.png";
 import { Link, useNavigate } from "react-router-dom";
 import { useUser } from "../../contexts/User";
-import { Alert, Snackbar, buttonBaseClasses } from "@mui/material";
+import {
+  Alert,
+  FilledInput,
+  FormControl,
+  IconButton,
+  InputAdornment,
+  InputLabel,
+  OutlinedInput,
+  Snackbar,
+  buttonBaseClasses,
+} from "@mui/material";
 import { snackbar } from "../../utilities/defaultFunctions";
+import Visibility from "@mui/icons-material/Visibility";
+import VisibilityOff from "@mui/icons-material/VisibilityOff";
 
 function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const { loginUser, statusLogin, setStatusLogin, isLoggedIn } = useUser();
 
   const navigate = useNavigate();
@@ -44,42 +57,98 @@ function Login() {
             <h1 className="login-title">Login</h1>
 
             <form className="login-form">
-              <input
-                onChange={(e) => handleInput(e)}
-                type="text"
-                name="email"
-                placeholder="Email address"
-                disabled={setStatusLogin.isSuccess || statusLogin.buttonLoading}
-                className={
+            <FormControl
+                disabled={statusLogin.isSuccess || statusLogin.buttonLoading}
+                color={
                   statusLogin.isError
-                    ? "login-input error"
+                    ? "error"
                     : statusLogin.isEmpty
-                    ? "login-input warning"
+                    ? "warning"
                     : statusLogin.isSuccess
-                    ? "login-input success disabled"
-                    : statusLogin.buttonLoading
-                    ? "login-input disabled"
-                    : "login-input"
+                    ? "success"
+                    : "info"
                 }
-              />
-              <input
-                onChange={(e) => handleInput(e)}
-                type="password"
-                name="password"
-                placeholder="Password"
-                disabled={setStatusLogin.isSuccess || statusLogin.buttonLoading}
-                className={
+                sx={{
+                  m: 1,
+                  width: "100%",
+                  background: "#fff",
+                  borderRadius: "5px",
+                }}
+                variant="filled"
+              >
+                <InputLabel htmlFor="filled-adornment-password">
+                  Email
+                </InputLabel>
+                <FilledInput
+                  onChange={handleInput}
+                  name="email"
+                  className={
+                    statusLogin.isError
+                      ? "login-input error"
+                      : statusLogin.isEmpty
+                      ? "login-input warning"
+                      : statusLogin.isSuccess
+                      ? "login-input success disabled"
+                      : statusLogin.buttonLoading
+                      ? "login-input disabled"
+                      : "login-input"
+                  }
+                  id="filled-adornment-password"
+                  type={"email"}
+                />
+              </FormControl>
+              <FormControl
+                disabled={statusLogin.isSuccess || statusLogin.buttonLoading}
+                color={
                   statusLogin.isError
-                    ? "login-input error"
+                    ? "error"
                     : statusLogin.isEmpty
-                    ? "login-input warning"
+                    ? "warning"
                     : statusLogin.isSuccess
-                    ? "login-input success disabled"
-                    : statusLogin.buttonLoading
-                    ? "login-input disabled"
-                    : "login-input"
+                    ? "success"
+                    : "info"
                 }
-              />
+                sx={{
+                  m: 1,
+                  width: "100%",
+                  background: "#fff",
+                  borderRadius: "5px",
+                }}
+                variant="filled"
+              >
+                <InputLabel htmlFor="filled-adornment-password">
+                  Password
+                </InputLabel>
+                <FilledInput
+                  onChange={handleInput}
+                  name="password"
+                  className={
+                    statusLogin.isError
+                      ? "login-input error"
+                      : statusLogin.isEmpty
+                      ? "login-input warning"
+                      : statusLogin.isSuccess
+                      ? "login-input success disabled"
+                      : statusLogin.buttonLoading
+                      ? "login-input disabled"
+                      : "login-input"
+                  }
+                  id="filled-adornment-password"
+                  type={showPassword ? "text" : "password"}
+                  endAdornment={
+                    <InputAdornment position="end">
+                      <IconButton
+                        aria-label="toggle password visibility"
+                        onClick={() => setShowPassword(!showPassword)}
+                        onMouseDown={(e) => e.preventDefault()}
+                        edge="end"
+                      >
+                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    </InputAdornment>
+                  }
+                />
+              </FormControl>
 
               <button
                 disabled={statusLogin.buttonLoading || statusLogin.isSuccess}

@@ -86,7 +86,10 @@ function NewMovies({ movies, isLoading, language }) {
                     return (
                       <>
                         <SwiperSlide>
-                          <Link to={`/movie/${movie._id}`} className="new-movie_card">
+                          <Link
+                            to={`/movie/${movie._id}`}
+                            className="new-movie_card"
+                          >
                             <img
                               src={movie.image.portrait}
                               className="new-movie_img"
@@ -94,7 +97,8 @@ function NewMovies({ movies, isLoading, language }) {
                             />
                             <div className="new-movie_info">
                               <h1 className="new-movie_name">
-                                {movie.title[language]}
+                                {movie.title[language].substring(0, 20)}
+                                {movie.title[language].length > 20 ? "..." : ""}
                               </h1>
                               <p className="new-movie_parts">
                                 <WatchLater /> {movie.duration.hour}:

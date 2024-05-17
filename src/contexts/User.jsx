@@ -218,7 +218,8 @@ const UserProvider = ({ children }) => {
                   loading: false,
                   result: false,
                 });
-                setUser(req.data.user);
+                setUserId(res.data.user._id);
+                setUser(res.data.user);
                 window.location.reload();
               }, 2500);
             } else {
@@ -249,7 +250,7 @@ const UserProvider = ({ children }) => {
       setUser({});
       removeUserId();
       window.location.reload();
-    }, 2000);
+    }, 1500);
   };
 
   const verifyUser = async (token) => {

@@ -2,6 +2,7 @@ import React, { useRef, useState } from "react";
 import logo from "../assets/images/logo.png";
 import { useUser } from "../contexts/User";
 import { snackbar } from "../utilities/defaultFunctions";
+import { Link } from "react-router-dom";
 
 function VerifyEmail() {
   const {
@@ -132,8 +133,8 @@ function VerifyEmail() {
                 >
                   {statusResendCode.loading ? "Resending..." : "Resend"}
                 </button>
-                <button
-                  onClick={() => logoutUser()}
+                <Link
+                  onClick={logoutUser}
                   className={
                     statusLogout.loading
                       ? "email-logout disabled"
@@ -141,7 +142,7 @@ function VerifyEmail() {
                   }
                 >
                   {statusLogout.loading ? "Logging out..." : "Logout"}
-                </button>
+                </Link>
               </div>
             </form>
           </div>
