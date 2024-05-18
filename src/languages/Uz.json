@@ -63,5 +63,19 @@
     "AlreadyInFavourites": "Film Sevimlilar ro‘yxatiga allaqachon qo‘shilgan",
     "RemovedFromFavourites": "Sevimlilar ro‘yxatidan olib tashlandi",
     "ErrorAtRemoveFavourites": "Sevimlilar ro'yhatidan olib tashlashda xatolik yuz berdi",
-    "NotFoundFavourites": "Sevimlilar ro‘yxatidan film topilmadi"
+    "NotFoundFavourites": "Sevimlilar ro‘yxatidan film topilmadi",
+    "rememberMe": "Meni eslab qoling",
+    "signingIn": "Kirmoqda...",
+    "dontHaveAnAccaunt": "Accauntingiz yo'qmi?",
+    "alreadyHaveAnAcc": "Accauntingiz allaqachon bormi?",
+    "signUp": "Ro'yhatdan o'tish",
+    "password": "Parol",
+    "cpassword": "Parolni tasdiqlang",
+    "pleaseFillFields": "Maydonlarni toʻldiring",
+    "loginSuccess": "Kirish muvaffaqiyatli bo'ldi",
+    "userNotFound": "Elektron pochta yoki parol yaroqsiz. Iltimos, yana bir bor urinib ko'ring",
+    "somethingWentWrong": "Nimadir noto'g'ri bajarildi. Iltimos, yana bir bor urinib ko'ring",
+    "registerSuccess": "Siz roʻyxatdan oʻtdingiz",
+    "alreadyRegistered": "Bu elektron pochta manzili allaqachon roʻyxatdan oʻtgan, boshqa elektron pochta manzilidan foydalaning",
+    "passwordsDontMatch": "Parollar mos emas, parolingizni tekshiring"
 }

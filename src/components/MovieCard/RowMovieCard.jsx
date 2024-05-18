@@ -1,6 +1,6 @@
 import React from "react";
-import { language } from "../utilities/defaultFunctions";
-import Calendar from "../assets/icons/CalendarIcon";
+import { language } from "../../utilities/defaultFunctions";
+import Calendar from "../../assets/icons/CalendarIcon";
 import WatchLater from "@mui/icons-material/WatchLater";
 import Star from "@mui/icons-material/Star";
 import Public from "@mui/icons-material/Public";

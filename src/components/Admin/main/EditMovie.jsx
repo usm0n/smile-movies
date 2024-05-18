@@ -15,9 +15,9 @@ import ThumbDownOffAltIcon from "@mui/icons-material/ThumbDownOffAlt";
 import ThumbUpOffAltIcon from "@mui/icons-material/ThumbUpOffAlt";
 import CheckIcon from "@mui/icons-material/Check";
 import StarBorderIcon from "@mui/icons-material/StarBorder";
-import Favourite from "../assets/icons/SolidStarIcon";
+import Favourite from "../../../assets/icons/SolidStarIcon";
 import PublicIcon from "@mui/icons-material/Public";
-import Calendar from "../assets/icons/CalendarIcon";
+import Calendar from "../../../assets/icons/CalendarIcon";
 import AddIcon from "@mui/icons-material/Add";
 import {
   currentDay,
@@ -25,8 +25,8 @@ import {
   currentYear,
   language,
   snackbar,
-} from "../utilities/defaultFunctions";
-import { useMovie } from "../contexts/Movie";
+} from "../../../utilities/defaultFunctions";
+import { useMovie } from "../../../contexts/Movie";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { useNavigate, useParams } from "react-router-dom";
 import Edit from "@mui/icons-material/Edit";

@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { useAllMovies } from "../../../contexts/Movies";
 import { language } from "../../../utilities/defaultFunctions";
 import { useNavigate, useParams } from "react-router-dom";
-import EditMovieComp from "../../../components/EditMovie";
+import EditMovieComp from "../../../components/Admin/main/EditMovie";
 import { useMovie } from "../../../contexts/Movie";
 
 function EditMovie() {

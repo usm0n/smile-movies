@@ -7,7 +7,7 @@ import EditMovie from "../pages/admin/movie/EditMovie";
 import SearchEditMovie from "../pages/Search/index";
 import DeleteMovie from "../pages/admin/movie/DeleteMovie";
 import SearchDeleteMovie from "../pages/Search/index";
-import DeleteMovieComp from "../components/DeleteMovie";
+import DeleteMovieComp from "../components/Admin/main/DeleteMovie";
 
 export const AdminRoutes = [
   {

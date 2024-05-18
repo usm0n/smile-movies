@@ -23,7 +23,6 @@ import {
   currentMonth,
   currentYear,
   removeLocalDraft,
-  setUserId,
   snackbar,
 } from "../../../utilities/defaultFunctions";
 import { useMovie } from "../../../contexts/Movie";

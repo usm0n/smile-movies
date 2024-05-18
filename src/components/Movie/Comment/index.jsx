@@ -1,9 +1,8 @@
 import React, { useEffect } from "react";
-import User from "../assets/images/user.png";
-import Like from "../assets/icons/Like";
-import DisLike from "../assets/icons/DisLike";
+import Like from "../../../assets/icons/Like";
+import DisLike from "../../../assets/icons/DisLike";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
-import { useComments } from "../contexts/Comments";
+import { useComments } from "../../../contexts/Comments";
 import {
   Alert,
   Avatar,

@@ -1,6 +1,6 @@
 import { Box, Skeleton } from "@mui/material";
 import React from "react";
-import CommentsSkeleton from "./CommentsSkeleton";
+import CommentsSkeleton from "../Comment/Skeleton/CommentsSkeleton";
 
 function MovieSkeleton() {
   return (

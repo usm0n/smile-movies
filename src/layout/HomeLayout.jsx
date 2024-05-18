@@ -1,11 +1,11 @@
 import React from "react";
-import Header from "../components/Header";
-import Movies from "../components/Movies";
-import Series from "../components/Series";
-import NewMovies from "../components/NewMovies";
-import Footer from "../components/Footer";
+import Header from "../components/Home/header/Header";
+import Movies from "../components/Home/main/Movies";
+import Series from "../components/Home/main/Series";
+import NewMovies from "../components/Home/main/NewMovies";
+import Footer from "../components/Footer/index";
 import { useAllMovies } from "../contexts/Movies";
-import Cartoons from "../components/Cartoons";
+import Cartoons from "../components/Home/main/Cartoons";
 import { language } from "../utilities/defaultFunctions";
 import { useWatchLater } from "../contexts/WatchLater";
 import { useUser } from "../contexts/User";

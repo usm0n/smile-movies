@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
-import { useAllMovies } from "../contexts/Movies";
-import MovieSkeletonCard from "./MovieCardSkeleton";
-import MovieCard from "./MovieCard";
+import { useAllMovies } from "../../../contexts/Movies";
+import MovieSkeletonCard from "../../MovieCard/Skeleton/MovieCardSkeleton";
+import MovieCard from "../../MovieCard/MovieCard";
 import { Grid } from "@mui/material";
 import { t } from "i18next";
 

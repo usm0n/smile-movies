@@ -1,10 +1,7 @@
 import React, { useState } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
-import img from "../assets/images/header.jpeg";
-import VideoPlayerIcon from "../assets/icons/VideoPlayerIcon";
-import ClockIcon from "../assets/icons/ClockIcon";
-import SolidStarIcon from "../assets/icons/SolidStarIcon";
-import CalendarIcon from "../assets/icons/CalendarIcon";
+import SolidStarIcon from "../../../assets/icons/SolidStarIcon";
+import CalendarIcon from "../../../assets/icons/CalendarIcon";
 import PlayCircleFilledOutlinedIcon from "@mui/icons-material/PlayCircleFilledOutlined";
 import { Box, Skeleton } from "@mui/material";
 import WatchLater from "@mui/icons-material/WatchLater";
@@ -16,7 +13,7 @@ import "swiper/css/navigation";
 
 import { EffectFade, Autoplay, Pagination, Navigation } from "swiper/modules";
 import { Link, useNavigate } from "react-router-dom";
-import { dialog, snackbar } from "../utilities/defaultFunctions";
+import { dialog, snackbar } from "../../../utilities/defaultFunctions";
 import Check from "@mui/icons-material/Check";
 import { t } from "i18next";
 

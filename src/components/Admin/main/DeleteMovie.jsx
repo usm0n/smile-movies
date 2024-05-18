@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { dialog, snackbar } from "../utilities/defaultFunctions";
+import { dialog, snackbar } from "../../../utilities/defaultFunctions";
 import { useNavigate, useParams } from "react-router-dom";
-import { useMovie } from "../contexts/Movie";
+import { useMovie } from "../../../contexts/Movie";
 import { Backdrop, CircularProgress } from "@mui/material";
 
 function DeleteMovie() {
