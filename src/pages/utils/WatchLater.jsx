@@ -5,6 +5,8 @@ import { useNavigate } from "react-router-dom";
 import RowMovieCard from "../../components/MovieCard/RowMovieCard";
 import RowMovieCardSkeleton from "../../components/MovieCard/Skeleton/RowMovieCardSkeleton";
 import { Skeleton } from "@mui/material";
+import { t } from "i18next";
+import { language } from "../../utilities/defaultFunctions";
 
 function WatchLater() {
   const { user, isLoggedIn, isRealUser } = useUser();
@@ -20,7 +22,7 @@ function WatchLater() {
   return (
     <div className="watch-later">
       <div className="watch-later-info">
-        <h1 className="watch-later-info_title">Watch Later</h1>
+        <h1 className="watch-later-info_title">{t("MenuWatchLaterText")}</h1>
         <h1 className="watch-later-info_fullname">
           {isRealUser.loading ? (
             <Skeleton
@@ -43,13 +45,30 @@ function WatchLater() {
                 width: "100px",
               }}
             />
-          ) : watchlater.result.length == 0 ? (
-            "No movies"
-          ) : watchlater.result.length == 1 ? (
-            <>{watchlater.result.length} movie</>
           ) : (
-            <>{watchlater.result.length} movies</>
+            <>
+              {language == "en" &&
+                (watchlater.result.length ? watchlater.result.length : "No") +
+                  " results found"}
+              {language == "uz" &&
+                (watchlater.result.length
+                  ? watchlater.result.length + " natija topildi"
+                  : "Natijalar topilmadi")}
+              {language == "ru" &&
+                (watchlater.result.length
+                  ? "Найдено " + watchlater.result.length + " результатов"
+                  : "Результатов не найдено")}
+            </>
           )}
+        </h1>
+        <h1 className="watch-later-not-found">
+          {language == "en" && !watchlater.result.length && "No results found"}
+          {language == "uz" &&
+            !watchlater.result.length &&
+            "Natijalar topilmadi"}
+          {language == "ru" &&
+            !watchlater.result.length &&
+            "Результатов не найдено"}
         </h1>
       </div>
       <div className="watch-later-movies">

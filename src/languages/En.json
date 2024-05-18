@@ -15,6 +15,7 @@
     "CartoonsTitle": "Cartoons",
     "NoCartoons": "There are no Cartoons yet",
     "SeriesTitle": "Series",
+    "NoSeries": "There are no series yet",
     "AddToFavourites": "Add to Favourites",
     "InFavourites": "In Favorites",
     "CommentsTitle": "Comments",
@@ -73,5 +74,8 @@
     "somethingWentWrong": "Something went wrong. Please try again",
     "registerSuccess": "You have registered successfully",
     "alreadyRegistered": "This email address already registered. Please use another email address",
-    "passwordsDontMatch": "Passwords do not match. Please check your password"
+    "passwordsDontMatch": "Passwords do not match. Please check your password",
+    "languageText": "Language:",
+    "movieText": "Movie",
+    "trailerText": "Trailer"
 }

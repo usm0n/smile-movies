@@ -45,6 +45,18 @@ function Movie({ movie }) {
     statusRemoveFavourites,
   } = useFavourites();
   const navigate = useNavigate();
+  const [toggleValue, setToggleValue] = useState({
+    movie: !movie.movie[language]
+      ? movie.movie.uz
+        ? "uz"
+        : movie.movie.ru
+        ? "ru"
+        : movie.movie.en
+        ? "en"
+        : ""
+      : language,
+    video: "movie",
+  });
 
   const [postCommentComment, setPostCommentComment] = useState();
   const [postCommentName, setPostCommentName] = useState(user.firstname);
@@ -97,14 +109,12 @@ function Movie({ movie }) {
     setFavouritesDialog(false);
   };
 
-  const iframe = (
-    <iframe
-      src={movie.movie}
-      width="100%"
-      className="movie-iframe"
-      allowFullScreen
-    ></iframe>
-  );
+  const handleToggleValue = (e, name) => {
+    setToggleValue({
+      ...toggleValue,
+      [name]: e.target.value,
+    });
+  };
 
   useEffect(() => {
     getMovieId(movie._id);
@@ -114,14 +124,23 @@ function Movie({ movie }) {
     <section key={movie._id} className="movie">
       <Helmet>
         <title>Smile Movie | {movie.title[language]}</title>
-        <meta name="description" content="2024 yilning eng yaxshi yangi kinolari haqida barcha ma'lumotlarni bizning saytimizda toping." />
-        <meta name="keywords" content="yangi kinolar 2024, film yangiliklari, kino treylerlari, eng yaxshi kinolar" />
-        <meta property="og:url" content={movie.movie}/>
-        <meta property="og:title" content={movie.title[language]}/>
-
+        <meta
+          name="description"
+          content="2024 yilning eng yaxshi yangi kinolari haqida barcha ma'lumotlarni bizning saytimizda toping."
+        />
+        <meta
+          name="keywords"
+          content={`${movie.title.uz}, ${movie.title.ru}, ${movie.title.en}`}
+        />
+        <meta property="og:title" content={movie.title[language]} />
+        <meta
+          property="og:url"
+          content={`https://smile-movies.uz/movie/${movie._id}`}
+        />
+        <meta property="og:image" content={movie.image.portrait} />
       </Helmet>
       <Button
-        onClick={() => navigate(-1)}
+        onClick={() => navigate("/")}
         sx={{
           position: "fixed",
           top: "90px",
@@ -251,7 +270,7 @@ function Movie({ movie }) {
                   }
                   className={
                     statusRemoveFavourites.loading ||
-                      statusRemoveFavourites.isSuccess
+                    statusRemoveFavourites.isSuccess
                       ? "movie-btn disabled"
                       : "movie-btn"
                   }
@@ -295,7 +314,7 @@ function Movie({ movie }) {
                   }
                   className={
                     statusRemoveWatchLater.loading ||
-                      statusRemoveWatchLater.isSuccess
+                    statusRemoveWatchLater.isSuccess
                       ? "movie-btn disabled"
                       : "movie-btn"
                   }
@@ -334,7 +353,59 @@ function Movie({ movie }) {
         </div>
 
         <div className="movie-video">
-          <div className="movie-movie-container">{iframe}</div>
+          <ToggleButtonGroup
+            color="info"
+            value={toggleValue.video}
+            name="video"
+            onChange={(e) => handleToggleValue(e, "video")}
+            sx={{
+              backgroundColor: "#fff",
+              margin: "0 auto",
+            }}
+            exclusive
+            aria-label="Platform"
+          >
+            <ToggleButton value="movie">{t("movieText")}</ToggleButton>
+            <ToggleButton value="trailer">{t("trailerText")}</ToggleButton>
+          </ToggleButtonGroup>
+          {toggleValue.video == "movie" && (
+            <div className="movie-video-language">
+              <h1 className="movie-video-language-text">{t("languageText")}</h1>
+              <ToggleButtonGroup
+                color="info"
+                value={toggleValue.movie}
+                name="movie"
+                onChange={(e) => handleToggleValue(e, "movie")}
+                sx={{
+                  backgroundColor: "#fff",
+                }}
+                exclusive
+                aria-label="Platform"
+              >
+                <ToggleButton disabled={!movie.movie.uz} value="uz">
+                  O'zbekcha
+                </ToggleButton>
+                <ToggleButton disabled={!movie.movie.ru} value="ru">
+                  Русский
+                </ToggleButton>
+                <ToggleButton disabled={!movie.movie.en} value="en">
+                  English
+                </ToggleButton>
+              </ToggleButtonGroup>
+            </div>
+          )}
+          <div className="movie-movie-container">
+            <iframe
+              src={
+                toggleValue.video == "movie"
+                  ? movie.movie[toggleValue.movie]
+                  : movie.trailer
+              }
+              width="100%"
+              className="movie-iframe"
+              allowFullScreen
+            ></iframe>
+          </div>
         </div>
 
         <div className="movie-comments">
@@ -374,9 +445,9 @@ function Movie({ movie }) {
               }}
               className={
                 !postCommentComment ||
-                  !postCommentName ||
-                  postCommentStatus.buttonLoading ||
-                  postCommentStatus.isSuccess
+                !postCommentName ||
+                postCommentStatus.buttonLoading ||
+                postCommentStatus.isSuccess
                   ? "movie-comments-posting-button disabled"
                   : "movie-comments-posting-button"
               }
@@ -386,9 +457,7 @@ function Movie({ movie }) {
             </button>
           </div>
           {allComments.isEmpty ? (
-            <h1 className="movie-comments-empty-text">
-              {t("NoComments")}
-            </h1>
+            <h1 className="movie-comments-empty-text">{t("NoComments")}</h1>
           ) : (
             !allComments.isLoading &&
             allComments.comments &&

@@ -266,13 +266,13 @@ function Navbar() {
                           </ListItemIcon>
                           {t("MenuFavouritesText")}
                         </MenuItem>
-                        <MenuItem>
+                        <MenuItem disabled>
                           <ListItemIcon>
                             <Settings fontSize="small" />
                           </ListItemIcon>
                           {t("MenuSettingsText")}
                         </MenuItem>
-                        <MenuItem onClick={() => logoutUser()}>
+                        <MenuItem disabled={statusLogout.loading} onClick={() => logoutUser()}>
                           <ListItemIcon>
                             <Logout fontSize="small" />
                           </ListItemIcon>

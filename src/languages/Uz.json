@@ -2,7 +2,7 @@
     "SearchPlaceholder": "Qidirish",
     "MenuWatchLaterText": "Keyinroq ko'rish",
     "MenuFavouritesText": "Sevimlilar",
-    "MenuSettingsText": "Sozlamar",
+    "MenuSettingsText": "Sozlamalar",
     "MenuLogoutText": "Chiqish",
     "MenuLogoutLoadingText": "Chiqmoqda...",
     "MenuLoginText": "Kirish",
@@ -77,5 +77,8 @@
     "somethingWentWrong": "Nimadir noto'g'ri bajarildi. Iltimos, yana bir bor urinib ko'ring",
     "registerSuccess": "Siz roʻyxatdan oʻtdingiz",
     "alreadyRegistered": "Bu elektron pochta manzili allaqachon roʻyxatdan oʻtgan, boshqa elektron pochta manzilidan foydalaning",
-    "passwordsDontMatch": "Parollar mos emas, parolingizni tekshiring"
+    "passwordsDontMatch": "Parollar mos emas, parolingizni tekshiring",
+    "languageText": "Til:",
+    "movieText": "Kino",
+    "trailerText": "Treyler"
 }

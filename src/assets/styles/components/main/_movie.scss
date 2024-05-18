@@ -237,9 +237,9 @@
     }
 
     &-language {
-      @include flex(start, start);
+      @include flex(center, center);
       align-items: center;
-      gap: 10px;
+      gap: 20px;
 
       &-text {
         @include adaptive-value("font-size", 25, 17);
