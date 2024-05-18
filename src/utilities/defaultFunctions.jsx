@@ -14,13 +14,22 @@ export const language = !localStorage.getItem("language")
   : localStorage.getItem("language").trim();
 export const setLanguage = (language) => {
   localStorage.setItem("language", language);
-
 };
 
-export const userId = localStorage.getItem("userId");
-export const removeUserId = () => localStorage.removeItem("userId");
-export const setUserId = (userId) => {
+export const userId = localStorage.getItem("userId")
+  ? localStorage.getItem("userId")
+  : sessionStorage.getItem("userId")
+  ? sessionStorage.getItem("userId")
+  : undefined;
+export const removeUserId = () => {
+  localStorage.removeItem("userId");
+  sessionStorage.removeItem("userId");
+};
+export const setLocalUserId = (userId) => {
   localStorage.setItem("userId", userId);
+};
+export const setSessionUserId = (userId) => {
+  sessionStorage.setItem("userId", userId);
 };
 
 export const removeLocalDraft = () => {

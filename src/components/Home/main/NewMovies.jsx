@@ -1,6 +1,5 @@
 import React from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
-import flash from "../assets/images/flash.jpeg";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 
 import "swiper/css";
@@ -11,7 +10,7 @@ import "swiper/css/navigation";
 import { Autoplay, Pagination, Navigation } from "swiper/modules";
 import { Link } from "react-router-dom";
 import WatchLater from "@mui/icons-material/WatchLater";
-import NewMoviesSkeleton from "./NewMoviesSkeleton";
+import NewMoviesSkeleton from "./../../MovieCard/Skeleton/NewMoviesSkeleton";
 import { Grid } from "@mui/material";
 import { t } from "i18next";
 

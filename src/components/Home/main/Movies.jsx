@@ -1,16 +1,16 @@
 import React, { useEffect } from "react";
-import { useAllMovies } from "../contexts/Movies";
-import MovieSkeletonCard from "./MovieCardSkeleton";
-import MovieCard from "./MovieCard";
+import { useAllMovies } from "../../../contexts/Movies";
+import MovieSkeletonCard from "../../MovieCard/Skeleton/MovieCardSkeleton";
+import MovieCard from "../../MovieCard/MovieCard";
 import { Grid } from "@mui/material";
 import { t } from "i18next";
 
-function Cartoons({ allMovies, language }) {
+function Movies({ allMovies, language }) {
   return (
     <section className="movies">
       <div className="container">
         <div className="movies-content">
-          <h1 className="movies-title">{t("SeriesTitle")}</h1>
+          <h1 className="movies-title">{t("MoviesTitle")}</h1>
           <div className="movies-movies">
             <div className="movies-cards">
               {allMovies.isLoading ? (
@@ -28,10 +28,10 @@ function Cartoons({ allMovies, language }) {
                     <MovieSkeletonCard />
                   </Grid>
                 </>
-              ) : allMovies.movies.filter((m) => m.status.type === "series")
+              ) : allMovies.movies.filter((m) => m.status.type === "movie")
                   .length > 0 ? (
                 allMovies.movies
-                  .filter((m) => m.status.type === "series")
+                  .filter((m) => m.status.type === "movie")
                   .map((movie) => (
                     <MovieCard
                       linkTo={`/movie/${movie._id}`}
@@ -40,7 +40,7 @@ function Cartoons({ allMovies, language }) {
                     />
                   ))
               ) : (
-                <h1>{t("NoSeries")}</h1>
+                <h1>{t("NoMovies")}</h1>
               )}
             </div>
           </div>
@@ -50,4 +50,4 @@ function Cartoons({ allMovies, language }) {
   );
 }
 
-export default Cartoons;
+export default Movies;

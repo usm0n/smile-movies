@@ -293,17 +293,31 @@ function Navbar() {
                         )}
                       </>
                     ) : (
-                      <MenuItem
-                        onClick={() => {
-                          menuNavigation("/login");
-                          setProfileMenu(false);
-                        }}
-                      >
-                        <ListItemIcon>
-                          <LoginIcon fontSize="small" />
-                        </ListItemIcon>
-                        {t("MenuLoginText")}
-                      </MenuItem>
+                      <>
+                        <MenuItem
+                          onClick={() => {
+                            menuNavigation("/login");
+                            setProfileMenu(false);
+                          }}
+                        >
+                          <ListItemIcon>
+                            <LoginIcon fontSize="small" />
+                          </ListItemIcon>
+                          {t("MenuLoginText")}
+                        </MenuItem>
+                        <Divider/>
+                        <MenuItem
+                          onClick={() => {
+                            menuNavigation("/register");
+                            setProfileMenu(false);
+                          }}
+                        >
+                          <ListItemIcon>
+                            <LoginIcon fontSize="small" />
+                          </ListItemIcon>
+                          {t("signUp")}
+                        </MenuItem>
+                      </>
                     )}
                   </div>
                 </div>
@@ -330,7 +344,7 @@ function Navbar() {
                   window.location.reload();
                 }}
               >
-                Uzbek
+                O'zbekcha
               </MenuItem>
               <Divider />
               <MenuItem
@@ -350,7 +364,7 @@ function Navbar() {
                   window.location.reload();
                 }}
               >
-                Russian
+                Русский
               </MenuItem>
             </div>
           </div>

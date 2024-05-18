@@ -16,10 +16,12 @@ import {
 import { snackbar } from "../../utilities/defaultFunctions";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
+import { t } from "i18next";
 
 function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const { loginUser, statusLogin, setStatusLogin, isLoggedIn } = useUser();
 
@@ -49,15 +51,15 @@ function Login() {
         <img src={bg} className="login-img" alt="" />
       </div>
       <div className="container">
-        {statusLogin.isEmpty && snackbar("warning", "Please fill inputs")}
-        {statusLogin.isSuccess && snackbar("success", "Login success")}
-        {statusLogin.isError && snackbar("error", "User not found")}
+        {statusLogin.isEmpty && snackbar("warning", t("pleaseFillFields"))}
+        {statusLogin.isSuccess && snackbar("success", t("loginSuccess"))}
+        {statusLogin.isError && snackbar("error", t("userNotFound"))}
         <div className="login-content">
           <div className="login-card">
-            <h1 className="login-title">Login</h1>
+            <h1 className="login-title">{t("MenuLoginText")}</h1>
 
             <form className="login-form">
-            <FormControl
+              <FormControl
                 disabled={statusLogin.isSuccess || statusLogin.buttonLoading}
                 color={
                   statusLogin.isError
@@ -77,7 +79,7 @@ function Login() {
                 variant="filled"
               >
                 <InputLabel htmlFor="filled-adornment-password">
-                  Email
+                  {t("ContactInputName3")}
                 </InputLabel>
                 <FilledInput
                   onChange={handleInput}
@@ -117,7 +119,7 @@ function Login() {
                 variant="filled"
               >
                 <InputLabel htmlFor="filled-adornment-password">
-                  Password
+                  {t("password")}
                 </InputLabel>
                 <FilledInput
                   onChange={handleInput}
@@ -152,7 +154,14 @@ function Login() {
 
               <button
                 disabled={statusLogin.buttonLoading || statusLogin.isSuccess}
-                onClick={(e) => loginUser(e, email, password)}
+                onClick={(e) =>
+                  loginUser(
+                    e,
+                    email.toLowerCase(),
+                    password,
+                    rememberMe == true ? "local" : "session"
+                  )
+                }
                 className={
                   statusLogin.buttonLoading || statusLogin.isSuccess
                     ? "login-btn disabled"
@@ -162,23 +171,23 @@ function Login() {
                 {statusLogin.buttonLoading
                   ? "Loading..."
                   : statusLogin.isSuccess
-                  ? "Signing in..."
-                  : "Sign in"}
+                  ? t("signingIn")
+                  : t("MenuLoginText")}
               </button>
               <div className="login-remember">
                 <input
-                  defaultChecked
+                  onChange={() => setRememberMe(!rememberMe)}
+                  defaultChecked={rememberMe == true}
                   type="checkbox"
                   className="login-checkbox"
                 />
-                <label className="login-label">Remember me</label>
+                <label className="login-label">{t("rememberMe")}</label>
               </div>
               <h1>
-                Don't have an accaunt?{" "}
+                {t("dontHaveAnAccaunt")}{" "}
                 <Link to="/register" className="login-register-link">
-                  Sign up
+                  {t("signUp")}
                 </Link>{" "}
-                now
               </h1>
             </form>
           </div>

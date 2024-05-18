@@ -2,8 +2,8 @@ import React, { useEffect } from "react";
 import { useUser } from "../../contexts/User";
 import { useWatchLater } from "../../contexts/WatchLater";
 import { useNavigate } from "react-router-dom";
-import RowMovieCard from "../../components/RowMovieCard";
-import RowMovieCardSkeleton from "../../components/RowMovieCardSkeleton";
+import RowMovieCard from "../../components/MovieCard/RowMovieCard";
+import RowMovieCardSkeleton from "../../components/MovieCard/Skeleton/RowMovieCardSkeleton";
 import { Skeleton } from "@mui/material";
 
 function WatchLater() {

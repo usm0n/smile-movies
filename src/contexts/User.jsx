@@ -1,5 +1,10 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import { removeUserId, setUserId, userId } from "../utilities/defaultFunctions";
+import {
+  removeUserId,
+  setLocalUserId,
+  setSessionUserId,
+  userId,
+} from "../utilities/defaultFunctions";
 import users from "../service/api/users.api.service";
 import auth from "../service/api/auth.api.service";
 import { useNavigate } from "react-router-dom";
@@ -69,8 +74,8 @@ const UserContext = createContext({
   user: {},
   resendToken: () => {},
   verifyUser: (token) => {},
-  loginUser: (e, email, password) => {},
-  registerUser: (e, firstname, email, password, cpassword) => {},
+  loginUser: (e, email, password, typeUserId) => {},
+  registerUser: (e, firstname, email, password, cpassword, typeUserId) => {},
   logoutUser: () => {},
 });
 
@@ -120,7 +125,7 @@ const UserProvider = ({ children }) => {
     isError: false,
   });
   const [user, setUser] = useState({});
-  const loginUser = async (e, email, password) => {
+  const loginUser = async (e, email, password, typeUserId) => {
     e.preventDefault();
     if (!email.trim() || !password.trim()) {
       setStatusLogin({
@@ -146,7 +151,11 @@ const UserProvider = ({ children }) => {
           setTimeout(() => {
             setIsLoggedIn(true);
             setUser(res.data.user);
-            setUserId(res.data.user._id);
+            if (typeUserId == "local") {
+              setLocalUserId(res.data.user._id);
+            } else {
+              setSessionUserId(res.data.user._id);
+            }
             setIsRealUser({
               loading: false,
               result: true,
@@ -165,7 +174,14 @@ const UserProvider = ({ children }) => {
     }
   };
 
-  const registerUser = async (e, firstname, email, password, cpassword) => {
+  const registerUser = async (
+    e,
+    firstname,
+    email,
+    password,
+    cpassword,
+    typeUserId
+  ) => {
     e.preventDefault();
     if (
       !firstname.trim() ||
@@ -218,7 +234,11 @@ const UserProvider = ({ children }) => {
                   loading: false,
                   result: false,
                 });
-                setUserId(res.data.user._id);
+                if (typeUserId == "local") {
+                  setLocalUserId(res.data.user._id);
+                } else {
+                  setSessionUserId(res.data.user._id);
+                }
                 setUser(res.data.user);
                 window.location.reload();
               }, 2500);

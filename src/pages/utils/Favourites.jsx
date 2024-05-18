@@ -1,8 +1,8 @@
 import React, { useEffect } from "react";
 import { useUser } from "../../contexts/User";
 import { useNavigate } from "react-router-dom";
-import RowMovieCard from "../../components/RowMovieCard";
-import RowMovieCardSkeleton from "../../components/RowMovieCardSkeleton";
+import RowMovieCard from "../../components/MovieCard/RowMovieCard";
+import RowMovieCardSkeleton from "../../components/MovieCard/Skeleton/RowMovieCardSkeleton";
 import { Skeleton } from "@mui/material";
 import { useFavourites } from "../../contexts/Favourites";
 

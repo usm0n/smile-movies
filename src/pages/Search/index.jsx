@@ -2,9 +2,9 @@ import React from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAllMovies } from "../../contexts/Movies";
 import { Box, Button, Grid, Typography } from "@mui/material";
-import MovieCard from "../../components/MovieCard";
+import MovieCard from "../../components/MovieCard/MovieCard";
 import { language } from "../../utilities/defaultFunctions";
-import MovieSkeletonCard from "../../components/MovieCardSkeleton";
+import MovieSkeletonCard from "../../components/MovieCard/Skeleton/MovieCardSkeleton";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 
 function Search({ backTo, linkTo }) {

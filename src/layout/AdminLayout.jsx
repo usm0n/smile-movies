@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import AdminMenu from "../components/AdminMenu";
+import AdminMenu from "../components/Admin/Menu/index";
 import { AdminRoutes } from "../helpers/admin.routes";
 import { Route, Routes, useNavigate } from "react-router-dom";
 import { routes } from "../helpers/routes";

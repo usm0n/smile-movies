@@ -13,7 +13,7 @@ import {
   ListItemText,
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
-import { AdminRoutes } from "../helpers/admin.routes";
+import { AdminRoutes } from "../../../helpers/admin.routes";
 import { useNavigate } from "react-router-dom";
 import Home from "@mui/icons-material/Home";
 import Add from "@mui/icons-material/Add";

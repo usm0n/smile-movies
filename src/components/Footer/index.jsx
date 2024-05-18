@@ -1,11 +1,11 @@
 import React from "react";
-import logo from "../assets/images/logo.png";
+import logo from "../../assets/images/logo.png";
 import { Link } from "react-router-dom";
-import Instagram from "../assets/icons/InstagramIcon";
-import Telegram from "../assets/icons/Telegram";
-import Youtube from "../assets/icons/YouTube";
-import { footerData } from "../data/footerData";
-import { language } from "../utilities/defaultFunctions";
+import Instagram from "../../assets/icons/InstagramIcon";
+import Telegram from "../../assets/icons/Telegram";
+import Youtube from "../../assets/icons/YouTube";
+import { footerData } from "../../data/footerData";
+import { language } from "../../utilities/defaultFunctions";
 
 function Footer() {
   return (
