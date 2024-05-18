@@ -115,6 +115,11 @@ function Movie({ movie }) {
     <section key={movie._id} className="movie">
       <Helmet>
         <title>Smile Movie | {movie.title[language]}</title>
+        <meta name="description" content="2024 yilning eng yaxshi yangi kinolari haqida barcha ma'lumotlarni bizning saytimizda toping." />
+        <meta name="keywords" content="yangi kinolar 2024, film yangiliklari, kino treylerlari, eng yaxshi kinolar" />
+        <meta property="og:url" content={movie.movie}/>
+        <meta property="og:title" content={movie.title[language]}/>
+
       </Helmet>
       <Button
         onClick={() => navigate(-1)}
@@ -247,7 +252,7 @@ function Movie({ movie }) {
                   }
                   className={
                     statusRemoveFavourites.loading ||
-                    statusRemoveFavourites.isSuccess
+                      statusRemoveFavourites.isSuccess
                       ? "movie-btn disabled"
                       : "movie-btn"
                   }
@@ -291,7 +296,7 @@ function Movie({ movie }) {
                   }
                   className={
                     statusRemoveWatchLater.loading ||
-                    statusRemoveWatchLater.isSuccess
+                      statusRemoveWatchLater.isSuccess
                       ? "movie-btn disabled"
                       : "movie-btn"
                   }
@@ -370,9 +375,9 @@ function Movie({ movie }) {
               }}
               className={
                 !postCommentComment ||
-                !postCommentName ||
-                postCommentStatus.buttonLoading ||
-                postCommentStatus.isSuccess
+                  !postCommentName ||
+                  postCommentStatus.buttonLoading ||
+                  postCommentStatus.isSuccess
                   ? "movie-comments-posting-button disabled"
                   : "movie-comments-posting-button"
               }
