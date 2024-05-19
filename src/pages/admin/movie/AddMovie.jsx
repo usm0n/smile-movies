@@ -35,6 +35,7 @@ function AddMovie() {
     video: "movie",
     page: "standart",
     notes: "uz",
+    movie: "uz",
   });
   const [addMovieValue, setAddMovieValue] = useState({
     title: {
@@ -85,7 +86,11 @@ function AddMovie() {
       isTrending: localStorage.getItem("statusDraft isTrending") || false,
       type: localStorage.getItem("statusDraft type") || "movie",
     },
-    movie: localStorage.getItem("movieDraft") || "",
+    movie: {
+      uz: localStorage.getItem("movieDraft uz") || "",
+      ru: localStorage.getItem("movieDraft ru") || "",
+      en: localStorage.getItem("movieDraft en") || "",
+    },
     trailer: localStorage.getItem("trailerDraft") || "",
   });
 
@@ -94,6 +99,7 @@ function AddMovie() {
   });
 
   const { addMovie, statusAddMovie } = useMovie();
+  console.log(addMovieValue);
 
   const handleToggleValue = (e, name) => {
     setToggleValue({
@@ -452,16 +458,44 @@ function AddMovie() {
                   <ToggleButton value="movie">Movie</ToggleButton>
                   <ToggleButton value="trailer">Trailer</ToggleButton>
                 </ToggleButtonGroup>
+                {toggleValue.video == "movie" && (
+                  <ToggleButtonGroup
+                    color="info"
+                    value={toggleValue.movie}
+                    name="movie"
+                    onChange={(e) => handleToggleValue(e, "movie")}
+                    sx={{
+                      backgroundColor: "#fff",
+                      margin: "0 auto",
+                    }}
+                    exclusive
+                    aria-label="Platform"
+                  >
+                    <ToggleButton value="uz">O'zbekcha</ToggleButton>
+                    <ToggleButton value="ru">Русский</ToggleButton>
+                    <ToggleButton value="en">English</ToggleButton>
+                  </ToggleButtonGroup>
+                )}
                 <textarea
-                  onChange={(e) => handleInput(e)}
-                  name={toggleValue.video}
+                  onChange={(e) =>
+                    toggleValue.video == "movie"
+                      ? handleExtraInput(e, "movie")
+                      : handleInput(e)
+                  }
+                  name={
+                    toggleValue.video == "movie"
+                      ? toggleValue.movie
+                      : toggleValue.video
+                  }
                   value={
                     toggleValue.video == "movie"
-                      ? addMovieValue.movie
+                      ? addMovieValue.movie[toggleValue.movie]
                       : addMovieValue.trailer
                   }
                   placeholder={
-                    toggleValue.video == "movie" ? "Movie Link" : "Trailer Link"
+                    toggleValue.video == "movie"
+                      ? `Movie Link ${toggleValue.movie}`
+                      : "Trailer Link"
                   }
                   width="100%"
                   className="movie-iframe admin-video-area"

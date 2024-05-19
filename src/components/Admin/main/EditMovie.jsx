@@ -41,6 +41,7 @@ function EditMovie({ movie }) {
     video: "movie",
     page: "standart",
     notes: "uz",
+    movie: "uz"
   });
   const [editMovieValue, seteditMovieValue] = useState({
     title: {
@@ -91,7 +92,11 @@ function EditMovie({ movie }) {
       isTrending: movie.status.isTrending,
       type: movie.status.type,
     },
-    movie: movie.movie,
+    movie: {
+      uz: movie.movie.uz || "",
+      ru: movie.movie.ru || "",
+      en: movie.movie.en || "",
+    },
     trailer: movie.trailer,
   });
 
@@ -126,6 +131,7 @@ function EditMovie({ movie }) {
       [e.target.name]: e.target.value,
     });
   };
+  console.log(editMovieValue);
 
   const isNotTrim =
     !editMovieValue.country.en.trim() ||
@@ -139,7 +145,6 @@ function EditMovie({ movie }) {
     !editMovieValue.description.uz.trim() ||
     !editMovieValue.image.fullscreen.trim() ||
     !editMovieValue.image.portrait.trim() ||
-    !editMovieValue.movie.trim() ||
     !editMovieValue.title.en.trim() ||
     !editMovieValue.title.ru.trim() ||
     !editMovieValue.title.uz.trim() ||
@@ -474,16 +479,44 @@ function EditMovie({ movie }) {
                   <ToggleButton value="movie">Movie</ToggleButton>
                   <ToggleButton value="trailer">Trailer</ToggleButton>
                 </ToggleButtonGroup>
+                {toggleValue.video == "movie" && (
+                  <ToggleButtonGroup
+                    color="info"
+                    value={toggleValue.movie}
+                    name="movie"
+                    onChange={(e) => handleToggleValue(e, "movie")}
+                    sx={{
+                      backgroundColor: "#fff",
+                      margin: "0 auto",
+                    }}
+                    exclusive
+                    aria-label="Platform"
+                  >
+                    <ToggleButton value="uz">O'zbekcha</ToggleButton>
+                    <ToggleButton value="ru">Русский</ToggleButton>
+                    <ToggleButton value="en">English</ToggleButton>
+                  </ToggleButtonGroup>
+                )}
                 <textarea
-                  onChange={(e) => handleInput(e)}
-                  name={toggleValue.video}
+                  onChange={(e) =>
+                    toggleValue.video == "movie"
+                      ? handleExtraInput(e, "movie")
+                      : handleInput(e)
+                  }
+                  name={
+                    toggleValue.video == "movie"
+                      ? toggleValue.movie
+                      : toggleValue.video
+                  }
                   value={
                     toggleValue.video == "movie"
-                      ? editMovieValue.movie
+                      ? editMovieValue.movie[toggleValue.movie]
                       : editMovieValue.trailer
                   }
                   placeholder={
-                    toggleValue.video == "movie" ? "Movie Link" : "Trailer Link"
+                    toggleValue.video == "movie"
+                      ? `Movie Link ${toggleValue.movie}`
+                      : "Trailer Link"
                   }
                   width="100%"
                   className="movie-iframe admin-video-area"

@@ -61,7 +61,9 @@ export const removeLocalDraft = () => {
   localStorage.removeItem("statusDraft isNew");
   localStorage.removeItem("statusDraft isTrending");
   localStorage.removeItem("statusDraft type");
-  localStorage.removeItem("movieDraft");
+  localStorage.removeItem("movieDraft uz");
+  localStorage.removeItem("movieDraft ru");
+  localStorage.removeItem("movieDraft en");
   localStorage.removeItem("trailerDraft");
 };
 
