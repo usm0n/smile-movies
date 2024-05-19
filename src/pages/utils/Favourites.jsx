@@ -61,15 +61,19 @@ function Favorites() {
             </>
           )}
         </h1>
-        <h1 className="watch-later-not-found">
-          {language == "en" && !favourites.result.length && "No results found"}
-          {language == "uz" &&
-            !favourites.result.length &&
-            "Natijalar topilmadi"}
-          {language == "ru" &&
-            !favourites.result.length &&
-            "Результатов не найдено"}
-        </h1>
+        {!favourites.loading && (
+          <h1 className="watch-later-not-found">
+            {language == "en" &&
+              !favourites.result.length &&
+              "No results found"}
+            {language == "uz" &&
+              !favourites.result.length &&
+              "Natijalar topilmadi"}
+            {language == "ru" &&
+              !favourites.result.length &&
+              "Результатов не найдено"}
+          </h1>
+        )}
       </div>
       <div className="watch-later-movies">
         {!favourites.loading ? (

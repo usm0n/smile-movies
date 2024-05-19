@@ -175,7 +175,7 @@ function EditMovie({ movie }) {
   return (
     <section className="movie">
       <Button
-        onClick={() => navigate("/admin/edit-movie")}
+        onClick={() => navigate(-1)}
         sx={{
           position: "absolute",
           top: "120px",
@@ -186,7 +186,6 @@ function EditMovie({ movie }) {
         }}
       >
         <ArrowBackIcon />
-        Back to search
       </Button>
       {status.isEmpty && snackbar("warning", "Please fill all fields")}
       {statusEditMovie.isSuccess &&

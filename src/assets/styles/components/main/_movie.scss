@@ -23,6 +23,19 @@
     width: 100%;
   }
 
+  &-admin{
+    background-color: rgba(231, 229, 219, 0.531);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-radius: 23px;
+    padding: 5px;
+    position: fixed;
+    top: 80px;
+    right: 10px;
+    gap: 10px;
+    display: flex;
+  }
+
   &-iframe {
     @include adaptive-value("height", 500, 200);
     width: 85%;

@@ -61,15 +61,19 @@ function WatchLater() {
             </>
           )}
         </h1>
-        <h1 className="watch-later-not-found">
-          {language == "en" && !watchlater.result.length && "No results found"}
-          {language == "uz" &&
-            !watchlater.result.length &&
-            "Natijalar topilmadi"}
-          {language == "ru" &&
-            !watchlater.result.length &&
-            "Результатов не найдено"}
-        </h1>
+        {!watchlater.loading && (
+          <h1 className="watch-later-not-found">
+            {language == "en" &&
+              !watchlater.result.length &&
+              "No results found"}
+            {language == "uz" &&
+              !watchlater.result.length &&
+              "Natijalar topilmadi"}
+            {language == "ru" &&
+              !watchlater.result.length &&
+              "Результатов не найдено"}
+          </h1>
+        )}
       </div>
       <div className="watch-later-movies">
         {!watchlater.loading ? (
