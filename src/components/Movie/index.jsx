@@ -28,12 +28,6 @@ function Movie({ movie }) {
           name="keywords"
           content={`${movie.title.uz}, ${movie.title.ru}, ${movie.title.en}`}
         />
-        <meta property="og:title" content={movie.title[language]} />
-        <meta
-          property="og:url"
-          content={`https://smile-movies.uz/movie/${movie._id}`}
-        />
-        <meta property="og:image" content={movie.image.portrait} />
         <title>Smile Movie | {movie.title[language]}</title>
       </Helmet>
       <Button
@@ -79,11 +73,7 @@ function Movie({ movie }) {
       <div className="movie-container">
         <MovieContent movie={movie} user={user} isLoggedIn={isLoggedIn} />
         <MovieVideo movie={movie} />
-        <MovieComments
-          isLoggedIn={isLoggedIn}
-          movie={movie}
-          user={user}
-        />
+        <MovieComments isLoggedIn={isLoggedIn} movie={movie} user={user} />
       </div>
     </section>
   );

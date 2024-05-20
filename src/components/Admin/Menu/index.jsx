@@ -22,6 +22,7 @@ import ExpandLess from "@mui/icons-material/ExpandLess";
 import ExpandMore from "@mui/icons-material/ExpandMore";
 import Edit from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
+import UserIcon from "@mui/icons-material/Person";
 
 function AdminMenu({ user }) {
   const [open, setOpen] = useState(false);
@@ -127,15 +128,46 @@ function AdminMenu({ user }) {
                 </ListItemButton>
               </List>
             </Collapse>
-            {/* <ListItem onClick={() => setUsersOpen(!usersOpen)}>
+            <ListItem onClick={() => handleClick("users")}>
               <ListItemButton>
                 <ListItemIcon>
                   <UserIcon />
                 </ListItemIcon>
                 <ListItemText primary="Users" />
-                {usersOpen ? <ExpandLess /> : <ExpandMore />}
+                {/* {usersOpen ? <ExpandLess /> : <ExpandMore />} */}
               </ListItemButton>
-            </ListItem> */}
+            </ListItem>
+            {/* <Collapse in={usersOpen} timeout="auto" unmountOnExit>
+              <List component="div" disablePadding>
+                <ListItemButton
+                  onClick={() => handleClick("/admin/add-movie")}
+                  sx={{ pl: 6 }}
+                >
+                  <ListItemIcon>
+                    <Add />
+                  </ListItemIcon>
+                  <ListItemText primary="Users" />
+                </ListItemButton>
+                <ListItemButton
+                  onClick={() => handleClick("/admin/edit-movie")}
+                  sx={{ pl: 6 }}
+                >
+                  <ListItemIcon>
+                    <Edit />
+                  </ListItemIcon>
+                  <ListItemText primary="Edit Movie" />
+                </ListItemButton>
+                <ListItemButton
+                  onClick={() => handleClick("/admin/delete-movie")}
+                  sx={{ pl: 6 }}
+                >
+                  <ListItemIcon>
+                    <DeleteIcon />
+                  </ListItemIcon>
+                  <ListItemText primary="Delete Movie" />
+                </ListItemButton>
+              </List>
+            </Collapse> */}
           </List>
         </Box>
       </Drawer>

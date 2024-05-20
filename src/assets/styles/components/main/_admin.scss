@@ -368,19 +368,19 @@
     }
   }
 
-  &-edit-movie{
+  &-edit-movie {
     display: flex;
     flex-direction: column;
     align-items: center;
     width: 100%;
     margin-top: 100px;
 
-    &-search-bar{
+    &-search-bar {
       display: flex;
       flex-direction: column;
       gap: 20px;
 
-      &-title{
+      &-title {
         width: 90%;
         margin: 0 auto;
         text-align: center;
@@ -390,5 +390,11 @@
         color: #ffffffda;
       }
     }
+  }
+
+  &-users {
+    width: 90%;
+    margin: 100px auto;
+    background-color: #fff;
   }
 }

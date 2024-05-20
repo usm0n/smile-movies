@@ -11,11 +11,11 @@ function AdminLayout() {
 
   const navigate = useNavigate();
 
-  useEffect(() => {
-    if (!isAdmin.loading && !isAdmin.result) {
-      navigate("/");
-    }
-  }, []);
+  // useEffect(() => {
+  //   if (!isAdmin.loading && !isAdmin.result) {
+  //     navigate("/");
+  //   }
+  // }, []);
   return !isAdmin.loading ? (
     <>
       {isAdmin.result && <AdminMenu user={user} />}

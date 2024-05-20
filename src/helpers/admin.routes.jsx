@@ -8,6 +8,7 @@ import SearchEditMovie from "../pages/Search/index";
 import DeleteMovie from "../pages/admin/movie/DeleteMovie";
 import SearchDeleteMovie from "../pages/Search/index";
 import DeleteMovieComp from "../components/Admin/main/DeleteMovie";
+import Users from "../pages/admin/users/index";
 
 export const AdminRoutes = [
   {
@@ -37,7 +38,12 @@ export const AdminRoutes = [
   {
     title: "Search Edit Movie",
     path: "edit-movie/search/:value",
-    element: <SearchEditMovie backTo={"/admin/edit-movie"} linkTo={"/admin/edit-movie"}/>,
+    element: (
+      <SearchEditMovie
+        backTo={"/admin/edit-movie"}
+        linkTo={"/admin/edit-movie"}
+      />
+    ),
   },
   {
     title: "Delete Movie",
@@ -52,6 +58,16 @@ export const AdminRoutes = [
   {
     title: "Search Delete Movie",
     path: "delete-movie/search/:value",
-    element: <SearchDeleteMovie backTo={"/admin/delete-movie"} linkTo={"/admin/delete-movie"}/>,
+    element: (
+      <SearchDeleteMovie
+        backTo={"/admin/delete-movie"}
+        linkTo={"/admin/delete-movie"}
+      />
+    ),
+  },
+  {
+    title: "Users",
+    path: "users",
+    element: <Users />,
   },
 ];
