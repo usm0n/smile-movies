@@ -1,0 +1,42 @@
+.notfound{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    height: 90vh;
+    gap: 20px;
+
+    &-logo{
+        width: 250px;
+    }
+
+    &-content{
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    &-404{
+        letter-spacing: 5px;
+        font-size: 100px;
+        font-weight: 700;
+        color: #ffffffc2;
+    }
+
+    &-title{
+        font-size: 40px;
+        font-weight: 600;
+        color: #ffffffc2;
+        letter-spacing: 2px;
+    }
+
+    &-desc{
+        font-size: 20px;
+        font-weight: 200;
+        color: #ffffffc2;
+        letter-spacing: 1px;
+        width: 80%;
+        margin: 0 auto;
+    }
+}

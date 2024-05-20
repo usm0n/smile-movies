@@ -79,7 +79,11 @@ function Movie({ movie }) {
       <div className="movie-container">
         <MovieContent movie={movie} user={user} isLoggedIn={isLoggedIn} />
         <MovieVideo movie={movie} />
-        <MovieComments isLoggedIn={isLoggedIn} movie={movie} user={user} />
+        <MovieComments
+          isLoggedIn={isLoggedIn}
+          movie={movie}
+          user={user}
+        />
       </div>
     </section>
   );

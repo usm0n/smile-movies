@@ -3,8 +3,6 @@ import { useMovie } from "../contexts/Movie";
 import MovieComponent from "../components/Movie";
 import { useParams } from "react-router-dom";
 import MovieSkeleton from "../components/Movie/Skeleton/index";
-import { language } from "../utilities/defaultFunctions";
-import { useWatchLater } from "../contexts/WatchLater";
 
 function Movie() {
   const { movieById, getMovieId } = useMovie();
@@ -13,15 +11,9 @@ function Movie() {
     getMovieId(movieId);
   }, [movieId]);
   return !movieById.isLoading ? (
-    <>
-      {movieById.movie && !movieById.isLoading && (
-        <MovieComponent movie={movieById.movie} />
-      )}
-    </>
+    movieById.movie && <MovieComponent movie={movieById.movie}/>
   ) : (
-    <>
-      <MovieSkeleton />
-    </>
+    <MovieSkeleton />
   );
 }
 

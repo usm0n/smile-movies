@@ -1,5 +1,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import comments from "../service/api/comments.api.service";
+import { userId } from "../utilities/defaultFunctions";
+import { useUser } from "./User";
 
 const CommentsContext = createContext({
   allComments: {
@@ -26,6 +28,7 @@ const CommentsContext = createContext({
 
 export const useComments = () => useContext(CommentsContext);
 const CommentsProvider = ({ children }) => {
+  const { isAdmin } = useUser();
   const [allComments, setAllComments] = useState({
     isLoading: false,
     isError: false,
@@ -37,7 +40,6 @@ const CommentsProvider = ({ children }) => {
     isError: false,
     isSuccess: false,
   });
-
   const [postCommentStatus, setPostCommentStatus] = useState({
     buttonLoading: false,
     isError: false,
@@ -61,9 +63,12 @@ const CommentsProvider = ({ children }) => {
       isSuccess: false,
     });
     await comments
-      .postComment(movieId, { firstname: firstname, comment: comment })
+      .postComment(movieId, {
+        firstname: firstname,
+        comment: comment,
+        isAdmin: isAdmin.result,
+      })
       .then((res) => {
-        console.log(res);
         setPostCommentStatus({
           buttonLoading: false,
           isError: false,
@@ -113,7 +118,6 @@ const CommentsProvider = ({ children }) => {
     comments
       .getComments(movieId)
       .then((comment) => {
-        console.log(comment);
         if (!comment.data) {
           if (comment.response.data.message == "Comments not found") {
             setAllComments({

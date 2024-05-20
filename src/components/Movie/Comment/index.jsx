@@ -2,6 +2,7 @@ import React, { useEffect } from "react";
 import Like from "../../../assets/icons/Like";
 import DisLike from "../../../assets/icons/DisLike";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
+import logo from "../../../assets/images/logo.png";
 import { useComments } from "../../../contexts/Comments";
 import {
   Alert,
@@ -33,18 +34,33 @@ function Comment({ comment, index }) {
           </Alert>
         </Snackbar>
       )} */}
-      <Avatar
-        sx={{
-          width: 56,
-          height: 56,
-        }}
-        className="movie-user_image"
-      >
-        {comment.firstname.slice(0, 1)}
-      </Avatar>
+      {comment.isAdmin ? (
+        <div className="movie-admin_img">
+          <img className="movie-admin_image" src={logo} alt="" />
+        </div>
+      ) : (
+        <Avatar
+          sx={{
+            width: 56,
+            height: 56,
+          }}
+          className="movie-user_image"
+        >
+          {comment.firstname.slice(0, 1)}
+        </Avatar>
+      )}
 
       <div className="movie-comment_items">
-        <h1 className="movie-comment_name">{comment.firstname}</h1>
+        <div className="movie-comment-names">
+          <h1 className="movie-comment_name">
+            {comment.isAdmin ? "Admin" : comment.firstname}
+          </h1>
+          {comment.isAdmin && (
+            <h1 className="movie-comment_name-admin">
+              ( {comment.firstname} )
+            </h1>
+          )}
+        </div>
         <p className="movie-comment_text">{comment.comment}</p>
         <div className="movie-buttons">
           <button className="movie-like_btn">

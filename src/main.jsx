@@ -15,17 +15,17 @@ ReactDOM.createRoot(document.getElementById("root")).render(
     <BrowserRouter>
       <MoviesProvider>
         <MovieProvider>
-          <CommentsProvider>
-            <UserProvider>
+          <UserProvider>
+            <CommentsProvider>
               <WatchLaterProvider>
                 <FavouritesProvider>
-                  <TranslationProvider >
+                  <TranslationProvider>
                     <App />
                   </TranslationProvider>
                 </FavouritesProvider>
               </WatchLaterProvider>
-            </UserProvider>
-          </CommentsProvider>
+            </CommentsProvider>
+          </UserProvider>
         </MovieProvider>
       </MoviesProvider>
     </BrowserRouter>

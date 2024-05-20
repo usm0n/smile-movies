@@ -4,7 +4,7 @@ import { t } from "i18next";
 import { snackbar } from "../../utilities/defaultFunctions";
 import Comment from "./Comment/index";
 
-function MovieComments({ movie, user, isLoggedIn }) {
+function MovieComments({ movie, user, isLoggedIn}) {
   const { getMovieId, allComments, postComment, postCommentStatus } =
     useComments();
 
@@ -69,7 +69,7 @@ function MovieComments({ movie, user, isLoggedIn }) {
         !allComments.isLoading &&
         allComments.comments &&
         allComments.comments.map((comment, index) => {
-          return <Comment comment={comment} index={index} />;
+          return <Comment comment={comment} index={index}/>;
         })
       )}
     </div>

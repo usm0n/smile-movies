@@ -141,7 +141,9 @@ function AddMovie() {
     !addMovieValue.description.uz.trim() ||
     !addMovieValue.image.fullscreen.trim() ||
     !addMovieValue.image.portrait.trim() ||
-    !addMovieValue.movie.trim() ||
+    !addMovieValue.movie.uz.trim() ||
+    !addMovieValue.movie.en.trim() ||
+    !addMovieValue.movie.ru.trim() ||
     !addMovieValue.title.en.trim() ||
     !addMovieValue.title.ru.trim() ||
     !addMovieValue.title.uz.trim() ||

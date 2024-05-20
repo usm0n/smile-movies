@@ -9,7 +9,7 @@ import AboutLayout from "../layout/AboutLayout";
 import ContactLayout from "../layout/ContactLayout";
 import AdminLayout from "../layout/AdminLayout";
 import Premium from "../pages/components/Premium";
-import VerifyEmail from "../components/VerifyEmail";
+import NotFound from "../pages/error/NotFound"
 
 export const routes = [
   {
@@ -20,6 +20,11 @@ export const routes = [
   {
     path: "/favourites",
     element: <Favourites />,
+  },
+
+  {
+    path: "*",
+    element: <NotFound />,
   },
 
   {

@@ -21,11 +21,12 @@ import MovieIcon from "@mui/icons-material/Movie";
 import ExpandLess from "@mui/icons-material/ExpandLess";
 import ExpandMore from "@mui/icons-material/ExpandMore";
 import Edit from "@mui/icons-material/Edit";
-import DeleteIcon from '@mui/icons-material/Delete';
+import DeleteIcon from "@mui/icons-material/Delete";
 
 function AdminMenu({ user }) {
   const [open, setOpen] = useState(false);
   const [movieOpen, setMovieOpen] = useState(false);
+  const [usersOpen, setUsersOpen] = useState(false);
   const navigate = useNavigate();
 
   const handleClick = (navigateTo) => {
@@ -126,6 +127,15 @@ function AdminMenu({ user }) {
                 </ListItemButton>
               </List>
             </Collapse>
+            {/* <ListItem onClick={() => setUsersOpen(!usersOpen)}>
+              <ListItemButton>
+                <ListItemIcon>
+                  <UserIcon />
+                </ListItemIcon>
+                <ListItemText primary="Users" />
+                {usersOpen ? <ExpandLess /> : <ExpandMore />}
+              </ListItemButton>
+            </ListItem> */}
           </List>
         </Box>
       </Drawer>
