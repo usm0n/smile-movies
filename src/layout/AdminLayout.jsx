@@ -5,27 +5,32 @@ import { Route, Routes, useNavigate } from "react-router-dom";
 import { routes } from "../helpers/routes";
 import { useUser } from "../contexts/User";
 import { Backdrop, CircularProgress } from "@mui/material";
+import NotFound from "../pages/error/NotFound";
 
 function AdminLayout() {
   const { isAdmin, user } = useUser();
 
-  const navigate = useNavigate();
-
-  // useEffect(() => {
-  //   if (!isAdmin.loading && !isAdmin.result) {
-  //     navigate("/");
-  //   }
-  // }, []);
   return !isAdmin.loading ? (
     <>
-      {isAdmin.result && <AdminMenu user={user} />}
-      <Routes>
-        {AdminRoutes.map((item) => {
-          return (
-            <Route path={item.path} element={item.element} key={item.path} />
-          );
-        })}
-      </Routes>
+      {!isAdmin.result ? (
+        <NotFound />
+      ) : (
+        <>
+          {" "}
+          <AdminMenu user={user} />
+          <Routes>
+            {AdminRoutes.map((item) => {
+              return (
+                <Route
+                  path={item.path}
+                  element={item.element}
+                  key={item.path}
+                />
+              );
+            })}
+          </Routes>
+        </>
+      )}
     </>
   ) : (
     <Backdrop

@@ -28,7 +28,7 @@ function Movie({ movie }) {
           name="keywords"
           content={`${movie.title.uz}, ${movie.title.ru}, ${movie.title.en}`}
         />
-        <title>Smile Movie | {movie.title[language]}</title>
+        <title>{movie.title[language]} - Smile Movies</title>
       </Helmet>
       <Button
         onClick={() => navigate("/")}

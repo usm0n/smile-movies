@@ -13,7 +13,6 @@ import {
   ListItemText,
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
-import { AdminRoutes } from "../../../helpers/admin.routes";
 import { useNavigate } from "react-router-dom";
 import Home from "@mui/icons-material/Home";
 import Add from "@mui/icons-material/Add";
@@ -23,6 +22,7 @@ import ExpandMore from "@mui/icons-material/ExpandMore";
 import Edit from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import UserIcon from "@mui/icons-material/Person";
+import FormatListBulletedIcon from "@mui/icons-material/FormatListBulleted";
 
 function AdminMenu({ user }) {
   const [open, setOpen] = useState(false);
@@ -128,46 +128,28 @@ function AdminMenu({ user }) {
                 </ListItemButton>
               </List>
             </Collapse>
-            <ListItem onClick={() => handleClick("users")}>
+            <ListItem onClick={() => setUsersOpen(!usersOpen)}>
               <ListItemButton>
                 <ListItemIcon>
                   <UserIcon />
                 </ListItemIcon>
                 <ListItemText primary="Users" />
-                {/* {usersOpen ? <ExpandLess /> : <ExpandMore />} */}
+                {usersOpen ? <ExpandLess /> : <ExpandMore />}
               </ListItemButton>
             </ListItem>
-            {/* <Collapse in={usersOpen} timeout="auto" unmountOnExit>
+            <Collapse in={usersOpen} timeout="auto" unmountOnExit>
               <List component="div" disablePadding>
                 <ListItemButton
-                  onClick={() => handleClick("/admin/add-movie")}
+                  onClick={() => handleClick("/admin/users")}
                   sx={{ pl: 6 }}
                 >
                   <ListItemIcon>
-                    <Add />
+                    <FormatListBulletedIcon />
                   </ListItemIcon>
-                  <ListItemText primary="Users" />
-                </ListItemButton>
-                <ListItemButton
-                  onClick={() => handleClick("/admin/edit-movie")}
-                  sx={{ pl: 6 }}
-                >
-                  <ListItemIcon>
-                    <Edit />
-                  </ListItemIcon>
-                  <ListItemText primary="Edit Movie" />
-                </ListItemButton>
-                <ListItemButton
-                  onClick={() => handleClick("/admin/delete-movie")}
-                  sx={{ pl: 6 }}
-                >
-                  <ListItemIcon>
-                    <DeleteIcon />
-                  </ListItemIcon>
-                  <ListItemText primary="Delete Movie" />
+                  <ListItemText primary="All Users" />
                 </ListItemButton>
               </List>
-            </Collapse> */}
+            </Collapse>
           </List>
         </Box>
       </Drawer>

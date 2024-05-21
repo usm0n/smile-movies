@@ -394,7 +394,26 @@
 
   &-users {
     width: 90%;
+    gap: 20px;
+    display: flex;
+    flex-direction: column;
     margin: 100px auto;
-    background-color: #fff;
+
+    &-content{
+      display: flex;
+      justify-content: space-evenly;
+      flex-wrap: wrap;
+
+      &>h1{
+        padding: 0px 10px 0px 10px;
+        font-size: 20px;
+        color: #ffffffb7;
+        font-weight: 500;
+        letter-spacing: 1px;
+        line-height: 30px;
+        font-weight: 200;
+        text-align: center;
+      }
+    }
   }
 }
