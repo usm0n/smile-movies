@@ -70,13 +70,13 @@ function Header({
       {statusAddWatchLater.isSuccess &&
         snackbar("success", t("AddedToWatchLater"))}
       {statusAddWatchLater.isError &&
-        snackbar("error", t("ErrorAtAddWatchLater"))}
+        snackbar("danger", t("ErrorAtAddWatchLater"))}
       {statusAddWatchLater.isAlreadyIn &&
         snackbar("warning", t("AlreadyInWatchLater"))}
       {statusRemoveWatchLater.isSuccess &&
         snackbar("success", t("RemovedFromWatchLater"))}
       {statusRemoveWatchLater.isError &&
-        snackbar("error", t("ErrorAtRemoveWatchLater"))}
+        snackbar("danger", t("ErrorAtRemoveWatchLater"))}
       {statusRemoveWatchLater.isNotFound &&
         snackbar("warning", t("NotFoundWatchLater"))}
       <>
