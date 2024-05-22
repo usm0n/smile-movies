@@ -53,7 +53,7 @@ function Login() {
       <div className="container">
         {statusLogin.isEmpty && snackbar("warning", t("pleaseFillFields"))}
         {statusLogin.isSuccess && snackbar("success", t("loginSuccess"))}
-        {statusLogin.isError && snackbar("error", t("userNotFound"))}
+        {statusLogin.isError && snackbar("danger", t("userNotFound"))}
         <div className="login-content">
           <div className="login-card">
             <h1 className="login-title">{t("MenuLoginText")}</h1>

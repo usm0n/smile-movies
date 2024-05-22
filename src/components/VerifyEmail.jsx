@@ -59,7 +59,7 @@ function VerifyEmail() {
   return (
     <section className="email">
       {statusResendCode.isSuccess && snackbar("success", "Code resent")}
-      {statusResendCode.isError && snackbar("error", "Error has occurred")}
+      {statusResendCode.isError && snackbar("danger", "Error has occurred")}
       <div className="container">
         <div className="email-card">
           <div className="email-content">

@@ -173,7 +173,7 @@ function AddMovie() {
       {status.isEmpty && snackbar("warning", "Please fill all fields")}
       {statusAddMovie.isSuccess &&
         snackbar("success", "Movie added successfully")}
-      {statusAddMovie.isError && snackbar("error", "Something went wrong")}
+      {statusAddMovie.isError && snackbar("danger", "Something went wrong")}
       <div
         style={{
           position: "fixed",

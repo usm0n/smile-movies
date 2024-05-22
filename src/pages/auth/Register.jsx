@@ -62,7 +62,7 @@ function Register() {
   return (
     <section className="register">
       {statusRegister.isSuccess && snackbar("success", t("registerSuccess"))}
-      {statusRegister.isError && snackbar("error", t("somethingWentWrong"))}
+      {statusRegister.isError && snackbar("danger", t("somethingWentWrong"))}
       {statusRegister.isEmpty && snackbar("warning", t("pleaseFillFields"))}
       {statusRegister.isConflict && snackbar("warning", t("alreadyRegistered"))}
       {statusRegister.confirmPassword &&

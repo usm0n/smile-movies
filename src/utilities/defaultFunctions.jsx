@@ -1,13 +1,12 @@
 import {
-  Alert,
   Button,
   Dialog,
   DialogActions,
   DialogContent,
   DialogContentText,
   DialogTitle,
-  Snackbar,
 } from "@mui/material";
+import { Snackbar } from "@mui/joy";
 
 export const language = !localStorage.getItem("language")
   ? "uz"
@@ -91,12 +90,15 @@ export const dialog = (title, text, open, close, agree) => (
 
 export const snackbar = (severity, text) => (
   <Snackbar
+    sx={{
+      marginTop: "70px",
+    }}
+    variant="outlined"
+    color={severity}
     anchorOrigin={{ vertical: "top", horizontal: "center" }}
     open={open}
   >
-    <Alert severity={severity} variant="filled" sx={{ marginTop: "70px" }}>
-      {text}
-    </Alert>
+    {text}
   </Snackbar>
 );
 

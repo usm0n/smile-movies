@@ -24,6 +24,7 @@ const WatchLaterContext = createContext({
   },
   addWatchLater: (movieId) => {},
   removeWatchLater: (movieId) => {},
+  getWatchLater: () => {},
 });
 
 export const useWatchLater = () => useContext(WatchLaterContext);
@@ -74,8 +75,7 @@ const WatchLaterProvider = ({ children }) => {
           });
         }
       })
-      .catch((err) => {
-        console.log(err);
+      .catch(() => {
         setStatusAddWatchLater({
           loading: false,
           isSuccess: false,
@@ -122,7 +122,7 @@ const WatchLaterProvider = ({ children }) => {
       });
   };
 
-  useEffect(() => {
+  const getWatchLater = () => {
     setWatchLater({
       loading: true,
       isEmpty: false,
@@ -156,6 +156,10 @@ const WatchLaterProvider = ({ children }) => {
           result: [],
         });
       });
+  };
+
+  useEffect(() => {
+    getWatchLater();
   }, []);
   return (
     <WatchLaterContext.Provider
@@ -165,6 +169,7 @@ const WatchLaterProvider = ({ children }) => {
         removeWatchLater,
         statusAddWatchLater,
         statusRemoveWatchLater,
+        getWatchLater,
       }}
     >
       {children}

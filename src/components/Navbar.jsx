@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { linksData } from "../data/linksData";
 import { Link, useNavigate } from "react-router-dom";
@@ -272,7 +272,10 @@ function Navbar() {
                           </ListItemIcon>
                           {t("MenuSettingsText")}
                         </MenuItem>
-                        <MenuItem disabled={statusLogout.loading} onClick={() => logoutUser()}>
+                        <MenuItem
+                          disabled={statusLogout.loading}
+                          onClick={() => logoutUser()}
+                        >
                           <ListItemIcon>
                             <Logout fontSize="small" />
                           </ListItemIcon>
@@ -305,7 +308,7 @@ function Navbar() {
                           </ListItemIcon>
                           {t("MenuLoginText")}
                         </MenuItem>
-                        <Divider/>
+                        <Divider />
                         <MenuItem
                           onClick={() => {
                             menuNavigation("/register");

@@ -1,25 +1,22 @@
 import React, { useEffect } from "react";
 import { useUser } from "../../contexts/User";
 import { useWatchLater } from "../../contexts/WatchLater";
-import { useNavigate } from "react-router-dom";
 import RowMovieCard from "../../components/MovieCard/RowMovieCard";
 import RowMovieCardSkeleton from "../../components/MovieCard/Skeleton/RowMovieCardSkeleton";
 import { Skeleton } from "@mui/material";
 import { t } from "i18next";
 import { language } from "../../utilities/defaultFunctions";
+import NotFound from "../error/NotFound";
 
 function WatchLater() {
   const { user, isLoggedIn, isRealUser } = useUser();
-  const { watchlater } = useWatchLater();
-
-  const navigate = useNavigate();
+  const { watchlater, getWatchLater } = useWatchLater();
 
   useEffect(() => {
-    if (!isLoggedIn) {
-      return navigate("/");
-    }
-  });
-  return (
+    getWatchLater();
+  }, []);
+
+  return isLoggedIn ? (
     <div className="watch-later">
       <div className="watch-later-info">
         <h1 className="watch-later-info_title">{t("MenuWatchLaterText")}</h1>
@@ -90,6 +87,8 @@ function WatchLater() {
         )}
       </div>
     </div>
+  ) : (
+    <NotFound />
   );
 }
 

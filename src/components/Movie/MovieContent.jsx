@@ -100,26 +100,26 @@ function MovieContent({ movie, user, isLoggedIn }) {
       {statusAddWatchLater.isSuccess &&
         snackbar("success", t("AddedToWatchLater"))}
       {statusAddWatchLater.isError &&
-        snackbar("error", t("ErrorAtAddWatchLater"))}
+        snackbar("danger", t("ErrorAtAddWatchLater"))}
       {statusAddWatchLater.isAlreadyIn &&
         snackbar("warning", t("AlreadyInWatchLater"))}
       {statusRemoveWatchLater.isSuccess &&
         snackbar("success", t("RemovedFromWatchLater"))}
       {statusRemoveWatchLater.isError &&
-        snackbar("error", t("ErrorAtRemoveWatchLater"))}
+        snackbar("danger", t("ErrorAtRemoveWatchLater"))}
       {statusRemoveWatchLater.isNotFound &&
         snackbar("warning", t("NotFoundWatchLater"))}
 
       {statusAddFavourites.isSuccess &&
         snackbar("success", t("AddedToFavourites"))}
       {statusAddFavourites.isError &&
-        snackbar("error", t("ErrorAtAddFavourites"))}
+        snackbar("danger", t("ErrorAtAddFavourites"))}
       {statusAddFavourites.isAlreadyIn &&
         snackbar("warning", t("AlreadyInFavourites"))}
       {statusRemoveFavourites.isSuccess &&
         snackbar("success", t("RemovedFromFavourites"))}
       {statusRemoveFavourites.isError &&
-        snackbar("error", t("ErrorAtRemoveFavourites"))}
+        snackbar("danger", t("ErrorAtRemoveFavourites"))}
       {statusRemoveFavourites.isNotFound &&
         snackbar("warning", t("NotFoundFavourites"))}
       <img

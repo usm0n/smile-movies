@@ -29,7 +29,7 @@ function DeleteMovie() {
       {statusDeleteMovie.isSuccess &&
         snackbar("success", "Movie deleted successfully")}
       {statusDeleteMovie.isError &&
-        snackbar("error", "Error at deleting the movie")}
+        snackbar("danger", "Error at deleting the movie")}
       {dialog(
         "Do you want to delete this movie?",
         "If you delete this movie then you can't return it",

@@ -21,7 +21,7 @@ function MovieComments({ movie, user, isLoggedIn}) {
         {postCommentStatus.isSuccess &&
           snackbar("success", "Your comment posted successfully")}
         {postCommentStatus.isError &&
-          snackbar("error", "An error has occurred")}
+          snackbar("danger", "An error has occurred")}
         {!isLoggedIn && (
           <input
             onChange={(e) => setPostCommentName(e.target.value)}
