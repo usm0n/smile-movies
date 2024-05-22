@@ -4,9 +4,7 @@ import { SwiperSlide } from "swiper/react";
 
 function NewMoviesSkeleton() {
   return (
-    <SwiperSlide style={{
-      width: "200px"
-    }}>
+    <SwiperSlide>
       <Box className="new-movie_card">
         <Skeleton
           sx={{

@@ -21,6 +21,13 @@ function NewMovies({ movies, isLoading, language }) {
         <h1 className="new-movie_title">{t("NewMoviesTitle")}</h1>
         <>
           <Swiper
+            style={{
+              "--swiper-pagination-color": "#FFBA08",
+              "--swiper-pagination-bullet-inactive-color": "#999999",
+              "--swiper-pagination-bullet-inactive-opacity": "1",
+              "--swiper-pagination-bullet-size": "10px",
+              "--swiper-pagination-bullet-horizontal-gap": "5px",
+            }}
             slidesPerView={4}
             spaceBetween={30}
             breakpoints={{
@@ -56,27 +63,11 @@ function NewMovies({ movies, isLoading, language }) {
             className="mySwiper"
           >
             {isLoading ? (
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "row",
-                  justifyContent: "space-between",
-                  flexWrap: "wrap",
-                }}
-              >
-                <Grid item xs={12} sm={6} md={4} lg={3}>
+              Array.from({ length: 4 }).map((_, index) => (
+                <SwiperSlide key={index}>
                   <NewMoviesSkeleton />
-                </Grid>
-                <Grid item xs={12} sm={6} md={4} lg={3}>
-                  <NewMoviesSkeleton />
-                </Grid>
-                <Grid item xs={12} sm={6} md={4} lg={3}>
-                  <NewMoviesSkeleton />
-                </Grid>
-                <Grid item xs={12} sm={6} md={4} lg={3}>
-                  <NewMoviesSkeleton />
-                </Grid>
-              </div>
+                </SwiperSlide>
+              ))
             ) : (
               <>
                 {movies

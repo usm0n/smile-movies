@@ -47,7 +47,7 @@
     width: 100%;
     flex-wrap: wrap;
 
-    @media screen and (max-width: 460px) {
+    @media screen and (max-width: 660px) {
       flex-direction: column;
     }
   }
@@ -71,9 +71,11 @@
     font-size: 20px;
     font-weight: 300;
     letter-spacing: 1px;
+    width: 285px;
     transition: all 0.2s ease-in-out;
 
     &_later {
+      width: 285px;
       background-color: transparent;
       padding: 10px 25px;
       border-radius: 50px;

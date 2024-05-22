@@ -1,11 +1,9 @@
 import React from "react";
 import Header from "../components/Home/header/Header";
 import Movies from "../components/Home/main/Movies";
-import Series from "../components/Home/main/Series";
 import NewMovies from "../components/Home/main/NewMovies";
 import Footer from "../components/Footer/index";
 import { useAllMovies } from "../contexts/Movies";
-import Cartoons from "../components/Home/main/Cartoons";
 import { language } from "../utilities/defaultFunctions";
 import { useWatchLater } from "../contexts/WatchLater";
 import { useUser } from "../contexts/User";
@@ -15,6 +13,7 @@ import IconButton from "@mui/material/IconButton";
 import Collapse from "@mui/material/Collapse";
 import CloseIcon from "@mui/icons-material/Close";
 import { Snackbar } from "@mui/material";
+import { t } from "i18next";
 
 function HomeLayout() {
   const [open, setOpen] = React.useState(
@@ -51,7 +50,13 @@ function HomeLayout() {
                 <CloseIcon fontSize="inherit" />
               </IconButton>
             }
-            sx={{ position: "absolute", top: "80px", width: "350px", display: "flex", alignItems: "center" }}
+            sx={{
+              position: "absolute",
+              top: "80px",
+              width: "350px",
+              display: "flex",
+              alignItems: "center",
+            }}
           >
             Web saytimiz test rejimda ishlayapti xato va kamchiliklar uchun uzur
             so'raymiz
@@ -74,9 +79,27 @@ function HomeLayout() {
         isLoading={allMovies.isLoading}
         language={language}
       />
-      <Movies allMovies={allMovies} language={language} />
-      <Cartoons allMovies={allMovies} language={language} />
-      <Series allMovies={allMovies} language={language} />
+      <Movies
+        allMovies={allMovies}
+        language={language}
+        MoviesTitle={t("MoviesTitle")}
+        MoviesType={"movie"}
+        NoMovies={t("NoMovies")}
+      />
+      <Movies
+        allMovies={allMovies}
+        language={language}
+        MoviesTitle={t("CartoonsTitle")}
+        MoviesType={"cartoon"}
+        NoMovies={t("NoCartoons")}
+      />
+      <Movies
+        allMovies={allMovies}
+        language={language}
+        MoviesTitle={t("SeriesTitle")}
+        MoviesType={"series"}
+        NoMovies={t("NoSeries")}
+      />
       <Footer />
     </div>
   );
