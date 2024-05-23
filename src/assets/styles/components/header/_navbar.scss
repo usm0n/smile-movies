@@ -26,8 +26,6 @@
   &-list {
     @include flex(center, unset);
     gap: 40px;
-    position: absolute;
-    left: 250px;
 
     @media screen and (max-width: 930px) {
       gap: 7px;
@@ -37,7 +35,7 @@
       transform: translateX(0);
     }
 
-    @media screen and (max-width: 1274px) {
+    @media screen and (max-width: 1000px) {
       position: fixed;
       top: 0;
       left: 0;
@@ -87,7 +85,7 @@
       gap: 7px;
     }
 
-    @media screen and (max-width: 1274px) {
+    @media screen and (max-width: 1000px) {
       align-items: start;
       justify-content: center;
       flex-direction: column;
@@ -109,7 +107,7 @@
     border-radius: 4px;
     display: none;
 
-    @media screen and (max-width: 1274px) {
+    @media screen and (max-width: 1000px) {
       display: block;
       z-index: 999;
       box-shadow: rgba(149, 157, 165, 0.2) 0px 8px 24px;
@@ -196,16 +194,14 @@
       color: #ffd700;
     }
 
-    @media screen and (max-width: 1274px) {
+    @media screen and (max-width: 1000px) {
       font-size: 24px;
     }
   }
 
   &-logo__list {
     @include flex(center, unset);
-    position: absolute;
     background-color: transparent;
-    left: 50px;
     height: 74px;
     padding: 14px;
     border-radius: 5px;
@@ -229,7 +225,7 @@
     fill: $gold-color;
     padding: 6px;
 
-    @media screen and (max-width: 1274px) {
+    @media screen and (max-width: 1000px) {
       display: block;
     }
   }
@@ -239,12 +235,12 @@
     border-radius: 25px;
     display: flex;
     align-items: center;
-    margin: 0 auto;
     color: $input-color;
     width: 410px;
     height: 43px;
     outline: none;
     font-size: 16px;
+    margin-left: 20px;
 
     &.mobile {
       display: none;
@@ -276,7 +272,6 @@
         border-radius: 10px;
         border: 0.1px solid black;
         width: 95%;
-        margin: 0 auto;
         height: 54px;
         background-color: #fff;
         color: #000;

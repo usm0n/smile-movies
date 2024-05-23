@@ -29,23 +29,21 @@ function Movies({ allMovies, language, MoviesTitle, MoviesType, NoMovies }) {
                   "--swiper-pagination-bullet-horizontal-gap": "5px",
                 }}
                 slidesPerView={4}
-                // spaceBetween={30}
+                spaceBetween={30}
                 breakpoints={{
                   280: {
                     slidesPerView: 1,
-                    // spaceBetween: 70,
+                    spaceBetween: 70,
                   },
-                  500: {
+                  700: {
                     slidesPerView: 2,
-                    // spaceBetween: 70,
+                    spaceBetween: 50,
                   },
                   870: {
                     slidesPerView: 3,
-                    // spaceBetween: 70,
                   },
                   1200: {
                     slidesPerView: 4,
-                    // spaceBetween: 70,
                   },
                 }}
                 autoplay={{
