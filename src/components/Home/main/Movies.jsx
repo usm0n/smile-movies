@@ -33,7 +33,7 @@ function Movies({ allMovies, language, MoviesTitle, MoviesType, NoMovies }) {
                 breakpoints={{
                   280: {
                     slidesPerView: 1,
-                    spaceBetween: 70,
+                    spaceBetween: 30,
                   },
                   700: {
                     slidesPerView: 2,

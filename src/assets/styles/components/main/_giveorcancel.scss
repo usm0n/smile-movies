@@ -1,0 +1,27 @@
+.giveorcancel {
+  display: flex;
+  flex-direction: column;
+  gap: 150px;
+  justify-content: center;
+  align-items: center;
+  height: 80vh;
+
+  &-title{
+    @include adaptive-value("font-size", 70, 40);
+    color: #ffffffb7;
+    font-weight: 500;
+    letter-spacing: 3px;
+    line-height: 30px;
+    font-weight: 200;
+    text-align: center;
+  }
+
+  &-content{
+    display: flex;
+    gap: 15px;
+
+    @media screen and (max-width: 800px) {
+        flex-direction: column;
+    }
+  }
+}

@@ -9,11 +9,26 @@ import AboutLayout from "../layout/AboutLayout";
 import ContactLayout from "../layout/ContactLayout";
 import AdminLayout from "../layout/AdminLayout";
 import Premium from "../pages/components/Premium";
-import NotFound from "../pages/error/NotFound"
+import NotFound from "../pages/error/NotFound";
 
 export const routes = [
   {
     path: "/",
+    element: <HomeLayout />,
+  },
+
+  {
+    path: "/uz",
+    element: <HomeLayout />,
+  },
+
+  {
+    path: "/ru",
+    element: <HomeLayout />,
+  },
+
+  {
+    path: "/en",
     element: <HomeLayout />,
   },
 

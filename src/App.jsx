@@ -6,6 +6,7 @@ import Navbar from "./components/Navbar";
 import { useUser } from "./contexts/User";
 import NotRealUser from "./components/NotRealUser";
 import VerifyEmail from "./components/VerifyEmail";
+import { autoChangeLanguage, setLanguage } from "./utilities/defaultFunctions";
 
 function App() {
   const wrapper = (
@@ -19,6 +20,9 @@ function App() {
     </div>
   );
   const { isRealUser, isLoggedIn, isVerified } = useUser();
+  useEffect(() => {
+    autoChangeLanguage()
+  }, [])
   return isLoggedIn ? (
     isRealUser.result || isRealUser.loading ? (
       isVerified ? (

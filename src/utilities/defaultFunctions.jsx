@@ -15,6 +15,19 @@ export const setLanguage = (language) => {
   localStorage.setItem("language", language);
 };
 
+export const autoChangeLanguage = () => {
+  if (window.location.pathname.endsWith("/uz")) {
+    setLanguage("uz");
+    window.location.pathname = window.location.pathname.replace("/uz", "");
+  } else if (window.location.pathname.endsWith("/ru")) {
+    setLanguage("ru");
+    window.location.pathname = window.location.pathname.replace("/ru", "");
+  } else if (window.location.pathname.endsWith("/en")) {
+    setLanguage("en");
+    window.location.pathname = window.location.pathname.replace("/en", "");
+  }
+};
+
 export const userId = localStorage.getItem("userId")
   ? localStorage.getItem("userId")
   : sessionStorage.getItem("userId")

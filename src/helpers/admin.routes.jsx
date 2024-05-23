@@ -9,6 +9,7 @@ import DeleteMovie from "../pages/admin/movie/DeleteMovie";
 import SearchDeleteMovie from "../pages/Search/index";
 import DeleteMovieComp from "../components/Admin/main/DeleteMovie";
 import Users from "../pages/admin/users/AllUsers";
+import GiveOrCancel from "../pages/admin/GiveOrCancel";
 
 export const AdminRoutes = [
   {
@@ -70,4 +71,10 @@ export const AdminRoutes = [
     path: "users",
     element: <Users />,
   },
+
+  {
+    title: "Give or Cancel",
+    path: "giveorcancel",
+    element: <GiveOrCancel />,
+  }
 ];

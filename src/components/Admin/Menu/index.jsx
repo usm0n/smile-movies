@@ -23,6 +23,7 @@ import Edit from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import UserIcon from "@mui/icons-material/Person";
 import FormatListBulletedIcon from "@mui/icons-material/FormatListBulleted";
+import ChangeCircleRoundedIcon from "@mui/icons-material/ChangeCircleRounded";
 
 function AdminMenu({ user }) {
   const [open, setOpen] = useState(false);
@@ -147,6 +148,15 @@ function AdminMenu({ user }) {
                     <FormatListBulletedIcon />
                   </ListItemIcon>
                   <ListItemText primary="All Users" />
+                </ListItemButton>
+                <ListItemButton
+                  sx={{ pl: 6 }}
+                  onClick={() => handleClick("/admin/giveorcancel")}
+                >
+                  <ListItemIcon>
+                    <ChangeCircleRoundedIcon />
+                  </ListItemIcon>
+                  <ListItemText primary="Give or Cancel" />
                 </ListItemButton>
               </List>
             </Collapse>

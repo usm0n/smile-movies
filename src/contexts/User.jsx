@@ -71,12 +71,25 @@ const UserContext = createContext({
     loading: false,
     result: false,
   },
+  statusGetUserByEmail: {
+    loading: false,
+    isError: false,
+    isSuccess: false,
+    result: {},
+  },
+  statusUpdateUserByEmail: {
+    loading: false,
+    isError: false,
+    isSuccess: false,
+  },
   user: {},
   resendToken: () => {},
   verifyUser: (token) => {},
   loginUser: (e, email, password, typeUserId) => {},
   registerUser: (e, firstname, email, password, cpassword, typeUserId) => {},
   logoutUser: () => {},
+  getUserByEmail: (email) => {},
+  updateUserByEmail: (email, value) => {},
 });
 
 export const useUser = () => useContext(UserContext);
@@ -124,7 +137,19 @@ const UserProvider = ({ children }) => {
     isSuccess: false,
     isError: false,
   });
+  const [statusGetUserByEmail, setStatusGetUserByEmail] = useState({
+    loading: false,
+    isError: false,
+    isSuccess: false,
+    result: {},
+  });
+  const [statusUpdateUserByEmail, setStatusUpdateUserByEmail] = useState({
+    loading: false,
+    isError: false,
+    isSuccess: false,
+  });
   const [user, setUser] = useState({});
+
   const loginUser = async (e, email, password, typeUserId) => {
     e.preventDefault();
     if (!email.trim() || !password.trim()) {
@@ -348,6 +373,77 @@ const UserProvider = ({ children }) => {
       });
   };
 
+  const getUserByEmail = async (email) => {
+    setStatusGetUserByEmail({
+      loading: true,
+      isError: false,
+      isSuccess: false,
+      result: {},
+    });
+    await users
+      .getUserByEmail(email)
+      .then((res) => {
+        if (res.data) {
+          setStatusGetUserByEmail({
+            loading: false,
+            isError: false,
+            isSuccess: true,
+            result: res.data,
+          });
+        } else {
+          setStatusGetUserByEmail({
+            loading: false,
+            isError: true,
+            isSuccess: false,
+            result: {},
+          });
+        }
+      })
+      .catch(() => {
+        setStatusGetUserByEmail({
+          loading: false,
+          isError: true,
+          isSuccess: false,
+          result: {},
+        });
+      });
+  };
+
+  const updateUserByEmail = async (email, value) => {
+    setStatusUpdateUserByEmail({
+      loading: true,
+      isError: false,
+      isSuccess: false,
+    });
+    await users
+      .updateUserByEmail(email, value)
+      .then((res) => {
+        if (res.data) {
+          setStatusUpdateUserByEmail({
+            loading: false,
+            isError: false,
+            isSuccess: true,
+          });
+          setTimeout(() => {
+            window.location.reload();
+          }, 2000);
+        } else {
+          setStatusUpdateUserByEmail({
+            loading: false,
+            isError: true,
+            isSuccess: false,
+          });
+        }
+      })
+      .catch(() => {
+        setStatusUpdateUserByEmail({
+          loading: false,
+          isError: true,
+          isSuccess: false,
+        });
+      });
+  };
+
   useEffect(() => {
     if (userId) {
       setIsLoggedIn(true);
@@ -420,6 +516,10 @@ const UserProvider = ({ children }) => {
         setStatusVerifyUser,
         resendToken,
         statusResendCode,
+        getUserByEmail,
+        statusGetUserByEmail,
+        statusUpdateUserByEmail,
+        updateUserByEmail,
       }}
     >
       {children}
