@@ -8,6 +8,7 @@ const MoviesContext = createContext({
     isError: false,
     movies: [],
   },
+  isNotConnected: false,
   deleteAllMovies: () => {},
 });
 MoviesContext.displayName = "MoviesContext";
@@ -20,6 +21,8 @@ const MoviesProvider = ({ children }) => {
     isError: false,
     movies: [],
   });
+
+  const [isNotConnected, setIsNotConnected] = useState(false);
 
   const deleteAllMovies = async () => {
     await movies.deleteAllMovies().then(() => {
@@ -37,16 +40,18 @@ const MoviesProvider = ({ children }) => {
       isError: false,
       movies: [],
     });
-
     await movies
       .getAllMovies()
-      .then((result) =>
+      .then((result) => {
+        if (result.message == "Network Error") {
+          setIsNotConnected(true);
+        }
         setAllMovies({
           isLoading: false,
           isError: false,
           movies: shuffle(result.data),
-        })
-      )
+        });
+      })
       .catch((err) =>
         setAllMovies({ isLoading: false, movies: [], isError: true })
       );
@@ -56,7 +61,9 @@ const MoviesProvider = ({ children }) => {
     getAllMovies();
   }, []);
   return (
-    <MoviesContext.Provider value={{ allMovies, deleteAllMovies }}>
+    <MoviesContext.Provider
+      value={{ allMovies, deleteAllMovies, isNotConnected }}
+    >
       {children}
     </MoviesContext.Provider>
   );

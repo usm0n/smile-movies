@@ -13,6 +13,7 @@ import { useWatchLater } from "../../contexts/WatchLater";
 import { useFavourites } from "../../contexts/Favourites";
 import { t } from "i18next";
 import { useNavigate } from "react-router-dom";
+import PlayCircleFilledOutlinedIcon from "@mui/icons-material/PlayCircleFilledOutlined";
 
 function MovieContent({ movie, user, isLoggedIn }) {
   const {
@@ -83,15 +84,15 @@ function MovieContent({ movie, user, isLoggedIn }) {
   return (
     <div className="movie-content">
       {dialog(
-        "Please sign In!",
-        "To add to Watch Later you must log in first.",
+        t("PleaseSignIn"),
+        t("ToAddWatchLaterSignIn"),
         watchlaterDialog,
         handleCloseWatchLaterDialog,
         handleOpenWatchLaterDialog
       )}
       {dialog(
-        "Please Sign In",
-        "To add to Favourites you must log in first",
+        t("PleaseSignIn"),
+        t("ToAddFavouritesSignIn"),
         favouritesDialog,
         handleCloseFavouritesDialog,
         handleOpenFavouritesDialog
@@ -267,6 +268,13 @@ function MovieContent({ movie, user, isLoggedIn }) {
               )}
             </button>
           )}
+          <button
+            onClick={() => (window.location.href = movie.trailer)}
+            disabled={!movie.trailer}
+            className={!movie.trailer ? "movie-btn disabled" : "movie-btn"}
+          >
+            <PlayCircleFilledOutlinedIcon /> {t("trailerText")}
+          </button>
         </div>
       </div>
     </div>

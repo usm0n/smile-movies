@@ -1,10 +1,10 @@
 import React from "react";
 import { DataGrid, useGridApiRef } from "@mui/x-data-grid";
 import { useAllUsers } from "../../../contexts/Users";
+import { t } from "i18next";
 
 function AllUsers() {
   const { allUsers } = useAllUsers();
-  const apiRef = useGridApiRef();
   const columns = [
     { field: "_id", headerName: "ID", width: 70 },
     { field: "firstname", headerName: "First Name", width: 100 },
@@ -19,14 +19,14 @@ function AllUsers() {
   return (
     <div className="admin-users">
       <div className="admin-users-content">
-        <h1>All Users: {allUsers.users.length}</h1>
+        <h1>{t("allUsers")}: {allUsers.users.length}</h1>
         <h1>
-          Verified Users: {allUsers.users.filter((m) => m.isVerified).length}
+          {t("VerifiedUsers")}: {allUsers.users.filter((m) => m.isVerified).length}
         </h1>
         <h1>
-          Premium Users: {allUsers.users.filter((m) => m.isPremiumUser).length}
+          {t("PremiumUsers")}: {allUsers.users.filter((m) => m.isPremiumUser).length}
         </h1>
-        <h1>Admins: {allUsers.users.filter((m) => m.isAdmin).length}</h1>
+        <h1>{t("admins")}: {allUsers.users.filter((m) => m.isAdmin).length}</h1>
       </div>
       <DataGrid
         sx={{

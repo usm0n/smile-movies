@@ -1,22 +1,18 @@
 import React from "react";
 import LoginIcon from "@mui/icons-material/Login";
 import { Link } from "react-router-dom";
-import { useUser } from "../contexts/User";
+import { useUser } from "../../contexts/User";
 import BuildIcon from "@mui/icons-material/Build";
-import logo from "../assets/images/logo.png";
+import logo from "../../assets/images/logo.png";
+import { t } from "i18next";
 
 function NotRealUser() {
-  const { logoutUser, statusLogout } = useUser();
+  const { logoutUser } = useUser();
   return (
     <div className="notrealuser">
       <img className="notrealuser-img" src={logo} alt="" />
-      <h1 className="notrealuser-title">
-        You are not a <span className="notrealuser-title-span">Real User</span>
-      </h1>
-      <p className="notrealuser-desc">
-        You are not a real user, so you can't watch movies and series until log
-        out or log in again
-      </p>
+      <h1 className="notrealuser-title">{t("YourNotRealUser")}</h1>
+      <p className="notrealuser-desc">{t("YourNotRealUserDesc")}</p>
       <div className="notrealuser-btns">
         <Link
           className="notrealuser-btn"
@@ -24,11 +20,11 @@ function NotRealUser() {
           to="/login"
         >
           <LoginIcon />
-          Log in Again
+          {t("MenuLoginText")}
         </Link>
         <Link className="notrealuser-btn" onClick={() => logoutUser()}>
           <BuildIcon />
-          {statusLogout.loading ? "Fixing..." : "Fix"}
+          {t("fix")}
         </Link>
       </div>
     </div>

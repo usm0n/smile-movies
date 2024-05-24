@@ -1,16 +1,14 @@
 import React from "react";
 import logo from "../../assets/images/logo.png";
+import { t } from "i18next";
 
 function index() {
   return (
     <div className="admin-index">
       <img className="admin-index-img" src={logo} alt="" />
       <div className="admin-index-texts">
-        <h1 className="admin-index-texts-title">This is Admin Panel</h1>
-        <p className="admin-index-texts-desc">
-          You are admin so you can customize movies, users and you can also add
-          new admins and more...
-        </p>
+        <h1 className="admin-index-texts-title">{t("AdminPanelTitle")}</h1>
+        <p className="admin-index-texts-desc">{t("AdminPanelSubtitle")}</p>
       </div>
     </div>
   );

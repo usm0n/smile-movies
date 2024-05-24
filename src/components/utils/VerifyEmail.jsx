@@ -1,8 +1,9 @@
 import React, { useRef, useState } from "react";
-import logo from "../assets/images/logo.png";
-import { useUser } from "../contexts/User";
-import { snackbar } from "../utilities/defaultFunctions";
+import logo from "../../assets/images/logo.png";
+import { useUser } from "../../contexts/User";
+import { snackbar } from "../../utilities/defaultFunctions";
 import { Link } from "react-router-dom";
+import { t } from "i18next";
 
 function VerifyEmail() {
   const {
@@ -58,15 +59,15 @@ function VerifyEmail() {
 
   return (
     <section className="email">
-      {statusResendCode.isSuccess && snackbar("success", "Code resent")}
-      {statusResendCode.isError && snackbar("danger", "Error has occurred")}
+      {statusResendCode.isSuccess && snackbar("success", t("CodeResend"))}
+      {statusResendCode.isError && snackbar("danger", t("somethingWentWrong"))}
       <div className="container">
         <div className="email-card">
           <div className="email-content">
             <img src={logo} width={300} alt="Apple ID" />
-            <h1 className="email-title">Verify Your Email Address</h1>
+            <h1 className="email-title">{t("VerifyYourEmail")}</h1>
             <h3 className="email-desc">
-              Please enter code that we have sent to your email{" "}
+              {t("PlsEnterCode")}{" "}
               <span className="email-desc-email">{user.email}</span>
             </h3>
             <form className="email-form">
@@ -98,11 +99,11 @@ function VerifyEmail() {
               </div>
               <h1 className={"email-error-status"}>
                 {error
-                  ? "Fill all fields"
+                  ? t("pleaseFillFields")
                   : statusVerifyUser.isIncorrect
-                  ? "Incorrect verification code"
+                  ? t("IncorrectVerificationCode")
                   : statusVerifyUser.isError
-                  ? "Something went wrong. Please try again"
+                  ? t("somethingWentWrong")
                   : ""}
               </h1>
               <div className="email-links">
@@ -118,7 +119,7 @@ function VerifyEmail() {
                       : "email-link"
                   }
                 >
-                  {statusVerifyUser.loading ? "Loading..." : "Continue"}
+                  {statusVerifyUser.loading ? "Loading..." : t("VerifyText")}
                 </button>
                 <button
                   onClick={() => resendToken()}
@@ -131,7 +132,9 @@ function VerifyEmail() {
                       : "email-resend"
                   }
                 >
-                  {statusResendCode.loading ? "Resending..." : "Resend"}
+                  {statusResendCode.loading
+                    ? "Loading..."
+                    : t("ResendCodeText")}
                 </button>
                 <Link
                   onClick={logoutUser}
@@ -141,7 +144,7 @@ function VerifyEmail() {
                       : "email-logout"
                   }
                 >
-                  {statusLogout.loading ? "Logging out..." : "Logout"}
+                  {statusLogout.loading ? t("MenuLogoutLoadingText") : t("MenuLogoutText")}
                 </Link>
               </div>
             </form>

@@ -4,10 +4,11 @@ import { useAllMovies } from "../../../contexts/Movies";
 import { language } from "../../../utilities/defaultFunctions";
 import { useNavigate, useParams } from "react-router-dom";
 import { useMovie } from "../../../contexts/Movie";
+import { t } from "i18next";
 
 function DeleteMovie() {
   const { allMovies } = useAllMovies();
-  const { getMovieId, movieById } = useMovie();
+  const { getMovieId } = useMovie();
   const navigate = useNavigate();
   const [searchValue, setSearchValue] = useState();
 
@@ -28,7 +29,7 @@ function DeleteMovie() {
     <div className="admin-edit-movie">
       <form onSubmit={handleSubmit} className="admin-edit-movie-search-bar">
         <h1 className="admin-edit-movie-search-bar-title">
-          Enter Movie Name that you want to delete
+          {t("enterMovieNameForDelete")}
         </h1>
         <Autocomplete
           sx={{
@@ -50,7 +51,7 @@ function DeleteMovie() {
                 type: "search",
               }}
               onChange={(e) => setSearchValue(e.target.value)}
-              placeholder="Search"
+              placeholder={t("SearchPlaceholder")}
               type="text"
               className="nav-search_bar_down-input"
             />

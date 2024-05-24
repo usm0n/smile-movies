@@ -30,6 +30,7 @@ import { useMovie } from "../../../contexts/Movie";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { useNavigate, useParams } from "react-router-dom";
 import Edit from "@mui/icons-material/Edit";
+import { t } from "i18next";
 
 function EditMovie({ movie }) {
   const { editMovie, statusEditMovie, getMovieId } = useMovie();
@@ -41,7 +42,7 @@ function EditMovie({ movie }) {
     video: "movie",
     page: "standart",
     notes: "uz",
-    movie: "uz"
+    movie: "uz",
   });
   const [editMovieValue, seteditMovieValue] = useState({
     title: {
@@ -187,10 +188,10 @@ function EditMovie({ movie }) {
       >
         <ArrowBackIcon />
       </Button>
-      {status.isEmpty && snackbar("warning", "Please fill all fields")}
+      {status.isEmpty && snackbar("warning", t("pleaseFillFields"))}
       {statusEditMovie.isSuccess &&
-        snackbar("success", "Movie edited successfully")}
-      {statusEditMovie.isError && snackbar("danger", "Something went wrong")}
+        snackbar("success", t("MovieEditedSuccessfully"))}
+      {statusEditMovie.isError && snackbar("danger", t("somethingWentWrong"))}
       <div
         style={{
           position: "fixed",
@@ -212,8 +213,8 @@ function EditMovie({ movie }) {
           exclusive
           aria-label="Platform"
         >
-          <ToggleButton value="standart">Standart</ToggleButton>
-          <ToggleButton value="extra">Extra</ToggleButton>
+          <ToggleButton value="standart">{t("Standard")}</ToggleButton>
+          <ToggleButton value="extra">{t("Extra")}</ToggleButton>
         </ToggleButtonGroup>
       </div>
       <button
@@ -232,7 +233,7 @@ function EditMovie({ movie }) {
         ) : (
           <>
             <Edit />
-            Edit
+            {t("Edit")}
           </>
         )}
       </button>
@@ -251,8 +252,10 @@ function EditMovie({ movie }) {
                 exclusive
                 aria-label="Platform"
               >
-                <ToggleButton value="portrait">Portrait</ToggleButton>
-                <ToggleButton value="fullscreen">Full Screen</ToggleButton>
+                <ToggleButton value="portrait">{t("Portrait")}</ToggleButton>
+                <ToggleButton value="fullscreen">
+                  {t("FullScreen")}
+                </ToggleButton>
               </ToggleButtonGroup>
               <textarea
                 onChange={(e) => handleExtraInput(e, "image")}
@@ -282,8 +285,8 @@ function EditMovie({ movie }) {
                       exclusive
                       aria-label="Platform"
                     >
-                      <ToggleButton value="uz">Uzbek</ToggleButton>
-                      <ToggleButton value="ru">Russian</ToggleButton>
+                      <ToggleButton value="uz">O'zbekcha</ToggleButton>
+                      <ToggleButton value="ru">Русский</ToggleButton>
                       <ToggleButton value="en">English</ToggleButton>
                     </ToggleButtonGroup>
                     <input
@@ -453,10 +456,10 @@ function EditMovie({ movie }) {
               </p>
               <div className="movie-btns">
                 <button disabled className="movie-btn disabled">
-                  <StarBorderIcon /> Add to Favourite
+                  <StarBorderIcon /> {t("AddToFavourites")}
                 </button>
                 <button disabled className="movie-btn disabled">
-                  <AccessTimeIcon /> Add to Watch Later
+                  <AccessTimeIcon /> {t("MenuWatchLaterText")}
                 </button>
               </div>
             </div>
@@ -475,8 +478,10 @@ function EditMovie({ movie }) {
                   exclusive
                   aria-label="Platform"
                 >
-                  <ToggleButton value="movie">Movie</ToggleButton>
-                  <ToggleButton value="trailer">Trailer</ToggleButton>
+                  <ToggleButton value="movie">{t("movieText")}</ToggleButton>
+                  <ToggleButton value="trailer">
+                    {t("trailerText")}
+                  </ToggleButton>
                 </ToggleButtonGroup>
                 {toggleValue.video == "movie" && (
                   <ToggleButtonGroup
@@ -529,10 +534,12 @@ function EditMovie({ movie }) {
         <div className="movie-container">
           <div className="admin-extra">
             <div className="admin-extra-status">
-              <h1 className="admin-extra-status-title">Status:</h1>
+              <h1 className="admin-extra-status-title">{t("Status")}:</h1>
               <div className="admin-extra-status-props">
                 <div className="admin-extra-status-prop">
-                  <h1 className="admin-extra-status-prop-title">isNew:</h1>
+                  <h1 className="admin-extra-status-prop-title">
+                    {t("isNew")}:
+                  </h1>
                   <FormControl
                     variant="filled"
                     sx={{
@@ -542,7 +549,9 @@ function EditMovie({ movie }) {
                       borderRadius: "5px",
                     }}
                   >
-                    <InputLabel id="demo-simple-select-label">isNew</InputLabel>
+                    <InputLabel id="demo-simple-select-label">
+                      {t("isNew")}
+                    </InputLabel>
                     <Select
                       labelId="demo-simple-select-label"
                       id="demo-simple-select"
@@ -557,7 +566,9 @@ function EditMovie({ movie }) {
                   </FormControl>
                 </div>
                 <div className="admin-extra-status-prop">
-                  <h1 className="admin-extra-status-prop-title">isTrending:</h1>
+                  <h1 className="admin-extra-status-prop-title">
+                    {t("isTrending")}:
+                  </h1>
                   <FormControl
                     variant="filled"
                     sx={{
@@ -568,7 +579,7 @@ function EditMovie({ movie }) {
                     }}
                   >
                     <InputLabel id="demo-simple-select-label">
-                      isTrending
+                      {t("isTrending")}
                     </InputLabel>
                     <Select
                       labelId="demo-simple-select-label"
@@ -584,7 +595,9 @@ function EditMovie({ movie }) {
                   </FormControl>
                 </div>
                 <div className="admin-extra-status-prop">
-                  <h1 className="admin-extra-status-prop-title">Type:</h1>
+                  <h1 className="admin-extra-status-prop-title">
+                    {t("Turi")}:
+                  </h1>
                   <FormControl
                     variant="filled"
                     sx={{
@@ -594,7 +607,9 @@ function EditMovie({ movie }) {
                       borderRadius: "5px",
                     }}
                   >
-                    <InputLabel id="demo-simple-select-label">Type</InputLabel>
+                    <InputLabel id="demo-simple-select-label">
+                      {t("Turi")}
+                    </InputLabel>
                     <Select
                       labelId="demo-simple-select-label"
                       id="demo-simple-select"
@@ -603,16 +618,16 @@ function EditMovie({ movie }) {
                       label="type"
                       onChange={(e) => handleExtraInput(e, "status")}
                     >
-                      <MenuItem value={"movie"}>Movie</MenuItem>
-                      <MenuItem value={"series"}>Series</MenuItem>
-                      <MenuItem value={"cartoon"}>Cartoon</MenuItem>
+                      <MenuItem value={"movie"}>{t("movieText")}</MenuItem>
+                      <MenuItem value={"series"}>{t("SeriesTitle")}</MenuItem>
+                      <MenuItem value={"cartoon"}>{t("CartoonsTitle")}</MenuItem>
                     </Select>
                   </FormControl>
                 </div>
               </div>
             </div>
             <div className="admin-extra-notes">
-              <h1 className="admin-extra-notes-title">Notes:</h1>
+              <h1 className="admin-extra-notes-title">{t("Notes")}:</h1>
               <div className="admin-extra-notes-main">
                 <ToggleButtonGroup
                   color="info"
@@ -625,8 +640,8 @@ function EditMovie({ movie }) {
                   exclusive
                   aria-label="Platform"
                 >
-                  <ToggleButton value="uz">Uzbek</ToggleButton>
-                  <ToggleButton value="ru">Russian</ToggleButton>
+                  <ToggleButton value="uz">O'zbekcha</ToggleButton>
+                  <ToggleButton value="ru">Русский</ToggleButton>
                   <ToggleButton value="en">English</ToggleButton>
                 </ToggleButtonGroup>
                 <textarea

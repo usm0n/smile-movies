@@ -24,6 +24,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import UserIcon from "@mui/icons-material/Person";
 import FormatListBulletedIcon from "@mui/icons-material/FormatListBulleted";
 import ChangeCircleRoundedIcon from "@mui/icons-material/ChangeCircleRounded";
+import { t } from "i18next";
 
 function AdminMenu({ user }) {
   const [open, setOpen] = useState(false);
@@ -86,7 +87,7 @@ function AdminMenu({ user }) {
                 <ListItemIcon>
                   <Home />
                 </ListItemIcon>
-                <ListItemText primary="Main" />
+                <ListItemText primary={t("AdminMenuMainTitle")} />
               </ListItemButton>
             </ListItem>
             <ListItem onClick={() => setMovieOpen(!movieOpen)}>
@@ -94,7 +95,7 @@ function AdminMenu({ user }) {
                 <ListItemIcon>
                   <MovieIcon />
                 </ListItemIcon>
-                <ListItemText primary="Movie" />
+                <ListItemText primary={t("movieText")} />
                 {movieOpen ? <ExpandLess /> : <ExpandMore />}
               </ListItemButton>
             </ListItem>
@@ -107,7 +108,7 @@ function AdminMenu({ user }) {
                   <ListItemIcon>
                     <Add />
                   </ListItemIcon>
-                  <ListItemText primary="Add Movie" />
+                  <ListItemText primary={t("AdminAddMovieText")} />
                 </ListItemButton>
                 <ListItemButton
                   onClick={() => handleClick("/admin/edit-movie")}
@@ -116,7 +117,7 @@ function AdminMenu({ user }) {
                   <ListItemIcon>
                     <Edit />
                   </ListItemIcon>
-                  <ListItemText primary="Edit Movie" />
+                  <ListItemText primary={t("AdminEditMovieText")} />
                 </ListItemButton>
                 <ListItemButton
                   onClick={() => handleClick("/admin/delete-movie")}
@@ -125,7 +126,7 @@ function AdminMenu({ user }) {
                   <ListItemIcon>
                     <DeleteIcon />
                   </ListItemIcon>
-                  <ListItemText primary="Delete Movie" />
+                  <ListItemText primary={t("AdminDeleteMovieText")} />
                 </ListItemButton>
               </List>
             </Collapse>
@@ -134,7 +135,7 @@ function AdminMenu({ user }) {
                 <ListItemIcon>
                   <UserIcon />
                 </ListItemIcon>
-                <ListItemText primary="Users" />
+                <ListItemText primary={t("users")} />
                 {usersOpen ? <ExpandLess /> : <ExpandMore />}
               </ListItemButton>
             </ListItem>
@@ -147,7 +148,7 @@ function AdminMenu({ user }) {
                   <ListItemIcon>
                     <FormatListBulletedIcon />
                   </ListItemIcon>
-                  <ListItemText primary="All Users" />
+                  <ListItemText primary={t("allUsers")} />
                 </ListItemButton>
                 <ListItemButton
                   sx={{ pl: 6 }}
@@ -156,7 +157,7 @@ function AdminMenu({ user }) {
                   <ListItemIcon>
                     <ChangeCircleRoundedIcon />
                   </ListItemIcon>
-                  <ListItemText primary="Give or Cancel" />
+                  <ListItemText primary={t("giveorcancel")} />
                 </ListItemButton>
               </List>
             </Collapse>

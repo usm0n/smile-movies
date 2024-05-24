@@ -6,6 +6,7 @@ import MovieCard from "../../components/MovieCard/MovieCard";
 import { language } from "../../utilities/defaultFunctions";
 import MovieSkeletonCard from "../../components/MovieCard/Skeleton/MovieCardSkeleton";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import { t } from "i18next";
 
 function Search({ backTo, linkTo }) {
   const { value } = useParams();
@@ -57,7 +58,7 @@ function Search({ backTo, linkTo }) {
         </>
       ) : (
         <>
-          <h1 className="search-title">Search: {value}</h1>
+          <h1 className="search-title">{t("SearchPlaceholder")}: {value}</h1>
           <h1 className="search-not-found">
             {language == "en" &&
               (prods.length ? prods.length : "No") + " results found"}

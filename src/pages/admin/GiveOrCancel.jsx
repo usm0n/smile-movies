@@ -11,6 +11,7 @@ import MenuList from "@mui/material/MenuList";
 import { FormControl, InputLabel, Select, TextField } from "@mui/material";
 import { useUser } from "../../contexts/User";
 import { snackbar } from "../../utilities/defaultFunctions";
+import { t } from "i18next";
 
 function GiveOrCancel() {
   const {
@@ -19,7 +20,7 @@ function GiveOrCancel() {
     updateUserByEmail,
     statusUpdateUserByEmail,
   } = useUser();
-  const buttonOptions = ["Give", "Cancel"];
+  const buttonOptions = [t("give"), t("cancel")];
   const [buttonOpen, setbuttonOpen] = React.useState(false);
   const buttonAnchorRef = React.useRef(null);
   const [selectedIndex, setSelectedIndex] = React.useState(0);
@@ -30,7 +31,6 @@ function GiveOrCancel() {
     updateUserByEmail(email, {
       [value]: buttonOptions[selectedIndex] == "Give" ? true : false,
     });
-    console.info(`You clicked ${buttonOptions[selectedIndex]}`);
   };
 
   const handleButtonMenuItemClick = (event, index) => {
@@ -64,7 +64,7 @@ function GiveOrCancel() {
 
   return (
     <div className="giveorcancel">
-      <h1 className="giveorcancel-title">Give or Cancel</h1>
+      <h1 className="giveorcancel-title">{t("giveorcancel")}</h1>
       {statusUpdateUserByEmail.isSuccess && snackbar("success", "Success")}
       {statusUpdateUserByEmail.isError && snackbar("danger", "Error")}
       <div className="giveorcancel-content">
@@ -84,7 +84,7 @@ function GiveOrCancel() {
             width: "200px",
           }}
           id="filled-basic"
-          label="Email"
+          label={t("ContactInputName3")}
           variant="filled"
         />
         <FormControl

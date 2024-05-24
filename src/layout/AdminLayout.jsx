@@ -1,8 +1,7 @@
-import React, { useEffect } from "react";
+import React from "react";
 import AdminMenu from "../components/Admin/Menu/index";
 import { AdminRoutes } from "../helpers/admin.routes";
-import { Route, Routes, useNavigate } from "react-router-dom";
-import { routes } from "../helpers/routes";
+import { Route, Routes } from "react-router-dom";
 import { useUser } from "../contexts/User";
 import { Backdrop, CircularProgress } from "@mui/material";
 import NotFound from "../pages/error/NotFound";

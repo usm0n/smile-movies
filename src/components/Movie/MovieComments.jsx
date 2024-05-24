@@ -19,9 +19,9 @@ function MovieComments({ movie, user, isLoggedIn}) {
       <h1 className="movie-comments-title">{t("CommentsTitle")}</h1>
       <div className="movie-comments-posting">
         {postCommentStatus.isSuccess &&
-          snackbar("success", "Your comment posted successfully")}
+          snackbar("success", t("YourCommentPostedSuccessfully"))}
         {postCommentStatus.isError &&
-          snackbar("danger", "An error has occurred")}
+          snackbar("danger", t("somethingWentWrong"))}
         {!isLoggedIn && (
           <input
             onChange={(e) => setPostCommentName(e.target.value)}
