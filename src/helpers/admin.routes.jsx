@@ -10,6 +10,8 @@ import SearchDeleteMovie from "../pages/Search/index";
 import DeleteMovieComp from "../components/Admin/main/DeleteMovie";
 import Users from "../pages/admin/users/AllUsers";
 import GiveOrCancel from "../pages/admin/GiveOrCancel";
+import DeleteAllMovies from "../components/Admin/Main/DeleteAllMovies";
+import DeleteAllUsers from "../components/Admin/Main/DeleteAllUsers";
 
 export const AdminRoutes = [
   {
@@ -76,5 +78,17 @@ export const AdminRoutes = [
     title: "Give or Cancel",
     path: "giveorcancel",
     element: <GiveOrCancel />,
+  },
+
+  {
+    title: "Delete All Movies",
+    path: "delete-all-movies",
+    element: <DeleteAllMovies />,
+  },
+
+  {
+    title: "Delete All Users",
+    path: "delete-all-users",
+    element: <DeleteAllUsers />,
   }
 ];

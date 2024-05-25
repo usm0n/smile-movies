@@ -7,6 +7,12 @@ const UsersContext = createContext({
     isError: false,
     users: [],
   },
+  statusDeleteAllUsers: {
+    isLoading: false,
+    isError: false,
+    isSuccess: false,
+  },
+  deleteAllUsers: () => {},
 });
 UsersContext.displayName = "UsersContext";
 
@@ -17,6 +23,11 @@ const UsersProvider = ({ children }) => {
     isLoading: false,
     isError: false,
     users: [],
+  });
+  const [statusDeleteAllUsers, setStatusDeleteAllUsers] = useState({
+    isLoading: false,
+    isError: false,
+    isSuccess: false,
   });
 
   const getAllUsers = async () => {
@@ -40,11 +51,42 @@ const UsersProvider = ({ children }) => {
       );
   };
 
+  const deleteAllUsers = async () => {
+    setStatusDeleteAllUsers({
+      isLoading: true,
+      isError: false,
+      isSuccess: false,
+    });
+    await users
+      .deleteAllUsers()
+      .then(() => {
+        setStatusDeleteAllUsers({
+          isLoading: false,
+          isError: false,
+          isSuccess: true,
+        });
+        setAllUsers({
+          isLoading: false,
+          isError: false,
+          users: [],
+        });
+      })
+      .catch((err) =>
+        setStatusDeleteAllUsers({
+          isLoading: false,
+          isError: true,
+          isSuccess: false,
+        })
+      );
+  };
+
   useEffect(() => {
     getAllUsers();
   }, []);
   return (
-    <UsersContext.Provider value={{ allUsers }}>
+    <UsersContext.Provider
+      value={{ allUsers, deleteAllUsers, statusDeleteAllUsers }}
+    >
       {children}
     </UsersContext.Provider>
   );

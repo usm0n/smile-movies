@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import {
+  currentDateTime,
   removeUserId,
   setLocalUserId,
   setSessionUserId,
@@ -457,6 +458,7 @@ const UserProvider = ({ children }) => {
       });
       users.getUserById(userId).then((user) => {
         if (user.data) {
+          users.updateUserById(userId, { lastLogin: currentDateTime });
           setIsRealUser({
             loading: false,
             result: true,

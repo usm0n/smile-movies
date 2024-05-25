@@ -70,6 +70,15 @@ const users = {
       return error;
     }
   },
+  deleteAllUsers: async () => {
+    try {
+      const response = await api.delete("/users");
+      return response;
+    } catch (error) {
+      console.log(error);
+      return error;
+    }
+  },
 
   verifyUser: async (id, token) => {
     try {

@@ -5,6 +5,7 @@ import {
   DialogContent,
   DialogContentText,
   DialogTitle,
+  TextField,
 } from "@mui/material";
 import { Snackbar } from "@mui/joy";
 
@@ -95,6 +96,42 @@ export const dialog = (title, text, open, close, agree) => (
     <DialogActions>
       <Button onClick={close}>Cancel</Button>
       <Button onClick={agree} autoFocus>
+        Ok
+      </Button>
+    </DialogActions>
+  </Dialog>
+);
+
+export const formDialog = (
+  open,
+  close,
+  title,
+  text,
+  type,
+  label,
+  agree,
+  onChange
+) => (
+  <Dialog open={open} onClose={close}>
+    <DialogTitle>{title}</DialogTitle>
+    <DialogContent>
+      <DialogContentText>{text}</DialogContentText>
+      <TextField
+        onChange={onChange}
+        autoFocus
+        required
+        margin="dense"
+        id="name"
+        name={type}
+        label={label}
+        type={type}
+        fullWidth
+        variant="standard"
+      />
+    </DialogContent>
+    <DialogActions>
+      <Button onClick={close}>Cancel</Button>
+      <Button onClick={agree} type="submit">
         Ok
       </Button>
     </DialogActions>

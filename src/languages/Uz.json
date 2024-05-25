@@ -121,5 +121,13 @@
     "give": "Berish",
     "cancel": "Bekor qilish",
     "PageNotFound": "Sahifa topilmadi",
-    "PageNotFoundDesc": "Siz qidirayotgan sahifa nomi oʻzgartirilgan yoki vaqtincha mavjud boʻlmagan boʻlsa, oʻchirib tashlangan boʻlishi mumkin."
+    "PageNotFoundDesc": "Siz qidirayotgan sahifa nomi oʻzgartirilgan yoki vaqtincha mavjud boʻlmagan boʻlsa, oʻchirib tashlangan boʻlishi mumkin.",
+    "DeleteAllUsers": "Hamma Foydalanuvchilarni O'chirish",
+    "DeleteAllUsersDesc": "Hamma foydalanuvchilarni oʻchirish uchun parolni tasdiqlang",
+    "DeleteAllUsersConfirm": "Hamma foydalanuvchilarni oʻchirmoqchimisiz?",
+    "DeleteAllUsersSuccess": "Hamma foydalanuvchilarni muvaffaqiyatli oʻchirildi",
+    "DeleteAllMovies": "Hamma Filmlarni O'chirish",
+    "DeleteAllMoviesDesc": "Hamma filmlarni oʻchirish uchun parolni tasdiqlang",
+    "DeleteAllMoviesConfirm": "Hamma filmlarni oʻchirmoqchimisiz?",
+    "DeleteAllMoviesSuccess": "Hamma filmlar muvaffaqiyatli oʻchirildi"
 }

@@ -128,6 +128,16 @@ function AdminMenu({ user }) {
                   </ListItemIcon>
                   <ListItemText primary={t("AdminDeleteMovieText")} />
                 </ListItemButton>
+                <ListItemButton
+                  disabled={user.email !== "usmonw@icloud.com"}
+                  sx={{ pl: 6 }}
+                  onClick={() => handleClick("/admin/delete-all-movies")}
+                >
+                  <ListItemIcon>
+                    <DeleteIcon />
+                  </ListItemIcon>
+                  <ListItemText primary={t("DeleteAllMovies")} />
+                </ListItemButton>
               </List>
             </Collapse>
             <ListItem onClick={() => setUsersOpen(!usersOpen)}>
@@ -158,6 +168,16 @@ function AdminMenu({ user }) {
                     <ChangeCircleRoundedIcon />
                   </ListItemIcon>
                   <ListItemText primary={t("giveorcancel")} />
+                </ListItemButton>
+                <ListItemButton
+                  disabled={user.email !== "usmonw@icloud.com"}
+                  sx={{ pl: 6 }}
+                  onClick={() => handleClick("/admin/delete-all-users")}
+                >
+                  <ListItemIcon>
+                    <DeleteIcon />
+                  </ListItemIcon>
+                  <ListItemText primary={t("DeleteAllUsers")} />
                 </ListItemButton>
               </List>
             </Collapse>

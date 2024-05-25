@@ -24,7 +24,7 @@
     "SendCommentButtonText": "Post",
     "NoComments": "No one has commented on this movie yet",
     "AdminPanelTitle": "This is Admin Panel",
-    "AdminPanelSubtitle": "src/pages/admin/index.jsx",
+    "AdminPanelSubtitle": "You are an admin, so you can customize movies, users, add new admins and more...",
     "AdminMenuMainTitle": "Main",
     "AdminAddMovieText": "Add Movie",
     "AdminEditMovieText": "Edit Movie",
@@ -121,5 +121,13 @@
     "give": "Give",
     "cancel": "Cancel",
     "PageNotFound": "Page not found",
-    "PageNotFoundDesc": "The page you're looking for may have been removed, renamed or temporarily unavailable."
+    "PageNotFoundDesc": "The page you're looking for may have been removed, renamed or temporarily unavailable.",
+    "DeleteAllUsers": "Delete All Users",
+    "DeleteAllUsersDesc": "Confirm password to delete all users",
+    "DeleteAllUsersConfirm": "Do you want to delete all users?",
+    "DeleteAllUsersSuccess": "All users have been successfully deleted",
+    "DeleteAllMovies": "Delete All Movies",
+    "DeleteAllMoviesDesc": "Confirm password to delete all movies",
+    "DeleteAllMoviesConfirm": "Do you want to delete all movies?",
+    "DeleteAllMoviesSuccess": "All movies deleted successfully"
 }

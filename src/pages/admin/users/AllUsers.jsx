@@ -9,6 +9,8 @@ function AllUsers() {
     { field: "_id", headerName: "ID", width: 70 },
     { field: "firstname", headerName: "First Name", width: 100 },
     { field: "email", headerName: "Email", width: 150 },
+    { field: "createdAt", headerName: "Created At", width: 150 },
+    { field: "lastLogin", headerName: "Last Login ", width: 150 },
     { field: "isPremiumUser", headerName: "isPremium", width: 100 },
     { field: "isAdmin", headerName: "isAdmin", width: 100 },
     { field: "isVerified", headerName: "isVerified", width: 100 },
@@ -19,14 +21,20 @@ function AllUsers() {
   return (
     <div className="admin-users">
       <div className="admin-users-content">
-        <h1>{t("allUsers")}: {allUsers.users.length}</h1>
         <h1>
-          {t("VerifiedUsers")}: {allUsers.users.filter((m) => m.isVerified).length}
+          {t("allUsers")}: {allUsers.users.length}
         </h1>
         <h1>
-          {t("PremiumUsers")}: {allUsers.users.filter((m) => m.isPremiumUser).length}
+          {t("VerifiedUsers")}:{" "}
+          {allUsers.users.filter((m) => m.isVerified).length}
         </h1>
-        <h1>{t("admins")}: {allUsers.users.filter((m) => m.isAdmin).length}</h1>
+        <h1>
+          {t("PremiumUsers")}:{" "}
+          {allUsers.users.filter((m) => m.isPremiumUser).length}
+        </h1>
+        <h1>
+          {t("admins")}: {allUsers.users.filter((m) => m.isAdmin).length}
+        </h1>
       </div>
       <DataGrid
         sx={{
