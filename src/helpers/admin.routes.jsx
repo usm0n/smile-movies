@@ -10,8 +10,8 @@ import SearchDeleteMovie from "../pages/Search/index";
 import DeleteMovieComp from "../components/Admin/main/DeleteMovie";
 import Users from "../pages/admin/users/AllUsers";
 import GiveOrCancel from "../pages/admin/GiveOrCancel";
-import DeleteAllMovies from "../components/Admin/Main/DeleteAllMovies";
-import DeleteAllUsers from "../components/Admin/Main/DeleteAllUsers";
+import DeleteAllMovies from "../pages/admin/movie/DeleteAllMovies";
+import DeleteAllUsers from "../pages/admin/users/DeleteAllUsers";
 
 export const AdminRoutes = [
   {
