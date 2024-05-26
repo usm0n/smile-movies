@@ -15,7 +15,6 @@ function AdminLayout() {
         <NotFound />
       ) : (
         <>
-          {" "}
           <AdminMenu user={user} />
           <Routes>
             {AdminRoutes.map((item) => {

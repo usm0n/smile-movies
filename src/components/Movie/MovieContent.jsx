@@ -1,7 +1,9 @@
 import React, { useState } from "react";
 import { dialog, language, snackbar } from "../../utilities/defaultFunctions";
 import ThumbUpOffAltIcon from "@mui/icons-material/ThumbUpOffAlt";
+import ThumbUpIcon from "@mui/icons-material/ThumbUp";
 import ThumbDownOffAltIcon from "@mui/icons-material/ThumbDownOffAlt";
+import ThumbDownIcon from "@mui/icons-material/ThumbDown";
 import Calendar from "../../assets/icons/CalendarIcon";
 import Favourite from "../../assets/icons/SolidStarIcon";
 import PublicIcon from "@mui/icons-material/Public";
@@ -12,10 +14,11 @@ import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import { useWatchLater } from "../../contexts/WatchLater";
 import { useFavourites } from "../../contexts/Favourites";
 import { t } from "i18next";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import PlayCircleFilledOutlinedIcon from "@mui/icons-material/PlayCircleFilledOutlined";
 
-function MovieContent({ movie, user, isLoggedIn }) {
+function MovieContent({ movie, user, isLoggedIn, likeMovie, dislikeMovie }) {
+  const { movieId } = useParams();
   const {
     addWatchLater,
     removeWatchLater,
@@ -134,12 +137,30 @@ function MovieContent({ movie, user, isLoggedIn }) {
           <div className="movie-first-section">
             <h1 className="movie-name">{movie.title[language]}</h1>
             <div className="movie-like-dislike">
-              <button className="movie-like">
-                <ThumbUpOffAltIcon />
+              <button
+                onClick={() => {
+                  likeMovie(movie.rating.like, movie.rating.dislike);
+                }}
+                className="movie-like"
+              >
+                {localStorage.getItem(`likeMovie${movieId}`) ? (
+                  <ThumbUpIcon />
+                ) : (
+                  <ThumbUpOffAltIcon />
+                )}
                 {movie.rating.like}
               </button>
-              <button className="movie-dislike">
-                <ThumbDownOffAltIcon />
+              <button
+                onClick={() => {
+                  dislikeMovie(movie.rating.like, movie.rating.dislike);
+                }}
+                className="movie-dislike"
+              >
+                {localStorage.getItem(`dislikeMovie${movieId}`) ? (
+                  <ThumbDownIcon />
+                ) : (
+                  <ThumbDownOffAltIcon />
+                )}
                 {movie.rating.dislike}
               </button>
             </div>

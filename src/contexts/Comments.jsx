@@ -74,6 +74,7 @@ const CommentsProvider = ({ children }) => {
           isError: false,
           isSuccess: true,
         });
+        localStorage.setItem(`comment${res.data.comment._id}`, "posted");
       })
       .catch(() => {
         setPostCommentStatus({
@@ -98,6 +99,8 @@ const CommentsProvider = ({ children }) => {
           isError: false,
           isSuccess: true,
         });
+        localStorage.removeItem(`comment${commentId}`);
+        window.location.reload();
       })
       .catch(() => {
         setDeleteCommentStatus({

@@ -7,16 +7,18 @@ import { useUser } from "./contexts/User";
 import NotRealUser from "./components/utils/NotRealUser";
 import VerifyEmail from "./components/utils/VerifyEmail";
 import { autoChangeLanguage } from "./utilities/defaultFunctions";
-import Alert from "@mui/material/Alert";
 import IconButton from "@mui/material/IconButton";
 import CloseIcon from "@mui/icons-material/Close";
 import { Snackbar } from "@mui/material";
 import { t } from "i18next";
 import { useAllMovies } from "./contexts/Movies";
 import NetworkError from "./components/utils/NetworkError";
+import { Alert } from "@mui/joy";
+import WarningIcon from "@mui/icons-material/Warning";
 
 function App() {
   const { isNotConnected } = useAllMovies();
+  const { isRealUser, isLoggedIn, isVerified } = useUser();
   const [open, setOpen] = React.useState(
     sessionStorage.getItem("headerAlert") || true
   );
@@ -29,8 +31,10 @@ function App() {
         >
           <Alert
             open={false}
-            severity="warning"
-            action={
+            color="warning"
+            variant="outlined"
+            startDecorator={<WarningIcon />}
+            endDecorator={
               <IconButton
                 aria-label="close"
                 color="inherit"
@@ -45,7 +49,7 @@ function App() {
             }
             sx={{
               position: "absolute",
-              top: "80px",
+              top: "60px",
               width: "350px",
               display: "flex",
               alignItems: "center",
@@ -63,7 +67,6 @@ function App() {
       </Routes>
     </div>
   );
-  const { isRealUser, isLoggedIn, isVerified } = useUser();
   useEffect(() => {
     autoChangeLanguage();
   }, []);

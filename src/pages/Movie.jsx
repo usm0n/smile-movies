@@ -5,13 +5,15 @@ import { useParams } from "react-router-dom";
 import MovieSkeleton from "../components/Movie/Skeleton/index";
 
 function Movie() {
-  const { movieById, getMovieId } = useMovie();
+  const { movieById, getMovieId, likeMovie, dislikeMovie } = useMovie();
   const { movieId } = useParams();
   useEffect(() => {
     getMovieId(movieId);
   }, [movieId]);
   return !movieById.isLoading ? (
-    movieById.movie && <MovieComponent movie={movieById.movie}/>
+    movieById.movie && (
+      <MovieComponent likeMovie={likeMovie} dislikeMovie={dislikeMovie} movie={movieById.movie} />
+    )
   ) : (
     <MovieSkeleton />
   );

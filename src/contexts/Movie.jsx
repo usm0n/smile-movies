@@ -30,6 +30,8 @@ const MovieContext = createContext({
   addMovie: () => {},
   editMovie: (data) => {},
   deleteMovie: (movieId) => {},
+  likeMovie: (currentLike, currentDisLike) => {},
+  dislikeMovie: (currentLike, currentDisLike) => {},
 });
 
 export const useMovie = () => useContext(MovieContext);
@@ -177,6 +179,52 @@ const MovieProvider = ({ children }) => {
       });
   };
 
+  const likeMovie = async (currentLike, currentDisLike) => {
+    await movies
+      .updateMovieById(movieId, {
+        rating: {
+          like: localStorage.getItem(`likeMovie${movieId}`)
+            ? currentLike - 1
+            : currentLike + 1,
+          dislike: localStorage.getItem(`dislikeMovie${movieId}`)
+            ? currentDisLike - 1
+            : currentDisLike,
+        },
+      })
+      .then(() => {
+        localStorage.getItem(`likeMovie${movieId}`)
+          ? localStorage.removeItem(`likeMovie${movieId}`)
+          : localStorage.setItem(`likeMovie${movieId}`, true);
+        localStorage.getItem(`dislikeMovie${movieId}`)
+          ? localStorage.removeItem(`dislikeMovie${movieId}`)
+          : null;
+        window.location.reload();
+      });
+  };
+
+  const dislikeMovie = async (currentLike, currentDisLike) => {
+    await movies
+      .updateMovieById(movieId, {
+        rating: {
+          like: localStorage.getItem(`likeMovie${movieId}`)
+            ? currentLike - 1
+            : currentLike,
+          dislike: localStorage.getItem(`dislikeMovie${movieId}`)
+            ? currentDisLike - 1
+            : currentDisLike + 1,
+        },
+      })
+      .then(() => {
+        localStorage.getItem(`likeMovie${movieId}`)
+          ? localStorage.removeItem(`likeMovie${movieId}`)
+          : null;
+        localStorage.getItem(`dislikeMovie${movieId}`)
+          ? localStorage.removeItem(`dislikeMovie${movieId}`)
+          : localStorage.setItem(`dislikeMovie${movieId}`, true);
+        window.location.reload();
+      });
+  };
+
   useEffect(() => {
     setMovie({
       isLoading: true,
@@ -212,6 +260,8 @@ const MovieProvider = ({ children }) => {
         editMovie,
         deleteMovie,
         statusDeleteMovie,
+        likeMovie,
+        dislikeMovie,
       }}
     >
       {children}

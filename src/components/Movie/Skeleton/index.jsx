@@ -144,6 +144,15 @@ function MovieSkeleton() {
                 variant="rectangular"
                 className="movie-btn"
               ></Skeleton>
+              <Skeleton
+                sx={{
+                  width: "140px",
+                  height: "50px",
+                  backgroundColor: "#ffffff2f",
+                }}
+                variant="rectangular"
+                className="movie-btn"
+              ></Skeleton>
             </Box>
           </Box>
         </Box>
