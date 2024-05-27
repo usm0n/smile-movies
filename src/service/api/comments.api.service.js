@@ -51,6 +51,19 @@ const comments = {
       return error;
     }
   },
+
+  updateComment: async (movieId, commentId, data) => {
+    try {
+      const response = await api.put(
+        "/movies/" + movieId + "/updateComment/" + commentId,
+        data
+      );
+      return response;
+    } catch (error) {
+      console.log(error);
+      return error;
+    }
+  },
 };
 
 export default comments;

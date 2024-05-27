@@ -20,10 +20,16 @@ const CommentsContext = createContext({
     isError: false,
     isSuccess: false,
   },
+  updateCommentStatus: {
+    loading: false,
+    isError: false,
+    isSuccess: false,
+  },
   getCommentId: (commentId) => {},
   getMovieId: (movieId) => {},
   postComment: (firstname, comment) => {},
   deleteComment: () => {},
+  updateComment: (data) => {},
 });
 
 export const useComments = () => useContext(CommentsContext);
@@ -42,6 +48,11 @@ const CommentsProvider = ({ children }) => {
   });
   const [postCommentStatus, setPostCommentStatus] = useState({
     buttonLoading: false,
+    isError: false,
+    isSuccess: false,
+  });
+  const [updateCommentStatus, setUpdateCommentStatus] = useState({
+    loading: false,
     isError: false,
     isSuccess: false,
   });
@@ -111,6 +122,53 @@ const CommentsProvider = ({ children }) => {
       });
   };
 
+  const updateComment = async (data) => {
+    setUpdateCommentStatus({
+      loading: true,
+      isError: false,
+      isSuccess: false,
+    });
+    await comments
+      .updateComment(movieId, commentId, data)
+      .then(() => {
+        setUpdateCommentStatus({
+          loading: false,
+          isError: false,
+          isSuccess: true,
+        });
+      })
+      .catch(() => {
+        setUpdateCommentStatus({
+          loading: false,
+          isError: true,
+          isSuccess: false,
+        });
+      });
+  };
+
+  const likeComment = async (currentLike, currentDisLike) => {
+    await comments
+      .updateComment(movieId, commentId, {
+        rating: {
+          like: localStorage.getItem(`likeComment${commentId}`)
+           ? currentLike - 1
+            : currentLike + 1,
+          dislike: localStorage.getItem(`dislikeComment${commentId}`)
+           ? currentDisLike - 1
+            : currentDisLike,
+        },
+      })
+      .then(() => {
+        localStorage.getItem(`likeComment${commentId}`)
+         ? localStorage.removeItem(`likeComment${commentId}`)
+          : localStorage.setItem(`likeComment${commentId}`, true);
+        localStorage.getItem(`dislikeComment${commentId}`)
+         ? localStorage.removeItem(`dislikeComment${commentId}`)
+          : null;
+        window.location.reload();
+      });
+  };
+
   useEffect(() => {
     setAllComments({
       isLoading: true,
@@ -166,6 +224,8 @@ const CommentsProvider = ({ children }) => {
         postCommentStatus,
         deleteComment,
         deleteCommentStatus,
+        updateComment,
+        updateCommentStatus
       }}
     >
       {children}
