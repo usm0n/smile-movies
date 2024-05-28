@@ -1040,7 +1040,7 @@ input::-webkit-inner-spin-button {
   justify-content: center;
   gap: 10px;
   font-size: 15px;
-  transition: all 0.5s;
+  transition: 0.1s;
 }
 .movie-delete_btn:hover {
   opacity: 0.8;

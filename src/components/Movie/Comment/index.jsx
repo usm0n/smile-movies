@@ -1,19 +1,26 @@
 import React, { useEffect } from "react";
-import Like from "../../../assets/icons/Like";
-import DisLike from "../../../assets/icons/DisLike";
+import Like from "@mui/icons-material/ThumbUpAltOutlined";
+import DisLike from "@mui/icons-material/ThumbDownAltOutlined";
+import ThumbUp from "@mui/icons-material/ThumbUp";
+import ThumbDown from "@mui/icons-material/ThumbDown";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
-import ClearIcon from '@mui/icons-material/Clear';
+import ClearIcon from "@mui/icons-material/Clear";
 import logo from "../../../assets/images/logo.png";
 import { useComments } from "../../../contexts/Comments";
-import {
-  Alert,
-  Avatar,
-  Backdrop,
-  CircularProgress,
-  Snackbar,
-} from "@mui/material";
+import { Avatar } from "@mui/material";
+import { backdropLoading } from "../../../utilities/defaultFunctions";
+import ReplyIcon from "@mui/icons-material/Reply";
+import EditIcon from "@mui/icons-material/Edit";
 
-function Comment({ comment, index, isAdmin }) {
+function Comment({
+  comment,
+  index,
+  isAdmin,
+  likeComment,
+  dislikeComment,
+  setPostCommentComment,
+  setEditComment
+}) {
   const { getCommentId, deleteComment, deleteCommentStatus } = useComments();
 
   useEffect(() => {
@@ -21,6 +28,7 @@ function Comment({ comment, index, isAdmin }) {
   }, []);
   return (
     <div key={index} className="movie-comment">
+      {backdropLoading(deleteCommentStatus.buttonLoading)}
       {/* {deleteCommentStatus.isSuccess && (
         <Snackbar open={open} autoHideDuration={6000}>
           <Alert severity="success" variant="filled" sx={{ width: "100%" }}>
@@ -64,34 +72,55 @@ function Comment({ comment, index, isAdmin }) {
         </div>
         <p className="movie-comment_text">{comment.comment}</p>
         <div className="movie-buttons">
-          <button className="movie-like_btn">
-            <Like />
+          <button onClick={() => likeComment(comment)} className="movie-like">
+            {localStorage.getItem(`likeComment${comment._id}`) ? (
+              <ThumbUp />
+            ) : (
+              <Like />
+            )}
             {comment.like}
           </button>
 
-          <button className="movie-like_btn">
-            <DisLike />
+          <button
+            onClick={() => dislikeComment(comment)}
+            className="movie-dislike"
+          >
+            {localStorage.getItem(`dislikeComment${comment._id}`) ? (
+              <ThumbDown />
+            ) : (
+              <DisLike />
+            )}
             {comment.dislike}
           </button>
-          
+          {!localStorage.getItem(`comment${comment._id}`) && (
+            <button
+              onClick={() => setPostCommentComment(`${comment.firstname}, `)}
+              className="movie-like"
+            >
+              <ReplyIcon />
+            </button>
+          )}
           {localStorage.getItem(`comment${comment._id}`) && (
             <button
               onClick={() => deleteComment()}
               className="movie-delete_btn"
             >
-              {deleteCommentStatus.buttonLoading ? (
-                <Backdrop
-                  sx={{
-                    color: "#fff",
-                    zIndex: (theme) => theme.zIndex.drawer + 1,
-                  }}
-                  open={open}
-                >
-                  <CircularProgress color="inherit" />
-                </Backdrop>
-              ) : (
-                <DeleteOutlineIcon />
-              )}
+              <DeleteOutlineIcon />
+            </button>
+          )}
+          {localStorage.getItem(`comment${comment._id}`) && (
+            <button
+              onClick={() => {
+                setEditComment({
+                  open: true,
+                  commentId: comment._id,
+                  firstname: comment.firstname,
+                  comment: comment.comment,
+                })
+              }}
+              className="movie-like"
+            >
+              <EditIcon />
             </button>
           )}
           {isAdmin.result && (
@@ -99,19 +128,7 @@ function Comment({ comment, index, isAdmin }) {
               onClick={() => deleteComment()}
               className="movie-delete_btn"
             >
-              {deleteCommentStatus.buttonLoading ? (
-                <Backdrop
-                  sx={{
-                    color: "#fff",
-                    zIndex: (theme) => theme.zIndex.drawer + 1,
-                  }}
-                  open={open}
-                >
-                  <CircularProgress color="inherit" />
-                </Backdrop>
-              ) : (
-                <ClearIcon />
-              )}
+              <ClearIcon />
             </button>
           )}
         </div>

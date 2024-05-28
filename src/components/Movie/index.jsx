@@ -12,7 +12,7 @@ import { IconButton } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 
-function Movie({ movie, likeMovie, dislikeMovie }) {
+function Movie({ movie, likeMovie, dislikeMovie, ratingLoading }) {
   const { isLoggedIn, user, isAdmin } = useUser();
 
   const navigate = useNavigate();
@@ -71,7 +71,7 @@ function Movie({ movie, likeMovie, dislikeMovie }) {
       )}
 
       <div className="movie-container">
-        <MovieContent dislikeMovie={dislikeMovie} likeMovie={likeMovie} movie={movie} user={user} isLoggedIn={isLoggedIn} />
+        <MovieContent ratingLoading={ratingLoading} dislikeMovie={dislikeMovie} likeMovie={likeMovie} movie={movie} user={user} isLoggedIn={isLoggedIn} />
         <MovieVideo movie={movie} />
         <MovieComments isAdmin={isAdmin} isLoggedIn={isLoggedIn} movie={movie} user={user} />
       </div>

@@ -152,7 +152,6 @@ function EditMovie({ movie }) {
     !editMovieValue.releaseDate.day.trim() ||
     !editMovieValue.releaseDate.month.trim() ||
     !editMovieValue.releaseDate.year.trim() ||
-    !editMovieValue.trailer.trim() ||
     !editMovieValue.duration.hour.trim() ||
     !editMovieValue.duration.min.trim() ||
     editMovieValue.rating.like < 0 ||

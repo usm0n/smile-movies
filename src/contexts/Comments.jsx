@@ -25,11 +25,14 @@ const CommentsContext = createContext({
     isError: false,
     isSuccess: false,
   },
+  ratingLoading: false,
   getCommentId: (commentId) => {},
   getMovieId: (movieId) => {},
   postComment: (firstname, comment) => {},
   deleteComment: () => {},
-  updateComment: (data) => {},
+  updateComment: (commentId, data) => {},
+  likeComment: (comment) => {},
+  dislikeComment: (comment) => {},
 });
 
 export const useComments = () => useContext(CommentsContext);
@@ -56,6 +59,7 @@ const CommentsProvider = ({ children }) => {
     isError: false,
     isSuccess: false,
   });
+  const [ratingLoading, setRatingLoading] = useState();
   const [commentId, setCommentId] = useState();
   const [movieId, setMovieId] = useState();
 
@@ -122,7 +126,7 @@ const CommentsProvider = ({ children }) => {
       });
   };
 
-  const updateComment = async (data) => {
+  const updateComment = async (commentId, data) => {
     setUpdateCommentStatus({
       loading: true,
       isError: false,
@@ -146,25 +150,54 @@ const CommentsProvider = ({ children }) => {
       });
   };
 
-  const likeComment = async (currentLike, currentDisLike) => {
+  const likeComment = async (comment) => {
+    setRatingLoading(true);
     await comments
       .updateComment(movieId, commentId, {
-        rating: {
-          like: localStorage.getItem(`likeComment${commentId}`)
-           ? currentLike - 1
-            : currentLike + 1,
-          dislike: localStorage.getItem(`dislikeComment${commentId}`)
-           ? currentDisLike - 1
-            : currentDisLike,
-        },
+        firstname: comment.firstname,
+        comment: comment.comment,
+        isAdmin: comment.isAdmin,
+        like: localStorage.getItem(`likeComment${commentId}`)
+          ? comment.like - 1
+          : comment.like + 1,
+        dislike: localStorage.getItem(`dislikeComment${commentId}`)
+          ? comment.dislike - 1
+          : comment.dislike,
       })
       .then(() => {
         localStorage.getItem(`likeComment${commentId}`)
-         ? localStorage.removeItem(`likeComment${commentId}`)
+          ? localStorage.removeItem(`likeComment${commentId}`)
           : localStorage.setItem(`likeComment${commentId}`, true);
         localStorage.getItem(`dislikeComment${commentId}`)
-         ? localStorage.removeItem(`dislikeComment${commentId}`)
+          ? localStorage.removeItem(`dislikeComment${commentId}`)
           : null;
+        setRatingLoading(false);
+        window.location.reload();
+      });
+  };
+
+  const dislikeComment = async (comment) => {
+    setRatingLoading(true);
+    await comments
+      .updateComment(movieId, commentId, {
+        firstname: comment.firstname,
+        comment: comment.comment,
+        isAdmin: comment.isAdmin,
+        like: localStorage.getItem(`likeComment${commentId}`)
+          ? comment.like - 1
+          : comment.like,
+        dislike: localStorage.getItem(`dislikeComment${commentId}`)
+          ? comment.dislike - 1
+          : comment.dislike + 1,
+      })
+      .then(() => {
+        localStorage.getItem(`likeComment${commentId}`)
+          ? localStorage.removeItem(`likeComment${commentId}`)
+          : null;
+        localStorage.getItem(`dislikeComment${commentId}`)
+          ? localStorage.removeItem(`dislikeComment${commentId}`)
+          : localStorage.setItem(`dislikeComment${commentId}`, true);
+        setRatingLoading(false);
         window.location.reload();
       });
   };
@@ -225,7 +258,10 @@ const CommentsProvider = ({ children }) => {
         deleteComment,
         deleteCommentStatus,
         updateComment,
-        updateCommentStatus
+        updateCommentStatus,
+        dislikeComment,
+        likeComment,
+        ratingLoading
       }}
     >
       {children}

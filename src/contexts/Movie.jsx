@@ -26,6 +26,8 @@ const MovieContext = createContext({
     isSuccess: false,
   },
 
+  ratingLoading: false,
+
   getMovieId: (movieId) => {},
   addMovie: () => {},
   editMovie: (data) => {},
@@ -53,6 +55,7 @@ const MovieProvider = ({ children }) => {
     isError: false,
     isSuccess: false,
   });
+  const [ratingLoading, setRatingLoading] = useState(false);
   const [movieId, setMovieId] = useState();
 
   const getMovieId = async (movieId) => {
@@ -180,6 +183,7 @@ const MovieProvider = ({ children }) => {
   };
 
   const likeMovie = async (currentLike, currentDisLike) => {
+    setRatingLoading(true);
     await movies
       .updateMovieById(movieId, {
         rating: {
@@ -198,11 +202,13 @@ const MovieProvider = ({ children }) => {
         localStorage.getItem(`dislikeMovie${movieId}`)
           ? localStorage.removeItem(`dislikeMovie${movieId}`)
           : null;
+        setRatingLoading(false);
         window.location.reload();
       });
   };
 
   const dislikeMovie = async (currentLike, currentDisLike) => {
+    setRatingLoading(true);
     await movies
       .updateMovieById(movieId, {
         rating: {
@@ -221,6 +227,7 @@ const MovieProvider = ({ children }) => {
         localStorage.getItem(`dislikeMovie${movieId}`)
           ? localStorage.removeItem(`dislikeMovie${movieId}`)
           : localStorage.setItem(`dislikeMovie${movieId}`, true);
+        setRatingLoading(false);
         window.location.reload();
       });
   };
@@ -262,6 +269,7 @@ const MovieProvider = ({ children }) => {
         statusDeleteMovie,
         likeMovie,
         dislikeMovie,
+        ratingLoading,
       }}
     >
       {children}

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { dialog, language, snackbar } from "../../utilities/defaultFunctions";
+import { backdropLoading, dialog, language, snackbar } from "../../utilities/defaultFunctions";
 import ThumbUpOffAltIcon from "@mui/icons-material/ThumbUpOffAlt";
 import ThumbUpIcon from "@mui/icons-material/ThumbUp";
 import ThumbDownOffAltIcon from "@mui/icons-material/ThumbDownOffAlt";
@@ -17,7 +17,7 @@ import { t } from "i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import PlayCircleFilledOutlinedIcon from "@mui/icons-material/PlayCircleFilledOutlined";
 
-function MovieContent({ movie, user, isLoggedIn, likeMovie, dislikeMovie }) {
+function MovieContent({ movie, user, isLoggedIn, likeMovie, dislikeMovie, ratingLoading }) {
   const { movieId } = useParams();
   const {
     addWatchLater,
@@ -86,6 +86,7 @@ function MovieContent({ movie, user, isLoggedIn, likeMovie, dislikeMovie }) {
   };
   return (
     <div className="movie-content">
+      {backdropLoading(ratingLoading)}
       {dialog(
         t("PleaseSignIn"),
         t("ToAddWatchLaterSignIn"),

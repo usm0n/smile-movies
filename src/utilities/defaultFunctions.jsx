@@ -1,5 +1,7 @@
 import {
+  Backdrop,
   Button,
+  CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
@@ -158,3 +160,12 @@ export const currentDay = new Date().getDate();
 export const currentDate = `${new Date().getDate()}.${new Date().getMonth()}.${new Date().getFullYear()}`;
 export const currentTime = `${new Date().getHours()}:${new Date().getMinutes()}:${new Date().getSeconds()}`;
 export const currentDateTime = `${new Date().getDate()}.${new Date().getMonth()}.${new Date().getFullYear()} ${new Date().getHours()}:${new Date().getMinutes()}:${new Date().getSeconds()}`;
+
+export const backdropLoading = (open) => (
+  <Backdrop
+    sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.drawer + 1 }}
+    open={open}
+  >
+    <CircularProgress color="inherit" />
+  </Backdrop>
+);
