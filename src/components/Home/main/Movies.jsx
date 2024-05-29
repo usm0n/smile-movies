@@ -1,9 +1,6 @@
 import React from "react";
-import { useAllMovies } from "../../../contexts/Movies";
-import MovieSkeletonCard from "../../movieCard/Skeleton/MovieCardSkeleton";
+import MovieCardSkeleton from "../../movieCard/Skeleton/MovieCardSkeleton";
 import MovieCard from "../../movieCard/MovieCard";
-import { Grid } from "@mui/material";
-import { t } from "i18next";
 import { Swiper, SwiperSlide } from "swiper/react";
 
 import "swiper/css";
@@ -59,7 +56,7 @@ function Movies({ allMovies, language, MoviesTitle, MoviesType, NoMovies }) {
                 {allMovies.isLoading ? (
                   Array.from({ length: 4 }).map((_, index) => (
                     <SwiperSlide key={index}>
-                      <MovieSkeletonCard />
+                      <MovieCardSkeleton />
                     </SwiperSlide>
                   ))
                 ) : allMovies.movies.filter((m) => m.status.type === MoviesType)
