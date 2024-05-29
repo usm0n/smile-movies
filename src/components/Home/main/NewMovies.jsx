@@ -10,7 +10,7 @@ import "swiper/css/navigation";
 import { Autoplay, Pagination, Navigation } from "swiper/modules";
 import { Link } from "react-router-dom";
 import WatchLater from "@mui/icons-material/WatchLater";
-import NewMoviesSkeleton from "./../../MovieCard/Skeleton/NewMoviesSkeleton";
+import NewMoviesSkeleton from "../../MovieCard/Skeleton/NewMoviesSkeleton";
 import { t } from "i18next";
 
 function NewMovies({ movies, isLoading, language }) {

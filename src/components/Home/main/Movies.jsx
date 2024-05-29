@@ -1,6 +1,6 @@
 import React from "react";
-import MovieCardSkeleton from "../../movieCard/Skeleton/MovieCardSkeleton";
-import MovieCard from "../../movieCard/MovieCard";
+import MovieCardSkeleton from "../../MovieCard/Skeleton/MovieCardSkeleton.jsx";
+import MovieCard from "../../MovieCard/MovieCard.jsx";
 import { Swiper, SwiperSlide } from "swiper/react";
 
 import "swiper/css";

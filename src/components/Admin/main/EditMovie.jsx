@@ -5,7 +5,6 @@ import {
   Button,
   FormControl,
   InputLabel,
-  ListItemIcon,
   MenuItem,
   Select,
   ToggleButton,
@@ -18,12 +17,10 @@ import StarBorderIcon from "@mui/icons-material/StarBorder";
 import Favourite from "../../../assets/icons/SolidStarIcon";
 import PublicIcon from "@mui/icons-material/Public";
 import Calendar from "../../../assets/icons/CalendarIcon";
-import AddIcon from "@mui/icons-material/Add";
 import {
   currentDay,
   currentMonth,
   currentYear,
-  language,
   snackbar,
 } from "../../../utilities/defaultFunctions";
 import { useMovie } from "../../../contexts/Movie";
@@ -613,7 +610,9 @@ function EditMovie({ movie }) {
                     >
                       <MenuItem value={"movie"}>{t("movieText")}</MenuItem>
                       <MenuItem value={"series"}>{t("SeriesTitle")}</MenuItem>
-                      <MenuItem value={"cartoon"}>{t("CartoonsTitle")}</MenuItem>
+                      <MenuItem value={"cartoon"}>
+                        {t("CartoonsTitle")}
+                      </MenuItem>
                     </Select>
                   </FormControl>
                 </div>
