@@ -282,7 +282,7 @@ function Navbar() {
                           </ListItemIcon>
                           {t("MenuFavouritesText")}
                         </MenuItem>
-                        <MenuItem disabled>
+                        <MenuItem onClick={() => menuNavigation("/settings")}>
                           <ListItemIcon>
                             <Settings fontSize="small" />
                           </ListItemIcon>

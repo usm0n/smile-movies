@@ -129,5 +129,15 @@
     "DeleteAllMovies": "Delete All Movies",
     "DeleteAllMoviesDesc": "Confirm password to delete all movies",
     "DeleteAllMoviesConfirm": "Do you want to delete all movies?",
-    "DeleteAllMoviesSuccess": "All movies deleted successfully"
+    "DeleteAllMoviesSuccess": "All movies deleted successfully",
+    "ProfilePicture": "Profile Picture",
+    "ChangePicture": "Change Profile Picture",
+    "FirstName": "First Name",
+    "Email": "Email",
+    "Password": "Password",
+    "ChangePassword": "Change Password",
+    "TimeZone": "Time Zone",
+    "TimeZoneText": "Queries you create will defaul to this time zone.",
+    "DevelopmentMode": "Development Mode",
+    "TextEditorMode": "Text Editor Mode"
 }

@@ -10,6 +10,7 @@ import ContactLayout from "../layout/ContactLayout";
 import AdminLayout from "../layout/AdminLayout";
 import Premium from "../pages/components/premium/Premium";
 import NotFound from "../pages/error/NotFound";
+import Settings from "../pages/user/Settings";
 
 export const routes = [
   {
@@ -86,4 +87,9 @@ export const routes = [
     path: "/premium",
     element: <Premium />,
   },
+
+  {
+    path: "/settings",
+    element: <Settings/>
+  }
 ];

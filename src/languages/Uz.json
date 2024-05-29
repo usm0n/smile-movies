@@ -129,5 +129,15 @@
     "DeleteAllMovies": "Hamma Filmlarni O'chirish",
     "DeleteAllMoviesDesc": "Hamma filmlarni oʻchirish uchun parolni tasdiqlang",
     "DeleteAllMoviesConfirm": "Hamma filmlarni oʻchirmoqchimisiz?",
-    "DeleteAllMoviesSuccess": "Hamma filmlar muvaffaqiyatli oʻchirildi"
+    "DeleteAllMoviesSuccess": "Hamma filmlar muvaffaqiyatli oʻchirildi",
+    "ProfilePicture": "Profil Rasmi",
+    "ChangePicture": "Profil rasmini almashtirish",
+    "FirstName": "Ism",
+    "Email": "Email",
+    "Password": "Parol",
+    "ChangePassword": "Parolni o'zgartishish",
+    "TimeZone": "Vaqt zonasi",
+    "TimeZoneText": "Siz yaratgan soʻrovlar birlamchi vaqt mintaqasida boʻladi.",
+    "DevelopmentMode": "Rivojlanish rejimi",
+    "TextEditorMode": "Matn muharriri rejimi"
 }

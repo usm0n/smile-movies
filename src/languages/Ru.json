@@ -129,5 +129,15 @@
     "DeleteAllMovies": "Удалить все фильмы",
     "DeleteAllMoviesDesc": "Подтвердите пароль, чтобы удалить все фильмы",
     "DeleteAllMoviesConfirm": "Хотите удалить все фильмы?",
-    "DeleteAllMoviesSuccess": "Все фильмы успешно удалены"
+    "DeleteAllMoviesSuccess": "Все фильмы успешно удалены",
+    "ProfilePicture": "Изображение профиля",
+    "ChangePicture": "Изменить изображение профиля",
+    "FirstName": "Имя",
+    "Email": "Электронная почта",
+    "Password": "Пароль",
+    "ChangePassword": "Изменить пароль",
+    "TimeZone": "Часовой пояс",
+    "TimeZoneText": "Создаваемые вами запросы по умолчанию будут использовать этот часовой пояс.",
+    "DevelopmentMode": "Режим разработки",
+    "TextEditorMode": "Режим текстового редактора"
 }
