@@ -63,9 +63,9 @@ function Movies({ allMovies, language, MoviesTitle, MoviesType, NoMovies }) {
                     .length > 0 ? (
                   allMovies.movies
                     .filter((m) => m.status.type === MoviesType)
-                    .map((movie) => {
+                    .map((movie, index) => {
                       return (
-                        <SwiperSlide key={movie._id}>
+                        <SwiperSlide key={index}>
                           <MovieCard
                             linkTo={`/movie/${movie._id}`}
                             movie={movie}
