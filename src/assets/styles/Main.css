@@ -3074,7 +3074,7 @@ input::-webkit-inner-spin-button {
     width: 100%;
   }
 }
-.settings-name-email {
+.settings-email {
   padding-top: 40px;
   display: flex;
   align-items: center;
@@ -3082,27 +3082,27 @@ input::-webkit-inner-spin-button {
   gap: 110px;
 }
 @media screen and (max-width: 600px) {
-  .settings-name-email {
+  .settings-email {
     justify-content: space-between;
     gap: 10px;
   }
 }
 @media screen and (max-width: 327px) {
-  .settings-name-email {
+  .settings-email {
     flex-direction: column;
     align-items: start;
   }
 }
-.settings-name-email_title {
+.settings-email_title {
   font-size: 20px;
   font-weight: 500;
 }
-.settings-name-email_name {
+.settings-email_name {
   font-size: 19px;
   font-weight: 400;
   letter-spacing: 0.7px;
 }
-.settings-name-password {
+.settings-password {
   padding-top: 40px;
   display: flex;
   align-items: center;
@@ -3110,22 +3110,22 @@ input::-webkit-inner-spin-button {
   gap: 74px;
 }
 @media screen and (max-width: 600px) {
-  .settings-name-password {
+  .settings-password {
     justify-content: space-between;
     gap: 10px;
   }
 }
 @media screen and (max-width: 327px) {
-  .settings-name-password {
+  .settings-password {
     flex-direction: column;
     align-items: start;
   }
 }
-.settings-name-password_title {
+.settings-password_title {
   font-size: 20px;
   font-weight: 500;
 }
-.settings-name-password_btn {
+.settings-password_btn {
   border: 1px solid #ccc;
   padding: 8px 25px;
   border-radius: 4px;
@@ -3135,7 +3135,7 @@ input::-webkit-inner-spin-button {
   font-weight: 500;
   letter-spacing: 0.78px;
 }
-.settings-name-inputs {
+.settings-inputs {
   width: 100%;
   display: flex;
   align-items: start;
@@ -3143,7 +3143,7 @@ input::-webkit-inner-spin-button {
   flex-direction: column;
   gap: 10px;
 }
-.settings-name-time_box {
+.settings-time_box {
   display: flex;
   align-items: start;
   justify-content: unset;
@@ -3151,41 +3151,41 @@ input::-webkit-inner-spin-button {
   padding-top: 40px;
 }
 @media screen and (max-width: 600px) {
-  .settings-name-time_box {
+  .settings-time_box {
     justify-content: space-between;
     gap: 10px;
   }
 }
 @media screen and (max-width: 537px) {
-  .settings-name-time_box {
+  .settings-time_box {
     flex-direction: column;
     align-items: start;
   }
 }
-.settings-name-time_title {
+.settings-time_title {
   width: 170px;
   font-size: 20px;
   font-weight: 500;
 }
-.settings-name-mode_title {
+.settings-mode_title {
   width: 200px;
   font-size: 20px;
   font-weight: 500;
 }
-.settings-name-mode_form {
+.settings-mode_form {
   padding-top: 40px;
   display: flex;
   align-items: center;
   justify-content: unset;
 }
 @media screen and (max-width: 600px) {
-  .settings-name-mode_form {
+  .settings-mode_form {
     justify-content: space-between;
     gap: 10px;
   }
 }
 @media screen and (max-width: 537px) {
-  .settings-name-mode_form {
+  .settings-mode_form {
     flex-direction: column;
     align-items: start;
   }
