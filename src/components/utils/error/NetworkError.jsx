@@ -1,6 +1,6 @@
 import React from "react";
 import WifiOffIcon from "@mui/icons-material/WifiOff";
-import logo from "../../assets/images/logo.png";
+import logo from "../../../assets/images/logo.png";
 import ReplayIcon from "@mui/icons-material/Replay";
 import { t } from "i18next";
 

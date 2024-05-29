@@ -8,7 +8,7 @@ import Search from "../pages/Search";
 import AboutLayout from "../layout/AboutLayout";
 import ContactLayout from "../layout/ContactLayout";
 import AdminLayout from "../layout/AdminLayout";
-import Premium from "../pages/components/Premium";
+import Premium from "../pages/components/premium/Premium";
 import NotFound from "../pages/error/NotFound";
 
 export const routes = [

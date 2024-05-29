@@ -4,7 +4,7 @@ import { Route, Routes } from "react-router-dom";
 import { routes } from "./helpers/routes";
 import Navbar from "./components/Navbar";
 import { useUser } from "./contexts/User";
-import NotRealUser from "./components/utils/NotRealUser";
+import NotRealUser from "./components/utils/error/NotRealUser";
 import VerifyEmail from "./components/utils/VerifyEmail";
 import { autoChangeLanguage } from "./utilities/defaultFunctions";
 import IconButton from "@mui/material/IconButton";
@@ -12,7 +12,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import { Snackbar } from "@mui/material";
 import { t } from "i18next";
 import { useAllMovies } from "./contexts/Movies";
-import NetworkError from "./components/utils/NetworkError";
+import NetworkError from "./components/utils/error/NetworkError";
 import { Alert } from "@mui/joy";
 import WarningIcon from "@mui/icons-material/Warning";
 

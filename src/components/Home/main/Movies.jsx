@@ -1,7 +1,7 @@
 import React from "react";
 import { useAllMovies } from "../../../contexts/Movies";
-import MovieSkeletonCard from "../../MovieCard/Skeleton/MovieCardSkeleton";
-import MovieCard from "../../MovieCard/MovieCard";
+import MovieSkeletonCard from "../../movieCard/Skeleton/MovieCardSkeleton";
+import MovieCard from "../../movieCard/MovieCard";
 import { Grid } from "@mui/material";
 import { t } from "i18next";
 import { Swiper, SwiperSlide } from "swiper/react";

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { linksData } from "../data/linksData";
 import { Link, useNavigate } from "react-router-dom";
@@ -152,7 +152,7 @@ function Navbar() {
               <CloseIcon />
             </button>
             <ul className="nav-links">
-              {linksData.map((item, key) => (
+              {linksData.map((item) => (
                 <Link
                   key={item.id}
                   className="nav-link"
@@ -243,7 +243,23 @@ function Navbar() {
                               }}
                             />
                           ) : (
-                            user.firstname
+                            <div
+                              style={{
+                                display: "flex",
+                                flexDirection: "column",
+                              }}
+                            >
+                              <h1>{user.firstname}</h1>
+                              <marquee
+                                behavior="alternate"
+                                scrollamount="2"
+                                style={{
+                                  fontSize: "13px",
+                                }}
+                              >
+                                {user.email}
+                              </marquee>
+                            </div>
                           )}
                         </MenuItem>
                         <Divider />

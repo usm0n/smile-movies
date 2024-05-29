@@ -1,9 +1,9 @@
 import React from "react";
 import LoginIcon from "@mui/icons-material/Login";
 import { Link } from "react-router-dom";
-import { useUser } from "../../contexts/User";
+import { useUser } from "../../../contexts/User";
 import BuildIcon from "@mui/icons-material/Build";
-import logo from "../../assets/images/logo.png";
+import logo from "../../../assets/images/logo.png";
 import { t } from "i18next";
 
 function NotRealUser() {
