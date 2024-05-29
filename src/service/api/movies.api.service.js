@@ -10,7 +10,6 @@ const movies = {
       const response = await api.get("/movies");
       return response;
     } catch (error) {
-      console.log(error);
       return error;
     }
   },
@@ -20,7 +19,6 @@ const movies = {
       const response = await api.get("/movies/id/" + id);
       return response;
     } catch (error) {
-      console.log(error);
       return error;
     }
   },
@@ -30,7 +28,6 @@ const movies = {
       const response = await api.put("/movies/id/" + id, data);
       return response;
     } catch (error) {
-      console.log(error);
       return error;
     }
   },
@@ -40,7 +37,6 @@ const movies = {
       const response = await api.delete("/movies/id/" + id);
       return response;
     } catch (error) {
-      console.log(error);
       return error;
     }
   },
@@ -50,7 +46,6 @@ const movies = {
       const response = await api.delete("/movies");
       return response;
     } catch (error) {
-      console.log(error);
       return error;
     }
   },
@@ -60,12 +55,9 @@ const movies = {
       const response = await api.post("/movies", data);
       return response;
     } catch (error) {
-      console.log(error);
       return error;
     }
   },
-
-  
 };
 
 export default movies;

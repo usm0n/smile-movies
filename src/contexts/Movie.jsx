@@ -28,12 +28,12 @@ const MovieContext = createContext({
 
   ratingLoading: false,
 
-  getMovieId: (movieId) => {},
+  getMovieById: (movieId) => {},
   addMovie: () => {},
-  editMovie: (data) => {},
+  editMovie: (movieId, data) => {},
   deleteMovie: (movieId) => {},
-  likeMovie: (currentLike, currentDisLike) => {},
-  dislikeMovie: (currentLike, currentDisLike) => {},
+  likeMovie: (movieId, currentLike, currentDisLike) => {},
+  dislikeMovie: (movieId, currentLike, currentDisLike) => {},
 });
 
 export const useMovie = () => useContext(MovieContext);
@@ -56,10 +56,29 @@ const MovieProvider = ({ children }) => {
     isSuccess: false,
   });
   const [ratingLoading, setRatingLoading] = useState(false);
-  const [movieId, setMovieId] = useState();
 
-  const getMovieId = async (movieId) => {
-    setMovieId(movieId);
+  const getMovieById = async (movieId) => {
+    setMovie({
+      isLoading: true,
+      isError: false,
+      movie: {},
+    });
+    await movies
+      .getMovieById(movieId)
+      .then((movie) => {
+        setMovie({
+          isLoading: false,
+          isError: false,
+          movie: movie.data,
+        });
+      })
+      .catch((error) => {
+        setMovie({
+          isLoading: false,
+          isError: true,
+          movie: {},
+        });
+      });
   };
 
   const addMovie = async (movie) => {
@@ -102,7 +121,7 @@ const MovieProvider = ({ children }) => {
       });
   };
 
-  const editMovie = async (movie) => {
+  const editMovie = async (movieId, movie) => {
     setStatusEditMovie({
       loading: true,
       isError: false,
@@ -182,7 +201,7 @@ const MovieProvider = ({ children }) => {
       });
   };
 
-  const likeMovie = async (currentLike, currentDisLike) => {
+  const likeMovie = async (movieId, currentLike, currentDisLike) => {
     setRatingLoading(true);
     await movies
       .updateMovieById(movieId, {
@@ -207,7 +226,7 @@ const MovieProvider = ({ children }) => {
       });
   };
 
-  const dislikeMovie = async (currentLike, currentDisLike) => {
+  const dislikeMovie = async (movieId, currentLike, currentDisLike) => {
     setRatingLoading(true);
     await movies
       .updateMovieById(movieId, {
@@ -232,35 +251,10 @@ const MovieProvider = ({ children }) => {
       });
   };
 
-  useEffect(() => {
-    setMovie({
-      isLoading: true,
-      isError: false,
-      movie: {},
-    });
-    movies
-      .getMovieById(movieId)
-      .then((movie) => {
-        setMovie({
-          isLoading: false,
-          isError: false,
-          movie: movie.data,
-        });
-      })
-      .catch((error) => {
-        setMovie({
-          isLoading: false,
-          isError: true,
-          movie: {},
-        });
-      });
-  }, [movieId]);
-
   return (
     <MovieContext.Provider
       value={{
         movieById,
-        getMovieId,
         addMovie,
         statusAddMovie,
         statusEditMovie,
@@ -270,6 +264,7 @@ const MovieProvider = ({ children }) => {
         likeMovie,
         dislikeMovie,
         ratingLoading,
+        getMovieById,
       }}
     >
       {children}

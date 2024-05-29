@@ -95,7 +95,6 @@ const WatchLaterProvider = ({ children }) => {
     users
       .removeMovieFromWatchLater(userId, movieId)
       .then((res) => {
-        console.log(res);
         if (res.response) {
           setStatusRemoveWatchLater({
             loading: false,
@@ -157,10 +156,6 @@ const WatchLaterProvider = ({ children }) => {
         });
       });
   };
-
-  useEffect(() => {
-    getWatchLater();
-  }, []);
   return (
     <WatchLaterContext.Provider
       value={{

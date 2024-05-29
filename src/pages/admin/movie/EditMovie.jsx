@@ -1,5 +1,5 @@
 import { Autocomplete, TextField } from "@mui/material";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useAllMovies } from "../../../contexts/Movies";
 import { language } from "../../../utilities/defaultFunctions";
 import { useNavigate, useParams } from "react-router-dom";
@@ -9,7 +9,7 @@ import { t } from "i18next";
 
 function EditMovie() {
   const { allMovies } = useAllMovies();
-  const { getMovieId, movieById } = useMovie();
+  const { movieById } = useMovie();
   const navigate = useNavigate();
   const [searchValue, setSearchValue] = useState();
 
@@ -21,10 +21,6 @@ function EditMovie() {
       navigate(`/admin/edit-movie/search/${searchValue}`);
     }
   };
-
-  useEffect(() => {
-    getMovieId(movieId);
-  }, []);
 
   return !movieId ? (
     <div className="admin-edit-movie">

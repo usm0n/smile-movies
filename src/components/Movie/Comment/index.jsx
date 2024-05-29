@@ -20,12 +20,10 @@ function Comment({
   dislikeComment,
   setPostCommentComment,
   setEditComment,
+  movie,
 }) {
-  const { getCommentId, deleteComment, deleteCommentStatus } = useComments();
+  const { deleteComment, deleteCommentStatus } = useComments();
 
-  useEffect(() => {
-    getCommentId(comment._id);
-  }, []);
   return (
     <div key={index} className="movie-comment">
       {backdropLoading(deleteCommentStatus.buttonLoading)}
@@ -73,7 +71,7 @@ function Comment({
         <p className="movie-comment_text">{comment.comment}</p>
         <div className="movie-buttons">
           <button
-            onClick={() => likeComment(comment._id, comment)}
+            onClick={() => likeComment(movie._id, comment._id, comment)}
             className="movie-like"
           >
             {localStorage.getItem(`likeComment${comment._id}`) ? (
@@ -85,7 +83,7 @@ function Comment({
           </button>
 
           <button
-            onClick={() => dislikeComment(comment._id, comment)}
+            onClick={() => dislikeComment(movie._id, comment._id, comment)}
             className="movie-dislike"
           >
             {localStorage.getItem(`dislikeComment${comment._id}`) ? (
@@ -105,7 +103,7 @@ function Comment({
           )}
           {localStorage.getItem(`comment${comment._id}`) && (
             <button
-              onClick={() => deleteComment()}
+              onClick={() => deleteComment(movie._id, comment._id)}
               className="movie-delete_btn"
             >
               <DeleteOutlineIcon />
@@ -131,7 +129,7 @@ function Comment({
           )}
           {isAdmin.result && (
             <button
-              onClick={() => deleteComment()}
+              onClick={() => deleteComment(movie._id, comment._id)}
               className="movie-delete_btn"
             >
               <ClearIcon />

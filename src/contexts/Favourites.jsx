@@ -23,6 +23,7 @@ const FavouritesContext = createContext({
   },
   addFavourites: (movieId) => {},
   removeFavourites: (movieId) => {},
+  getFavourites: () => {},
 });
 
 export const useFavourites = () => useContext(FavouritesContext);
@@ -46,6 +47,41 @@ const FavouritesProvider = ({ children }) => {
     isError: false,
     isNotFound: false,
   });
+  const getFavourites = () => {
+    setFavourites({
+      loading: true,
+      isEmpty: false,
+      isError: false,
+      result: [],
+    });
+    users
+      .getFavourites(userId)
+      .then((result) => {
+        if (result.response) {
+          setFavourites({
+            loading: false,
+            isEmpty: false,
+            isError: true,
+            result: [],
+          });
+        } else {
+          setFavourites({
+            loading: false,
+            isEmpty: false,
+            isError: false,
+            result: result.data.movies,
+          });
+        }
+      })
+      .catch(() => {
+        setFavourites({
+          loading: false,
+          isEmpty: false,
+          isError: true,
+          result: [],
+        });
+      });
+  };
   const addFavourites = (movieId) => {
     setStatusAddFavourites({
       loading: true,
@@ -117,41 +153,7 @@ const FavouritesProvider = ({ children }) => {
         });
       });
   };
-  useEffect(() => {
-    setFavourites({
-      loading: true,
-      isEmpty: false,
-      isError: false,
-      result: [],
-    });
-    users
-      .getFavourites(userId)
-      .then((result) => {
-        if (result.response) {
-          setFavourites({
-            loading: false,
-            isEmpty: false,
-            isError: true,
-            result: [],
-          });
-        } else {
-          setFavourites({
-            loading: false,
-            isEmpty: false,
-            isError: false,
-            result: result.data.movies,
-          });
-        }
-      })
-      .catch(() => {
-        setFavourites({
-          loading: false,
-          isEmpty: false,
-          isError: true,
-          result: [],
-        });
-      });
-  }, []);
+  useEffect(() => {}, []);
   return (
     <FavouritesContext.Provider
       value={{
@@ -160,6 +162,7 @@ const FavouritesProvider = ({ children }) => {
         removeFavourites,
         statusAddFavourites,
         statusRemoveFavourites,
+        getFavourites,
       }}
     >
       {children}

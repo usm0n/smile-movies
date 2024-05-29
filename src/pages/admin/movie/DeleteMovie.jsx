@@ -1,18 +1,14 @@
 import { Autocomplete, TextField } from "@mui/material";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useAllMovies } from "../../../contexts/Movies";
 import { language } from "../../../utilities/defaultFunctions";
-import { useNavigate, useParams } from "react-router-dom";
-import { useMovie } from "../../../contexts/Movie";
+import { useNavigate } from "react-router-dom";
 import { t } from "i18next";
 
 function DeleteMovie() {
   const { allMovies } = useAllMovies();
-  const { getMovieId } = useMovie();
   const navigate = useNavigate();
   const [searchValue, setSearchValue] = useState();
-
-  const { movieId } = useParams();
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -20,10 +16,6 @@ function DeleteMovie() {
       navigate(`/admin/delete-movie/search/${searchValue.toLowerCase()}`);
     }
   };
-
-  useEffect(() => {
-    getMovieId(movieId);
-  }, []);
 
   return (
     <div className="admin-edit-movie">

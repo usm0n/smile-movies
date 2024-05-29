@@ -10,7 +10,6 @@ const comments = {
       const response = await api.get("/movies/" + movieId + "/comments");
       return response;
     } catch (error) {
-      console.log(error);
       return error;
     }
   },
@@ -22,7 +21,6 @@ const comments = {
       );
       return response;
     } catch (error) {
-      console.log(error);
       return error;
     }
   },
@@ -35,7 +33,6 @@ const comments = {
       );
       return response;
     } catch (error) {
-      console.log(error);
       return error;
     }
   },
@@ -47,7 +44,6 @@ const comments = {
       );
       return response;
     } catch (error) {
-      console.log(error);
       return error;
     }
   },
@@ -60,7 +56,6 @@ const comments = {
       );
       return response;
     } catch (error) {
-      console.log(error);
       return error;
     }
   },

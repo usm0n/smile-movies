@@ -71,9 +71,21 @@ function Movie({ movie, likeMovie, dislikeMovie, ratingLoading }) {
       )}
 
       <div className="movie-container">
-        <MovieContent ratingLoading={ratingLoading} dislikeMovie={dislikeMovie} likeMovie={likeMovie} movie={movie} user={user} isLoggedIn={isLoggedIn} />
+        <MovieContent
+          ratingLoading={ratingLoading}
+          dislikeMovie={dislikeMovie}
+          likeMovie={likeMovie}
+          movie={movie}
+          user={user}
+          isLoggedIn={isLoggedIn}
+        />
         <MovieVideo movie={movie} />
-        <MovieComments isAdmin={isAdmin} isLoggedIn={isLoggedIn} movie={movie} user={user} />
+        <MovieComments
+          isAdmin={isAdmin}
+          isLoggedIn={isLoggedIn}
+          movie={movie}
+          user={user}
+        />
       </div>
     </section>
   );

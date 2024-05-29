@@ -50,7 +50,6 @@ function Movies({ allMovies, language, MoviesTitle, MoviesType, NoMovies }) {
                   delay: 2500,
                   disableOnInteraction: false,
                 }}
-                loop={true}
                 pagination={{
                   clickable: true,
                 }}

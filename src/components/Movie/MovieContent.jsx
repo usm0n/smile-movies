@@ -14,11 +14,10 @@ import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import { useWatchLater } from "../../contexts/WatchLater";
 import { useFavourites } from "../../contexts/Favourites";
 import { t } from "i18next";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import PlayCircleFilledOutlinedIcon from "@mui/icons-material/PlayCircleFilledOutlined";
 
 function MovieContent({ movie, user, isLoggedIn, likeMovie, dislikeMovie, ratingLoading }) {
-  const { movieId } = useParams();
   const {
     addWatchLater,
     removeWatchLater,
@@ -32,8 +31,8 @@ function MovieContent({ movie, user, isLoggedIn, likeMovie, dislikeMovie, rating
     statusRemoveFavourites,
   } = useFavourites();
 
-  const [watchlaterDialog, setWatchlaterDialog] = useState();
-  const [favouritesDialog, setFavouritesDialog] = useState();
+  const [watchlaterDialog, setWatchlaterDialog] = useState(false);
+  const [favouritesDialog, setFavouritesDialog] = useState(false);
 
   const navigate = useNavigate();
 
@@ -140,11 +139,11 @@ function MovieContent({ movie, user, isLoggedIn, likeMovie, dislikeMovie, rating
             <div className="movie-like-dislike">
               <button
                 onClick={() => {
-                  likeMovie(movie.rating.like, movie.rating.dislike);
+                  likeMovie(movie._id, movie.rating.like, movie.rating.dislike);
                 }}
                 className="movie-like"
               >
-                {localStorage.getItem(`likeMovie${movieId}`) ? (
+                {localStorage.getItem(`likeMovie${movie._id}`) ? (
                   <ThumbUpIcon />
                 ) : (
                   <ThumbUpOffAltIcon />
@@ -153,11 +152,11 @@ function MovieContent({ movie, user, isLoggedIn, likeMovie, dislikeMovie, rating
               </button>
               <button
                 onClick={() => {
-                  dislikeMovie(movie.rating.like, movie.rating.dislike);
+                  dislikeMovie(movie._id, movie.rating.like, movie.rating.dislike);
                 }}
                 className="movie-dislike"
               >
-                {localStorage.getItem(`dislikeMovie${movieId}`) ? (
+                {localStorage.getItem(`dislikeMovie${movie._id}`) ? (
                   <ThumbDownIcon />
                 ) : (
                   <ThumbDownOffAltIcon />

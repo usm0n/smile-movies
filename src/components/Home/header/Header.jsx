@@ -28,7 +28,7 @@ function Header({
   statusRemoveWatchLater,
   user,
 }) {
-  const [open, setOpen] = useState();
+  const [open, setOpen] = useState(false);
 
   const navigate = useNavigate();
 
@@ -61,8 +61,8 @@ function Header({
   return !isLoading ? (
     <section className="header">
       {dialog(
-        "You are not logged in!",
-        "To add to Watch Later, you must sign in first.",
+        t("PleaseSignIn"),
+        t("ToAddWatchLaterSignIn"),
         open,
         handleClose,
         handleClick
@@ -95,7 +95,6 @@ function Header({
             delay: 2500,
             disableOnInteraction: false,
           }}
-          loop={true}
           pagination={{
             clickable: true,
           }}
@@ -104,8 +103,8 @@ function Header({
         >
           {movies
             .filter((m) => m.status.isTrending)
-            .map((movie, key) => (
-              <SwiperSlide>
+            .map((movie, index) => (
+              <SwiperSlide key={index}>
                 <img
                   src={movie.image.fullscreen}
                   className="header-bg"

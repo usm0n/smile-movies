@@ -100,7 +100,6 @@ function AddMovie() {
   });
 
   const { addMovie, statusAddMovie } = useMovie();
-  console.log(addMovieValue);
 
   const handleToggleValue = (e, name) => {
     setToggleValue({

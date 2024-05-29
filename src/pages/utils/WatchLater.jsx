@@ -13,7 +13,9 @@ function WatchLater() {
   const { watchlater, getWatchLater } = useWatchLater();
 
   useEffect(() => {
-    getWatchLater();
+    if (isLoggedIn) {
+      getWatchLater();
+    }
   }, []);
 
   return isLoggedIn ? (

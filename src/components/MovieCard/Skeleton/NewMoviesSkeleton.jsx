@@ -1,10 +1,8 @@
 import { Box, Skeleton } from "@mui/material";
 import React from "react";
-import { SwiperSlide } from "swiper/react";
 
 function NewMoviesSkeleton() {
   return (
-    <SwiperSlide>
       <Box className="new-movie_card">
         <Skeleton
           sx={{
@@ -67,7 +65,7 @@ function NewMoviesSkeleton() {
           </Box>
         </Box>
       </Box>
-    </SwiperSlide>
+
   );
 }
 

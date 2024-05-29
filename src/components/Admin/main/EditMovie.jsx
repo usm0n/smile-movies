@@ -28,12 +28,12 @@ import {
 } from "../../../utilities/defaultFunctions";
 import { useMovie } from "../../../contexts/Movie";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import Edit from "@mui/icons-material/Edit";
 import { t } from "i18next";
 
 function EditMovie({ movie }) {
-  const { editMovie, statusEditMovie, getMovieId } = useMovie();
+  const { editMovie, statusEditMovie } = useMovie();
 
   const [active, setActive] = useState(false);
   const [toggleValue, setToggleValue] = useState({
@@ -101,7 +101,6 @@ function EditMovie({ movie }) {
     trailer: movie.trailer,
   });
 
-  const { movieId } = useParams();
   const [status, setStatus] = useState({
     isEmpty: false,
   });
@@ -132,7 +131,6 @@ function EditMovie({ movie }) {
       [e.target.name]: e.target.value,
     });
   };
-  console.log(editMovieValue);
 
   const isNotTrim =
     !editMovieValue.country.en.trim() ||
@@ -164,13 +162,9 @@ function EditMovie({ movie }) {
     if (isNotTrim) {
       setStatus({ isEmpty: true });
     } else {
-      editMovie(editMovieValue);
+      editMovie(movie._id, editMovieValue);
     }
   };
-
-  useEffect(() => {
-    getMovieId(movieId);
-  }, []);
 
   return (
     <section className="movie">

@@ -10,7 +10,6 @@ const users = {
       const response = await api.get("/users");
       return response;
     } catch (error) {
-      console.log(error);
       return error;
     }
   },
@@ -19,7 +18,6 @@ const users = {
       const response = await api.get("/users/id/" + id);
       return response;
     } catch (error) {
-      console.log(error);
       return error;
     }
   },
@@ -28,7 +26,6 @@ const users = {
       const response = await api.get("/users/email/" + email);
       return response;
     } catch (error) {
-      console.log(error);
       return error;
     }
   },
@@ -38,7 +35,6 @@ const users = {
       const response = await api.put("/users/id/" + id, data);
       return response;
     } catch (error) {
-      console.log(error);
       return error;
     }
   },
@@ -47,7 +43,6 @@ const users = {
       const response = await api.put("/users/email/" + email, data);
       return response;
     } catch (error) {
-      console.log(error);
       return error;
     }
   },
@@ -57,7 +52,6 @@ const users = {
       const response = await api.delete("/users/id/" + id);
       return response;
     } catch (error) {
-      console.log(error);
       return error;
     }
   },
@@ -66,7 +60,6 @@ const users = {
       const response = await api.delete("/users/email/" + email);
       return response;
     } catch (error) {
-      console.log(error);
       return error;
     }
   },
@@ -75,7 +68,6 @@ const users = {
       const response = await api.delete("/users");
       return response;
     } catch (error) {
-      console.log(error);
       return error;
     }
   },
@@ -85,7 +77,6 @@ const users = {
       const response = await api.get("/users/" + id + "/verify/" + token);
       return response;
     } catch (error) {
-      console.log(error);
       return error;
     }
   },
@@ -95,7 +86,6 @@ const users = {
       const response = await api.delete("/users/deletetoken/" + id);
       return response;
     } catch (error) {
-      console.log(error);
       return error;
     }
   },
@@ -104,7 +94,6 @@ const users = {
       const response = await api.post("/users/resendtoken/" + id);
       return response;
     } catch (error) {
-      console.log(error);
       return error;
     }
   },
@@ -114,7 +103,6 @@ const users = {
       const response = await api.get("/users/" + userId + "/favourites");
       return response;
     } catch (error) {
-      console.log(error);
       return error;
     }
   },
@@ -125,7 +113,6 @@ const users = {
       );
       return response;
     } catch (error) {
-      console.log(error);
       return error;
     }
   },
@@ -134,7 +121,6 @@ const users = {
       const response = await api.post("/users/" + userId + "/amtf/" + movieId);
       return response;
     } catch (error) {
-      console.log(error);
       return error;
     }
   },
@@ -145,7 +131,6 @@ const users = {
       );
       return response;
     } catch (error) {
-      console.log(error);
       return error;
     }
   },
@@ -155,7 +140,6 @@ const users = {
       const response = await api.get("/users/" + userId + "/watchlater");
       return response;
     } catch (error) {
-      console.log(error);
       return error;
     }
   },
@@ -166,7 +150,6 @@ const users = {
       );
       return response;
     } catch (error) {
-      console.log(error);
       return error;
     }
   },
@@ -175,7 +158,6 @@ const users = {
       const response = await api.post("/users/" + userId + "/wlm/" + movieId);
       return response;
     } catch (error) {
-      console.log(error);
       return error;
     }
   },
@@ -184,7 +166,6 @@ const users = {
       const response = await api.delete("/users/" + userId + "/rmwl/" + wlmId);
       return response;
     } catch (error) {
-      console.log(error);
       return error;
     }
   },
@@ -194,7 +175,6 @@ const users = {
       const response = await api.post("/users/givepremium/" + email);
       return response;
     } catch (error) {
-      console.log(error);
       return error;
     }
   },
@@ -203,7 +183,6 @@ const users = {
       const response = await api.post("/users/cancelpremium/" + email);
       return response;
     } catch (error) {
-      console.log(error);
       return error;
     }
   },

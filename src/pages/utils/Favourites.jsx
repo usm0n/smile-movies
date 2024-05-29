@@ -1,25 +1,23 @@
 import React, { useEffect } from "react";
 import { useUser } from "../../contexts/User";
-import { useNavigate } from "react-router-dom";
 import RowMovieCard from "../../components/MovieCard/RowMovieCard";
 import RowMovieCardSkeleton from "../../components/MovieCard/Skeleton/RowMovieCardSkeleton";
 import { Skeleton } from "@mui/material";
 import { useFavourites } from "../../contexts/Favourites";
 import { language } from "../../utilities/defaultFunctions";
 import { t } from "i18next";
+import NotFound from "../error/NotFound";
 
 function Favorites() {
   const { user, isLoggedIn, isRealUser } = useUser();
-  const { favourites } = useFavourites();
-
-  const navigate = useNavigate();
+  const { favourites, getFavourites } = useFavourites();
 
   useEffect(() => {
-    if (!isLoggedIn) {
-      return navigate("/");
+    if (isLoggedIn) {
+      getFavourites();
     }
   });
-  return (
+  return isLoggedIn ? (
     <div className="watch-later">
       <div className="watch-later-info">
         <h1 className="watch-later-info_title">{t("MenuFavouritesText")}</h1>
@@ -90,6 +88,8 @@ function Favorites() {
         )}
       </div>
     </div>
+  ) : (
+    <NotFound />
   );
 }
 

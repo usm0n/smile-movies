@@ -65,8 +65,6 @@ function Contact() {
 
     fetch(`https://api.telegram.org/bot6857149409:AAFf9oseOBFw59STi9FPo93jehcOBgjYOjQ/sendMessage`, requestOptions)
       .then(response => response.json())
-      .then(data => console.log(data))
-      .catch(error => console.error('Error:', error));
 
     setUName('');
     setMessage('');

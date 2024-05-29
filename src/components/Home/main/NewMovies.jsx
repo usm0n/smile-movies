@@ -11,7 +11,6 @@ import { Autoplay, Pagination, Navigation } from "swiper/modules";
 import { Link } from "react-router-dom";
 import WatchLater from "@mui/icons-material/WatchLater";
 import NewMoviesSkeleton from "./../../MovieCard/Skeleton/NewMoviesSkeleton";
-import { Grid } from "@mui/material";
 import { t } from "i18next";
 
 function NewMovies({ movies, isLoading, language }) {
@@ -55,7 +54,6 @@ function NewMovies({ movies, isLoading, language }) {
               delay: 2500,
               disableOnInteraction: false,
             }}
-            loop={true}
             pagination={{
               clickable: true,
             }}
@@ -72,10 +70,9 @@ function NewMovies({ movies, isLoading, language }) {
               <>
                 {movies
                   .filter((m) => m.status.isNew == true)
-                  .map((movie) => {
+                  .map((movie, index) => {
                     return (
-                      <>
-                        <SwiperSlide>
+                        <SwiperSlide key={index}>
                           <Link
                             to={`/movie/${movie._id}`}
                             className="new-movie_card"
@@ -103,7 +100,6 @@ function NewMovies({ movies, isLoading, language }) {
                             </div>
                           </Link>
                         </SwiperSlide>
-                      </>
                     );
                   })}
                 {movies.filter((m) => m.status.isNew).length == 0 && (

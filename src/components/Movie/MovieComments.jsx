@@ -3,11 +3,9 @@ import { useComments } from "../../contexts/Comments";
 import { t } from "i18next";
 import { backdropLoading, snackbar } from "../../utilities/defaultFunctions";
 import Comment from "./Comment/index";
-import { Backdrop, Dialog } from "@mui/material";
 
 function MovieComments({ movie, user, isLoggedIn, isAdmin }) {
   const {
-    getMovieId,
     allComments,
     postComment,
     postCommentStatus,
@@ -16,6 +14,7 @@ function MovieComments({ movie, user, isLoggedIn, isAdmin }) {
     ratingLoading,
     updateComment,
     updateCommentStatus,
+    getComments,
   } = useComments();
 
   const [postCommentComment, setPostCommentComment] = useState();
@@ -31,13 +30,13 @@ function MovieComments({ movie, user, isLoggedIn, isAdmin }) {
   });
 
   useEffect(() => {
-    getMovieId(movie._id);
-  }, []);
+    getComments(movie._id);
+  }, [movie._id]);
   return (
     <div className="movie-comments">
       <h1 className="movie-comments-title">{t("CommentsTitle")}</h1>
       <div className="movie-comments-posting">
-        {backdropLoading(ratingLoading)}
+        {backdropLoading(ratingLoading == true)}
         {postCommentStatus.isSuccess &&
           snackbar("success", t("YourCommentPostedSuccessfully"))}
         {postCommentStatus.isError &&
@@ -85,7 +84,7 @@ function MovieComments({ movie, user, isLoggedIn, isAdmin }) {
                 updateCommentStatus.isSuccess
               }
               onClick={() => {
-                updateComment(editComment.commentId, {
+                updateComment(movie._id, editComment.commentId, {
                   firstname: editComment.firstname,
                   comment: editComment.comment,
                   isAdmin: editComment.isAdmin,
@@ -149,7 +148,7 @@ function MovieComments({ movie, user, isLoggedIn, isAdmin }) {
                 postCommentStatus.isSuccess
               }
               onClick={() => {
-                postComment(postCommentName, postCommentComment);
+                postComment(movie._id, postCommentName, postCommentComment);
                 setTimeout(() => {
                   window.location.reload();
                 }, 1500);
@@ -176,6 +175,7 @@ function MovieComments({ movie, user, isLoggedIn, isAdmin }) {
         allComments.comments.map((comment, index) => {
           return (
             <Comment
+              movie={movie}
               setEditComment={setEditComment}
               setPostCommentComment={setPostCommentComment}
               likeComment={likeComment}
