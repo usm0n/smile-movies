@@ -19,7 +19,7 @@ function Comment({
   likeComment,
   dislikeComment,
   setPostCommentComment,
-  setEditComment
+  setEditComment,
 }) {
   const { getCommentId, deleteComment, deleteCommentStatus } = useComments();
 
@@ -72,7 +72,10 @@ function Comment({
         </div>
         <p className="movie-comment_text">{comment.comment}</p>
         <div className="movie-buttons">
-          <button onClick={() => likeComment(comment)} className="movie-like">
+          <button
+            onClick={() => likeComment(comment._id, comment)}
+            className="movie-like"
+          >
             {localStorage.getItem(`likeComment${comment._id}`) ? (
               <ThumbUp />
             ) : (
@@ -82,7 +85,7 @@ function Comment({
           </button>
 
           <button
-            onClick={() => dislikeComment(comment)}
+            onClick={() => dislikeComment(comment._id, comment)}
             className="movie-dislike"
           >
             {localStorage.getItem(`dislikeComment${comment._id}`) ? (
@@ -116,7 +119,10 @@ function Comment({
                   commentId: comment._id,
                   firstname: comment.firstname,
                   comment: comment.comment,
-                })
+                  isAdmin: comment.isAdmin,
+                  like: comment.like,
+                  dislike: comment.dislike,
+                });
               }}
               className="movie-like"
             >

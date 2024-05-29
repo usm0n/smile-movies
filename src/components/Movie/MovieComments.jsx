@@ -25,6 +25,9 @@ function MovieComments({ movie, user, isLoggedIn, isAdmin }) {
     comment: "",
     open: false,
     commentId: "",
+    isAdmin: false,
+    like: 0,
+    dislike: 0,
   });
 
   useEffect(() => {
@@ -48,6 +51,9 @@ function MovieComments({ movie, user, isLoggedIn, isAdmin }) {
                   comment: editComment.comment,
                   open: true,
                   commentId: editComment.commentId,
+                  isAdmin: editComment.isAdmin,
+                  like: editComment.like,
+                  dislike: editComment.dislike,
                 })
               }
               value={editComment.firstname}
@@ -62,6 +68,9 @@ function MovieComments({ movie, user, isLoggedIn, isAdmin }) {
                   comment: e.target.value,
                   open: true,
                   commentId: editComment.commentId,
+                  isAdmin: editComment.isAdmin,
+                  like: editComment.like,
+                  dislike: editComment.dislike,
                 })
               }
               value={editComment.comment}
@@ -79,6 +88,9 @@ function MovieComments({ movie, user, isLoggedIn, isAdmin }) {
                 updateComment(editComment.commentId, {
                   firstname: editComment.firstname,
                   comment: editComment.comment,
+                  isAdmin: editComment.isAdmin,
+                  like: editComment.like,
+                  dislike: editComment.dislike,
                 });
                 setTimeout(() => {
                   window.location.reload();
@@ -102,6 +114,9 @@ function MovieComments({ movie, user, isLoggedIn, isAdmin }) {
                   comment: "",
                   open: false,
                   commentId: "",
+                  isAdmin: false,
+                  like: 0,
+                  dislike: 0,
                 })
               }
               className="movie-comments-posting-button"

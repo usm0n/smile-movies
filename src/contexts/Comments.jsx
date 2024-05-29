@@ -31,8 +31,8 @@ const CommentsContext = createContext({
   postComment: (firstname, comment) => {},
   deleteComment: () => {},
   updateComment: (commentId, data) => {},
-  likeComment: (comment) => {},
-  dislikeComment: (comment) => {},
+  likeComment: (commentId, comment) => {},
+  dislikeComment: (commentId, comment) => {},
 });
 
 export const useComments = () => useContext(CommentsContext);
@@ -150,7 +150,7 @@ const CommentsProvider = ({ children }) => {
       });
   };
 
-  const likeComment = async (comment) => {
+  const likeComment = async (commentId, comment) => {
     setRatingLoading(true);
     await comments
       .updateComment(movieId, commentId, {
@@ -176,7 +176,7 @@ const CommentsProvider = ({ children }) => {
       });
   };
 
-  const dislikeComment = async (comment) => {
+  const dislikeComment = async (commentId, comment) => {
     setRatingLoading(true);
     await comments
       .updateComment(movieId, commentId, {
@@ -261,7 +261,7 @@ const CommentsProvider = ({ children }) => {
         updateCommentStatus,
         dislikeComment,
         likeComment,
-        ratingLoading
+        ratingLoading,
       }}
     >
       {children}
