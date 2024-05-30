@@ -2963,15 +2963,12 @@ input::-webkit-inner-spin-button {
 .settings {
   padding-top: 100px;
   padding-bottom: 50px;
+  height: 100vh;
 }
-@media screen and (max-width: 480px) {
-  .settings-change_button {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-  }
+.settings-content {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
 }
 .settings-user {
   display: flex;
@@ -3030,34 +3027,9 @@ input::-webkit-inner-spin-button {
     text-align: center;
   }
 }
-.settings-name_form {
-  padding-top: 40px;
-}
-.settings-name_box {
-  display: flex;
-  align-items: center;
-  justify-content: unset;
-  gap: 40px;
-}
-@media screen and (max-width: 600px) {
-  .settings-name_box {
-    justify-content: space-between;
-  }
-}
-@media screen and (max-width: 537px) {
-  .settings-name_box {
-    flex-direction: column;
-    align-items: start;
-  }
-}
-.settings-name_title {
-  width: 120px;
-  font-size: 20px;
-  font-weight: 500;
-}
-.settings-name_input {
-  width: 300px;
-  background-color: transparent;
+.settings-input {
+  width: 400px;
+  background-color: #fff;
   border: 1px solid #ccc;
   padding: 12px;
   font-size: 16px;
@@ -3066,127 +3038,48 @@ input::-webkit-inner-spin-button {
   transition: all 0.2s ease-in-out;
   border-radius: 4px;
 }
-.settings-name_input:focus {
+.settings-input:focus {
   border-color: #ffd700;
 }
 @media screen and (max-width: 450px) {
-  .settings-name_input {
+  .settings-input {
     width: 100%;
   }
 }
-.settings-email {
-  padding-top: 40px;
+.settings-box {
   display: flex;
   align-items: center;
   justify-content: unset;
-  gap: 110px;
+  gap: 70px;
 }
 @media screen and (max-width: 600px) {
-  .settings-email {
+  .settings-box {
     justify-content: space-between;
+  }
+}
+@media screen and (max-width: 537px) {
+  .settings-box {
+    flex-direction: column;
+    align-items: start;
     gap: 10px;
   }
 }
-@media screen and (max-width: 327px) {
-  .settings-email {
-    flex-direction: column;
-    align-items: start;
-  }
-}
-.settings-email_title {
+.settings-title {
+  width: 120px;
+  text-align: end;
   font-size: 20px;
-  font-weight: 500;
+  font-weight: 300;
 }
-.settings-email_name {
-  font-size: 19px;
-  font-weight: 400;
-  letter-spacing: 0.7px;
-}
-.settings-password {
-  padding-top: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: unset;
-  gap: 74px;
-}
-@media screen and (max-width: 600px) {
-  .settings-password {
-    justify-content: space-between;
-    gap: 10px;
+@media screen and (max-width: 537px) {
+  .settings-title {
+    text-align: start;
   }
-}
-@media screen and (max-width: 327px) {
-  .settings-password {
-    flex-direction: column;
-    align-items: start;
-  }
-}
-.settings-password_title {
-  font-size: 20px;
-  font-weight: 500;
 }
 .settings-password_btn {
-  border: 1px solid #ccc;
-  padding: 8px 25px;
-  border-radius: 4px;
-  color: #ffd700;
-  margin-bottom: 7px;
-  font-size: 16px;
-  font-weight: 500;
-  letter-spacing: 0.78px;
+  width: 400px;
 }
-.settings-inputs {
-  width: 100%;
-  display: flex;
-  align-items: start;
-  justify-content: unset;
-  flex-direction: column;
-  gap: 10px;
-}
-.settings-time_box {
-  display: flex;
-  align-items: start;
-  justify-content: unset;
-  gap: 10px;
-  padding-top: 40px;
-}
-@media screen and (max-width: 600px) {
-  .settings-time_box {
-    justify-content: space-between;
-    gap: 10px;
-  }
-}
-@media screen and (max-width: 537px) {
-  .settings-time_box {
-    flex-direction: column;
-    align-items: start;
-  }
-}
-.settings-time_title {
-  width: 170px;
-  font-size: 20px;
-  font-weight: 500;
-}
-.settings-mode_title {
-  width: 200px;
-  font-size: 20px;
-  font-weight: 500;
-}
-.settings-mode_form {
-  padding-top: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: unset;
-}
-@media screen and (max-width: 600px) {
-  .settings-mode_form {
-    justify-content: space-between;
-    gap: 10px;
-  }
-}
-@media screen and (max-width: 537px) {
-  .settings-mode_form {
-    flex-direction: column;
-    align-items: start;
+@media screen and (max-width: 450px) {
+  .settings-password_btn {
+    width: 100%;
   }
 }/*# sourceMappingURL=Main.css.map */

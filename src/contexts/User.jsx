@@ -458,12 +458,12 @@ const UserProvider = ({ children }) => {
       });
       users.getUserById(userId).then((user) => {
         if (user.data) {
-          users.updateUserById(userId, { lastLogin: currentDateTime });
           setIsRealUser({
             loading: false,
             result: true,
           });
           setUser(user.data);
+          users.updateUserById(userId, { lastLogin: currentDateTime });
           if (user.data.isAdmin) {
             setIsAdmin({
               loading: false,

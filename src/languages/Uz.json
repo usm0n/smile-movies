@@ -139,5 +139,8 @@
     "TimeZone": "Vaqt zonasi",
     "TimeZoneText": "Siz yaratgan soʻrovlar birlamchi vaqt mintaqasida boʻladi.",
     "DevelopmentMode": "Rivojlanish rejimi",
-    "TextEditorMode": "Matn muharriri rejimi"
+    "TextEditorMode": "Matn muharriri rejimi",
+    "Notifications": "Bildirishnomalar",
+    "DeleteAccount": "Accountni o'chirish",
+    "LastName": "Familiya"
 }

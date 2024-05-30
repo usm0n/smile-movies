@@ -1,223 +1,115 @@
 .settings {
-    padding-top: 100px;
-    padding-bottom: 50px;
+  padding-top: 100px;
+  padding-bottom: 50px;
+  height: 100vh;
 
+  &-content {
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+  }
 
-    &-change_button {
-        @media screen and (max-width: 480px) {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            width: 100%;
-        }
+  &-user {
+    @include flex(start, unset);
+    gap: 40px;
+
+    @media screen and (max-width: 830px) {
+      flex-direction: column;
     }
 
-    &-user {
-        @include flex(start, unset);
-        gap: 40px;
-
-        @media screen and (max-width: 830px) {
-            flex-direction: column;
-        }
-
-        &_title {
-            @include adaptive-value('font-size', 28, 26);
-            font-weight: 500;
-            letter-spacing: 0.78px;
-        }
-
-        &_img {
-            border-radius: 50%;
-            width: 150px;
-        }
-
-        &_items {
-            @include flex(center, unset);
-            gap: 30px;
-
-            @media screen and (max-width: 480px) {
-                flex-direction: column;
-                justify-content: center;
-                width: 100%;
-            }
-        }
-
-
-        &_button {
-            border: 1px solid #ccc;
-            padding: 8px 25px;
-            border-radius: 4px;
-            color: #ccc;
-            margin-bottom: 7px;
-            font-size: 16px;
-            font-weight: 500;
-            letter-spacing: 0.78px;
-        }
-
-        &_text {
-            font-size: 18px;
-            letter-spacing: 0.70px;
-
-            @media screen and (max-width: 480px) {
-                text-align: center;
-            }
-        }
+    &_title {
+      @include adaptive-value("font-size", 28, 26);
+      font-weight: 500;
+      letter-spacing: 0.78px;
     }
 
-    &-name_form {
-        padding-top: 40px;
+    &_img {
+      border-radius: 50%;
+      width: 150px;
     }
 
-    &-name {
-        &_box {
-            @include flex(center, unset);
-            gap: 40px;
+    &_items {
+      @include flex(center, unset);
+      gap: 30px;
 
-            @media screen and (max-width: 600px) {
-                justify-content: space-between;
-            }
-
-            @media screen and (max-width: 537px) {
-                flex-direction: column;
-                align-items: start;
-            }
-        }
-
-        &_title {
-            width: 120px;
-            font-size: 20px;
-            font-weight: 500;
-        }
-
-        &_input {
-            width: 300px;
-            background-color: transparent;
-            border: 1px solid #ccc;
-            padding: 12px;
-            font-size: 16px;
-            color: #fff;
-            outline: none;
-            transition: all 0.2s ease-in-out;
-            border-radius: 4px;
-
-            &:focus {
-                border-color: $gold-color;
-            }
-
-            @media screen and (max-width: 450px){
-                width: 100%;
-            }
-        }
-    }
-
-    &-email {
-        padding-top: 40px;
-        @include flex(center, unset);
-        gap: 110px;
-
-        @media screen and (max-width: 600px) {
-            justify-content: space-between;
-            gap: 10px;
-        }
-
-         @media screen and (max-width: 327px) {
-            flex-direction: column;
-            align-items: start;
-        }
-
-        &_title {
-            font-size: 20px;
-            font-weight: 500;
-        }
-
-        &_name {
-            font-size: 19px;
-            font-weight: 400;
-            letter-spacing: 0.70px;
-        }
-    }
-
-    &-password {
-        padding-top: 40px;
-        @include flex(center, unset);
-        gap: 74px;
-
-        @media screen and (max-width: 600px) {
-            justify-content: space-between;
-            gap: 10px;
-        }
-
-        @media screen and (max-width: 327px) {
-            flex-direction: column;
-            align-items: start;
-        }
-
-        &_title {
-            font-size: 20px;
-            font-weight: 500;
-        }
-
-        &_btn {
-            border: 1px solid #ccc;
-            padding: 8px 25px;
-            border-radius: 4px;
-            color: $gold-color;
-            margin-bottom: 7px;
-            font-size: 16px;
-            font-weight: 500;
-            letter-spacing: 0.78px;
-        }
-    }
-
-    &-inputs {
-        width: 100%;
-        @include flex(start, unset);
+      @media screen and (max-width: 480px) {
         flex-direction: column;
-        gap: 10px;
+        justify-content: center;
+        width: 100%;
+      }
     }
 
-    &-time_box {
-        @include flex(start, unset);
-        gap: 10px;
-        padding-top: 40px;
-
-        @media screen and (max-width: 600px) {
-            justify-content: space-between;
-            gap: 10px;
-        }
-
-        @media screen and (max-width: 537px) {
-            flex-direction: column;
-            align-items: start;
-        }
+    &_button {
+      border: 1px solid #ccc;
+      padding: 8px 25px;
+      border-radius: 4px;
+      color: #ccc;
+      margin-bottom: 7px;
+      font-size: 16px;
+      font-weight: 500;
+      letter-spacing: 0.78px;
     }
 
-    &-time_title {
-        width: 170px;
-        font-size: 20px;
-        font-weight: 500;
+    &_text {
+      font-size: 18px;
+      letter-spacing: 0.7px;
+
+      @media screen and (max-width: 480px) {
+        text-align: center;
+      }
+    }
+  }
+
+  &-input {
+    width: 400px;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    padding: 12px;
+    font-size: 16px;
+    color: #fff;
+    outline: none;
+    transition: all 0.2s ease-in-out;
+    border-radius: 4px;
+
+    &:focus {
+      border-color: $gold-color;
     }
 
-    &-mode_title {
-        width: 200px;
-        font-size: 20px;
-        font-weight: 500;
+    @media screen and (max-width: 450px) {
+      width: 100%;
+    }
+  }
+
+  &-box {
+    @include flex(center, unset);
+    gap: 70px;
+
+    @media screen and (max-width: 600px) {
+      justify-content: space-between;
     }
 
-    &-mode_form {
-        padding-top: 40px;
-        @include flex(center, unset);
-
-        @media screen and (max-width: 600px) {
-            justify-content: space-between;
-            gap: 10px;
-        }
-
-        @media screen and (max-width: 537px) {
-            flex-direction: column;
-            align-items: start;
-        }
+    @media screen and (max-width: 537px) {
+      flex-direction: column;
+      align-items: start;
+      gap: 10px;
     }
+  }
+  &-title {
+    width: 120px;
+    text-align: end;
+    font-size: 20px;
+    font-weight: 300;
 
+    @media screen and (max-width: 537px) {
+      text-align: start;
+    }
+  }
+
+  &-password_btn {
+    width: 400px;
+
+    @media screen and (max-width: 450px) {
+      width: 100%;
+    }
+  }
 }
