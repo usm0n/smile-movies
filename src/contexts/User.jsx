@@ -83,6 +83,11 @@ const UserContext = createContext({
     isError: false,
     isSuccess: false,
   },
+  statusUpdateUserById: {
+    loading: false,
+    isError: false,
+    isSuccess: false,
+  },
   user: {},
   resendToken: () => {},
   verifyUser: (token) => {},
@@ -91,6 +96,7 @@ const UserContext = createContext({
   logoutUser: () => {},
   getUserByEmail: (email) => {},
   updateUserByEmail: (email, value) => {},
+  updateUserById: (id, value) => {},
 });
 
 export const useUser = () => useContext(UserContext);
@@ -145,6 +151,11 @@ const UserProvider = ({ children }) => {
     result: {},
   });
   const [statusUpdateUserByEmail, setStatusUpdateUserByEmail] = useState({
+    loading: false,
+    isError: false,
+    isSuccess: false,
+  });
+  const [statusUpdateUserById, setStatusUpdateUserById] = useState({
     loading: false,
     isError: false,
     isSuccess: false,
@@ -445,6 +456,41 @@ const UserProvider = ({ children }) => {
       });
   };
 
+  const updateUserById = async (id, value) => {
+    setStatusUpdateUserById({
+      loading: true,
+      isError: false,
+      isSuccess: false,
+    });
+    await users
+      .updateUserById(id, value)
+      .then((res) => {
+        if (res.data) {
+          setStatusUpdateUserById({
+            loading: false,
+            isError: false,
+            isSuccess: true,
+          });
+          setTimeout(() => {
+            window.location.reload();
+          }, 2000);
+        } else {
+          setStatusUpdateUserById({
+            loading: false,
+            isError: true,
+            isSuccess: false,
+          });
+        }
+      })
+      .catch(() => {
+        setStatusUpdateUserById({
+          loading: false,
+          isError: true,
+          isSuccess: false,
+        });
+      });
+  };
+
   useEffect(() => {
     if (userId) {
       setIsLoggedIn(true);
@@ -522,6 +568,8 @@ const UserProvider = ({ children }) => {
         statusGetUserByEmail,
         statusUpdateUserByEmail,
         updateUserByEmail,
+        statusUpdateUserById,
+        updateUserById,
       }}
     >
       {children}

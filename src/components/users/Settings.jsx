@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Avatar, Button, TextField } from "@mui/material";
 import { t } from "i18next";
 
-function Settings({ user }) {
+function Settings({ user, updateUserById, statusUpdateUserById }) {
   const [userValue, setUserValue] = useState({
     firstname: user.firstname,
     lastname: user.lastname,
@@ -15,12 +15,23 @@ function Settings({ user }) {
       [event.target.name]: event.target.value,
     });
   };
+
+  const handleSubmit = () => {
+    updateUserById(user._id, userValue);
+  };
   return (
     <div className="settings">
       <div className="container">
         <div className="settings-content">
           <div className="settings-box">
             <Button
+              disabled={
+                statusUpdateUserById.loading ||
+                statusUpdateUserById.isSuccess ||
+                (userValue.firstname === user.firstname &&
+                  userValue.lastname === user.lastname)
+              }
+              onClick={() => handleSubmit()}
               className="settings-button edit"
               sx={{
                 position: "fixed",
@@ -39,7 +50,7 @@ function Settings({ user }) {
                 },
               }}
             >
-              {t("Edit")}
+              {statusUpdateUserById.loading ? "Loading..." : t("Edit")}
             </Button>
             {/* <Button
               className="settings-button delete"
@@ -73,7 +84,7 @@ function Settings({ user }) {
                 }}
                 className="settings-user_img"
               >
-                {userValue.firstname ? userValue.firstname.slice(0, 1) : ""}
+                {user.firstname ? user.firstname.slice(0, 1) : ""}
               </Avatar>
             </div>
           </div>
@@ -107,7 +118,7 @@ function Settings({ user }) {
           <div className="settings-box">
             <h1 className="settings-title">{t("Email")}</h1>
             <TextField
-            disabled
+              disabled
               name="email"
               onChange={handleInput}
               value={userValue.email}
