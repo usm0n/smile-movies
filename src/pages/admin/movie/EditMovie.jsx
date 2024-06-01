@@ -6,6 +6,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import EditMovieComp from "../../../components/Admin/main/EditMovie";
 import { useMovie } from "../../../contexts/Movie";
 import { t } from "i18next";
+import MovieSkeleton from "../../../components/movie/Skeleton/index";
 
 function EditMovie() {
   const { allMovies } = useAllMovies();
@@ -60,10 +61,10 @@ function EditMovie() {
         />
       </form>
     </div>
+  ) : !movieById.isLoading ? (
+    movieById.movie && <EditMovieComp movie={movieById.movie} />
   ) : (
-    !movieById.isLoading && movieById.movie && (
-      <EditMovieComp movie={movieById.movie} />
-    )
+    <MovieSkeleton />
   );
 }
 
