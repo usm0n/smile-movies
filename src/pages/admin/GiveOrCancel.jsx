@@ -29,7 +29,7 @@ function GiveOrCancel() {
 
   const handleButtonClick = () => {
     updateUserByEmail(email, {
-      [value]: buttonOptions[selectedIndex] == "Give" ? true : false,
+      [value]: buttonOptions[selectedIndex] == t("give") ? true : false,
     });
   };
 
@@ -111,14 +111,15 @@ function GiveOrCancel() {
         </FormControl>
         <ButtonGroup
           disabled={
-            !value || !email ||
+            !value ||
+            !email ||
             statusGetUserByEmail.isError ||
             statusGetUserByEmail.loading
           }
           sx={{
             background: "#fff",
           }}
-          color={buttonOptions[selectedIndex] == "Give" ? "success" : "error"}
+          color={buttonOptions[selectedIndex] == t("give") ? "success" : "error"}
           variant="contained"
           ref={buttonAnchorRef}
         >
