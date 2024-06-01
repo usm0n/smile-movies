@@ -12,7 +12,7 @@ function Settings({ user, updateUserById, statusUpdateUserById }) {
   const handleInput = (event) => {
     setUserValue({
       ...userValue,
-      [event.target.name]: event.target.value,
+      [event.target.name]: event.target.value.trim(),
     });
   };
 
