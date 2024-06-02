@@ -1,6 +1,6 @@
 import React from "react";
 import { useUser } from "../../contexts/User";
-import SettingsComp from "../../components/Users/Settings";
+import SettingsComp from "../../components/users/Settings";
 import { backdropLoading } from "../../utilities/defaultFunctions";
 
 function Settings() {
