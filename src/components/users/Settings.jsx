@@ -54,7 +54,9 @@ function Settings({ user }) {
   };
 
   const handleSubmit = () => {
-    updateUserById(user._id, userValue);
+    updateUserById(user._id, userValue).then(() => {
+      window.location.reload();
+    });
   };
 
   const handleOpenDialog = (name) => {
@@ -75,9 +77,9 @@ function Settings({ user }) {
 
   const handleInputEmail = (e) => {
     if (isValidEmail(userValue.email)) {
-      getUserByEmail(e.target.value);
+      getUserByEmail(e.target.value.toLowerCase());
     }
-    setUserValue({ email: e.target.value });
+    setUserValue({ email: e.target.value.toLowerCase() });
   };
 
   const handleInputPassword = (event) => {
@@ -100,7 +102,10 @@ function Settings({ user }) {
             {backdropLoading(statusResendCode.loading)}
             <Dialog
               open={dialog.email}
-              onClose={() => setDialog({ email: false })}
+              onClose={() => {
+                setDialog({ email: false });
+                setUserValue({ email: user.email });
+              }}
             >
               <DialogTitle>{t("ChangeEmail")}</DialogTitle>
               <DialogContent>
@@ -333,7 +338,8 @@ function Settings({ user }) {
                 statusUpdateUserById.loading ||
                 statusUpdateUserById.isSuccess ||
                 (userValue.firstname === user.firstname &&
-                  userValue.lastname === user.lastname)
+                  userValue.lastname === user.lastname &&
+                  userValue.email === user.email)
               }
               onClick={() => handleSubmit()}
               className="settings-button edit"
