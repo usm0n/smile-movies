@@ -1,8 +1,7 @@
-import React, { Children, useEffect, useState } from "react";
+import React, { useState } from "react";
 import WatchLaterIcon from "@mui/icons-material/WatchLater";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import {
-  Button,
   FormControl,
   InputLabel,
   MenuItem,
@@ -18,13 +17,13 @@ import Favourite from "../../../assets/icons/SolidStarIcon";
 import PublicIcon from "@mui/icons-material/Public";
 import Calendar from "../../../assets/icons/CalendarIcon";
 import {
+  backButton,
   currentDay,
   currentMonth,
   currentYear,
   snackbar,
 } from "../../../utilities/defaultFunctions";
 import { useMovie } from "../../../contexts/Movie";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { useNavigate } from "react-router-dom";
 import Edit from "@mui/icons-material/Edit";
 import { t } from "i18next";
@@ -165,19 +164,7 @@ function EditMovie({ movie }) {
 
   return (
     <section className="movie">
-      <Button
-        onClick={() => navigate(-1)}
-        sx={{
-          position: "absolute",
-          top: "120px",
-          left: "10px",
-          display: "flex",
-          gap: "10px",
-          color: "#fff",
-        }}
-      >
-        <ArrowBackIcon />
-      </Button>
+      {backButton(() => navigate(-1))}
       {status.isEmpty && snackbar("warning", t("pleaseFillFields"))}
       {statusEditMovie.isSuccess &&
         snackbar("success", t("MovieEditedSuccessfully"))}

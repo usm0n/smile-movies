@@ -12,6 +12,7 @@ import {
   styled,
 } from "@mui/material";
 import { Snackbar } from "@mui/joy";
+import ArrowBack from "@mui/icons-material/ArrowBack";
 
 export const language = !localStorage.getItem("language")
   ? "uz"
@@ -227,3 +228,25 @@ export const isValidEmail = (email) =>
   /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|.(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/.test(
     email
   );
+
+export const backButton = (onclick) => (
+  <Button
+    onClick={onclick}
+    sx={{
+      position: "fixed",
+      top: "90px",
+      left: "20px",
+      zIndex: "1000",
+      color: "black",
+      backgroundColor: "gold",
+      borderRadius: "50px",
+      transition: "ease-in-out 0.2s",
+      "&:hover": {
+        backgroundColor: "gold",
+        opacity: "0.8",
+      },
+    }}
+  >
+    <ArrowBack />
+  </Button>
+);

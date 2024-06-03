@@ -1,11 +1,10 @@
 import React from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAllMovies } from "../../contexts/Movies";
-import { Box, Button, Grid, Typography } from "@mui/material";
+import { Grid } from "@mui/material";
 import MovieCard from "../../components/MovieCard/MovieCard";
-import { language } from "../../utilities/defaultFunctions";
+import { backButton, language } from "../../utilities/defaultFunctions";
 import MovieSkeletonCard from "../../components/MovieCard/Skeleton/MovieCardSkeleton";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { t } from "i18next";
 
 function Search({ backTo, linkTo }) {
@@ -23,19 +22,7 @@ function Search({ backTo, linkTo }) {
 
   return (
     <div className="search">
-      <Button
-        onClick={() => navigate(backTo)}
-        sx={{
-          position: "absolute",
-          top: "80px",
-          left: "10px",
-          display: "flex",
-          gap: "10px",
-          color: "#fff",
-        }}
-      >
-        <ArrowBackIcon />
-      </Button>
+      {backButton(() => navigate(backTo))}
       {allMovies.isLoading ? (
         <>
           <Grid
@@ -58,7 +45,9 @@ function Search({ backTo, linkTo }) {
         </>
       ) : (
         <>
-          <h1 className="search-title">{t("SearchPlaceholder")}: {value}</h1>
+          <h1 className="search-title">
+            {t("SearchPlaceholder")}: {value}
+          </h1>
           <h1 className="search-not-found">
             {language == "en" &&
               (prods.length ? prods.length : "No") + " results found"}

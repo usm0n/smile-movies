@@ -1,10 +1,8 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { useUser } from "../../contexts/User";
-import { Button } from "@mui/material";
-import { language } from "../../utilities/defaultFunctions";
+import { backButton, language } from "../../utilities/defaultFunctions";
 import { Helmet } from "react-helmet";
-import ArrowBack from "@mui/icons-material/ArrowBack";
 import MovieContent from "./MovieContent";
 import MovieVideo from "./MovieVideo";
 import MovieComments from "./MovieComments";
@@ -30,25 +28,7 @@ function Movie({ movie, likeMovie, dislikeMovie, ratingLoading }) {
         />
         <title>{movie.title[language]} - Smile Movies</title>
       </Helmet>
-      <Button
-        onClick={() => navigate("/")}
-        sx={{
-          position: "fixed",
-          top: "90px",
-          left: "20px",
-          zIndex: "1000",
-          color: "black",
-          backgroundColor: "gold",
-          borderRadius: "50px",
-          transition: "ease-in-out 0.2s",
-          "&:hover": {
-            backgroundColor: "gold",
-            opacity: "0.8",
-          },
-        }}
-      >
-        <ArrowBack />
-      </Button>
+      {backButton(() => navigate("/"))}
       {isAdmin.result && (
         <div className="movie-admin">
           <IconButton
