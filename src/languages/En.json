@@ -139,5 +139,21 @@
     "TimeZone": "Time Zone",
     "TimeZoneText": "Queries you create will defaul to this time zone.",
     "DevelopmentMode": "Development Mode",
-    "TextEditorMode": "Text Editor Mode"
+    "TextEditorMode": "Text Editor Mode",
+    "Notifications": "Notifications",
+    "DeleteAccount": "Delete Account",
+    "LastName": "Last Name",
+    "ChangeEmail": "Change Email",
+    "IfYouChangeEmail": "If you change your email, you must confirm your email again",
+    "IfYouChangePassword": "If you want to change your password. You must enter your old password, then you can enter a new password",
+    "OldPassword": "Old password",
+    "NewPassword": "New password",
+    "ConfirmNewPassword": "Confirm new password",
+    "EnterOldPassword": "Enter old password",
+    "OldPasswordIsIncorrect": "Old password is incorrect",
+    "EnterNewPassword": "Enter new password",
+    "PasswordShouldBe8": "Password must not be less than 8 characters",
+    "PasswordsDoNotMatch": "Passwords do not match",
+    "EnterConfirmPassword": "Enter confirm password",
+    "NewPasswordCantBeAsOld": "The new password cannot be the same as the old password"
 }

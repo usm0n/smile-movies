@@ -4,13 +4,11 @@ import SettingsComp from "../../components/users/Settings";
 import { backdropLoading } from "../../utilities/defaultFunctions";
 
 function Settings() {
-  const { user, isRealUser, updateUserById, statusUpdateUserById } = useUser();
+  const { user, isRealUser } = useUser();
 
   return !isRealUser.loading ? (
     <SettingsComp
       user={user}
-      updateUserById={updateUserById}
-      statusUpdateUserById={statusUpdateUserById}
     />
   ) : (
     backdropLoading(open)

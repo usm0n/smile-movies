@@ -94,6 +94,7 @@ const users = {
       const response = await api.post("/users/resendtoken/" + id);
       return response;
     } catch (error) {
+      console.log(error);
       return error;
     }
   },

@@ -142,5 +142,18 @@
     "TextEditorMode": "Matn muharriri rejimi",
     "Notifications": "Bildirishnomalar",
     "DeleteAccount": "Accountni o'chirish",
-    "LastName": "Familiya"
+    "LastName": "Familiya",
+    "ChangeEmail": "Elektron pochtani o'zgartirish",
+    "IfYouChangeEmail": "Agar siz elektron pochtangizni o'zgartirsangiz, elektron pochtangizni yana tasdiqlashingiz kerak",
+    "IfYouChangePassword": "Agar siz parolingizni o'zgartirmoqchi bo'lsangiz. Siz eski parolingizni kiritishingiz kerak, keyin yangi parolni kiritishingiz mumkin",
+    "OldPassword": "Eski parol",
+    "NewPassword": "Yangi parol",
+    "ConfirmNewPassword": "Yangi parolni tasdiqlash",
+    "EnterOldPassword": "Eski parolni kiriting",
+    "OldPasswordIsIncorrect": "Eski parol noto'g'ri",
+    "EnterNewPassword": "Yangi parolni kiriting",
+    "PasswordShouldBe8": "Parol 8 ta belgidan kam bo'lmasligi kerak",
+    "PasswordsDoNotMatch": "Parollar mos kelmayapti",
+    "EnterConfirmPassword": "Tasdiqlash parolini kiriting",
+    "NewPasswordCantBeAsOld": "Yangi parol eski parol bilan bir xil bo'lishi mumkin emas"
 }

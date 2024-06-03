@@ -471,9 +471,9 @@ const UserProvider = ({ children }) => {
             isError: false,
             isSuccess: true,
           });
-          setTimeout(() => {
-            window.location.reload();
-          }, 2000);
+          // setTimeout(() => {
+          //   window.location.reload();
+          // }, 2000);
         } else {
           setStatusUpdateUserById({
             loading: false,
