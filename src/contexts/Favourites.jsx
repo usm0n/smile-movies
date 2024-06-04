@@ -153,7 +153,6 @@ const FavouritesProvider = ({ children }) => {
         });
       });
   };
-  useEffect(() => {}, []);
   return (
     <FavouritesContext.Provider
       value={{

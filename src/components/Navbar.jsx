@@ -231,7 +231,7 @@ function Navbar() {
                   >
                     {isLoggedIn ? (
                       <>
-                        <MenuItem>
+                        <MenuItem onClick={() => menuNavigation("/settings")}>
                           <ListItemIcon>
                             <AccountCircleIcon fontSize="small" />
                           </ListItemIcon>
