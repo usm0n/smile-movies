@@ -5,7 +5,7 @@ import RowMovieCard from "../../components/MovieCard/RowMovieCard";
 import RowMovieCardSkeleton from "../../components/MovieCard/Skeleton/RowMovieCardSkeleton";
 import { Skeleton } from "@mui/material";
 import { t } from "i18next";
-import { language } from "../../utilities/defaultFunctions";
+import { backdropLoading, language } from "../../utilities/defaultFunctions";
 import NotFound from "../error/NotFound";
 
 function WatchLater() {
@@ -16,7 +16,7 @@ function WatchLater() {
     if (isLoggedIn) {
       getWatchLater();
     }
-  }, []);
+  }, [isLoggedIn]);
 
   return isLoggedIn ? (
     <div className="watch-later">
@@ -81,10 +81,11 @@ function WatchLater() {
           })
         ) : (
           <>
+            {/* <RowMovieCardSkeleton />
             <RowMovieCardSkeleton />
             <RowMovieCardSkeleton />
-            <RowMovieCardSkeleton />
-            <RowMovieCardSkeleton />
+            <RowMovieCardSkeleton /> */}
+            {backdropLoading(open)}
           </>
         )}
       </div>

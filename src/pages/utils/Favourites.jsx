@@ -4,7 +4,7 @@ import RowMovieCard from "../../components/MovieCard/RowMovieCard";
 import RowMovieCardSkeleton from "../../components/MovieCard/Skeleton/RowMovieCardSkeleton";
 import { Skeleton } from "@mui/material";
 import { useFavourites } from "../../contexts/Favourites";
-import { language } from "../../utilities/defaultFunctions";
+import { backdropLoading, language } from "../../utilities/defaultFunctions";
 import { t } from "i18next";
 import NotFound from "../error/NotFound";
 
@@ -16,7 +16,7 @@ function Favorites() {
     if (isLoggedIn) {
       getFavourites();
     }
-  });
+  }, [isLoggedIn]);
   return isLoggedIn ? (
     <div className="watch-later">
       <div className="watch-later-info">
@@ -80,10 +80,11 @@ function Favorites() {
           })
         ) : (
           <>
+            {/* <RowMovieCardSkeleton />
             <RowMovieCardSkeleton />
             <RowMovieCardSkeleton />
-            <RowMovieCardSkeleton />
-            <RowMovieCardSkeleton />
+            <RowMovieCardSkeleton /> */}
+            {backdropLoading(open)}
           </>
         )}
       </div>
