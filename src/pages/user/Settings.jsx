@@ -1,17 +1,20 @@
 import React from "react";
 import { useUser } from "../../contexts/User";
-import SettingsComp from "../../components/users/Settings";
-import { backdropLoading } from "../../utilities/defaultFunctions";
+import SettingsComp from "../../components/users/Settings/Settings";
+import NotFound from "../error/NotFound";
+import SettingsSkeleton from "../../components/users/Settings/SettingsSkeleton";
 
 function Settings() {
-  const { user, isRealUser } = useUser();
+  const { user, isRealUser, isLoggedIn } = useUser();
 
-  return !isRealUser.loading ? (
-    <SettingsComp
-      user={user}
-    />
+  return isLoggedIn ? (
+    !isRealUser.loading ? (
+      <SettingsComp user={user} />
+    ) : (
+      <SettingsSkeleton />
+    )
   ) : (
-    backdropLoading(open)
+    <NotFound />
   );
 }
 

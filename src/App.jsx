@@ -49,7 +49,7 @@ function App() {
             }
             sx={{
               position: "absolute",
-              top: "60px",
+              top: "70px",
               width: "350px",
               display: "flex",
               alignItems: "center",
