@@ -155,5 +155,7 @@
     "PasswordShouldBe8": "Пароль не должен быть меньше 8 символов",
     "PasswordsDoNotMatch": "Пароли не совпадают",
     "EnterConfirmPassword": "Введите пароль для подтверждения",
-    "NewPasswordCantBeAsOld": "Новый пароль не может совпадать со старым паролем."
+    "NewPasswordCantBeAsOld": "Новый пароль не может совпадать со старым паролем.",
+    "isAvailable": "Доступен",
+    "willPostedSoon": "Скоро вы сможете посмотреть этот фильм на нашем сайте."
 }

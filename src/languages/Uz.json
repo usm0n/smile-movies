@@ -155,5 +155,7 @@
     "PasswordShouldBe8": "Parol 8 ta belgidan kam bo'lmasligi kerak",
     "PasswordsDoNotMatch": "Parollar mos kelmayapti",
     "EnterConfirmPassword": "Tasdiqlash parolini kiriting",
-    "NewPasswordCantBeAsOld": "Yangi parol eski parol bilan bir xil bo'lishi mumkin emas"
+    "NewPasswordCantBeAsOld": "Yangi parol eski parol bilan bir xil bo'lishi mumkin emas",
+    "isAvailable": "Mavjudmi",
+    "willPostedSoon": "Tez orada ushbu filmni saytimizda tomosha qilishingiz mumkin"
 }

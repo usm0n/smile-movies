@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { useAllMovies } from "../../../contexts/Movies";
 import { language } from "../../../utilities/defaultFunctions";
 import { useNavigate, useParams } from "react-router-dom";
-import EditMovieComp from "../../../components/Admin/main/EditMovie";
+import AddOrEditMovie from "../../../components/Admin/main/AddOrEditMovie";
 import { useMovie } from "../../../contexts/Movie";
 import { t } from "i18next";
 import MovieSkeleton from "../../../components/Movie/Skeleton/index";
@@ -62,7 +62,7 @@ function EditMovie() {
       </form>
     </div>
   ) : !movieById.isLoading ? (
-    movieById.movie && <EditMovieComp movie={movieById.movie} />
+    movieById.movie && <AddOrEditMovie type={"edit"} movie={movieById.movie} />
   ) : (
     <MovieSkeleton />
   );

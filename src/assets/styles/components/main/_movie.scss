@@ -19,11 +19,21 @@
     }
   }
 
-  &-movie-container {
-    width: 100%;
+  &-movie {
+    &-container {
+      width: 100%;
+    }
+
+    &-willposted{
+      @include adaptive-value("font-size", 25, 20);
+      text-align: center;
+      color: #ffffffc6;
+      font-weight: 200;
+      letter-spacing: 1px;
+    }
   }
 
-  &-admin{
+  &-admin {
     background-color: rgba(231, 229, 219, 0.531);
     backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
@@ -415,7 +425,7 @@
     @include flex(center, unset);
     gap: 30px;
 
-    &-names{
+    &-names {
       display: flex;
       align-items: center;
       gap: 10px;
@@ -424,7 +434,7 @@
     &_name {
       font-size: 20px;
 
-      &-admin{
+      &-admin {
         font-size: 13px;
       }
     }
@@ -436,7 +446,7 @@
     }
   }
 
-  &-admin_img{
+  &-admin_img {
     width: 56px;
     height: 56px;
     border: 1px solid #ffffff41;
@@ -448,7 +458,7 @@
     background-color: rgba(255, 217, 0, 0.376);
   }
 
-  &-admin_image{
+  &-admin_image {
     z-index: 999;
     width: 56px;
   }

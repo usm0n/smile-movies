@@ -155,5 +155,7 @@
     "PasswordShouldBe8": "Password must not be less than 8 characters",
     "PasswordsDoNotMatch": "Passwords do not match",
     "EnterConfirmPassword": "Enter confirm password",
-    "NewPasswordCantBeAsOld": "The new password cannot be the same as the old password"
+    "NewPasswordCantBeAsOld": "The new password cannot be the same as the old password",
+    "isAvailable": "isAvailable",
+    "willPostedSoon": "You can watch this movie in our website soon"
 }

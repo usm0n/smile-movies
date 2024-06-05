@@ -32,34 +32,42 @@ function MovieVideo({ movie }) {
   );
   return (
     <div className="movie-video">
-      <div className="movie-video-language">
-        <ToggleButtonGroup
-          color="info"
-          value={toggleValue.movie}
-          name="movie"
-          onChange={(e) => handleToggleValue(e, "movie")}
-          sx={{
-            backgroundColor: "#fff",
-          }}
-          exclusive
-          aria-label="Platform"
-        >
-          <ToggleButton disabled={!movie.movie.uz} value="uz">
-            O'zbekcha
-          </ToggleButton>
-          <ToggleButton disabled={!movie.movie.ru} value="ru">
-            Русский
-          </ToggleButton>
-          <ToggleButton disabled={!movie.movie.en} value="en">
-            English
-          </ToggleButton>
-        </ToggleButtonGroup>
-      </div>
-      <div className="movie-movie-container">
-        {toggleValue.movie == "uz" && iframe}
-        {toggleValue.movie == "ru" && iframe}
-        {toggleValue.movie == "en" && iframe}
-      </div>
+      {!movie.status.isAvailable ? (
+        <div className="movie-movie-container">
+          <h1 className="movie-movie-willposted">{t("willPostedSoon")}</h1>
+        </div>
+      ) : (
+        <>
+          <div className="movie-video-language">
+            <ToggleButtonGroup
+              color="info"
+              value={toggleValue.movie}
+              name="movie"
+              onChange={(e) => handleToggleValue(e, "movie")}
+              sx={{
+                backgroundColor: "#fff",
+              }}
+              exclusive
+              aria-label="Platform"
+            >
+              <ToggleButton disabled={!movie.movie.uz} value="uz">
+                O'zbekcha
+              </ToggleButton>
+              <ToggleButton disabled={!movie.movie.ru} value="ru">
+                Русский
+              </ToggleButton>
+              <ToggleButton disabled={!movie.movie.en} value="en">
+                English
+              </ToggleButton>
+            </ToggleButtonGroup>
+          </div>
+          <div className="movie-movie-container">
+            {toggleValue.movie == "uz" && iframe}
+            {toggleValue.movie == "ru" && iframe}
+            {toggleValue.movie == "en" && iframe}
+          </div>
+        </>
+      )}
     </div>
   );
 }

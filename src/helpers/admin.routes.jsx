@@ -1,5 +1,4 @@
 import AddIcon from "@mui/icons-material/Add";
-import AddMovie from "../pages/admin/movie/AddMovie";
 import HomeIcon from "@mui/icons-material/Home";
 import Index from "../pages/admin";
 import EditIcon from "@mui/icons-material/Edit";
@@ -12,6 +11,7 @@ import Users from "../pages/admin/users/AllUsers";
 import GiveOrCancel from "../pages/admin/GiveOrCancel";
 import DeleteAllMovies from "../pages/admin/movie/DeleteAllMovies";
 import DeleteAllUsers from "../pages/admin/users/DeleteAllUsers";
+import AddOrEditMovie from "../components/Admin/main/AddOrEditMovie";
 
 export const AdminRoutes = [
   {
@@ -24,7 +24,7 @@ export const AdminRoutes = [
     title: "Add Movie",
     icon: <AddIcon />,
     path: "add-movie",
-    element: <AddMovie />,
+    element: <AddOrEditMovie type={"add"} />,
   },
   {
     title: "Edit Movie",
@@ -90,5 +90,5 @@ export const AdminRoutes = [
     title: "Delete All Users",
     path: "delete-all-users",
     element: <DeleteAllUsers />,
-  }
+  },
 ];

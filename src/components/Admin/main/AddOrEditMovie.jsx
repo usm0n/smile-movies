@@ -21,15 +21,17 @@ import {
   currentDay,
   currentMonth,
   currentYear,
+  removeLocalDraft,
   snackbar,
 } from "../../../utilities/defaultFunctions";
 import { useMovie } from "../../../contexts/Movie";
 import { useNavigate } from "react-router-dom";
 import Edit from "@mui/icons-material/Edit";
 import { t } from "i18next";
+import AddIcon from "@mui/icons-material/Add";
 
-function EditMovie({ movie }) {
-  const { editMovie, statusEditMovie } = useMovie();
+function AddOrEditMovie({ movie, type }) {
+  const { editMovie, statusEditMovie, addMovie, statusAddMovie } = useMovie();
 
   const [active, setActive] = useState(false);
   const [toggleValue, setToggleValue] = useState({
@@ -40,61 +42,161 @@ function EditMovie({ movie }) {
     notes: "uz",
     movie: "uz",
   });
-  const [editMovieValue, seteditMovieValue] = useState({
+  const [movieValue, setMovieValue] = useState({
     title: {
-      uz: movie.title.uz,
-      ru: movie.title.ru,
-      en: movie.title.en,
+      uz:
+        type == "add"
+          ? localStorage.getItem("titleDraft uz") || ""
+          : movie.title.uz,
+      ru:
+        type == "add"
+          ? localStorage.getItem("titleDraft ru") || ""
+          : movie.title.ru,
+      en:
+        type == "add"
+          ? localStorage.getItem("titleDraft en") || ""
+          : movie.title.en,
     },
     notes: {
-      uz: movie.notes.uz,
-      ru: movie.notes.ru,
-      en: movie.notes.en,
+      uz:
+        type == "add"
+          ? localStorage.getItem("notesDraft uz") || ""
+          : movie.notes.uz,
+      ru:
+        type == "add"
+          ? localStorage.getItem("notesDraft ru") || ""
+          : movie.notes.ru,
+      en:
+        type == "add"
+          ? localStorage.getItem("notesDraft en") || ""
+          : movie.notes.en,
     },
     description: {
-      uz: movie.description.uz,
-      ru: movie.description.ru,
-      en: movie.description.en,
+      uz:
+        type == "add"
+          ? localStorage.getItem("descriptionDraft uz") || ""
+          : movie.description.uz,
+      ru:
+        type == "add"
+          ? localStorage.getItem("descriptionDraft ru") || ""
+          : movie.description.ru,
+      en:
+        type == "add"
+          ? localStorage.getItem("descriptionDraft en") || ""
+          : movie.description.en,
     },
     releaseDate: {
-      day: movie.releaseDate.day,
-      month: movie.releaseDate.month,
-      year: movie.releaseDate.year,
+      day:
+        type == "add"
+          ? localStorage.getItem("releaseDateDraft day") || ""
+          : movie.releaseDate.day,
+      month:
+        type == "add"
+          ? localStorage.getItem("releaseDateDraft month") || ""
+          : movie.releaseDate.month,
+      year:
+        type == "add"
+          ? localStorage.getItem("releaseDateDraft year") || ""
+          : movie.releaseDate.year,
     },
     duration: {
-      hour: movie.duration.hour,
-      min: movie.duration.min,
+      hour:
+        type == "add"
+          ? localStorage.getItem("durationDraft hour") || ""
+          : movie.duration.hour,
+      min:
+        type == "add"
+          ? localStorage.getItem("durationDraft min") || ""
+          : movie.duration.min,
     },
     rating: {
-      like: movie.rating.like,
-      dislike: movie.rating.dislike,
-      imdb: movie.rating.imdb,
+      like:
+        type == "add"
+          ? localStorage.getItem("ratingDraft like") || 0
+          : movie.rating.like,
+      dislike:
+        type == "add"
+          ? localStorage.getItem("ratingDraft dislike") || 0
+          : movie.rating.dislike,
+      imdb:
+        type == "add"
+          ? localStorage.getItem("ratingDraft imdb") || ""
+          : movie.rating.imdb,
     },
     country: {
-      uz: movie.country.uz,
-      ru: movie.country.ru,
-      en: movie.country.en,
+      uz:
+        type == "add"
+          ? localStorage.getItem("countryDraft uz") || ""
+          : movie.country.uz,
+      ru:
+        type == "add"
+          ? localStorage.getItem("countryDraft ru") || ""
+          : movie.country.ru,
+      en:
+        type == "add"
+          ? localStorage.getItem("countryDraft en") || ""
+          : movie.country.en,
     },
     credit: {
-      uz: movie.credit.uz,
-      ru: movie.credit.ru,
-      en: movie.credit.en,
+      uz:
+        type == "add"
+          ? localStorage.getItem("creditDraft uz") || ""
+          : movie.credit.uz,
+      ru:
+        type == "add"
+          ? localStorage.getItem("creditDraft ru") || ""
+          : movie.credit.ru,
+      en:
+        type == "add"
+          ? localStorage.getItem("creditDraft en") || ""
+          : movie.credit.en,
     },
     image: {
-      portrait: movie.image.portrait,
-      fullscreen: movie.image.fullscreen,
+      portrait:
+        type == "add"
+          ? localStorage.getItem("imageDraft portrait") || ""
+          : movie.image.portrait,
+      fullscreen:
+        type == "add"
+          ? localStorage.getItem("imageDraft fullscreen") || ""
+          : movie.image.fullscreen,
     },
     status: {
-      isNew: movie.status.isNew,
-      isTrending: movie.status.isTrending,
-      type: movie.status.type,
+      isNew:
+        type == "add"
+          ? localStorage.getItem("statusDraft isNew") || false
+          : movie.status.isNew,
+      isTrending:
+        type == "add"
+          ? localStorage.getItem("statusDraft isTrending") || false
+          : movie.status.isTrending,
+      type:
+        type == "add"
+          ? localStorage.getItem("statusDraft type") || ""
+          : movie.status.type,
+      isAvailable:
+        type == "add"
+          ? localStorage.getItem("statusDraft isAvailable") || true
+          : movie.status.isAvailable,
     },
     movie: {
-      uz: movie.movie.uz || "",
-      ru: movie.movie.ru || "",
-      en: movie.movie.en || "",
+      uz:
+        type == "add"
+          ? localStorage.getItem("movieDraft uz") || ""
+          : movie.movie.uz,
+      ru:
+        type == "add"
+          ? localStorage.getItem("movieDraft ru") || ""
+          : movie.movie.ru,
+      en:
+        type == "add"
+          ? localStorage.getItem("movieDraft en") || ""
+          : movie.movie.en,
     },
-    trailer: movie.trailer,
+    trailer:
+      type == "add"
+        ? localStorage.getItem("trailerDraft") || ""
+        : movie.trailer,
   });
 
   const [status, setStatus] = useState({
@@ -111,10 +213,10 @@ function EditMovie({ movie }) {
 
   const handleExtraInput = (e, parent) => {
     setStatus({ isEmpty: false });
-    seteditMovieValue({
-      ...editMovieValue,
+    setMovieValue({
+      ...movieValue,
       [parent]: {
-        ...editMovieValue[parent],
+        ...movieValue[parent],
         [e.target.name]: e.target.value,
       },
     });
@@ -122,35 +224,35 @@ function EditMovie({ movie }) {
 
   const handleInput = (e) => {
     setStatus({ isEmpty: false });
-    seteditMovieValue({
-      ...editMovieValue,
+    setMovieValue({
+      ...movieValue,
       [e.target.name]: e.target.value,
     });
   };
 
   const isNotTrim =
-    !editMovieValue.country.en.trim() ||
-    !editMovieValue.country.ru.trim() ||
-    !editMovieValue.country.uz.trim() ||
-    !editMovieValue.credit.en.trim() ||
-    !editMovieValue.credit.ru.trim() ||
-    !editMovieValue.credit.uz.trim() ||
-    !editMovieValue.description.en.trim() ||
-    !editMovieValue.description.ru.trim() ||
-    !editMovieValue.description.uz.trim() ||
-    !editMovieValue.image.fullscreen.trim() ||
-    !editMovieValue.image.portrait.trim() ||
-    !editMovieValue.title.en.trim() ||
-    !editMovieValue.title.ru.trim() ||
-    !editMovieValue.title.uz.trim() ||
-    !editMovieValue.releaseDate.day.trim() ||
-    !editMovieValue.releaseDate.month.trim() ||
-    !editMovieValue.releaseDate.year.trim() ||
-    !editMovieValue.duration.hour.trim() ||
-    !editMovieValue.duration.min.trim() ||
-    editMovieValue.rating.like < 0 ||
-    editMovieValue.rating.dislike < 0 ||
-    !editMovieValue.rating.imdb.trim();
+    !movieValue.country.en.trim() ||
+    !movieValue.country.ru.trim() ||
+    !movieValue.country.uz.trim() ||
+    !movieValue.credit.en.trim() ||
+    !movieValue.credit.ru.trim() ||
+    !movieValue.credit.uz.trim() ||
+    !movieValue.description.en.trim() ||
+    !movieValue.description.ru.trim() ||
+    !movieValue.description.uz.trim() ||
+    !movieValue.image.fullscreen.trim() ||
+    !movieValue.image.portrait.trim() ||
+    !movieValue.title.en.trim() ||
+    !movieValue.title.ru.trim() ||
+    !movieValue.title.uz.trim() ||
+    !movieValue.releaseDate.day.trim() ||
+    !movieValue.releaseDate.month.trim() ||
+    !movieValue.releaseDate.year.trim() ||
+    !movieValue.duration.hour.trim() ||
+    !movieValue.duration.min.trim() ||
+    movieValue.rating.like < 0 ||
+    movieValue.rating.dislike < 0 ||
+    !movieValue.rating.imdb.trim();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -158,7 +260,11 @@ function EditMovie({ movie }) {
     if (isNotTrim) {
       setStatus({ isEmpty: true });
     } else {
-      editMovie(movie._id, editMovieValue);
+      if (type == "add") {
+        addMovie(movieValue);
+        removeLocalDraft();
+      }
+      editMovie(movie._id, movieValue);
     }
   };
 
@@ -169,6 +275,9 @@ function EditMovie({ movie }) {
       {statusEditMovie.isSuccess &&
         snackbar("success", t("MovieEditedSuccessfully"))}
       {statusEditMovie.isError && snackbar("danger", t("somethingWentWrong"))}
+      {statusAddMovie.isSuccess &&
+        snackbar("success", t("MovieAddedSuccessfully"))}
+      {statusAddMovie.isError && snackbar("danger", t("somethingWentWrong"))}
       <div
         style={{
           position: "fixed",
@@ -197,20 +306,32 @@ function EditMovie({ movie }) {
       <button
         onClick={(e) => handleSubmit(e)}
         disabled={
-          isNotTrim || statusEditMovie.isSuccess || statusEditMovie.loading
+          isNotTrim ||
+          statusEditMovie.isSuccess ||
+          statusEditMovie.loading ||
+          statusAddMovie.isSuccess ||
+          statusAddMovie.loading
         }
         className={
-          isNotTrim || statusEditMovie.isSuccess || statusEditMovie.loading
+          isNotTrim ||
+          statusEditMovie.isSuccess ||
+          statusEditMovie.loading ||
+          statusAddMovie.isSuccess ||
+          statusAddMovie.loading
             ? "admin-addmovie-btn disabled"
             : "admin-addmovie-btn"
         }
       >
-        {statusEditMovie.loading ? (
+        {statusEditMovie.loading || statusAddMovie.loading ? (
           "Loading..."
-        ) : (
+        ) : type == "edit" ? (
           <>
             <Edit />
             {t("Edit")}
+          </>
+        ) : (
+          <>
+            <AddIcon /> {t("Film qo'shish")}
           </>
         )}
       </button>
@@ -237,7 +358,7 @@ function EditMovie({ movie }) {
               <textarea
                 onChange={(e) => handleExtraInput(e, "image")}
                 name={toggleValue.image}
-                value={editMovieValue.image[toggleValue.image]}
+                value={movieValue.image[toggleValue.image]}
                 placeholder={`${toggleValue.image} photo link`}
                 className="admin-input"
               />
@@ -267,7 +388,7 @@ function EditMovie({ movie }) {
                       <ToggleButton value="en">English</ToggleButton>
                     </ToggleButtonGroup>
                     <input
-                      value={editMovieValue.title[toggleValue.title]}
+                      value={movieValue.title[toggleValue.title]}
                       name={toggleValue.title}
                       type="text"
                       onChange={(e) => handleExtraInput(e, "title")}
@@ -281,7 +402,7 @@ function EditMovie({ movie }) {
                     <button className="movie-like">
                       <ThumbUpOffAltIcon />
                       <input
-                        value={editMovieValue.rating.like}
+                        value={movieValue.rating.like}
                         name="like"
                         type="text"
                         onChange={(e) => handleExtraInput(e, "rating")}
@@ -292,7 +413,7 @@ function EditMovie({ movie }) {
                     <button className="movie-dislike">
                       <ThumbDownOffAltIcon />
                       <input
-                        value={editMovieValue.rating.dislike}
+                        value={movieValue.rating.dislike}
                         name="dislike"
                         type="text"
                         onChange={(e) => handleExtraInput(e, "rating")}
@@ -306,7 +427,7 @@ function EditMovie({ movie }) {
                   <span className="movie-info_title">
                     <Calendar />
                     <input
-                      value={editMovieValue.releaseDate.day}
+                      value={movieValue.releaseDate.day}
                       name="day"
                       type="text"
                       onChange={(e) => handleExtraInput(e, "releaseDate")}
@@ -318,7 +439,7 @@ function EditMovie({ movie }) {
                       }
                     />
                     <input
-                      value={editMovieValue.releaseDate.month}
+                      value={movieValue.releaseDate.month}
                       name="month"
                       type="text"
                       onChange={(e) => handleExtraInput(e, "releaseDate")}
@@ -330,7 +451,7 @@ function EditMovie({ movie }) {
                       }
                     />
                     <input
-                      value={editMovieValue.releaseDate.year}
+                      value={movieValue.releaseDate.year}
                       name="year"
                       type="text"
                       onChange={(e) => handleExtraInput(e, "releaseDate")}
@@ -344,7 +465,7 @@ function EditMovie({ movie }) {
                   <span className="movie-info_title">
                     <WatchLaterIcon />
                     <input
-                      value={editMovieValue.duration.hour}
+                      value={movieValue.duration.hour}
                       name="hour"
                       type="text"
                       onChange={(e) => handleExtraInput(e, "duration")}
@@ -357,7 +478,7 @@ function EditMovie({ movie }) {
                     />
                     :
                     <input
-                      value={editMovieValue.duration.min}
+                      value={movieValue.duration.min}
                       name="min"
                       type="text"
                       onChange={(e) => handleExtraInput(e, "duration")}
@@ -376,7 +497,7 @@ function EditMovie({ movie }) {
                     </span>
                     <input
                       onChange={(e) => handleExtraInput(e, "rating")}
-                      value={editMovieValue.rating.imdb}
+                      value={movieValue.rating.imdb}
                       name="imdb"
                       placeholder="imdb"
                       type="text"
@@ -394,7 +515,7 @@ function EditMovie({ movie }) {
                     </span>
                     <input
                       onChange={(e) => handleExtraInput(e, "country")}
-                      value={editMovieValue.country[toggleValue.title]}
+                      value={movieValue.country[toggleValue.title]}
                       name={toggleValue.title}
                       placeholder={toggleValue.title.toUpperCase()}
                       type="text"
@@ -411,7 +532,7 @@ function EditMovie({ movie }) {
                     <input
                       onChange={(e) => handleExtraInput(e, "credit")}
                       placeholder={`${toggleValue.title.toUpperCase()} credit`}
-                      value={editMovieValue.credit[toggleValue.title]}
+                      value={movieValue.credit[toggleValue.title]}
                       name={toggleValue.title}
                       type="text"
                       className={active ? "admin-check active" : "admin-check"}
@@ -422,7 +543,7 @@ function EditMovie({ movie }) {
               <p className="movie-subtitle">
                 <textarea
                   onChange={(e) => handleExtraInput(e, "description")}
-                  value={editMovieValue.description[toggleValue.title]}
+                  value={movieValue.description[toggleValue.title]}
                   name={toggleValue.title}
                   placeholder={`${toggleValue.title.toUpperCase()} description`}
                   id=""
@@ -491,8 +612,8 @@ function EditMovie({ movie }) {
                   }
                   value={
                     toggleValue.video == "movie"
-                      ? editMovieValue.movie[toggleValue.movie]
-                      : editMovieValue.trailer
+                      ? movieValue.movie[toggleValue.movie]
+                      : movieValue.trailer
                   }
                   placeholder={
                     toggleValue.video == "movie"
@@ -533,7 +654,7 @@ function EditMovie({ movie }) {
                       labelId="demo-simple-select-label"
                       id="demo-simple-select"
                       name="isNew"
-                      value={editMovieValue.status.isNew}
+                      value={movieValue.status.isNew}
                       label="isNew"
                       onChange={(e) => handleExtraInput(e, "status")}
                     >
@@ -562,7 +683,7 @@ function EditMovie({ movie }) {
                       labelId="demo-simple-select-label"
                       id="demo-simple-select"
                       name="isTrending"
-                      value={editMovieValue.status.isTrending}
+                      value={movieValue.status.isTrending}
                       label="isTrending"
                       onChange={(e) => handleExtraInput(e, "status")}
                     >
@@ -573,7 +694,7 @@ function EditMovie({ movie }) {
                 </div>
                 <div className="admin-extra-status-prop">
                   <h1 className="admin-extra-status-prop-title">
-                    {t("Turi")}:
+                    {t("type")}:
                   </h1>
                   <FormControl
                     variant="filled"
@@ -585,13 +706,13 @@ function EditMovie({ movie }) {
                     }}
                   >
                     <InputLabel id="demo-simple-select-label">
-                      {t("Turi")}
+                      {t("type")}
                     </InputLabel>
                     <Select
                       labelId="demo-simple-select-label"
                       id="demo-simple-select"
                       name="type"
-                      value={editMovieValue.status.type}
+                      value={movieValue.status.type}
                       label="type"
                       onChange={(e) => handleExtraInput(e, "status")}
                     >
@@ -600,6 +721,35 @@ function EditMovie({ movie }) {
                       <MenuItem value={"cartoon"}>
                         {t("CartoonsTitle")}
                       </MenuItem>
+                    </Select>
+                  </FormControl>
+                </div>
+                <div className="admin-extra-status-prop">
+                  <h1 className="admin-extra-status-prop-title">
+                    {t("isAvailable")}:
+                  </h1>
+                  <FormControl
+                    variant="filled"
+                    sx={{
+                      m: 1,
+                      minWidth: 120,
+                      backgroundColor: "#fff",
+                      borderRadius: "5px",
+                    }}
+                  >
+                    <InputLabel id="demo-simple-select-label">
+                      {t("isAvailable")}
+                    </InputLabel>
+                    <Select
+                      labelId="demo-simple-select-label"
+                      id="demo-simple-select"
+                      name="isAvailable"
+                      value={movieValue.status.isAvailable}
+                      label="isAvailable"
+                      onChange={(e) => handleExtraInput(e, "status")}
+                    >
+                      <MenuItem value={"true"}>True</MenuItem>
+                      <MenuItem value={"false"}>False</MenuItem>
                     </Select>
                   </FormControl>
                 </div>
@@ -625,7 +775,7 @@ function EditMovie({ movie }) {
                 </ToggleButtonGroup>
                 <textarea
                   onChange={(e) => handleExtraInput(e, "notes")}
-                  value={editMovieValue.notes[toggleValue.notes]}
+                  value={movieValue.notes[toggleValue.notes]}
                   name={toggleValue.notes}
                   placeholder={`Note for ${toggleValue.notes}`}
                   width="100%"
@@ -640,4 +790,4 @@ function EditMovie({ movie }) {
   );
 }
 
-export default EditMovie;
+export default AddOrEditMovie;
