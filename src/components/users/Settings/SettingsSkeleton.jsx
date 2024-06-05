@@ -18,6 +18,7 @@ function SettingsSkeleton() {
                 padding: "20px 70px",
                 bottom: "25px",
                 right: "25px",
+                zIndex: "99999",
               }}
               className="settings-button edit"
             />

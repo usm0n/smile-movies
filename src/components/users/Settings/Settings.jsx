@@ -240,7 +240,6 @@ function Settings({ user }) {
                       : t("PasswordsDoNotMatch")
                   }
                   onChange={handleInputPassword}
-                  autoFocus
                   required
                   margin="dense"
                   id="name"
@@ -288,7 +287,6 @@ function Settings({ user }) {
                       ? ""
                       : t("PasswordsDoNotMatch")
                   }
-                  autoFocus
                   required
                   margin="dense"
                   id="name"
@@ -352,6 +350,7 @@ function Settings({ user }) {
                 padding: "10px 20px",
                 bottom: "25px",
                 right: "25px",
+                zIndex: "99999",
 
                 "&:hover": {
                   background: "gold",
