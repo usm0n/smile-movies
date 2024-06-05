@@ -125,7 +125,10 @@ function Navbar() {
           <Search />
         </button>
         <button
-          onClick={() => setSearchMenu(false)}
+          onClick={(e) => {
+            e.preventDefault();
+            setSearchMenu(false);
+          }}
           className="nav-search_bar_down-btn"
         >
           <CloseIcon />

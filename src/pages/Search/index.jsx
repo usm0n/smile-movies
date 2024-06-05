@@ -19,7 +19,8 @@ function Search({ backTo, linkTo }) {
     return (
       m.title.uz.toLowerCase().includes(value.toLowerCase()) ||
       m.title.en.toLowerCase().includes(value.toLowerCase()) ||
-      m.title.ru.toLowerCase().includes(value.toLowerCase())
+      m.title.ru.toLowerCase().includes(value.toLowerCase()) ||
+      m.releaseDate.year.includes(value)
     );
   });
   const lastPostIndex = currentPage * postsPerPage;
