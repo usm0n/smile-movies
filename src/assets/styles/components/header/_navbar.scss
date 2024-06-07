@@ -293,6 +293,7 @@
         background-color: transparent;
         outline: none;
         cursor: pointer;
+        background-color: #fff;
 
         &-search {
           position: absolute;
@@ -332,12 +333,13 @@
     right: 40px;
     top: 10px;
     border: none;
-    background-color: transparent;
+    background-color: #fff;
     fill: #000;
 
     &.mobile {
       fill: #fff;
       right: 10px;
+      background-color: transparent;
     }
   }
 

@@ -170,7 +170,7 @@ function Navbar() {
           <form onSubmit={handleSearchSubmit} className="nav-search_bar">
             <Autocomplete
               disableClearable
-              freeSolo
+              // freeSolo
               options={allMovies.movies}
               onChange={(e, value) => setSearchValue(value.title[language])}
               getOptionLabel={(option) => `${option.title[language]}`}
