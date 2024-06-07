@@ -75,7 +75,7 @@ function Navbar() {
     e.preventDefault();
     if (searchValue.length) {
       setSearchMenu(false);
-      navigate(`/search/${searchValue}`);
+      navigate(`/search/${searchValue}/1`);
     }
   };
 

@@ -161,15 +161,14 @@ export const snackbar = (severity, text) => (
 
 export const fullSnackbar = (severity, text, open, onClose) => (
   <Snackbar
-  sx={{
-    marginTop: "70px",
-  }}
+    sx={{
+      marginTop: "70px",
+    }}
     variant="outlined"
     color={severity}
     open={open}
     onClose={onClose}
     anchorOrigin={{ vertical: "top", horizontal: "center" }}
-    // startDecorator={<PlaylistAddCheckCircleRoundedIcon />}
     endDecorator={
       <IconButton onClick={onClose}>
         <CloseIcon />
@@ -185,6 +184,10 @@ export const currentMonth = new Date().getMonth();
 export const currentDay = new Date().getDate();
 export const currentDate = `${new Date().getDate()}.${new Date().getMonth()}.${new Date().getFullYear()}`;
 export const currentTime = `${new Date().getHours()}:${new Date().getMinutes()}:${new Date().getSeconds()}`;
+export const currentHour = `${new Date().getHours()}`;
+export const currentMinute = `${new Date().getMinutes()}`;
+export const currentSecond = `${new Date().getSeconds()}`;
+export const currentMillisecond = `${new Date().getMilliseconds()}`;
 export const currentDateTime = `${new Date().getDate()}.${new Date().getMonth()}.${new Date().getFullYear()} ${new Date().getHours()}:${new Date().getMinutes()}:${new Date().getSeconds()}`;
 
 export const backdropLoading = (open) => (

@@ -74,6 +74,11 @@ export const routes = [
   },
 
   {
+    path: "/search/:value/:page",
+    element: <Search backTo={"/"} linkTo={`/movie`} />,
+  },
+
+  {
     path: "/about",
     element: <AboutLayout />,
   },
@@ -90,6 +95,6 @@ export const routes = [
 
   {
     path: "/settings",
-    element: <Settings/>
-  }
+    element: <Settings />,
+  },
 ];

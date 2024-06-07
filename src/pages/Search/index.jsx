@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAllMovies } from "../../contexts/Movies";
 import { Grid } from "@mui/material";
@@ -26,7 +26,7 @@ function Search({ backTo, linkTo }) {
   const lastPostIndex = currentPage * postsPerPage;
   const firstPostIndex = lastPostIndex - postsPerPage;
   const currentPosts = prods.slice(firstPostIndex, lastPostIndex);
-
+  
   return (
     <div className="search">
       {backButton(() => navigate(backTo))}

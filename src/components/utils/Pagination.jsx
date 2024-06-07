@@ -1,12 +1,14 @@
-import ArrowBack from "@mui/icons-material/ArrowBack";
-import ArrowForward from "@mui/icons-material/ArrowForward";
-import { IconButton, styled } from "@mui/material";
+import { styled } from "@mui/material";
 import usePagination from "@mui/material/usePagination/usePagination";
-import React from "react";
+import React, { useEffect } from "react";
 import PaginationMUI from "@mui/material/Pagination";
+import { useNavigate, useParams } from "react-router-dom";
 
 function Pagination({ totalPosts, postsPerPage, setCurrentPage, currentPage }) {
   let pages = [];
+  const navigate = useNavigate();
+
+  const { value, page } = useParams();
   const List = styled("ul")({
     margin: "0 auto",
     display: "flex",
@@ -22,6 +24,14 @@ function Pagination({ totalPosts, postsPerPage, setCurrentPage, currentPage }) {
     count: pages.length,
   });
 
+  useEffect(() => {
+    if (page) {
+      setCurrentPage(parseInt(page));
+    } else {
+      navigate(`/search/${value}/${1}`);
+      setCurrentPage(1);
+    }
+  }, [value]);
   return (
     <List>
       <PaginationMUI
@@ -38,7 +48,10 @@ function Pagination({ totalPosts, postsPerPage, setCurrentPage, currentPage }) {
         page={currentPage}
         count={pages.length}
         siblingCount={0}
-        onChange={(event, page) => setCurrentPage(page)}
+        onChange={(event, page) => {
+          navigate(`/search/${value}/${page}`);
+          setCurrentPage(page);
+        }}
       />
     </List>
   );

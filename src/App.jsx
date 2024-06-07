@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import "./assets/styles/Main.scss";
 import { Route, Routes } from "react-router-dom";
 import { routes } from "./helpers/routes";
@@ -6,59 +6,72 @@ import Navbar from "./components/Navbar";
 import { useUser } from "./contexts/User";
 import NotRealUser from "./components/utils/error/NotRealUser";
 import VerifyEmail from "./components/utils/VerifyEmail";
-import { autoChangeLanguage } from "./utilities/defaultFunctions";
+import {
+  autoChangeLanguage,
+  language,
+} from "./utilities/defaultFunctions";
 import IconButton from "@mui/material/IconButton";
 import CloseIcon from "@mui/icons-material/Close";
 import { Snackbar } from "@mui/material";
-import { t } from "i18next";
 import { useAllMovies } from "./contexts/Movies";
 import NetworkError from "./components/utils/error/NetworkError";
 import { Alert } from "@mui/joy";
-import WarningIcon from "@mui/icons-material/Warning";
+import Countdown from "react-countdown";
 
 function App() {
-  const { isNotConnected } = useAllMovies();
+  const { isNotConnected, allMovies } = useAllMovies();
   const { isRealUser, isLoggedIn, isVerified } = useUser();
-  const [open, setOpen] = React.useState(
-    sessionStorage.getItem("headerAlert") || true
-  );
+  const [ServerAlert, setServerAlert] = useState(true);
   const wrapper = (
     <div className="wrapper">
-      <div className="warning">
-        <Snackbar
-          anchorOrigin={{ vertical: "top", horizontal: "center" }}
-          open={open == true}
-        >
-          <Alert
-            open={false}
-            color="warning"
-            variant="outlined"
-            startDecorator={<WarningIcon />}
-            endDecorator={
-              <IconButton
-                aria-label="close"
-                color="inherit"
-                size="small"
-                onClick={() => {
-                  sessionStorage.setItem("headerAlert", false);
-                  setOpen(false);
-                }}
-              >
-                <CloseIcon fontSize="inherit" />
-              </IconButton>
-            }
-            sx={{
-              position: "absolute",
-              top: "70px",
-              width: "350px",
-              display: "flex",
-              alignItems: "center",
-            }}
+      {allMovies.isLoading && (
+        <Countdown date={Date.now() + 3000}>
+          <Snackbar
+            anchorOrigin={{ vertical: "top", horizontal: "center" }}
+            open={ServerAlert == true}
+            onClose={() => setServerAlert(false)}
           >
-            {t("warningText")}
-          </Alert>
-        </Snackbar>
-      </div>
+            <Alert
+              endDecorator={
+                <IconButton onClick={() => setServerAlert(false)}>
+                  <CloseIcon />
+                </IconButton>
+              }
+              open={true}
+              color="warning"
+              variant="outlined"
+              sx={{
+                position: "absolute",
+                top: "70px",
+                width: "350px",
+                display: "flex",
+                alignItems: "center",
+              }}
+            >
+              <div>
+                {language == "uz" ? (
+                  <>
+                    Saytimiz <Countdown date={Date.now() + 60000} /> ichida
+                    ishga tushadi
+                  </>
+                ) : language == "en" ? (
+                  <>
+                    Our site will be launched within{" "}
+                    <Countdown date={Date.now() + 60000} />
+                  </>
+                ) : (
+                  language == "ru" && (
+                    <>
+                      Наш сайт будет запущен в течение{" "}
+                      <Countdown date={Date.now() + 60000} />
+                    </>
+                  )
+                )}
+              </div>
+            </Alert>
+          </Snackbar>
+        </Countdown>
+      )}
       <Navbar />
       <Routes>
         {routes.map((item) => (
