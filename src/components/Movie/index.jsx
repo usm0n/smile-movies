@@ -1,7 +1,11 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { useUser } from "../../contexts/User";
-import { backButton, language } from "../../utilities/defaultFunctions";
+import {
+  backButton,
+  language,
+  snackbar,
+} from "../../utilities/defaultFunctions";
 import { Helmet } from "react-helmet";
 import MovieContent from "./MovieContent";
 import MovieVideo from "./MovieVideo";
@@ -49,6 +53,7 @@ function Movie({ movie, likeMovie, dislikeMovie, ratingLoading }) {
           </IconButton>
         </div>
       )}
+      {movie.notes[language] && snackbar("info", movie.notes[language])}
 
       <div className="movie-container">
         <MovieContent
