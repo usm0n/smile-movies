@@ -1,10 +1,10 @@
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUser } from "../../contexts/User";
 import {
   backButton,
+  fullSnackbar,
   language,
-  snackbar,
 } from "../../utilities/defaultFunctions";
 import { Helmet } from "react-helmet";
 import MovieContent from "./MovieContent";
@@ -16,6 +16,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 
 function Movie({ movie, likeMovie, dislikeMovie, ratingLoading }) {
   const { isLoggedIn, user, isAdmin } = useUser();
+  const [noteOpen, setNoteOpen] = useState(true);
 
   const navigate = useNavigate();
 
@@ -53,7 +54,10 @@ function Movie({ movie, likeMovie, dislikeMovie, ratingLoading }) {
           </IconButton>
         </div>
       )}
-      {movie.notes[language] && snackbar("info", movie.notes[language])}
+      {movie.notes[language] &&
+        fullSnackbar("neutral", movie.notes[language], noteOpen == true, () =>
+          setNoteOpen(false)
+        )}
 
       <div className="movie-container">
         <MovieContent

@@ -7,12 +7,14 @@ import {
   DialogContent,
   DialogContentText,
   DialogTitle,
+  IconButton,
   Switch,
   TextField,
   styled,
 } from "@mui/material";
 import { Snackbar } from "@mui/joy";
 import ArrowBack from "@mui/icons-material/ArrowBack";
+import CloseIcon from "@mui/icons-material/Close";
 
 export const language = !localStorage.getItem("language")
   ? "uz"
@@ -152,6 +154,27 @@ export const snackbar = (severity, text) => (
     color={severity}
     anchorOrigin={{ vertical: "top", horizontal: "center" }}
     open={open}
+  >
+    {text}
+  </Snackbar>
+);
+
+export const fullSnackbar = (severity, text, open, onClose) => (
+  <Snackbar
+  sx={{
+    marginTop: "70px",
+  }}
+    variant="outlined"
+    color={severity}
+    open={open}
+    onClose={onClose}
+    anchorOrigin={{ vertical: "top", horizontal: "center" }}
+    // startDecorator={<PlaylistAddCheckCircleRoundedIcon />}
+    endDecorator={
+      <IconButton onClick={onClose}>
+        <CloseIcon />
+      </IconButton>
+    }
   >
     {text}
   </Snackbar>
