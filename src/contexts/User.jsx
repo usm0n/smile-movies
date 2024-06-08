@@ -199,7 +199,7 @@ const UserProvider = ({ children }) => {
             });
             navigate("/");
             window.location.reload();
-          }, 3000);
+          }, 1500);
         } else {
           setStatusLogin({
             buttonLoading: false,
