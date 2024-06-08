@@ -2,13 +2,14 @@ import React, { useEffect, useState } from "react";
 import bg from "../../assets/images/login-bg.png";
 import { Link, useNavigate } from "react-router-dom";
 import { useUser } from "../../contexts/User";
-import { snackbar } from "../../utilities/defaultFunctions";
+import { isValidEmail, snackbar } from "../../utilities/defaultFunctions";
 import {
   FilledInput,
   FormControl,
   IconButton,
   InputAdornment,
   InputLabel,
+  TextField,
 } from "@mui/material";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import Visibility from "@mui/icons-material/Visibility";
@@ -64,9 +65,6 @@ function Register() {
       {statusRegister.isSuccess && snackbar("success", t("registerSuccess"))}
       {statusRegister.isError && snackbar("danger", t("somethingWentWrong"))}
       {statusRegister.isEmpty && snackbar("warning", t("pleaseFillFields"))}
-      {statusRegister.isConflict && snackbar("warning", t("alreadyRegistered"))}
-      {statusRegister.confirmPassword &&
-        snackbar("warning", t("passwordsDontMatch"))}
       <div className="login-bg">
         <img src={bg} className="login-img" alt="" />
       </div>
@@ -76,56 +74,48 @@ function Register() {
           <div className="register-card">
             <h1 className="login-title">{t("signUp")}</h1>
             <form className="login-form">
-              <FormControl
-                disabled={
-                  statusRegister.isSuccess || statusRegister.buttonLoading
+              <TextField
+                onChange={handleInput}
+                name="firstname"
+                className={
+                  statusRegister.buttonLoading
+                    ? "login-input disabled"
+                    : "login-input"
                 }
+                label={t("ContactInputName1")}
+                sx={{
+                  background: "#fff",
+                }}
+                variant="filled"
+                fullWidth
+                disabled={statusRegister.buttonLoading}
+                error={statusRegister.isError}
                 color={
-                  statusRegister.isError
-                    ? "error"
-                    : statusRegister.isEmpty
+                  statusRegister.isEmpty
                     ? "warning"
                     : statusRegister.isSuccess
                     ? "success"
                     : "info"
                 }
-                sx={{
-                  m: 1,
-                  width: "100%",
-                  background: "#fff",
-                  borderRadius: "5px",
-                }}
-                variant="filled"
-              >
-                <InputLabel htmlFor="filled-adornment-password">
-                  {t("ContactInputName1")}
-                </InputLabel>
-                <FilledInput
-                  onChange={handleInput}
-                  name="firstname"
-                  className={
-                    statusRegister.isError
-                      ? "login-input error"
-                      : statusRegister.isEmpty
-                      ? "login-input warning"
-                      : statusRegister.isSuccess
-                      ? "login-input success disabled"
-                      : statusRegister.buttonLoading
-                      ? "login-input disabled"
-                      : "login-input"
-                  }
-                  id="filled-adornment-password"
-                  type={"text"}
-                />
-              </FormControl>
-              <FormControl
-                disabled={
-                  statusRegister.isSuccess || statusRegister.buttonLoading
+              />
+              <TextField
+                onChange={handleInput}
+                name="email"
+                helperText={statusRegister.isConflict && t("alreadyRegistered")}
+                className={
+                  statusRegister.buttonLoading
+                    ? "login-input disabled"
+                    : "login-input"
                 }
+                id="filled-adornment-password"
+                type={"email"}
+                label={t("ContactInputName3")}
+                disabled={statusRegister.buttonLoading}
                 color={
                   statusRegister.isError
                     ? "error"
-                    : statusRegister.isEmpty
+                    : registerValue.email.trim() &&
+                      !isValidEmail(registerValue.email)
                     ? "warning"
                     : statusRegister.isSuccess
                     ? "success"
@@ -133,41 +123,42 @@ function Register() {
                     ? "error"
                     : "info"
                 }
+                error={statusRegister.isError || statusRegister.isConflict}
                 sx={{
-                  m: 1,
-                  width: "100%",
                   background: "#fff",
-                  borderRadius: "5px",
                 }}
                 variant="filled"
-              >
-                <InputLabel htmlFor="filled-adornment-password">
-                  {t("ContactInputName3")}
-                </InputLabel>
-                <FilledInput
-                  onChange={handleInput}
-                  name="email"
-                  className={
-                    statusRegister.isSuccess
-                      ? "login-input success disabled"
-                      : statusRegister.isError
-                      ? "login-input error"
-                      : statusRegister.isEmpty
-                      ? "login-input warning"
-                      : statusRegister.buttonLoading
-                      ? "login-input disabled"
-                      : statusRegister.isConflict
-                      ? "login-input error"
-                      : "login-input"
-                  }
-                  id="filled-adornment-password"
-                  type={"email"}
-                />
-              </FormControl>
-              <FormControl
-                disabled={
-                  statusRegister.isSuccess || statusRegister.buttonLoading
+              />
+              <TextField
+                onChange={handleInput}
+                name="password"
+                className={
+                  statusRegister.buttonLoading
+                    ? "login-input disabled"
+                    : "login-input"
                 }
+                type={showPassword ? "text" : "password"}
+                InputProps={{
+                  endAdornment: (
+                    <IconButton
+                      aria-label="toggle password visibility"
+                      onClick={() => setShowPassword(!showPassword)}
+                      onMouseDown={(e) => e.preventDefault()}
+                      edge="end"
+                    >
+                      {showPassword ? <VisibilityOff /> : <Visibility />}
+                    </IconButton>
+                  ),
+                }}
+                helperText={
+                  statusRegister.confirmPassword
+                    ? t("passwordsDontMatch")
+                    : registerValue.password.length < 8
+                    ? t("PasswordShouldBe8")
+                    : ""
+                }
+                label={t("password")}
+                disabled={statusRegister.buttonLoading}
                 color={
                   statusRegister.isError
                     ? "error"
@@ -179,53 +170,38 @@ function Register() {
                     ? "error"
                     : "info"
                 }
+                error={statusRegister.isError || statusRegister.confirmPassword}
                 sx={{
-                  m: 1,
-                  width: "100%",
                   background: "#fff",
-                  borderRadius: "5px",
                 }}
                 variant="filled"
-              >
-                <InputLabel htmlFor="filled-adornment-password">
-                  {t("password")}
-                </InputLabel>
-                <FilledInput
-                  onChange={handleInput}
-                  name="password"
-                  className={
-                    statusRegister.isSuccess
-                      ? "login-input success disabled"
-                      : statusRegister.isError
-                      ? "login-input error"
-                      : statusRegister.isEmpty
-                      ? "login-input warning"
-                      : statusRegister.buttonLoading
-                      ? "login-input disabled"
-                      : statusRegister.confirmPassword
-                      ? "login-input error"
-                      : "login-input"
-                  }
-                  id="filled-adornment-password"
-                  type={showPassword ? "text" : "password"}
-                  endAdornment={
-                    <InputAdornment position="end">
-                      <IconButton
-                        aria-label="toggle password visibility"
-                        onClick={() => setShowPassword(!showPassword)}
-                        onMouseDown={(e) => e.preventDefault()}
-                        edge="end"
-                      >
-                        {showPassword ? <VisibilityOff /> : <Visibility />}
-                      </IconButton>
-                    </InputAdornment>
-                  }
-                />
-              </FormControl>
-              <FormControl
-                disabled={
-                  statusRegister.isSuccess || statusRegister.buttonLoading
+              />
+              <TextField
+                helperText={
+                  statusRegister.confirmPassword && t("passwordsDontMatch")
                 }
+                onChange={handleInput}
+                name="cpassword"
+                className={
+                  statusRegister.buttonLoading
+                    ? "login-input disabled"
+                    : "login-input"
+                }
+                type={showPassword ? "text" : "password"}
+                InputProps={{
+                  endAdornment: (
+                    <IconButton
+                      aria-label="toggle password visibility"
+                      onClick={() => setShowPassword(!showPassword)}
+                      onMouseDown={(e) => e.preventDefault()}
+                      edge="end"
+                    >
+                      {showPassword ? <VisibilityOff /> : <Visibility />}
+                    </IconButton>
+                  ),
+                }}
+                label={t("cpassword")}
+                disabled={statusRegister.buttonLoading}
                 color={
                   statusRegister.isError
                     ? "error"
@@ -237,56 +213,31 @@ function Register() {
                     ? "error"
                     : "info"
                 }
+                error={statusRegister.isError || statusRegister.confirmPassword}
                 sx={{
-                  m: 1,
-                  width: "100%",
                   background: "#fff",
-                  borderRadius: "5px",
                 }}
                 variant="filled"
-              >
-                <InputLabel htmlFor="filled-adornment-password">
-                  {t("cpassword")}
-                </InputLabel>
-                <FilledInput
-                  onChange={handleInput}
-                  name="cpassword"
-                  className={
-                    statusRegister.isSuccess
-                      ? "login-input success disabled"
-                      : statusRegister.isError
-                      ? "login-input error"
-                      : statusRegister.isEmpty
-                      ? "login-input warning"
-                      : statusRegister.buttonLoading
-                      ? "login-input disabled"
-                      : statusRegister.confirmPassword
-                      ? "login-input error"
-                      : "login-input"
-                  }
-                  id="filled-adornment-password"
-                  type={showPassword ? "text" : "password"}
-                  endAdornment={
-                    <InputAdornment position="end">
-                      <IconButton
-                        aria-label="toggle password visibility"
-                        onClick={() => setShowPassword(!showPassword)}
-                        onMouseDown={(e) => e.preventDefault()}
-                        edge="end"
-                      >
-                        {showPassword ? <VisibilityOff /> : <Visibility />}
-                      </IconButton>
-                    </InputAdornment>
-                  }
-                />
-              </FormControl>
+              />
               <button
                 disabled={
-                  statusRegister.isSuccess || statusRegister.buttonLoading
+                  statusRegister.isSuccess ||
+                  statusRegister.buttonLoading ||
+                  !registerValue.firstname.trim() ||
+                  !registerValue.email.trim() ||
+                  !registerValue.password.trim() ||
+                  !registerValue.cpassword.trim() ||
+                  !isValidEmail(registerValue.email)
                 }
                 onClick={(e) => handleSubmit(e)}
                 className={
-                  statusRegister.buttonLoading || statusRegister.isSuccess
+                  statusRegister.buttonLoading ||
+                  statusRegister.isSuccess ||
+                  !registerValue.firstname.trim() ||
+                  !registerValue.email.trim() ||
+                  !registerValue.password.trim() ||
+                  !registerValue.cpassword.trim() ||
+                  !isValidEmail(registerValue.email)
                     ? "login-btn disabled"
                     : "login-btn"
                 }

@@ -15,12 +15,11 @@ import NetworkError from "./components/utils/error/NetworkError";
 import { Alert } from "@mui/joy";
 import Countdown from "react-countdown";
 import devtoolsDetect from "devtools-detect";
-import { debug } from "./utilities/debugger";
 import DevtoolsError from "./components/utils/error/DevtoolsError";
 
 function App() {
   const { isNotConnected, allMovies } = useAllMovies();
-  const { isRealUser, isLoggedIn, isVerified } = useUser();
+  const { isRealUser, isLoggedIn, isVerified, isAdmin } = useUser();
   const [ServerAlert, setServerAlert] = useState(true);
   const [isDevToolsOpen, setIsDevToolsOpen] = useState(devtoolsDetect.isOpen);
   const wrapper = (
@@ -52,19 +51,19 @@ function App() {
               <div>
                 {language == "uz" ? (
                   <>
-                    Saytimiz <Countdown date={Date.now() + 60000} /> ichida
+                    Saytimiz <Countdown date={Date.now() + 40000} /> ichida
                     ishga tushadi
                   </>
                 ) : language == "en" ? (
                   <>
                     Our site will be launched within{" "}
-                    <Countdown date={Date.now() + 60000} />
+                    <Countdown date={Date.now() + 40000} />
                   </>
                 ) : (
                   language == "ru" && (
                     <>
                       Наш сайт будет запущен в течение{" "}
-                      <Countdown date={Date.now() + 60000} />
+                      <Countdown date={Date.now() + 40000} />
                     </>
                   )
                 )}
@@ -93,7 +92,7 @@ function App() {
     };
   }, []);
   return !isNotConnected ? (
-    isDevToolsOpen ? (
+    !isAdmin.result && isDevToolsOpen ? (
       <DevtoolsError />
     ) : isLoggedIn ? (
       isRealUser.result || isRealUser.loading ? (

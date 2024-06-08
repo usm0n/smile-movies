@@ -266,7 +266,6 @@ const UserProvider = ({ children }) => {
                 isSuccess: true,
                 isError: false,
               });
-              setTimeout(() => {
                 setIsVerified({
                   loading: false,
                   result: false,
@@ -278,7 +277,6 @@ const UserProvider = ({ children }) => {
                 }
                 setUser(res.data.user);
                 window.location.reload();
-              }, 2500);
             } else {
               setStatusRegister({
                 buttonLoading: false,
