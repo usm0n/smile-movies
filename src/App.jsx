@@ -6,10 +6,7 @@ import Navbar from "./components/Navbar";
 import { useUser } from "./contexts/User";
 import NotRealUser from "./components/utils/error/NotRealUser";
 import VerifyEmail from "./components/utils/VerifyEmail";
-import {
-  autoChangeLanguage,
-  language,
-} from "./utilities/defaultFunctions";
+import { autoChangeLanguage, language } from "./utilities/defaultFunctions";
 import IconButton from "@mui/material/IconButton";
 import CloseIcon from "@mui/icons-material/Close";
 import { Snackbar } from "@mui/material";
@@ -17,11 +14,15 @@ import { useAllMovies } from "./contexts/Movies";
 import NetworkError from "./components/utils/error/NetworkError";
 import { Alert } from "@mui/joy";
 import Countdown from "react-countdown";
+import devtoolsDetect from "devtools-detect";
+import { debug } from "./utilities/debugger";
+import DevtoolsError from "./components/utils/error/DevtoolsError";
 
 function App() {
   const { isNotConnected, allMovies } = useAllMovies();
   const { isRealUser, isLoggedIn, isVerified } = useUser();
   const [ServerAlert, setServerAlert] = useState(true);
+  const [isDevToolsOpen, setIsDevToolsOpen] = useState(devtoolsDetect.isOpen);
   const wrapper = (
     <div className="wrapper">
       {allMovies.isLoading && (
@@ -80,11 +81,21 @@ function App() {
       </Routes>
     </div>
   );
+
   useEffect(() => {
     autoChangeLanguage();
+    const handleChange = (event) => {
+      setIsDevToolsOpen(event.detail.isOpen);
+    };
+    window.addEventListener("devtoolschange", handleChange);
+    return () => {
+      window.removeEventListener("devtoolschange", handleChange);
+    };
   }, []);
   return !isNotConnected ? (
-    isLoggedIn ? (
+    isDevToolsOpen ? (
+      <DevtoolsError />
+    ) : isLoggedIn ? (
       isRealUser.result || isRealUser.loading ? (
         isVerified ? (
           wrapper

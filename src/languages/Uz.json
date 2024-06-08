@@ -157,5 +157,7 @@
     "EnterConfirmPassword": "Tasdiqlash parolini kiriting",
     "NewPasswordCantBeAsOld": "Yangi parol eski parol bilan bir xil bo'lishi mumkin emas",
     "isAvailable": "Mavjudmi",
-    "willPostedSoon": "Tez orada ushbu filmni saytimizda tomosha qilishingiz mumkin"
+    "willPostedSoon": "Tez orada ushbu filmni saytimizda tomosha qilishingiz mumkin",
+    "DevtoolsError": "Sizga bu yerni ko'rishga ruxsat berilmagan",
+    "DevtoolsErrorDesc": "Sizga bu yerni ko'rishga ruxsat berilmagan. Bu yerdan ketmasangiz, seriallar va filmlarni ko'ra olmaysiz"
 }

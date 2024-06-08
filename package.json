@@ -18,6 +18,7 @@
     "@mui/material": "^5.15.15",
     "@mui/x-data-grid": "^7.5.0",
     "axios": "^1.6.8",
+    "devtools-detect": "^4.0.2",
     "i18next": "^23.11.4",
     "react": "^18.2.0",
     "react-countdown": "^2.3.5",
