@@ -16,18 +16,15 @@ import { Link, useNavigate } from "react-router-dom";
 import { dialog, snackbar } from "../../../utilities/defaultFunctions";
 import Check from "@mui/icons-material/Check";
 import { t } from "i18next";
+import { useWatchLater } from "../../../contexts/WatchLater";
 
-function Header({
-  isLoading,
-  movies,
-  language,
-  addWatchLater,
-  statusAddWatchLater,
-  isLoggedIn,
-  removeWatchLater,
-  statusRemoveWatchLater,
-  user,
-}) {
+function Header({ isLoading, movies, language, isLoggedIn, user }) {
+  const {
+    addWatchLater,
+    statusAddWatchLater,
+    removeWatchLater,
+    statusRemoveWatchLater,
+  } = useWatchLater();
   const [open, setOpen] = useState(false);
 
   const navigate = useNavigate();

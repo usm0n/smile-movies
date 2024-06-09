@@ -2,10 +2,12 @@ import React, { useEffect } from "react";
 import logo from "../../../assets/images/logo.png";
 import DoNotDisturbAltIcon from "@mui/icons-material/DoNotDisturbAlt";
 import { t } from "i18next";
+import { debug } from "../../../utilities/debugger";
 
 function DevtoolsError() {
   useEffect(() => {
     console.clear();
+    debug()
   }, []);
   return (
     <div className="network">

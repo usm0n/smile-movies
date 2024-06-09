@@ -5,26 +5,15 @@ import NewMovies from "../components/Home/main/NewMovies";
 import Footer from "../components/Footer/index";
 import { useAllMovies } from "../contexts/Movies";
 import { language } from "../utilities/defaultFunctions";
-import { useWatchLater } from "../contexts/WatchLater";
 import { useUser } from "../contexts/User";
 import { t } from "i18next";
 
 function HomeLayout() {
   const { allMovies } = useAllMovies();
-  const {
-    addWatchLater,
-    statusAddWatchLater,
-    removeWatchLater,
-    statusRemoveWatchLater,
-  } = useWatchLater();
   const { isLoggedIn, user } = useUser();
   return (
     <div>
       <Header
-        addWatchLater={addWatchLater}
-        statusAddWatchLater={statusAddWatchLater}
-        removeWatchLater={removeWatchLater}
-        statusRemoveWatchLater={statusRemoveWatchLater}
         isLoggedIn={isLoggedIn}
         isLoading={allMovies.isLoading}
         movies={allMovies.movies}
