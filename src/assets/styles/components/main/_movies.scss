@@ -1,6 +1,12 @@
 .movies {
   padding-top: 130px;
 
+  &-titles{
+    display: flex;
+    align-items: first baseline;
+    justify-content: space-between;
+  }
+
   &-title {
     font-weight: 500;
     @include adaptive-value("font-size", 40, 25);

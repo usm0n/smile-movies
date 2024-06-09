@@ -4,7 +4,14 @@ import React, { useEffect } from "react";
 import PaginationMUI from "@mui/material/Pagination";
 import { useNavigate, useParams } from "react-router-dom";
 
-function Pagination({ totalPosts, postsPerPage, setCurrentPage, currentPage }) {
+function Pagination({
+  totalPosts,
+  postsPerPage,
+  setCurrentPage,
+  currentPage,
+  onChangeLink,
+  MoviesType,
+}) {
   let pages = [];
   const navigate = useNavigate();
 
@@ -28,7 +35,11 @@ function Pagination({ totalPosts, postsPerPage, setCurrentPage, currentPage }) {
     if (page) {
       setCurrentPage(parseInt(page));
     } else {
-      navigate(`/search/${value}/${1}`);
+      navigate(
+        onChangeLink == "search"
+          ? `/search/${value}/${1}`
+          : `/${MoviesType}/${1}`
+      );
       setCurrentPage(1);
     }
   }, [value]);
@@ -49,7 +60,11 @@ function Pagination({ totalPosts, postsPerPage, setCurrentPage, currentPage }) {
         count={pages.length}
         siblingCount={0}
         onChange={(event, page) => {
-          navigate(`/search/${value}/${page}`);
+          navigate(
+            onChangeLink == "search"
+              ? `/search/${value}/${page}`
+              : `/${MoviesType}/${page}`
+          );
           setCurrentPage(page);
         }}
       />

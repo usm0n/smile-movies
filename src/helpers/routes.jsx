@@ -11,6 +11,7 @@ import AdminLayout from "../layout/AdminLayout";
 import Premium from "../pages/components/premium/Premium";
 import NotFound from "../pages/error/NotFound";
 import Settings from "../pages/user/Settings";
+import AllMovies from "../pages/movies/AllMovies";
 
 export const routes = [
   {
@@ -96,5 +97,35 @@ export const routes = [
   {
     path: "/settings",
     element: <Settings />,
+  },
+
+  {
+    path: "/movies",
+    element: <AllMovies MovieType={"movie"} MoviesType={"movies"} />,
+  },
+
+  {
+    path: "/series",
+    element: <AllMovies MovieType={"series"} MoviesType={"series"} />,
+  },
+
+  {
+    path: "/cartoons",
+    element: <AllMovies MovieType={"cartoon"} MoviesType={"cartoons"} />,
+  },
+
+  {
+    path: "/movies/:page",
+    element: <AllMovies MovieType={"movie"} MoviesType={"movies"} />,
+  },
+
+  {
+    path: "/series/:page",
+    element: <AllMovies MovieType={"series"} MoviesType={"series"} />,
+  },
+
+  {
+    path: "/cartoons/:page",
+    element: <AllMovies MovieType={"cartoon"} MoviesType={"cartoons"} />,
   },
 ];

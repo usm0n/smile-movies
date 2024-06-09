@@ -40,22 +40,25 @@ function HomeLayout() {
         allMovies={allMovies}
         language={language}
         MoviesTitle={t("MoviesTitle")}
-        MoviesType={"movie"}
+        MovieType={"movie"}
         NoMovies={t("NoMovies")}
+        MoviesType={"movies"}
       />
       <Movies
         allMovies={allMovies}
         language={language}
         MoviesTitle={t("CartoonsTitle")}
-        MoviesType={"cartoon"}
+        MovieType={"cartoon"}
         NoMovies={t("NoCartoons")}
+        MoviesType={"cartoons"}
       />
       <Movies
         allMovies={allMovies}
         language={language}
         MoviesTitle={t("SeriesTitle")}
-        MoviesType={"series"}
+        MovieType={"series"}
         NoMovies={t("NoSeries")}
+        MoviesType={"series"}
       />
       <Footer />
     </div>

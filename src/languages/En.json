@@ -159,5 +159,6 @@
     "isAvailable": "isAvailable",
     "willPostedSoon": "You can watch this movie in our website soon",
     "DevtoolsError": "You are not allowed to view here",
-    "DevtoolsErrorDesc": "You are not allowed to view here. If you don't leave here, you won't be able to watch series and movies"
+    "DevtoolsErrorDesc": "You are not allowed to view here. If you don't leave here, you won't be able to watch series and movies",
+    "SeeAll": "See all"
 }
