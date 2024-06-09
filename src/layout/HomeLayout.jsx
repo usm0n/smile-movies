@@ -23,7 +23,6 @@ function HomeLayout() {
       <NewMovies
         movies={allMovies.movies}
         isLoading={allMovies.isLoading}
-        language={language}
       />
       <Movies
         allMovies={allMovies}

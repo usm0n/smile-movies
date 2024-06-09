@@ -1,7 +1,7 @@
 import { Box, Skeleton } from "@mui/material";
 import React from "react";
 
-function NewMoviesSkeleton() {
+function SmallMovieCardSkeleton() {
   return (
       <Box className="new-movie_card">
         <Skeleton
@@ -69,4 +69,4 @@ function NewMoviesSkeleton() {
   );
 }
 
-export default NewMoviesSkeleton;
+export default SmallMovieCardSkeleton;
