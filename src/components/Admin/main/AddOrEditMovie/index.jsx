@@ -202,6 +202,9 @@ function AddOrEditMovie({ movie, type }) {
         [e.target.name]: e.target.value,
       },
     });
+    if (type == "add") {
+      localStorage.setItem(`${parent}Draft ${e.target.name}`, e.target.value);
+    }
   };
 
   const handleInput = (e) => {
@@ -210,6 +213,9 @@ function AddOrEditMovie({ movie, type }) {
       ...movieValue,
       [e.target.name]: e.target.value,
     });
+    if (type == "add") {
+      localStorage.setItem(`${e.target.name}Draft`, e.target.value);
+    }
   };
 
   const isNotTrim =
