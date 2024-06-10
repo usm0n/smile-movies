@@ -17,6 +17,7 @@ import { snackbar } from "../../utilities/defaultFunctions";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import { t } from "i18next";
+import NotFound from "../error/NotFound";
 
 function Login() {
   const [email, setEmail] = useState("");
@@ -40,12 +41,9 @@ function Login() {
       setPassword(e.target.value);
     }
   };
-  useEffect(() => {
-    if (isLoggedIn) {
-      navigate("/");
-    }
-  });
-  return (
+  return isLoggedIn ? (
+    <NotFound />
+  ) : (
     <section className="login">
       <div className="login-bg">
         <img src={bg} className="login-img" alt="" />

@@ -2,10 +2,14 @@ import React from "react";
 import logo from "../../assets/images/logo.png";
 import { t } from "i18next";
 import ReportProblemIcon from "@mui/icons-material/ReportProblem";
+import { backButton } from "../../utilities/defaultFunctions";
+import { useNavigate } from "react-router-dom";
 
 function NotFound() {
+  const navigate = useNavigate();
   return (
     <div className="notfound">
+      {backButton(() => navigate("/"))}
       <div className="notfound-content">
         <ReportProblemIcon
           sx={{

@@ -14,6 +14,7 @@ import {
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import Visibility from "@mui/icons-material/Visibility";
 import { t } from "i18next";
+import NotFound from "../error/NotFound";
 
 function Register() {
   const { registerUser, statusRegister, setStatusRegister } = useUser();
@@ -54,13 +55,9 @@ function Register() {
     );
   };
 
-  useEffect(() => {
-    if (isLoggedIn) {
-      navigate("/");
-    }
-  });
-
-  return (
+  return isLoggedIn ? (
+    <NotFound />
+  ) : (
     <section className="register">
       {statusRegister.isSuccess && snackbar("success", t("registerSuccess"))}
       {statusRegister.isError && snackbar("danger", t("somethingWentWrong"))}
