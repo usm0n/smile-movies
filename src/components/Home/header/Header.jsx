@@ -196,7 +196,7 @@ function Header({ isLoading, movies, language, isLoggedIn, user }) {
             ))}
         </Swiper>
         {movies.filter((m) => m.status.isTrending).length === 0 && (
-          <h1 style={{ textAlign: "center" }}>There's no Trending Movies</h1>
+          <h1 style={{ textAlign: "center" }}>{t("NoMovies")}</h1>
         )}
       </>
     </section>
