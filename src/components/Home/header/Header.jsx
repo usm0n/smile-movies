@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
-import SolidStarIcon from "../../../assets/icons/SolidStarIcon";
-import CalendarIcon from "../../../assets/icons/CalendarIcon";
+import SolidStarIcon from "@mui/icons-material/StarBorder";
+import CalendarIcon from '@mui/icons-material/CalendarMonth';
 import PlayCircleFilledOutlinedIcon from "@mui/icons-material/PlayCircleFilledOutlined";
-import { Box, Skeleton } from "@mui/material";
+import { Skeleton } from "@mui/material";
 import WatchLater from "@mui/icons-material/WatchLater";
 
 import "swiper/css";

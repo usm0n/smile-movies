@@ -2,9 +2,9 @@ import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { linksData } from "../data/linksData";
 import { Link, useNavigate } from "react-router-dom";
-import MenuIcon from "../assets/icons/MenuIcon";
-import Search from "../assets/icons/Search";
-import CloseIcon from "../assets/icons/CloseIcon";
+import MenuIcon from "@mui/icons-material/Menu";
+import Search from "@mui/icons-material/Search";
+import CloseIcon from "@mui/icons-material/Close";
 import logo from "../assets/images/logo.png";
 import Tooltip from "@mui/material/Tooltip";
 import {
