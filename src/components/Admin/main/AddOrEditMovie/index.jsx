@@ -219,10 +219,6 @@ function AddOrEditMovie({ movie, type }) {
     !movieValue.credit.en.trim() ||
     !movieValue.credit.ru.trim() ||
     !movieValue.credit.uz.trim() ||
-    !movieValue.description.en.trim() ||
-    !movieValue.description.ru.trim() ||
-    !movieValue.description.uz.trim() ||
-    !movieValue.image.fullscreen.trim() ||
     !movieValue.image.portrait.trim() ||
     !movieValue.title.en.trim() ||
     !movieValue.title.ru.trim() ||
@@ -230,11 +226,8 @@ function AddOrEditMovie({ movie, type }) {
     !movieValue.releaseDate.day.trim() ||
     !movieValue.releaseDate.month.trim() ||
     !movieValue.releaseDate.year.trim() ||
-    !movieValue.duration.hour.trim() ||
-    !movieValue.duration.min.trim() ||
     movieValue.rating.like < 0 ||
-    movieValue.rating.dislike < 0 ||
-    !movieValue.rating.imdb.trim();
+    movieValue.rating.dislike < 0;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
