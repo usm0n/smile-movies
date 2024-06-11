@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "https://smile-movies-project.onrender.com",
+  baseURL: "https://smile-movies-backend.onrender.com",
 });
 
 const users = {
