@@ -1,8 +1,4 @@
-import axios from "axios";
-
-const api = axios.create({
-  baseURL: "https://smile-movies-backend.vercel.app",
-});
+import { api } from "./api";
 
 const movies = {
   getAllMovies: async () => {
