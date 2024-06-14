@@ -7,12 +7,23 @@ import { useAllMovies } from "../contexts/Movies";
 import { language } from "../utilities/defaultFunctions";
 import { useUser } from "../contexts/User";
 import { t } from "i18next";
+import { Helmet } from "react-helmet";
 
 function HomeLayout() {
   const { allMovies } = useAllMovies();
   const { isLoggedIn, user } = useUser();
   return (
     <div>
+      <Helmet>
+        <meta
+          name="description"
+          content="O'zingizga yoqqan sifat va tilda serial va multfilmlarni tomosha qiling - Smile Movies"
+        />
+        <meta
+          name="keywords"
+          content="Tarjima kinolar, Hind kinolar, HD original kesilmagan, Ujas kinolar, Jangari kinolar, O'zbek tilida, Uzbekcha tarjima kino, 2024 yangi kinolar, Ingliz tilida, Rus tilida"
+        />
+      </Helmet>
       <Header
         isLoggedIn={isLoggedIn}
         isLoading={allMovies.isLoading}
@@ -20,10 +31,7 @@ function HomeLayout() {
         language={language}
         user={user}
       />
-      <NewMovies
-        movies={allMovies.movies}
-        isLoading={allMovies.isLoading}
-      />
+      <NewMovies movies={allMovies.movies} isLoading={allMovies.isLoading} />
       <Movies
         allMovies={allMovies}
         language={language}

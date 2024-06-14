@@ -23,15 +23,21 @@ function Movie({ movie, likeMovie, dislikeMovie, ratingLoading }) {
   return (
     <section key={movie._id} className="movie">
       <Helmet>
-        <meta
-          name="description"
-          content="2024 yilning eng yaxshi yangi kinolari haqida barcha ma'lumotlarni bizning saytimizda toping."
-        />
+        <title>{movie.title.uz} - Smile Movies</title>
         <meta
           name="keywords"
-          content={`${movie.title.uz}, ${movie.title.ru}, ${movie.title.en}`}
+          content={`${movie.title.uz}, ${movie.title.ru}, ${movie.title.en}, tomosha qilish, skachat, uzbek tilida`}
         />
-        <title>{movie.title[language]} - Smile Movies</title>
+        <meta
+          name="description"
+          content={`${
+            movie.title.uz
+          }ni faqat Smile filmlarida tomosha qiling. ${movie.description.uz.substring(
+            0,
+            20
+          )}`}
+        ></meta>
+        <meta name="robots" content="index, follow"></meta>
       </Helmet>
       {backButton(() => navigate("/"))}
       {isAdmin.result && (

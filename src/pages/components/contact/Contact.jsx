@@ -1,6 +1,5 @@
 import React, { useState } from 'react'
 import Img from '../../../assets/images/contact-bg.jpg'
-import { Helmet } from 'react-helmet';
 import { t } from 'i18next';
 
 function Contact() {
@@ -80,9 +79,6 @@ function Contact() {
   };
   return (
     <section className="contact">
-      <Helmet>
-        <title>Smile Movie | Contact</title>
-      </Helmet>
       <div className="contact-bg">
         <img src={Img} alt="" className="contact-bg_img" />
       </div>
