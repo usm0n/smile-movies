@@ -154,7 +154,7 @@ function AddOrEditMovie({ movie, type }) {
           : movie.status.isTrending,
       type:
         type == "add"
-          ? localStorage.getItem("statusDraft type") || ""
+          ? localStorage.getItem("statusDraft type") || "movie"
           : movie.status.type,
       isAvailable:
         type == "add"
