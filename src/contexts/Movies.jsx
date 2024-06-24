@@ -16,7 +16,6 @@ const MoviesContext = createContext({
   isNotConnected: false,
   deleteAllMovies: () => {},
 });
-MoviesContext.displayName = "MoviesContext";
 
 export const useAllMovies = () => useContext(MoviesContext);
 
