@@ -14,7 +14,6 @@ const UsersContext = createContext({
   },
   deleteAllUsers: () => {},
 });
-UsersContext.displayName = "UsersContext";
 
 export const useAllUsers = () => useContext(UsersContext);
 
