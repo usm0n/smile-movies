@@ -10,27 +10,30 @@ import WatchLaterProvider from "./contexts/WatchLater.jsx";
 import FavouritesProvider from "./contexts/Favourites.jsx";
 import TranslationProvider from "./provider/TranslationProvider.jsx";
 import UsersProvider from "./contexts/Users.jsx";
+import MoviesTMDBProvider from "./contexts/MoviesTMDB.tsx";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <>
     <BrowserRouter>
-      <MoviesProvider>
-        <UsersProvider>
-          <MovieProvider>
-            <UserProvider>
-              <CommentsProvider>
-                <WatchLaterProvider>
-                  <FavouritesProvider>
-                    <TranslationProvider>
-                      <App />
-                    </TranslationProvider>
-                  </FavouritesProvider>
-                </WatchLaterProvider>
-              </CommentsProvider>
-            </UserProvider>
-          </MovieProvider>
-        </UsersProvider>
-      </MoviesProvider>
+      <MoviesTMDBProvider>
+        <MoviesProvider>
+          <UsersProvider>
+            <MovieProvider>
+              <UserProvider>
+                <CommentsProvider>
+                  <WatchLaterProvider>
+                    <FavouritesProvider>
+                      <TranslationProvider>
+                        <App />
+                      </TranslationProvider>
+                    </FavouritesProvider>
+                  </WatchLaterProvider>
+                </CommentsProvider>
+              </UserProvider>
+            </MovieProvider>
+          </UsersProvider>
+        </MoviesProvider>
+      </MoviesTMDBProvider>
     </BrowserRouter>
   </>
 );
