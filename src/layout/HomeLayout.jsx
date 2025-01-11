@@ -8,9 +8,11 @@ import { language } from "../utilities/defaultFunctions";
 import { useUser } from "../contexts/User";
 import { t } from "i18next";
 import { Helmet } from "react-helmet";
+import { useMoviesTMDB } from "../contexts/MoviesTMDB";
 
 function HomeLayout() {
   const { allMovies } = useAllMovies();
+  const { trendingData } = useMoviesTMDB();
   const { isLoggedIn, user } = useUser();
   return (
     <div>
@@ -26,8 +28,8 @@ function HomeLayout() {
       </Helmet>
       <Header
         isLoggedIn={isLoggedIn}
-        isLoading={allMovies.isLoading}
-        movies={allMovies.movies}
+        isLoading={trendingData?.isLoading}
+        movies={trendingData?.data}
         language={language}
         user={user}
       />
