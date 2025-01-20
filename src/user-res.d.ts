@@ -18,3 +18,7 @@ export interface CatchError {
   message: string;
   error: string;
 }
+
+export interface TokenResponse {
+  token: string
+}
