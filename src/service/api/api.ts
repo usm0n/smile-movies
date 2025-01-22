@@ -9,7 +9,7 @@ export const smbAPI = axios.create({
 
 export const tmdbAPI = axios.create({
   baseURL: import.meta.env.VITE_TMDB_API_URL,
-  params: {
-    api_key: import.meta.env.VITE_TMDB_API_KEY,
+  headers: {
+    Authorization: `Bearer ${import.meta.env.VITE_TMDB_API_KEY}`,
   },
 });
