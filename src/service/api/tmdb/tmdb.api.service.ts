@@ -42,6 +42,38 @@ export const tmdb = {
       return error;
     }
   },
+  airingTodayTv: async () => {
+    try {
+      const response = await tmdbAPI.get("/tv/airing_today");
+      return response.data;
+    } catch (error) {
+      return error;
+    }
+  },
+  onTheAirTv: async () => {
+    try {
+      const response = await tmdbAPI.get("/tv/on_the_air");
+      return response.data;
+    } catch (error) {
+      return error;
+    }
+  },
+  popularTv: async () => {
+    try {
+      const response = await tmdbAPI.get("/tv/popular");
+      return response.data;
+    } catch (error) {
+      return error;
+    }
+  },
+  topRatedTv: async () => {
+    try {
+      const response = await tmdbAPI.get("/tv/top_rated");
+      return response.data;
+    } catch (error) {
+      return error;
+    }
+  },
 
   searchMovie: async (query: string) => {
     try {
@@ -63,6 +95,23 @@ export const tmdb = {
   trending: async (kind: "movie" | "tv", time: "day" | "week") => {
     try {
       const response = await tmdbAPI.get(`/trending/${kind}/${time}`);
+      return response.data;
+    } catch (error) {
+      return error;
+    }
+  },
+
+  movie: async (id: string) => {
+    try {
+      const response = await tmdbAPI.get("/movie/" + id);
+      return response.data;
+    } catch (error) {
+      return error;
+    }
+  },
+  tv: async (id: string) => {
+    try {
+      const response = await tmdbAPI.get("/tv/" + id);
       return response.data;
     } catch (error) {
       return error;
