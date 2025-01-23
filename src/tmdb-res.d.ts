@@ -262,7 +262,7 @@ export interface trendingTV {
 export interface ResponseType {
   isLoading: boolean;
   isError: boolean;
-  data:
+  data?:
     | DiscoverMovie
     | DiscoverTV
     | nowPlayingMovies
