@@ -1,4 +1,11 @@
-import { CatchError, Message, TokenResponse, User } from "../../../user-res";
+import {
+  CatchError,
+  Message,
+  TokenResponse,
+  User,
+  UserLogin,
+  UserRegister,
+} from "../../../user";
 import { smbAPI } from "../api";
 
 export const users = {
@@ -82,7 +89,7 @@ export const users = {
       return error.response.data as CatchError;
     }
   },
-  register: async (user: User) => {
+  register: async (user: UserRegister) => {
     try {
       const response = await smbAPI.post("/users/reigster", user);
       return response.data as Message | TokenResponse;
@@ -90,7 +97,7 @@ export const users = {
       return error.response.data as CatchError;
     }
   },
-  login: async (user: User) => {
+  login: async (user: UserLogin) => {
     try {
       const response = await smbAPI.post("/users/login", user);
       return response.data as TokenResponse;
