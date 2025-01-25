@@ -3,11 +3,14 @@ import { createRoot } from "react-dom/client";
 import "./index.css";
 import App from "./App.tsx";
 import { TMDBProvider } from "./context/TMDB.tsx";
+import UsersProvider from "./context/Users.tsx";
 
 createRoot(document.getElementById("root")!).render(
-  <TMDBProvider>
-    <StrictMode>
-      <App />
-    </StrictMode>
-  </TMDBProvider>
+  <UsersProvider>
+    <TMDBProvider>
+      <StrictMode>
+        <App />
+      </StrictMode>
+    </TMDBProvider>
+  </UsersProvider>
 );
