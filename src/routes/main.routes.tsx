@@ -1,6 +1,8 @@
+import HomeLayout from "../layouts/HomeLayout";
+
 export const mainRoutes = [
   {
     path: "/",
-    element: <></>,
+    element: <HomeLayout />,
   },
 ];
