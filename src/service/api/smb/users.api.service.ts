@@ -151,4 +151,44 @@ export const users = {
       return error.response.data as CatchError;
     }
   },
+  addToWatchlist: async (typeMovie: string, movieId: string) => {
+    try {
+      const response = await smbAPI.post(
+        `/users/watchlist/${typeMovie}/${movieId}`
+      );
+      return response.data as Message;
+    } catch (error: any) {
+      return error.response.data as CatchError;
+    }
+  },
+  removeFromWatchlist: async (typeMovie: string, movieId: string) => {
+    try {
+      const response = await smbAPI.delete(
+        `/users/watchlist/${typeMovie}/${movieId}`
+      );
+      return response.data as Message;
+    } catch (error: any) {
+      return error.response.data as CatchError;
+    }
+  },
+  addToFavorites: async (typeMovie: string, movieId: string) => {
+    try {
+      const response = await smbAPI.post(
+        `/users/favorites/${typeMovie}/${movieId}`
+      );
+      return response.data as Message;
+    } catch (error: any) {
+      return error.response.data as CatchError;
+    }
+  },
+  removeFromFavorites: async (typeMovie: string, movieId: string) => {
+    try {
+      const response = await smbAPI.delete(
+        `/users/favorites/${typeMovie}/${movieId}`
+      );
+      return response.data as Message;
+    } catch (error: any) {
+      return error.response.data as CatchError;
+    }
+  },
 };
