@@ -21,6 +21,10 @@ const UsersContext = createContext({
   forgotPasswordData: null as userType.ResponseType | null,
   resendForgotPasswordData: null as userType.ResponseType | null,
   resetPasswordData: null as userType.ResponseType | null,
+  addToWatchlistData: null as userType.ResponseType | null,
+  removeFromWatchlistData: null as userType.ResponseType | null,
+  addToFavoritesData: null as userType.ResponseType | null,
+  removeFromFavoritesData: null as userType.ResponseType | null,
   getUsers: async () => {},
   getUserById: async (id: string) => {
     id;
@@ -71,6 +75,22 @@ const UsersContext = createContext({
     token;
     password;
   },
+  addToWatchlist: async (type: string, id: string) => {
+    type;
+    id;
+  },
+  removeFromWatchlist: async (type: string, id: string) => {
+    type;
+    id;
+  },
+  addToFavorites: async (type: string, id: string) => {
+    type;
+    id;
+  },
+  removeFromFavorites: async (type: string, id: string) => {
+    type;
+    id;
+  },
 });
 
 export const useUsers = () => useContext(UsersContext);
@@ -113,6 +133,14 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
   const [resendForgotPasswordData, setResendForgotPasswordData] =
     useState<userType.ResponseType | null>(null);
   const [resetPasswordData, setResetPasswordData] =
+    useState<userType.ResponseType | null>(null);
+  const [addToWatchlistData, setAddToWatchlistData] =
+    useState<userType.ResponseType | null>(null);
+  const [removeFromWatchlistData, setRemoveFromWatchlistData] =
+    useState<userType.ResponseType | null>(null);
+  const [addToFavoritesData, setAddToFavoritesData] =
+    useState<userType.ResponseType | null>(null);
+  const [removeFromFavoritesData, setRemoveFromFavoritesData] =
     useState<userType.ResponseType | null>(null);
 
   const getUsers = async () => {
@@ -804,6 +832,167 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
       });
     }
   };
+
+  const addToWatchlist = async (type: string, id: string) => {
+    try {
+      setAddToWatchlistData({
+        isLoading: true,
+        isError: false,
+        data: null,
+        errorResponse: null,
+      });
+      const response = await users.addToWatchlist(type, id);
+      if (
+        response &&
+        "response" in response &&
+        typeof response.response === "object" &&
+        response.response !== null &&
+        "data" in response.response
+      ) {
+        setAddToWatchlistData({
+          isLoading: false,
+          isError: true,
+          data: null,
+          errorResponse: response.response.data as userType.Message,
+        });
+      } else {
+        setAddToWatchlistData({
+          isLoading: false,
+          isError: false,
+          data: response as userType.Message,
+          errorResponse: null,
+        });
+      }
+    } catch (error) {
+      setAddToWatchlistData({
+        isLoading: false,
+        isError: true,
+        data: null,
+        errorResponse: error,
+      });
+    }
+  };
+
+  const removeFromWatchlist = async (type: string, id: string) => {
+    try {
+      setRemoveFromWatchlistData({
+        isLoading: true,
+        isError: false,
+        data: null,
+        errorResponse: null,
+      });
+      const response = await users.removeFromWatchlist(type, id);
+      if (
+        response &&
+        "response" in response &&
+        typeof response.response === "object" &&
+        response.response !== null &&
+        "data" in response.response
+      ) {
+        setRemoveFromWatchlistData({
+          isLoading: false,
+          isError: true,
+          data: null,
+          errorResponse: response.response.data as userType.Message,
+        });
+      } else {
+        setRemoveFromWatchlistData({
+          isLoading: false,
+          isError: false,
+          data: response as userType.Message,
+          errorResponse: null,
+        });
+      }
+    } catch (error) {
+      setRemoveFromWatchlistData({
+        isLoading: false,
+        isError: true,
+        data: null,
+        errorResponse: error,
+      });
+    }
+  };
+
+  const addToFavorites = async (type: string, id: string) => {
+    try {
+      setAddToFavoritesData({
+        isLoading: true,
+        isError: false,
+        data: null,
+        errorResponse: null,
+      });
+      const response = await users.addToFavorites(type, id);
+      if (
+        response &&
+        "response" in response &&
+        typeof response.response === "object" &&
+        response.response !== null &&
+        "data" in response.response
+      ) {
+        setAddToFavoritesData({
+          isLoading: false,
+          isError: true,
+          data: null,
+          errorResponse: response.response.data as userType.Message,
+        });
+      } else {
+        setAddToFavoritesData({
+          isLoading: false,
+          isError: false,
+          data: response as userType.Message,
+          errorResponse: null,
+        });
+      }
+    } catch (error) {
+      setAddToFavoritesData({
+        isLoading: false,
+        isError: true,
+        data: null,
+        errorResponse: error,
+      });
+    }
+  };
+
+  const removeFromFavorites = async (type: string, id: string) => {
+    try {
+      setRemoveFromFavoritesData({
+        isLoading: true,
+        isError: false,
+        data: null,
+        errorResponse: null,
+      });
+      const response = await users.removeFromFavorites(type, id);
+      if (
+        response &&
+        "response" in response &&
+        typeof response.response === "object" &&
+        response.response !== null &&
+        "data" in response.response
+      ) {
+        setRemoveFromFavoritesData({
+          isLoading: false,
+          isError: true,
+          data: null,
+          errorResponse: response.response.data as userType.Message,
+        });
+      } else {
+        setRemoveFromFavoritesData({
+          isLoading: false,
+          isError: false,
+          data: response as userType.Message,
+          errorResponse: null,
+        });
+      }
+    } catch (error) {
+      setRemoveFromFavoritesData({
+        isLoading: false,
+        isError: true,
+        data: null,
+        errorResponse: error,
+      });
+    }
+  };
+
   return (
     <UsersContext.Provider
       value={{
@@ -842,6 +1031,14 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
         updateUserById,
         userByEmailData,
         verify,
+        addToFavorites,
+        addToFavoritesData,
+        addToWatchlist,
+        addToWatchlistData,
+        removeFromFavorites,
+        removeFromFavoritesData,
+        removeFromWatchlist,
+        removeFromWatchlistData,
       }}
     >
       {children}
