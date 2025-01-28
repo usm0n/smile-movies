@@ -10,8 +10,8 @@ import "swiper/css/pagination";
 import "swiper/css/navigation";
 
 import { EffectFade, Autoplay, Pagination, Navigation } from "swiper/modules";
-import { Box, Button, Typography } from "@mui/joy";
-import { CalendarMonth, PlayCircle, Star } from "@mui/icons-material";
+import { Box, Typography } from "@mui/joy";
+import { CalendarMonth, Star } from "@mui/icons-material";
 
 function Header() {
   return (
