@@ -16,7 +16,6 @@ a:hover {
 body {
   background-color: #000;
   font-family: "Roboto", sans-serif;
-  margin-bottom: 50px;
 }
 
 .navbar {
@@ -37,32 +36,36 @@ body {
   justify-content: space-between;
 }
 .poster_image {
-  display: none;
-  border-radius: 23px;
-  margin: 0 auto;
-  position: relative;
-  height: 100vh;
-  width: 100%;
-  object-fit: cover;
-  background-position: center;
+  width: 250px;
+  border-radius: 25px;
+  box-shadow: 0 0 30px rgba(255, 255, 255, 0.1);
 }
 
 .backdrop_image {
+  display: flex;
+  border-radius: 25px;
   position: relative;
-  height: 100vh;
+  height: 90vh;
   width: 100%;
   object-fit: cover;
   background-position: center;
 }
 
-@media screen and (max-width: 700px) {
+@media screen and (max-width: 1000px) {
+  .backdrop_image {
+    height: 90vh;
+  }
+}
+
+/* @media screen and (max-width: 800px) {
+  .poster_image {
+    width: 100%;
+  }
   .backdrop_image {
     display: none;
   }
-  .poster_image {
-    display: flex;
-  }
-}
+} */
+
 @media screen and (max-width: 400px) {
   .navbar {
     padding-left: 20px;

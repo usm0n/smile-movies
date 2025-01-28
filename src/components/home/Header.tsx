@@ -40,137 +40,116 @@ function Header() {
         className="mySwiper"
       >
         <SwiperSlide>
-          <img
-            className="backdrop_image"
-            src="https://image.tmdb.org/t/p/original/zOpe0eHsq0A2NvNyBbtT6sj53qV.jpg"
-          />
-          <img
-            className="poster_image"
-            src="https://image.tmdb.org/t/p/original/d8Ryb8AunYAuycVKDp5HpdWPKgC.jpg"
-          />
-          <Box
-            sx={{
-              position: "absolute",
-              top: "50%",
-              left: "50%",
-              transform: "translate(-50%, -50%)",
-              textAlign: "center",
-              color: "white",
-              display: "flex",
-              gap: 3,
-              "@media (max-width: 700px)": {
-                width: "90%",
-                flexDirection: "column",
-              },
-            }}
-          >
-            <Button
+          <Box sx={{
+            transition: "all 0.2s ease-in-out",
+            ":hover": {
+              cursor: "pointer",
+              opacity: 0.8,
+            }
+          }}>
+            <img
+              className="backdrop_image"
+              src="https://image.tmdb.org/t/p/original/zOpe0eHsq0A2NvNyBbtT6sj53qV.jpg"
+            />
+            <Box
               sx={{
-                gap: 1,
-                background: "rgb(247, 203, 43)",
-                ":hover": {
-                  background: "rgba(247, 203, 43, 0.86)",
-                },
-                color: "black",
-                border: "1px solid rgb(247, 203, 43)",
-                padding: "10px 20px",
-                width: "200px",
-                "@media (max-width: 700px)": {
-                  width: "100%",
+                position: "absolute",
+                bottom: "0%",
+                boxShadow: "0px -200px 100px rgba(0, 0, 0, 0.9) inset",
+                width: "100%",
+                "@media (max-width: 800px)": {
+                  height: "100%",
+                  boxShadow: "0 -200px 500px rgba(0, 0, 0, 0.9) inset",
                 },
               }}
             >
-              <Typography>Watch Now</Typography>
-              <PlayCircle />
-            </Button>
-            <Button
-              sx={{
-                gap: 1,
-                background: "transparent",
-                ":hover": {
-                  background: "rgb(247, 203, 43)",
-                  color: "black",
-                },
-                color: "white",
-                border: "1px solid rgb(247, 203, 43)",
-                padding: "10px 20px",
-                width: "200px",
-                "@media (max-width: 700px)": {
-                  width: "100%",
-                },
-              }}
-            >
-              <Typography
+              <Box
                 sx={{
-                  color: "white",
-                  textShadow: "0 0 10px rgba(0, 0, 0, 0.5)",
-                }}
-              >
-                Watch list
-              </Typography>
-              <PlayCircle />
-            </Button>
-          </Box>
-          <Box
-            sx={{
-              position: "absolute",
-              bottom: "15%",
-              left: "5%",
-              display: "flex",
-              flexDirection: "column",
-              gap: 1,
-            }}
-          >
-            <Typography
-              level="h2"
-              letterSpacing={1}
-              sx={{
-                color: "white",
-                textShadow: "0 0 10px rgba(0, 0, 0, 0.5)",
-              }}
-            >
-              Sonic The Hedgehog 3
-            </Typography>
-            <Box display={"flex"} gap={2}>
-              <Typography
-                sx={{
-                  color: "rgb(255, 255, 255, 0.8)",
-                  textShadow: "0 0 10px rgba(0, 0, 0, 0.5)",
                   display: "flex",
-                  gap: "5px",
-                  alignItems: "center",
+                  alignItems: "end",
+                  gap: 5,
+                  width: "90%",
+                  margin: "0 auto",
+                  padding: "100px 0",
+                  "@media (max-width: 1000px)": {
+                    padding: "50px 0",
+                  },
+                  "@media (max-width: 800px)": {
+                    flexDirection: "column",
+                    alignItems: "center",
+                    gap: 2,
+                    width: "100%",
+                    padding: "150px 0",
+                  },
                 }}
               >
-                <CalendarMonth /> 2024-12-19
-              </Typography>
-              <Typography
-                sx={{
-                  color: "rgb(255, 255, 255, 0.8)",
-                  textShadow: "0 0 10px rgba(0, 0, 0, 0.5)",
-                  display: "flex",
-                  gap: "5px",
-                  alignItems: "center",
-                }}
-              >
-                <Star /> 7
-              </Typography>
+                <img
+                  className="poster_image"
+                  src="https://image.tmdb.org/t/p/original/d8Ryb8AunYAuycVKDp5HpdWPKgC.jpg"
+                />
+                <Box
+                  sx={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 1,
+                    "@media (max-width: 800px)": {
+                      width: "90%",
+                    },
+                  }}
+                >
+                  <Typography
+                    level="h2"
+                    letterSpacing={1}
+                    sx={{
+                      color: "white",
+                      textShadow: "0 0 10px rgba(0, 0, 0, 0.5)",
+                    }}
+                  >
+                    Sonic The Hedgehog 3
+                  </Typography>
+                  <Box display={"flex"} gap={2}>
+                    <Typography
+                      sx={{
+                        color: "rgb(255, 255, 255, 0.8)",
+                        textShadow: "0 0 10px rgba(0, 0, 0, 0.5)",
+                        display: "flex",
+                        gap: "5px",
+                        alignItems: "center",
+                      }}
+                    >
+                      <CalendarMonth /> 2024-12-19
+                    </Typography>
+                    <Typography
+                      sx={{
+                        color: "rgb(255, 255, 255, 0.8)",
+                        textShadow: "0 0 10px rgba(0, 0, 0, 0.5)",
+                        display: "flex",
+                        gap: "5px",
+                        alignItems: "center",
+                      }}
+                    >
+                      <Star /> 7
+                    </Typography>
+                  </Box>
+                  <Typography
+                    sx={{
+                      color: "rgb(255, 255, 255, 0.8)",
+                      textShadow: "0 0 10px rgba(0, 0, 0, 0.5)",
+                      "@media (max-width: 800px)": {
+                        display: "none",
+                      },
+                    }}
+                  >
+                    Sonic, Knuckles, and Tails reunite against a powerful new
+                    adversary, Shadow, a mysterious villain with powers unlike
+                    anything they have faced before. With their abilities
+                    outmatched in every way, Team Sonic must seek out an
+                    unlikely alliance in hopes of stopping Shadow and protecting
+                    the planet.
+                  </Typography>
+                </Box>
+              </Box>
             </Box>
-            <Typography
-              sx={{
-                color: "rgb(255, 255, 255, 0.8)",
-                textShadow: "0 0 10px rgba(0, 0, 0, 0.5)",
-                width: "50%",
-                "@media (max-width: 700px)": {
-                  display: "none",
-                },
-              }}
-            >
-              Sonic, Knuckles, and Tails reunite against a powerful new
-              adversary, Shadow, a mysterious villain with powers unlike
-              anything they have faced before. With their abilities outmatched
-              in every way, Team Sonic must seek out an unlikely alliance in
-              hopes of stopping Shadow and protecting the planet.
-            </Typography>
           </Box>
         </SwiperSlide>
       </Swiper>
