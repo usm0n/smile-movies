@@ -40,13 +40,15 @@ function Header() {
         className="mySwiper"
       >
         <SwiperSlide>
-          <Box sx={{
-            transition: "all 0.2s ease-in-out",
-            ":hover": {
-              cursor: "pointer",
-              opacity: 0.8,
-            }
-          }}>
+          <Box
+            sx={{
+              transition: "all 0.2s ease-in-out",
+              ":hover": {
+                cursor: "pointer",
+                opacity: 0.8,
+              },
+            }}
+          >
             <img
               className="backdrop_image"
               src="https://image.tmdb.org/t/p/original/zOpe0eHsq0A2NvNyBbtT6sj53qV.jpg"
@@ -79,7 +81,7 @@ function Header() {
                     alignItems: "center",
                     gap: 2,
                     width: "100%",
-                    padding: "150px 0",
+                    padding: "250px 0",
                   },
                 }}
               >
@@ -109,26 +111,16 @@ function Header() {
                   </Typography>
                   <Box display={"flex"} gap={2}>
                     <Typography
-                      sx={{
-                        color: "rgb(255, 255, 255, 0.8)",
-                        textShadow: "0 0 10px rgba(0, 0, 0, 0.5)",
-                        display: "flex",
-                        gap: "5px",
-                        alignItems: "center",
-                      }}
+                      textColor={"neutral.300"}
+                      startDecorator={<CalendarMonth />}
                     >
-                      <CalendarMonth /> 2024-12-19
+                      2024-12-19
                     </Typography>
                     <Typography
-                      sx={{
-                        color: "rgb(255, 255, 255, 0.8)",
-                        textShadow: "0 0 10px rgba(0, 0, 0, 0.5)",
-                        display: "flex",
-                        gap: "5px",
-                        alignItems: "center",
-                      }}
+                      textColor={"neutral.300"}
+                      startDecorator={<Star />}
                     >
-                      <Star /> 7
+                      7
                     </Typography>
                   </Box>
                   <Typography
