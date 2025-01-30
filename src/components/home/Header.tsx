@@ -12,8 +12,17 @@ import "swiper/css/navigation";
 import { EffectFade, Autoplay, Pagination, Navigation } from "swiper/modules";
 import { Box, Typography } from "@mui/joy";
 import { CalendarMonth, Star } from "@mui/icons-material";
+import { useTMDB } from "../../context/TMDB";
+import { useEffect } from "react";
+import { trendingAll } from "../../tmdb-res";
+import { Skeleton } from "@mui/material";
 
 function Header() {
+  const { trendingAll, trendingAllData } = useTMDB();
+
+  useEffect(() => {
+    trendingAll("week", 1);
+  }, []);
   return (
     <div>
       <Swiper
@@ -39,111 +48,152 @@ function Header() {
         modules={[Autoplay, EffectFade, Pagination, Navigation]}
         className="mySwiper"
       >
-        <SwiperSlide>
-          <Box
+        {trendingAllData?.isLoading ? (
+          <Skeleton
             sx={{
-              transition: "all 0.2s ease-in-out",
-              ":hover": {
-                cursor: "pointer",
-                opacity: 0.8,
-              },
+              backgroundColor: "rgb(255, 255, 255, 0.5)",
             }}
-          >
-            <img
-              className="backdrop_image"
-              src="https://image.tmdb.org/t/p/original/zOpe0eHsq0A2NvNyBbtT6sj53qV.jpg"
-            />
-            <Box
-              sx={{
-                position: "absolute",
-                bottom: "0%",
-                boxShadow: "0px -200px 100px rgba(0, 0, 0, 0.9) inset",
-                width: "100%",
-                "@media (max-width: 800px)": {
-                  height: "100%",
-                  boxShadow: "0 -200px 500px rgba(0, 0, 0, 0.9) inset",
-                },
-              }}
-            >
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "end",
-                  gap: 5,
-                  width: "90%",
-                  margin: "0 auto",
-                  padding: "100px 0",
-                  "@media (max-width: 1000px)": {
-                    padding: "50px 0",
-                  },
-                  "@media (max-width: 800px)": {
-                    flexDirection: "column",
-                    alignItems: "center",
-                    gap: 2,
-                    width: "100%",
-                    padding: "250px 0",
-                  },
-                }}
-              >
-                <img
-                  className="poster_image"
-                  src="https://image.tmdb.org/t/p/original/d8Ryb8AunYAuycVKDp5HpdWPKgC.jpg"
-                />
-                <Box
-                  sx={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: 1,
-                    "@media (max-width: 800px)": {
-                      width: "90%",
-                    },
-                  }}
-                >
-                  <Typography
-                    level="h2"
-                    letterSpacing={1}
+            variant="rectangular"
+            width="100%"
+            height={600}
+          />
+        ) : (
+          (trendingAllData?.data as trendingAll)?.results.map(
+            (movie, index) => {
+              return (
+                <SwiperSlide key={index}>
+                  <Box
                     sx={{
-                      color: "white",
-                      textShadow: "0 0 10px rgba(0, 0, 0, 0.5)",
-                    }}
-                  >
-                    Sonic The Hedgehog 3
-                  </Typography>
-                  <Box display={"flex"} gap={2}>
-                    <Typography
-                      textColor={"neutral.300"}
-                      startDecorator={<CalendarMonth />}
-                    >
-                      2024-12-19
-                    </Typography>
-                    <Typography
-                      textColor={"neutral.300"}
-                      startDecorator={<Star />}
-                    >
-                      7
-                    </Typography>
-                  </Box>
-                  <Typography
-                    sx={{
-                      color: "rgb(255, 255, 255, 0.8)",
-                      textShadow: "0 0 10px rgba(0, 0, 0, 0.5)",
-                      "@media (max-width: 800px)": {
-                        display: "none",
+                      transition: "all 0.2s ease-in-out",
+                      ":hover": {
+                        cursor: "pointer",
+                        filter: "brightness(90%)",
                       },
                     }}
                   >
-                    Sonic, Knuckles, and Tails reunite against a powerful new
-                    adversary, Shadow, a mysterious villain with powers unlike
-                    anything they have faced before. With their abilities
-                    outmatched in every way, Team Sonic must seek out an
-                    unlikely alliance in hopes of stopping Shadow and protecting
-                    the planet.
-                  </Typography>
-                </Box>
-              </Box>
-            </Box>
-          </Box>
-        </SwiperSlide>
+                    {movie.backdrop_path ? (
+                      <img
+                        className="backdrop_image"
+                        src={`https://image.tmdb.org/t/p/original${movie.backdrop_path}`}
+                      />
+                    ) : (
+                      <img
+                        className="backdrop_image"
+                        src="https://salonlfc.com/wp-content/uploads/2018/01/image-not-found-scaled-1150x647.png"
+                      />
+                    )}
+                    <Box
+                      sx={{
+                        position: "absolute",
+                        bottom: "0%",
+                        boxShadow: "0px -200px 100px rgba(0, 0, 0, 0.9) inset",
+                        width: "100%",
+                        "@media (max-width: 800px)": {
+                          height: "100%",
+                          boxShadow: "0 -200px 500px rgba(0, 0, 0, 0.9) inset",
+                        },
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "end",
+                          gap: 5,
+                          width: "90%",
+                          margin: "0 auto",
+                          padding: "100px 0",
+                          "@media (max-width: 1000px)": {
+                            padding: "50px 0",
+                          },
+                          "@media (max-width: 800px)": {
+                            flexDirection: "column",
+                            alignItems: "center",
+                            gap: 2,
+                            width: "100%",
+                            padding: "150px 0",
+                            background: "rgb(0, 0, 0, 0.3)",
+                            backdropFilter: "blur(10px)",
+                          },
+                        }}
+                      >
+                        {movie.poster_path ? (
+                          <img
+                            className="poster_image"
+                            src={`https://image.tmdb.org/t/p/original${movie?.poster_path}`}
+                          />
+                        ) : (
+                          <img
+                            className="poster_image"
+                            src="https://png.pngtree.com/png-vector/20190820/ourmid/pngtree-no-image-vector-illustration-isolated-png-image_1694547.jpg"
+                          />
+                        )}
+                        <Box
+                          sx={{
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: 1,
+                            "@media (max-width: 800px)": {
+                              width: "90%",
+                            },
+                          }}
+                        >
+                          <Typography
+                            level="h2"
+                            letterSpacing={1}
+                            textColor={"common.white"}
+                            sx={{
+                              textShadow: "0 0 10px rgba(0, 0, 0, 0.5)",
+                            }}
+                          >
+                            {movie?.title || movie?.name}
+                          </Typography>
+                          {movie?.title !== movie?.original_title ||
+                            (movie?.name !== movie?.original_name && (
+                              <Typography
+                                level="h4"
+                                letterSpacing={1}
+                                textColor={"neutral.300"}
+                                sx={{
+                                  textShadow: "0 0 10px rgba(0, 0, 0, 0.5)",
+                                }}
+                              >
+                                {movie?.original_title || movie?.original_name}
+                              </Typography>
+                            ))}
+                          <Box display={"flex"} gap={2}>
+                            <Typography
+                              textColor={"neutral.300"}
+                              startDecorator={<CalendarMonth />}
+                            >
+                              {movie?.release_date || movie?.first_air_date}
+                            </Typography>
+                            <Typography
+                              textColor={"neutral.300"}
+                              startDecorator={<Star />}
+                            >
+                              {movie?.vote_average}
+                            </Typography>
+                          </Box>
+                          <Typography
+                            textColor={"neutral.300"}
+                            sx={{
+                              textShadow: "0 0 10px rgba(0, 0, 0, 0.5)",
+                              "@media (max-width: 800px)": {
+                                display: "none",
+                              },
+                            }}
+                          >
+                            {movie?.overview}
+                          </Typography>
+                        </Box>
+                      </Box>
+                    </Box>
+                  </Box>
+                </SwiperSlide>
+              );
+            }
+          )
+        )}
       </Swiper>
     </div>
   );
