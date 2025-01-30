@@ -17,7 +17,7 @@ export interface Movie {
 
 export interface DiscoverMovie {
   page: number;
-  results: Movie[];
+  results: [Movie];
   total_pages: number;
   total_results: number;
 }
@@ -41,7 +41,7 @@ export interface TV {
 
 export interface DiscoverTV {
   page: number;
-  results: TV[];
+  results: [TV];
   total_pages: number;
   total_results: number;
 }
@@ -52,19 +52,19 @@ export interface nowPlayingMovies {
     minimum: string;
   };
   page: number;
-  results: Movie[];
+  results: [Movie];
   total_pages: number;
   total_results: number;
 }
 export interface popularMovies {
   page: number;
-  results: Movie[];
+  results: [Movie];
   total_pages: number;
   total_results: number;
 }
 export interface topRatedMovies {
   page: number;
-  results: Movie[];
+  results: [Movie];
   total_pages: number;
   total_results: number;
 }
@@ -74,45 +74,45 @@ export interface upcomingMovies {
     minimum: string;
   };
   page: number;
-  results: Movie[];
+  results: [Movie];
   total_pages: number;
   total_results: number;
 }
 
 export interface airingTodayTV {
   page: number;
-  results: TV[];
+  results: [TV];
   total_pages: number;
   total_results: number;
 }
 export interface onTheAirTV {
   page: number;
-  results: TV[];
+  results: [TV];
   total_pages: number;
   total_results: number;
 }
 export interface popularTV {
   page: number;
-  results: TV[];
+  results: [TV];
   total_pages: number;
   total_results: number;
 }
 export interface topRatedTV {
   page: number;
-  results: TV[];
+  results: [TV];
   total_pages: number;
   total_results: number;
 }
 
 export interface searchMovie {
   page: number;
-  results: Movie[];
+  results: [Movie];
   total_pages: number;
   total_results: number;
 }
 export interface searchTV {
   page: number;
-  results: TV[];
+  results: [TV];
   total_pages: number;
   total_results: number;
 }
@@ -308,6 +308,8 @@ export interface ResponseType {
     | trendingAll
     | trendingMovies
     | trendingTV
+    | Movie
+    | TV
     | null;
   errorResponse: any;
 }

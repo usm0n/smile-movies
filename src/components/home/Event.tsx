@@ -1,8 +1,16 @@
 import { Box, Typography } from "@mui/joy";
 import EventMC from "../cards/EventMC";
 import { ArrowForwardIos } from "@mui/icons-material";
+import * as tmdbRes from "../../tmdb-res";
+import EventMCS from "../cards/skeleton/EventMC";
 
-function Event({ eventTitle }: { eventTitle: string }) {
+function Event({
+  eventTitle,
+  eventData,
+}: {
+  eventTitle: string;
+  eventData: tmdbRes.ResponseType | null;
+}) {
   return (
     <Box
       sx={{
@@ -41,13 +49,26 @@ function Event({ eventTitle }: { eventTitle: string }) {
           scrollbarWidth: "thin",
         }}
       >
-        <EventMC />
-        <EventMC />
-        <EventMC />
-        <EventMC />
-        <EventMC />
-        <EventMC />
-        <EventMC />
+        {eventData?.isLoading ? (
+          <>
+            <EventMCS />
+            <EventMCS />
+            <EventMCS />
+            <EventMCS />
+            <EventMCS />
+          </>
+        ) : (
+          (eventData?.data as tmdbRes.trendingAll)?.results.map((event) => (
+            <EventMC
+              key={event.id}
+              eventTitle={event.title || event.name}
+              eventPoster={event.poster_path}
+              eventId={event.id}
+              eventDate={event.release_date || event.first_air_date}
+              eventRating={event.vote_average}
+            />
+          ))
+        )}
       </Box>
     </Box>
   );

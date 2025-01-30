@@ -1,6 +1,5 @@
 import { ArrowForwardIos, BookmarkAdd } from "@mui/icons-material";
 import { Box, Button, Link, Typography } from "@mui/joy";
-import EventMC from "../cards/EventMC";
 import { isLoggedIn } from "../../utilities/defaults";
 
 function Watchlist() {
@@ -43,13 +42,7 @@ function Watchlist() {
             scrollbarWidth: "thin",
           }}
         >
-          <EventMC />
-          <EventMC />
-          <EventMC />
-          <EventMC />
-          <EventMC />
-          <EventMC />
-          <EventMC />
+
         </Box>
       ) : (
         <Box
