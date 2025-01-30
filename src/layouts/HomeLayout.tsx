@@ -2,15 +2,15 @@
 
 import Event from "../components/home/Event";
 import Header from "../components/home/Header";
+import Watchlist from "../components/home/Watchlist";
 
 function HomeLayout() {
   return (
     <>
       <Header />
-      <Event eventTitle="Movies - Now Playing" />
-      <Event eventTitle="Movies - Popular" />
-      <Event eventTitle="Movies - Top Rated" />
-      <Event eventTitle="Movies - Upcoming" />
+      <Event eventTitle="Movies" />
+      <Event eventTitle="TV Shows" />
+      <Watchlist />
     </>
   );
 }
