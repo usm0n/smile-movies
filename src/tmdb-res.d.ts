@@ -246,15 +246,43 @@ export interface tvDetails {
   vote_average: number;
   vote_count: number;
 }
+export interface trendingAll {
+  page: number;
+  results: [
+    {
+      adult: boolean;
+      backdrop_path: string;
+      id: number;
+      name: string;
+      original_language: string;
+      original_name: string;
+      overview: string;
+      poster_path: string;
+      media_type: string;
+      genre_ids: number[];
+      popularity: number;
+      first_air_date: string;
+      vote_average: number;
+      vote_count: number;
+      origin_country: string[];
+      title: string;
+      original_title: string;
+      release_date: string;
+      video: boolean;
+    }
+  ];
+  total_pages: number;
+  total_results: number;
+}
 export interface trendingMovies {
   page: number;
-  results: Movie[];
+  results: [...Movie, { media_type: string }];
   total_pages: number;
   total_results: number;
 }
 export interface trendingTV {
   page: number;
-  results: TV[];
+  results: [...TV, { media_type: string }];
   total_pages: number;
   total_results: number;
 }
@@ -277,6 +305,7 @@ export interface ResponseType {
     | topRatedTV
     | movieDetails
     | tvDetails
+    | trendingAll
     | trendingMovies
     | trendingTV
     | null;

@@ -13,6 +13,7 @@ const TmdbContext = createContext({
   onTheAirTvData: null as tmdbRes.ResponseType | null,
   popularTvData: null as tmdbRes.ResponseType | null,
   topRatedTvData: null as tmdbRes.ResponseType | null,
+  trendingAllData: null as tmdbRes.ResponseType | null,
   trendingMoviesData: null as tmdbRes.ResponseType | null,
   trendingTvData: null as tmdbRes.ResponseType | null,
   movieDetailsData: null as tmdbRes.ResponseType | null,
@@ -57,6 +58,10 @@ const TmdbContext = createContext({
     query;
     page;
   },
+  trendingAll: (time: "day" | "week", page: number) => {
+    time;
+    page;
+  },
   trendingMovies: (time: "day" | "week", page: number) => {
     time;
     page;
@@ -95,6 +100,8 @@ export const TMDBProvider = ({ children }: { children: React.ReactNode }) => {
   const [popularTvData, setPopularTvData] =
     useState<tmdbRes.ResponseType | null>(null);
   const [topRatedTvData, setTopRatedTvData] =
+    useState<tmdbRes.ResponseType | null>(null);
+  const [trendingAllData, setTrendingAllData] =
     useState<tmdbRes.ResponseType | null>(null);
   const [trendingMoviesData, setTrendingMoviesData] =
     useState<tmdbRes.ResponseType | null>(null);
@@ -421,6 +428,32 @@ export const TMDBProvider = ({ children }: { children: React.ReactNode }) => {
       });
     }
   };
+  const trendingAll = async (time: "day" | "week", page: number) => {
+    try {
+      setTrendingAllData({
+        isLoading: true,
+        isError: false,
+        data: null,
+        errorResponse: null,
+      });
+      const response = await tmdb.trending("all", time, page);
+      if (response) {
+        setTrendingAllData({
+          isLoading: false,
+          isError: false,
+          data: response as tmdbRes.trendingAll,
+          errorResponse: null,
+        });
+      }
+    } catch (error) {
+      setTrendingAllData({
+        isLoading: false,
+        isError: true,
+        data: null,
+        errorResponse: error,
+      });
+    }
+  };
   const trendingMovies = async (time: "day" | "week", page: number) => {
     try {
       setTrendingMoviesData({
@@ -560,6 +593,8 @@ export const TMDBProvider = ({ children }: { children: React.ReactNode }) => {
         nowPlayingMoviesData,
         onTheAirTv,
         onTheAirTvData,
+        trendingAll,
+        trendingAllData,
       }}
     >
       {children}

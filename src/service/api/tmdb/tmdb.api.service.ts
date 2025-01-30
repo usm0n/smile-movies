@@ -97,7 +97,7 @@ export const tmdb = {
   },
 
   trending: async (
-    kind: "movie" | "tv",
+    kind: "movie" | "tv" | "all",
     time: "day" | "week",
     page: number
   ) => {

@@ -23,8 +23,8 @@ function EventMC() {
       <Card
         sx={{
           cursor: "pointer",
-          minHeight: "500px",
-          width: "300px",
+          minHeight: "400px",
+          width: "250px",
           background: "transparent",
           border: "1px solid gray",
           "@media (max-width: 800px)": {
