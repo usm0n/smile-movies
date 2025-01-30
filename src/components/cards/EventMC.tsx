@@ -1,12 +1,5 @@
-import { CalendarMonth, Save, Star } from "@mui/icons-material";
-import {
-  Box,
-  Card,
-  CardContent,
-  CardCover,
-  IconButton,
-  Typography,
-} from "@mui/joy";
+import { CalendarMonth, Star } from "@mui/icons-material";
+import { Box, Card, CardContent, CardCover, Typography } from "@mui/joy";
 
 // @ts-ignore
 import "swiper/css";
@@ -17,9 +10,21 @@ import "swiper/css/pagination";
 // @ts-ignore
 import "swiper/css/navigation";
 
-function EventMC() {
+function EventMC({
+  eventPoster,
+  eventTitle,
+  eventDate,
+  eventRating,
+  eventId,
+}: {
+  eventPoster: string;
+  eventTitle: string;
+  eventDate: string;
+  eventRating: number;
+  eventId: number;
+}) {
   return (
-    <Box>
+    <Box key={eventId}>
       <Card
         sx={{
           cursor: "pointer",
@@ -38,34 +43,19 @@ function EventMC() {
           },
         }}
       >
-        <CardCover
-          className="gradient-cover"
-          sx={{
-            "&:hover, &:focus-within": {
-              opacity: 1,
-            },
-            opacity: 0,
-            transition: "0.1s ease-in",
-            background:
-              "linear-gradient(180deg, transparent 62%, rgba(0,0,0,0.00345888) 63.94%, rgba(0,0,0,0.014204) 65.89%, rgba(0,0,0,0.0326639) 67.83%, rgba(0,0,0,0.0589645) 69.78%, rgba(0,0,0,0.0927099) 71.72%, rgba(0,0,0,0.132754) 73.67%, rgba(0,0,0,0.177076) 75.61%, rgba(0,0,0,0.222924) 77.56%, rgba(0,0,0,0.267246) 79.5%, rgba(0,0,0,0.30729) 81.44%, rgba(0,0,0,0.341035) 83.39%, rgba(0,0,0,0.367336) 85.33%, rgba(0,0,0,0.385796) 87.28%, rgba(0,0,0,0.396541) 89.22%, rgba(0,0,0,0.4) 91.17%)",
-          }}
-        >
-          <div>
-            <IconButton>
-              <Save />
-            </IconButton>
-          </div>
-        </CardCover>
         <CardCover>
-          <img
-            src="https://image.tmdb.org/t/p/original/d8Ryb8AunYAuycVKDp5HpdWPKgC.jpg"
-            alt=""
-          />
+          <img src={`https://image.tmdb.org/t/p/original${eventPoster}`} />
         </CardCover>
-
+        <CardCover
+          sx={{
+            background:
+              "linear-gradient(to top, rgba(0,0,0,0.4), rgba(0,0,0,0) 200px), linear-gradient(to top, rgba(0,0,0,0.8), rgba(0,0,0,0) 150px)",
+          }}
+        />
         <CardContent sx={{ justifyContent: "flex-end" }}>
           <Typography
             sx={{
+              textShadow: "0px 0px 10px rgba(0, 0, 0, 1)",
               "@media (max-width: 800px)": {
                 fontSize: "17px",
               },
@@ -73,7 +63,7 @@ function EventMC() {
             level="h3"
             textColor={"common.white"}
           >
-            Sonic the hedgehog 3
+            {eventTitle}
           </Typography>
           <Box display={"flex"} gap={2}>
             <Typography
@@ -86,7 +76,7 @@ function EventMC() {
                 },
               }}
             >
-              2024-12-19
+              {eventDate}
             </Typography>
             <Typography
               level="body-md"
@@ -98,7 +88,7 @@ function EventMC() {
                 },
               }}
             >
-              7
+              {eventRating}
             </Typography>
           </Box>
         </CardContent>
