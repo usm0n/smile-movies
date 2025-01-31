@@ -10,11 +10,10 @@ a {
   transition: 0.1s;
 }
 a:hover {
-  color: rgb(255, 226, 97);
+  color: rgb(255, 216, 77);
 }
 
 body {
-  background-color: #000;
   font-family: "Roboto", sans-serif;
 }
 

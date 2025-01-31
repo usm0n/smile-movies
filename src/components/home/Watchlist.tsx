@@ -18,7 +18,6 @@ function Watchlist() {
         endDecorator={<ArrowForwardIos />}
         level="h1"
         sx={{
-          color: "white",
           "@media (max-width: 800px)": {
             fontSize: "25px",
           },
@@ -57,8 +56,8 @@ function Watchlist() {
             margin: "0 auto"
           }}
         >
-          <BookmarkAdd sx={{ color: "white", fontSize: "50px" }} />
-          <Typography level="h2" textColor={"neutral.100"}>
+          <BookmarkAdd sx={{ fontSize: "50px" }} />
+          <Typography level="h2">
             <Link
               sx={{
                 color: "rgb(255, 216, 77)",
@@ -74,7 +73,7 @@ function Watchlist() {
             </Link>{" "}
             to access your watchlist
           </Typography>
-          <Typography level="body-md" textColor={"neutral.300"}>
+          <Typography level="body-md" >
             Save shows and movies to keep track of what you want to watch
           </Typography>
           <Button

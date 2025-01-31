@@ -26,15 +26,6 @@ function Header() {
   return (
     <div>
       <Swiper
-        style={
-          {
-            "--swiper-pagination-color": "#FFBA08",
-            "--swiper-pagination-bullet-inactive-color": "#999999",
-            "--swiper-pagination-bullet-inactive-opacity": "1",
-            "--swiper-pagination-bullet-size": "10px",
-            "--swiper-pagination-bullet-horizontal-gap": "5px",
-          } as any
-        }
         slidesPerView={1}
         effect={"fade"}
         spaceBetween={30}
@@ -163,13 +154,15 @@ function Header() {
                           <Box display={"flex"} gap={2}>
                             <Typography
                               textColor={"neutral.300"}
-                              startDecorator={<CalendarMonth />}
+                              startDecorator={
+                                <CalendarMonth sx={{ color: "lightgray" }} />
+                              }
                             >
                               {movie?.release_date || movie?.first_air_date}
                             </Typography>
                             <Typography
                               textColor={"neutral.300"}
-                              startDecorator={<Star />}
+                              startDecorator={<Star sx={{ color: "lightgray" }}/>}
                             >
                               {movie?.vote_average}
                             </Typography>

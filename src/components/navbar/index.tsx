@@ -1,6 +1,10 @@
 "use client";
 
-import { Logout, Search, WarningRounded } from "@mui/icons-material";
+import {
+  Logout,
+  Search,
+  WarningRounded,
+} from "@mui/icons-material";
 import MenuIcon from "@mui/icons-material/Menu";
 import logo from "../../assets/images/logo.png";
 import {
@@ -29,12 +33,14 @@ import {
 } from "@mui/joy";
 import { isLoggedIn, redirect } from "../../utilities/defaults";
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 function Navbar() {
   const [logoutModal, setLogoutModal] = useState(false);
   const [searchVisibility, setSearchVisibility] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
+
+  const navigate = useNavigate();
   return (
     <div className="navbar">
       <Box display={"flex"} gap={1}>
@@ -85,10 +91,10 @@ function Navbar() {
         <IconButton
           onClick={() => setSearchVisibility(!searchVisibility)}
           sx={{
-            color: "gray",
+            transition: "200ms",
+            borderRadius: "50%",
             ":hover": {
-              backgroundColor: "transparent",
-              color: "white",
+              backgroundColor: "rgb(0, 0, 0, 0.2)",
             },
             "@media (min-width: 1000px)": {
               display: "none",
@@ -106,7 +112,21 @@ function Navbar() {
           }}
         >
           {!isLoggedIn ? (
-            <Button color="neutral">Sign In</Button>
+            <Button
+              onClick={() => navigate("/login")}
+              sx={{
+                background: "rgb(255, 216, 77)",
+                color: "black",
+                ":hover": {
+                  background: "rgb(255, 216, 77)",
+                  color: "black",
+                  opacity: 0.8,
+                  transition: "200ms",
+                },
+              }}
+            >
+              Sign In
+            </Button>
           ) : (
             <Dropdown>
               <MenuButton
@@ -176,25 +196,31 @@ function Navbar() {
         <ModalClose />
         <Box padding={2} paddingTop={7}>
           <List>
-            {isLoggedIn? 
-            <ListItemButton
-              sx={{
-                justifyContent: "space-between",
-              }}
-            >
-              <Avatar>UR</Avatar>
-              <Tooltip title="View Profile">
-                <Stack>
-                  <Typography>Usmon Umarovich</Typography>
-                  <Typography level="body-xs">usmonw@icloud.com</Typography>
-                </Stack>
-              </Tooltip>
-              <Tooltip title="Logout">
-                <IconButton onClick={() => setLogoutModal(true)} color="danger">
-                  <Logout />
-                </IconButton>
-              </Tooltip>
-            </ListItemButton> : <Button>Sign in</Button>}
+            {isLoggedIn ? (
+              <ListItemButton
+                sx={{
+                  justifyContent: "space-between",
+                }}
+              >
+                <Avatar>UR</Avatar>
+                <Tooltip title="View Profile">
+                  <Stack>
+                    <Typography>Usmon Umarovich</Typography>
+                    <Typography level="body-xs">usmonw@icloud.com</Typography>
+                  </Stack>
+                </Tooltip>
+                <Tooltip title="Logout">
+                  <IconButton
+                    onClick={() => setLogoutModal(true)}
+                    color="danger"
+                  >
+                    <Logout />
+                  </IconButton>
+                </Tooltip>
+              </ListItemButton>
+            ) : (
+              <Button>Sign in</Button>
+            )}
           </List>
           <br />
           <Divider />
