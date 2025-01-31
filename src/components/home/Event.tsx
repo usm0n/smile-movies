@@ -23,7 +23,7 @@ function Event({
       }}
     >
       <Typography
-        endDecorator={<ArrowForwardIos />}
+        endDecorator={<ArrowForwardIos sx={{color: "rgb(255, 216, 77)"}}/>}
         level="h1"
         sx={{
           color: "rgb(255, 216, 77)",
