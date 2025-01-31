@@ -1,4 +1,4 @@
-import { Apple, GitHub, Lock, Mail } from "@mui/icons-material";
+import { GitHub, Lock, Mail } from "@mui/icons-material";
 import {
   Box,
   Button,
@@ -9,7 +9,6 @@ import {
   FormLabel,
   Input,
   Link,
-  Stack,
   Typography,
 } from "@mui/joy";
 import SvgIcon from "@mui/joy/SvgIcon";
