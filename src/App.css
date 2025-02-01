@@ -37,12 +37,12 @@ body {
 .poster_image {
   width: 250px;
   border-radius: 25px;
-  box-shadow: 0 0 30px rgba(255, 255, 255, 0.1);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.531);
 }
 
 .backdrop_image {
   display: flex;
-  border-radius: 25px;
+  /* border-radius: 25px; */
   position: relative;
   height: 90vh;
   width: 100%;
