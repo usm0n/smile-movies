@@ -8,6 +8,7 @@ export interface User {
   isVerified: boolean;
   isAdmin: boolean;
   isBanned: boolean;
+  watchlist: { id: string; type: string }[];
 }
 
 export interface UserRegister {

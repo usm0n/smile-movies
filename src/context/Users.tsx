@@ -1,7 +1,7 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import * as userType from "../user";
 import { users } from "../service/api/smb/users.api.service";
-import { deleteCookie, setCookie } from "../utilities/defaults";
+import { deleteCookie, isLoggedIn, setCookie } from "../utilities/defaults";
 
 const UsersContext = createContext({
   usersData: null as userType.ResponseType | null,
@@ -624,9 +624,7 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const logout = () => {
-    setTimeout(() => {
-      deleteCookie("authToken");
-    }, 1000);
+    deleteCookie("authToken");
   };
 
   const verify = async (token: string) => {
@@ -993,6 +991,11 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  useEffect(() => {
+    if (isLoggedIn) {
+      getMyself();
+    }
+  }, [isLoggedIn]);
   return (
     <UsersContext.Provider
       value={{
