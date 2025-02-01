@@ -9,7 +9,7 @@ import "swiper/css/pagination";
 // @ts-ignore
 import "swiper/css/navigation";
 
-import { EffectFade, Autoplay, Pagination, Navigation } from "swiper/modules";
+import { EffectFade, Navigation } from "swiper/modules";
 import { Box, Typography } from "@mui/joy";
 import { CalendarMonth, Star } from "@mui/icons-material";
 import { useTMDB } from "../../context/TMDB";
@@ -36,7 +36,7 @@ function Header() {
         pagination={{
           clickable: true,
         }}
-        modules={[Autoplay, EffectFade, Pagination, Navigation]}
+        modules={[EffectFade, Navigation]}
         className="mySwiper"
       >
         {trendingAllData?.isLoading ? (
@@ -162,7 +162,9 @@ function Header() {
                             </Typography>
                             <Typography
                               textColor={"neutral.300"}
-                              startDecorator={<Star sx={{ color: "lightgray" }}/>}
+                              startDecorator={
+                                <Star sx={{ color: "lightgray" }} />
+                              }
                             >
                               {movie?.vote_average}
                             </Typography>

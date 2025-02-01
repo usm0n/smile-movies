@@ -6,9 +6,17 @@ import Navbar from "./components/navbar";
 import { Box, useColorScheme } from "@mui/joy";
 
 function App() {
-  const { systemMode } = useColorScheme();
+  const { colorScheme } = useColorScheme();
+
   return (
-    <Box sx={{ backgroundColor: systemMode === "light" ? "rgba(255, 255, 255, 0.63)" : "rgb(0, 0, 0)" }}>
+    <Box
+      sx={{
+        backgroundColor:
+          colorScheme === "light"
+            ? "rgba(255, 255, 255, 0.63)"
+            : "rgb(0, 0, 0)",
+      }}
+    >
       <Navbar />
       <Routes>
         {mainRoutes.map((route, index) => (
