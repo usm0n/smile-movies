@@ -31,7 +31,7 @@ function EventMC({
           minHeight: "400px",
           width: "250px",
           background: "transparent",
-          border: "1px solid gray",
+          // border: "1px solid gray",
           "@media (max-width: 800px)": {
             margin: "0 auto",
             width: "200px",

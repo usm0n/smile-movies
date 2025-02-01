@@ -1,5 +1,4 @@
-import { Box, Card, CardContent, CardCover } from "@mui/joy";
-import { Skeleton } from "@mui/material";
+import { Box, Card, CardContent, CardCover, Skeleton } from "@mui/joy";
 
 function EventMCS() {
   return (

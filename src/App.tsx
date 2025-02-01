@@ -13,7 +13,7 @@ function App() {
       sx={{
         backgroundColor:
           colorScheme === "light"
-            ? "rgba(255, 255, 255, 0.63)"
+            ? "rgb(255, 255, 255)"
             : "rgb(0, 0, 0)",
       }}
     >

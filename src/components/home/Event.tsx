@@ -1,4 +1,4 @@
-import { Box, Typography } from "@mui/joy";
+import { Box, Typography, useColorScheme } from "@mui/joy";
 import EventMC from "../cards/EventMC";
 import { ArrowForwardIos } from "@mui/icons-material";
 import * as tmdbRes from "../../tmdb-res";
@@ -11,6 +11,7 @@ function Event({
   eventTitle: string;
   eventData: tmdbRes.ResponseType | null;
 }) {
+  const { colorScheme } = useColorScheme();
   return (
     <Box
       sx={{
@@ -23,10 +24,16 @@ function Event({
       }}
     >
       <Typography
-        endDecorator={<ArrowForwardIos sx={{color: "rgb(255, 216, 77)"}}/>}
+        endDecorator={
+          <ArrowForwardIos
+            sx={{
+              color: colorScheme === "dark" ? "rgb(255, 216, 77)" : "rgb(255, 200, 0)",
+            }}
+          />
+        }
         level="h1"
         sx={{
-          color: "rgb(255, 216, 77)",
+          color: colorScheme === "dark" ? "rgb(255, 216, 77)" : "rgb(255, 200, 0)",
           "@media (max-width: 800px)": {
             fontSize: "25px",
           },
