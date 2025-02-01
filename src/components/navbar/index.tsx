@@ -44,10 +44,17 @@ function Navbar() {
   const [searchVisibility, setSearchVisibility] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const { colorScheme, setMode } = useColorScheme();
-
   const navigate = useNavigate();
   return (
-    <div className="navbar">
+    <div
+      style={{
+        backgroundColor:
+          colorScheme === "dark"
+            ? "rgba(0, 0, 0, 0.3)"
+            : "rgba(255, 255, 255, 0.3)",
+      }}
+      className="navbar"
+    >
       <Box display={"flex"} gap={1}>
         <IconButton
           onClick={() => setDrawerOpen(true)}
@@ -65,6 +72,7 @@ function Navbar() {
       </Box>
       <Box
         sx={{
+          textShadow: "0 0 3px rgb(0, 0, 0, 0.7)",
           "@media (max-width: 700px)": {
             display: "none",
           },
@@ -178,7 +186,11 @@ function Navbar() {
               width: "36px",
             }}
           >
-            {colorScheme === "light" ? <LightMode /> : <DarkMode />}
+            {colorScheme === "light" ? (
+              <LightMode sx={{ color: "rgb(255, 200, 0)" }} />
+            ) : (
+              <DarkMode sx={{ color: "white" }} />
+            )}
           </MenuButton>
           <Menu>
             <MenuItem onClick={() => setMode("system")}>
