@@ -88,7 +88,7 @@ function EventMC({
                 },
               }}
             >
-              {eventRating}
+              {eventRating.toString().slice(0, 3)}
             </Typography>
           </Box>
         </CardContent>

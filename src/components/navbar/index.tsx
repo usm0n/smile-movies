@@ -30,6 +30,7 @@ import {
   Modal,
   ModalClose,
   ModalDialog,
+  Skeleton,
   Stack,
   Tooltip,
   Typography,
@@ -38,16 +39,27 @@ import {
 import { isLoggedIn, redirect } from "../../utilities/defaults";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useUsers } from "../../context/Users";
+import { User } from "../../user";
 
 function Navbar() {
   const [logoutModal, setLogoutModal] = useState(false);
   const [searchVisibility, setSearchVisibility] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const { colorScheme, setMode } = useColorScheme();
-
+  const { myselfData, logout } = useUsers();
   const navigate = useNavigate();
+  const user = myselfData?.data as User;
   return (
-    <div className="navbar">
+    <div
+      style={{
+        backgroundColor:
+          colorScheme === "dark"
+            ? "rgba(0, 0, 0, 0.3)"
+            : "rgba(255, 255, 255, 0.3)",
+      }}
+      className="navbar"
+    >
       <Box display={"flex"} gap={1}>
         <IconButton
           onClick={() => setDrawerOpen(true)}
@@ -65,6 +77,7 @@ function Navbar() {
       </Box>
       <Box
         sx={{
+          textShadow: "0 0 3px rgb(0, 0, 0, 0.7)",
           "@media (max-width: 700px)": {
             display: "none",
           },
@@ -132,6 +145,46 @@ function Navbar() {
             >
               Sign In
             </Button>
+          ) : myselfData?.isLoading ? (
+            <Dropdown>
+              <MenuButton
+                sx={{
+                  border: "none",
+                  transition: "200ms",
+                  ":hover": {
+                    backgroundColor: "transparent",
+                  },
+                  ":active": {
+                    scale: 1.1,
+                  },
+                }}
+              >
+                <Avatar></Avatar>
+              </MenuButton>
+              <Menu>
+                <MenuItem>
+                  <Avatar></Avatar>
+                  <Tooltip title="View Profile">
+                    <Stack>
+                      <Skeleton variant="text" sx={{ width: "120px" }} />
+                      <Skeleton
+                        variant="text"
+                        sx={{ width: "100px", height: "15px" }}
+                      />
+                    </Stack>
+                  </Tooltip>
+                  <Tooltip title="Logout">
+                    <IconButton
+                      disabled
+                      onClick={() => setLogoutModal(true)}
+                      color="danger"
+                    >
+                      <Logout />
+                    </IconButton>
+                  </Tooltip>
+                </MenuItem>
+              </Menu>
+            </Dropdown>
           ) : (
             <Dropdown>
               <MenuButton
@@ -146,15 +199,23 @@ function Navbar() {
                   },
                 }}
               >
-                <Avatar>UR</Avatar>
+                <Avatar>
+                  {user?.firstname?.slice(0, 1)}
+                  {user?.lastname?.slice(0, 1)}
+                </Avatar>
               </MenuButton>
               <Menu>
                 <MenuItem>
-                  <Avatar>UR</Avatar>
+                  <Avatar>
+                    {user?.firstname?.slice(0, 1)}
+                    {user?.lastname?.slice(0, 1)}
+                  </Avatar>
                   <Tooltip title="View Profile">
                     <Stack>
-                      <Typography>Usmon Umarovich</Typography>
-                      <Typography level="body-xs">usmonw@icloud.com</Typography>
+                      <Typography>
+                        {user?.firstname} {user?.lastname}
+                      </Typography>
+                      <Typography level="body-xs">{user?.email}</Typography>
                     </Stack>
                   </Tooltip>
                   <Tooltip title="Logout">
@@ -178,7 +239,11 @@ function Navbar() {
               width: "36px",
             }}
           >
-            {colorScheme === "light" ? <LightMode /> : <DarkMode />}
+            {colorScheme === "light" ? (
+              <LightMode sx={{ color: "rgb(255, 200, 0)" }} />
+            ) : (
+              <DarkMode sx={{ color: "white" }} />
+            )}
           </MenuButton>
           <Menu>
             <MenuItem onClick={() => setMode("system")}>
@@ -204,11 +269,7 @@ function Navbar() {
           <Divider />
           <DialogContent>Are you sure you want to log out?</DialogContent>
           <DialogActions>
-            <Button
-              variant="solid"
-              color="danger"
-              onClick={() => setLogoutModal(false)}
-            >
+            <Button variant="solid" color="danger" onClick={() => logout()}>
               Log out
             </Button>
             <Button

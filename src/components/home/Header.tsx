@@ -27,17 +27,12 @@ function Header() {
     <div>
       <Swiper
         slidesPerView={1}
-        effect={"fade"}
-        spaceBetween={30}
+        spaceBetween={10}
         autoplay={{
           delay: 2500,
           disableOnInteraction: false,
         }}
-        pagination={{
-          clickable: true,
-        }}
         modules={[Autoplay, Navigation]}
-        className="mySwiper"
       >
         {trendingAllData?.isLoading ? (
           <Skeleton

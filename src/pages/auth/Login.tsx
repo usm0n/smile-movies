@@ -1,4 +1,10 @@
-import { GitHub, Lock, Mail } from "@mui/icons-material";
+import {
+  GitHub,
+  Lock,
+  Mail,
+  Visibility,
+  VisibilityOff,
+} from "@mui/icons-material";
 import {
   Box,
   Button,
@@ -7,16 +13,50 @@ import {
   FormControl,
   FormHelperText,
   FormLabel,
+  IconButton,
   Input,
   Link,
   Typography,
 } from "@mui/joy";
 import SvgIcon from "@mui/joy/SvgIcon";
+import { useUsers } from "../../context/Users";
+import { useEffect, useState } from "react";
+import { UserLogin } from "../../user";
+import { isLoggedIn, isValidEmail } from "../../utilities/defaults";
+import { useNavigate } from "react-router-dom";
 
 function Login() {
+  const { login, loginData } = useUsers();
+  const [passwordVisibility, setPasswordVisibility] = useState<boolean>(false);
+  const [userValue, setUserValue] = useState<UserLogin>({
+    email: "",
+    password: "",
+  });
+
+  const navigate = useNavigate();
+
+  const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setUserValue((prevUserData) => ({
+      ...prevUserData,
+      [name]: value.toLocaleLowerCase(),
+    }));
+  };
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      navigate("/");
+    }
+  }, [isLoggedIn]);
+
   return (
-    <form>
-      <FormControl
+    <form
+      onSubmit={(e) => {
+        e?.preventDefault();
+        login(userValue);
+      }}
+    >
+      <Box
         sx={{
           display: "flex",
           alignItems: "center",
@@ -33,14 +73,49 @@ function Login() {
         >
           <FormLabel sx={{ fontSize: "20px" }}>Sign in</FormLabel>
           <Box gap={1} display={"flex"} flexDirection={"column"}>
-            <Input placeholder="Email" startDecorator={<Mail />} />
-            <Input
-              placeholder="Password"
-              type="password"
-              startDecorator={<Lock />}
-            />
+            <FormControl color={loginData?.isError ? "danger" : "neutral"}>
+              <FormLabel>Email</FormLabel>
+              <Input
+                name="email"
+                onChange={handleInput}
+                value={userValue.email}
+                placeholder="user@example.com"
+                startDecorator={<Mail />}
+              />
+              <FormHelperText>
+                {loginData?.isError && "Invalid credentials"}
+              </FormHelperText>
+            </FormControl>
+
+            <FormControl color={loginData?.isError ? "danger" : "neutral"}>
+              <FormLabel>Password</FormLabel>
+              <Input
+                name="password"
+                onChange={handleInput}
+                value={userValue.password}
+                endDecorator={
+                  <IconButton
+                    onClick={() => setPasswordVisibility(!passwordVisibility)}
+                  >
+                    {passwordVisibility ? <VisibilityOff /> : <Visibility />}
+                  </IconButton>
+                }
+                placeholder="Your Password"
+                type={passwordVisibility ? "text" : "password"}
+                startDecorator={<Lock />}
+              />
+              <FormHelperText>
+                {loginData?.isError && "Invalid credentials"}
+              </FormHelperText>
+            </FormControl>
           </Box>
           <Button
+            type="submit"
+            disabled={
+              !isValidEmail(userValue.email) ||
+              !userValue ||
+              loginData?.isLoading
+            }
             sx={{
               background: "rgb(255, 216, 77)",
               color: "black",
@@ -51,9 +126,11 @@ function Login() {
               },
             }}
           >
-            Sign in
+            {loginData?.isLoading ? "Loading..." : "Sign in"}
           </Button>
-          <FormHelperText>Don't have an account yet? <Link>Create one</Link></FormHelperText>
+          <FormHelperText>
+            Don't have an account yet? <Link>Create one</Link>
+          </FormHelperText>
           <Divider>or</Divider>
           <Box gap={2} display={"flex"} flexDirection={"column"}>
             <Card
@@ -90,7 +167,7 @@ function Login() {
             </Card>
           </Box>
         </Card>
-      </FormControl>
+      </Box>
     </form>
   );
 }

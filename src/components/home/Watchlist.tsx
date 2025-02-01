@@ -33,15 +33,24 @@ function Watchlist() {
       </Typography>
       {isLoggedIn ? (
         <Box
-          display={"flex"}
-          gap={3}
-          overflow={"scroll"}
           sx={{
-            scrollbarColor: "rgb(255, 216, 77) rgba(255, 216, 77, 0.41)",
-            scrollbarWidth: "thin",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            height: "50vh",
+            gap: 2,
+            textAlign: "center",
+            width: "90%",
+            margin: "0 auto",
           }}
         >
-
+          <BookmarkAdd sx={{ fontSize: "50px" }} />
+          <Typography level="h2">
+            There's no shows or movies in your watchlist
+          </Typography>
+          <Typography level="body-md">
+            Add shows and movies to keep track of what you want to watch
+          </Typography>
         </Box>
       ) : (
         <Box
@@ -53,7 +62,7 @@ function Watchlist() {
             gap: 2,
             textAlign: "center",
             width: "90%",
-            margin: "0 auto"
+            margin: "0 auto",
           }}
         >
           <BookmarkAdd sx={{ fontSize: "50px" }} />
@@ -73,7 +82,7 @@ function Watchlist() {
             </Link>{" "}
             to access your watchlist
           </Typography>
-          <Typography level="body-md" >
+          <Typography level="body-md">
             Save shows and movies to keep track of what you want to watch
           </Typography>
           <Button
