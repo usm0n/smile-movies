@@ -1,8 +1,11 @@
 "use client";
 
 import {
+  DarkMode,
+  LightMode,
   Logout,
   Search,
+  Source,
   WarningRounded,
 } from "@mui/icons-material";
 import MenuIcon from "@mui/icons-material/Menu";
@@ -30,6 +33,7 @@ import {
   Stack,
   Tooltip,
   Typography,
+  useColorScheme,
 } from "@mui/joy";
 import { isLoggedIn, redirect } from "../../utilities/defaults";
 import { useState } from "react";
@@ -39,6 +43,7 @@ function Navbar() {
   const [logoutModal, setLogoutModal] = useState(false);
   const [searchVisibility, setSearchVisibility] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const { colorScheme, setMode } = useColorScheme();
 
   const navigate = useNavigate();
   return (
@@ -165,6 +170,30 @@ function Navbar() {
             </Dropdown>
           )}
         </Box>
+        <Dropdown>
+          <MenuButton
+            sx={{
+              border: "none",
+              borderRadius: "50%",
+              width: "36px",
+            }}
+          >
+            {colorScheme === "light" ? <LightMode /> : <DarkMode />}
+          </MenuButton>
+          <Menu>
+            <MenuItem onClick={() => setMode("system")}>
+              <Typography startDecorator={<Source />}>System Theme</Typography>
+            </MenuItem>
+            <MenuItem onClick={() => setMode("light")}>
+              <Typography startDecorator={<LightMode />}>
+                Light Theme
+              </Typography>
+            </MenuItem>
+            <MenuItem onClick={() => setMode("dark")}>
+              <Typography startDecorator={<DarkMode />}>Dark Theme</Typography>
+            </MenuItem>
+          </Menu>
+        </Dropdown>
       </Box>
       <Modal open={logoutModal} onClose={() => setLogoutModal(false)}>
         <ModalDialog minWidth={500} variant="outlined" role="alertdialog">
