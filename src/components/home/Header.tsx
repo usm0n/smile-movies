@@ -43,7 +43,7 @@ function Header() {
             height={600}
           />
         ) : (
-          (trendingAllData?.data as trendingAll)?.results.map(
+          (trendingAllData?.data as trendingAll)?.results.filter((movie) => movie.media_type !== "person").map(
             (movie, index) => {
               return (
                 <SwiperSlide key={index}>
@@ -60,7 +60,7 @@ function Header() {
                       <img
                         loading="lazy"
                         className="backdrop_image"
-                        src={`https://image.tmdb.org/t/p/original${movie.backdrop_path}`}
+                        src={`https://image.tmdb.org/t/p/w200${movie.backdrop_path}`}
                       />
                     ) : (
                       <img
@@ -110,7 +110,7 @@ function Header() {
                           <img
                             loading="lazy"
                             className="poster_image"
-                            src={`https://image.tmdb.org/t/p/original${movie?.poster_path}`}
+                            src={`https://image.tmdb.org/t/p/w500${movie?.poster_path}`}
                           />
                         ) : (
                           <img

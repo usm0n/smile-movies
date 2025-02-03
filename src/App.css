@@ -18,7 +18,6 @@ body {
 }
 
 .navbar {
-    
   backdrop-filter: blur(20px);
   box-shadow: 0 0 30px rgba(255, 255, 255, 0.1);
   padding: 15px;
@@ -48,6 +47,7 @@ body {
   width: 100%;
   object-fit: cover;
   background-position: center;
+  filter: blur(10px);
 }
 
 @media screen and (max-width: 1000px) {
