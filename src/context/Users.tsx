@@ -581,46 +581,41 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const login = async (user: userType.UserLogin) => {
-    try {
-      setLoginData({
-        isLoading: true,
-        isError: false,
-        data: null,
-        errorResponse: null,
-      });
-      const response = await users.login(user);
+    setLoginData({
+      isLoading: true,
+      isError: false,
+      data: null,
+      errorResponse: null,
+    });
+    await users.login(user).then((res) => {
       if (
-        response &&
-        "response" in response &&
-        typeof response.response === "object" &&
-        response.response !== null &&
-        "data" in response.response
+        "response" in res &&
+        typeof res.response === "object" &&
+        res.response !== null &&
+        "data" in res.response
       ) {
         setLoginData({
           isLoading: false,
           isError: true,
           data: null,
-          errorResponse: response.response.data as userType.Message,
+          errorResponse: res.response.data as userType.Message,
         });
-      } else {
+      } else if (
+        "data" in res &&
+        typeof res.data === "object" &&
+        res.data !== null
+      ) {
         setLoginData({
           isLoading: false,
           isError: false,
-          data: response,
+          data: res.data as userType.TokenResponse,
           errorResponse: null,
         });
-        if ("token" in response) {
-          setCookie("authToken", response.token);
+        if ("token" in res.data && typeof res.data.token === "string") {
+          setCookie("authToken", res.data.token);
         }
       }
-    } catch (error) {
-      setLoginData({
-        isLoading: false,
-        isError: true,
-        data: null,
-        errorResponse: error,
-      });
-    }
+    });
   };
 
   const logout = () => {

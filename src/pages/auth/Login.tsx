@@ -12,7 +12,6 @@ import {
   Link,
   useColorScheme,
 } from "@mui/joy";
-import { useUsers } from "../../context/Users";
 import { useEffect, useState } from "react";
 import { GoogleUserResponse, UserLogin } from "../../user";
 import {
@@ -23,14 +22,16 @@ import {
 import { useNavigate } from "react-router-dom";
 import { GoogleLogin } from "@react-oauth/google";
 import { jwtDecode } from "jwt-decode";
+import { useUsers } from "../../context/Users";
 
 function Login() {
-  const { login, loginData, register, registerData } = useUsers();
   const [passwordVisibility, setPasswordVisibility] = useState<boolean>(false);
   const [userValue, setUserValue] = useState<UserLogin>({
     email: "",
     password: "",
   });
+
+  const { login, loginData } = useUsers();
 
   const { colorScheme } = useColorScheme();
 
@@ -57,10 +58,7 @@ function Login() {
         login(userValue);
       }}
     >
-      {backdropLoading(
-        loginData?.isLoading || registerData?.isLoading,
-        colorScheme
-      )}
+      {backdropLoading(loginData?.isLoading, colorScheme)}
       <Box
         sx={{
           display: "flex",
@@ -150,16 +148,7 @@ function Login() {
                   email: decodedToken.email,
                   password: decodedToken.sub,
                 }).then(() => {
-                  if (loginData?.isError) {
-                    register({
-                      email: decodedToken.email,
-                      password: decodedToken.sub,
-                      firstname: decodedToken.given_name,
-                      lastname: decodedToken.family_name,
-                      profilePic: decodedToken.picture,
-                      isVerified: true,
-                    });
-                  }
+                  console.log(loginData);
                 });
               }}
               onError={() => console.log("Login Failed")}
@@ -167,6 +156,12 @@ function Login() {
               auto_select
             />
           </Box>
+          {/* <FormControl sx={{ width: "300px" }} color="danger">
+            <FormHelperText>
+              This email is already used by "Email & Password" method. Please
+              enter the password correctly or try another Google Account
+            </FormHelperText>
+          </FormControl> */}
         </Card>
       </Box>
     </form>
