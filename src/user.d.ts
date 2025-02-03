@@ -1,4 +1,5 @@
 export interface User {
+  profilePic?: string;
   id: string;
   firstname: string;
   lastname?: string;
@@ -9,6 +10,10 @@ export interface User {
   isAdmin: boolean;
   isBanned: boolean;
   watchlist: { id: string; type: string }[];
+  favorites: {
+    id: string;
+    type: string;
+  }[];
 }
 
 export interface UserRegister {
@@ -16,6 +21,8 @@ export interface UserRegister {
   lastname?: string;
   email: string;
   password: string;
+  profilePic?: string;
+  isVerified?: boolean;
 }
 export interface UserLogin {
   email: string;
@@ -33,6 +40,23 @@ export interface CatchError {
 
 export interface TokenResponse {
   token: string;
+}
+
+export interface GoogleUserResponse {
+  iss: string;
+  nbf: number;
+  aud: string;
+  sub: string;
+  email: string;
+  email_verified: boolean;
+  azp: string;
+  name: string;
+  picture: string;
+  given_name: string;
+  family_name: string;
+  iat: number;
+  exp: number;
+  jti: string;
 }
 
 export interface ResponseType {
