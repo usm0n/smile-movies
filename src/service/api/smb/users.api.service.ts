@@ -100,10 +100,10 @@ export const users = {
   login: async (user: UserLogin) => {
     try {
       const response = await smbAPI.post("/users/login", user);
-      return response;
+      return response.data as TokenResponse | Message;  
     } catch (error: any) {
       console.log(error);
-      
+
       return error.response.data as CatchError;
     }
   },

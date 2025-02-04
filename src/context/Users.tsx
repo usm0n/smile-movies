@@ -152,28 +152,13 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
         errorResponse: null,
       });
       const response = await users.getAll();
-      if (
-        response &&
-        "response" in response &&
-        typeof response.response === "object" &&
-        response.response !== null &&
-        "data" in response.response
-      ) {
+      if (response) {
         setUsersData({
           isLoading: false,
-          isError: true,
-          data: null,
-          errorResponse: response.response.data as userType.Message,
+          isError: false,
+          data: response as userType.User[],
+          errorResponse: null,
         });
-      } else {
-        if (response) {
-          setUsersData({
-            isLoading: false,
-            isError: false,
-            data: response as userType.User[],
-            errorResponse: null,
-          });
-        }
       }
     } catch (error) {
       setUsersData({
@@ -194,27 +179,12 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
         errorResponse: null,
       });
       const response = await users.getById(id);
-      if (
-        response &&
-        "response" in response &&
-        typeof response.response === "object" &&
-        response.response !== null &&
-        "data" in response.response
-      ) {
-        setUserByIdData({
-          isLoading: false,
-          isError: true,
-          data: null,
-          errorResponse: response.response.data as userType.Message,
-        });
-      } else {
-        setUserByIdData({
-          isLoading: false,
-          isError: false,
-          data: response as userType.User,
-          errorResponse: null,
-        });
-      }
+      setUserByIdData({
+        isLoading: false,
+        isError: false,
+        data: response as userType.User,
+        errorResponse: null,
+      });
     } catch (error) {
       setUserByIdData({
         isLoading: false,
@@ -233,20 +203,7 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
         errorResponse: null,
       });
       const response = await users.getByEmail(email);
-      if (
-        response &&
-        "response" in response &&
-        typeof response.response === "object" &&
-        response.response !== null &&
-        "data" in response.response
-      ) {
-        setUserByEmailData({
-          isLoading: false,
-          isError: true,
-          data: null,
-          errorResponse: response.response.data as userType.Message,
-        });
-      } else {
+      if (response) {
         setUserByEmailData({
           isLoading: false,
           isError: false,
@@ -272,20 +229,7 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
         errorResponse: null,
       });
       const response = await users.getMyself();
-      if (
-        response &&
-        "response" in response &&
-        typeof response.response === "object" &&
-        response.response !== null &&
-        "data" in response.response
-      ) {
-        setMyselfData({
-          isLoading: false,
-          isError: true,
-          data: null,
-          errorResponse: response.response.data as userType.Message,
-        });
-      } else {
+      if (response) {
         setMyselfData({
           isLoading: false,
           isError: false,
@@ -311,20 +255,7 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
         errorResponse: null,
       });
       const response = await users.updateById(id, user);
-      if (
-        response &&
-        "response" in response &&
-        typeof response.response === "object" &&
-        response.response !== null &&
-        "data" in response.response
-      ) {
-        setUpdatedUserByIdData({
-          isLoading: false,
-          isError: true,
-          data: null,
-          errorResponse: response.response.data as userType.Message,
-        });
-      } else {
+      if (response) {
         setUpdatedUserByIdData({
           isLoading: false,
           isError: false,
@@ -350,20 +281,7 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
         errorResponse: null,
       });
       const response = await users.updateByEmail(email, user);
-      if (
-        response &&
-        "response" in response &&
-        typeof response.response === "object" &&
-        response.response !== null &&
-        "data" in response.response
-      ) {
-        setUpdatedUserByEmailData({
-          isLoading: false,
-          isError: true,
-          data: null,
-          errorResponse: response.response.data as userType.Message,
-        });
-      } else {
+      if (response) {
         setUpdatedUserByEmailData({
           isLoading: false,
           isError: false,
@@ -389,21 +307,7 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
         errorResponse: null,
       });
       const response = await users.updateMyself(user);
-      if (
-        response &&
-        "response" in response &&
-        typeof response.response === "object" &&
-        response.response !== null &&
-        "data" in response.response
-      ) {
-        setUpdatedMyselfData({
-          isLoading: false,
-          isError: true,
-          data: null,
-          errorResponse: response.response.data as userType.Message,
-        });
-        return;
-      } else {
+      if (response) {
         setUpdatedMyselfData({
           isLoading: false,
           isError: false,
@@ -429,20 +333,7 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
         errorResponse: null,
       });
       const response = await users.deleteById(id);
-      if (
-        response &&
-        "response" in response &&
-        typeof response.response === "object" &&
-        response.response !== null &&
-        "data" in response.response
-      ) {
-        setDeletedUserByIdData({
-          isLoading: false,
-          isError: true,
-          data: null,
-          errorResponse: response.response.data as userType.Message,
-        });
-      } else {
+      if (response) {
         setDeletedUserByIdData({
           isLoading: false,
           isError: false,
@@ -468,20 +359,7 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
         errorResponse: null,
       });
       const response = await users.deleteByEmail(email);
-      if (
-        response &&
-        "response" in response &&
-        typeof response.response === "object" &&
-        response.response !== null &&
-        "data" in response.response
-      ) {
-        setDeletedUserByEmailData({
-          isLoading: false,
-          isError: true,
-          data: null,
-          errorResponse: response.response.data as userType.Message,
-        });
-      } else {
+      if (response) {
         setDeletedUserByEmailData({
           isLoading: false,
           isError: false,
@@ -507,20 +385,7 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
         errorResponse: null,
       });
       const response = await users.deleteMyself();
-      if (
-        response &&
-        "response" in response &&
-        typeof response.response === "object" &&
-        response.response !== null &&
-        "data" in response.response
-      ) {
-        setDeletedMyselfData({
-          isLoading: false,
-          isError: true,
-          data: null,
-          errorResponse: response.response.data as userType.Message,
-        });
-      } else {
+      if (response) {
         setDeletedMyselfData({
           isLoading: false,
           isError: false,
@@ -546,20 +411,7 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
         errorResponse: null,
       });
       const response = await users.register(user);
-      if (
-        response &&
-        "response" in response &&
-        typeof response.response === "object" &&
-        response.response !== null &&
-        "data" in response.response
-      ) {
-        setRegisterData({
-          isLoading: false,
-          isError: true,
-          data: null,
-          errorResponse: response.response.data as userType.Message,
-        });
-      } else {
+      if (response) {
         setRegisterData({
           isLoading: false,
           isError: false,
@@ -581,41 +433,33 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const login = async (user: userType.UserLogin) => {
-    setLoginData({
-      isLoading: true,
-      isError: false,
-      data: null,
-      errorResponse: null,
-    });
-    await users.login(user).then((res) => {
-      if (
-        "response" in res &&
-        typeof res.response === "object" &&
-        res.response !== null &&
-        "data" in res.response
-      ) {
-        setLoginData({
-          isLoading: false,
-          isError: true,
-          data: null,
-          errorResponse: res.response.data as userType.Message,
-        });
-      } else if (
-        "data" in res &&
-        typeof res.data === "object" &&
-        res.data !== null
-      ) {
+    try {
+      setLoginData({
+        isLoading: true,
+        isError: false,
+        data: null,
+        errorResponse: null,
+      });
+      const response = await users.login(user);
+      if (response) {
         setLoginData({
           isLoading: false,
           isError: false,
-          data: res.data as userType.TokenResponse,
+          data: response as userType.TokenResponse,
           errorResponse: null,
         });
-        if ("token" in res.data && typeof res.data.token === "string") {
-          setCookie("authToken", res.data.token);
+        if ("token" in response) {
+          setCookie("authToken", response.token);
         }
       }
-    });
+    } catch (error) {
+      setLoginData({
+        isLoading: false,
+        isError: true,
+        data: null,
+        errorResponse: error,
+      });
+    }
   };
 
   const logout = () => {
@@ -631,20 +475,6 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
         errorResponse: null,
       });
       const response = await users.verify(token);
-      if (
-        response &&
-        "response" in response &&
-        typeof response.response === "object" &&
-        response.response !== null &&
-        "data" in response.response
-      ) {
-        setVerifyData({
-          isLoading: false,
-          isError: true,
-          data: null,
-          errorResponse: response.response.data as userType.Message,
-        });
-      }
       if (response) {
         setVerifyData({
           isLoading: false,
@@ -672,20 +502,7 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
         errorResponse: null,
       });
       const response = await users.resendTokenVerification();
-      if (
-        response &&
-        "response" in response &&
-        typeof response.response === "object" &&
-        response.response !== null &&
-        "data" in response.response
-      ) {
-        setResendTokenVerificationData({
-          isLoading: false,
-          isError: true,
-          data: null,
-          errorResponse: response.response.data as userType.Message,
-        });
-      } else {
+      if (response) {
         setResendTokenVerificationData({
           isLoading: false,
           isError: false,
@@ -711,20 +528,7 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
         errorResponse: null,
       });
       const response = await users.forgotPassword(email);
-      if (
-        response &&
-        "response" in response &&
-        typeof response.response === "object" &&
-        response.response !== null &&
-        "data" in response.response
-      ) {
-        setForgotPasswordData({
-          isLoading: false,
-          isError: true,
-          data: null,
-          errorResponse: response.response.data as userType.Message,
-        });
-      } else {
+      if (response) {
         setForgotPasswordData({
           isLoading: false,
           isError: false,
@@ -751,20 +555,7 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
         errorResponse: null,
       });
       const response = await users.resendForgotPasswordToken(email);
-      if (
-        response &&
-        "response" in response &&
-        typeof response.response === "object" &&
-        response.response !== null &&
-        "data" in response.response
-      ) {
-        setResendForgotPasswordData({
-          isLoading: false,
-          isError: true,
-          data: null,
-          errorResponse: response.response.data as userType.Message,
-        });
-      } else {
+      if (response) {
         setResendForgotPasswordData({
           isLoading: false,
           isError: false,
@@ -795,20 +586,7 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
         errorResponse: null,
       });
       const response = await users.resetPassword(email, token, password);
-      if (
-        response &&
-        "response" in response &&
-        typeof response.response === "object" &&
-        response.response !== null &&
-        "data" in response.response
-      ) {
-        setResetPasswordData({
-          isLoading: false,
-          isError: true,
-          data: null,
-          errorResponse: response.response.data as userType.Message,
-        });
-      } else {
+      if (response) {
         setResetPasswordData({
           isLoading: false,
           isError: false,
@@ -835,20 +613,7 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
         errorResponse: null,
       });
       const response = await users.addToWatchlist(type, id);
-      if (
-        response &&
-        "response" in response &&
-        typeof response.response === "object" &&
-        response.response !== null &&
-        "data" in response.response
-      ) {
-        setAddToWatchlistData({
-          isLoading: false,
-          isError: true,
-          data: null,
-          errorResponse: response.response.data as userType.Message,
-        });
-      } else {
+      if (response) {
         setAddToWatchlistData({
           isLoading: false,
           isError: false,
@@ -875,20 +640,7 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
         errorResponse: null,
       });
       const response = await users.removeFromWatchlist(type, id);
-      if (
-        response &&
-        "response" in response &&
-        typeof response.response === "object" &&
-        response.response !== null &&
-        "data" in response.response
-      ) {
-        setRemoveFromWatchlistData({
-          isLoading: false,
-          isError: true,
-          data: null,
-          errorResponse: response.response.data as userType.Message,
-        });
-      } else {
+      if (response) {
         setRemoveFromWatchlistData({
           isLoading: false,
           isError: false,
@@ -915,20 +667,7 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
         errorResponse: null,
       });
       const response = await users.addToFavorites(type, id);
-      if (
-        response &&
-        "response" in response &&
-        typeof response.response === "object" &&
-        response.response !== null &&
-        "data" in response.response
-      ) {
-        setAddToFavoritesData({
-          isLoading: false,
-          isError: true,
-          data: null,
-          errorResponse: response.response.data as userType.Message,
-        });
-      } else {
+      if (response) {
         setAddToFavoritesData({
           isLoading: false,
           isError: false,
@@ -955,20 +694,7 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
         errorResponse: null,
       });
       const response = await users.removeFromFavorites(type, id);
-      if (
-        response &&
-        "response" in response &&
-        typeof response.response === "object" &&
-        response.response !== null &&
-        "data" in response.response
-      ) {
-        setRemoveFromFavoritesData({
-          isLoading: false,
-          isError: true,
-          data: null,
-          errorResponse: response.response.data as userType.Message,
-        });
-      } else {
+      if (response) {
         setRemoveFromFavoritesData({
           isLoading: false,
           isError: false,
