@@ -31,7 +31,7 @@ function Login() {
     password: "",
   });
 
-  const { login, loginData } = useUsers();
+  const { login, loginData, register, registerData } = useUsers();
 
   const { colorScheme } = useColorScheme();
 
@@ -58,7 +58,10 @@ function Login() {
         login(userValue);
       }}
     >
-      {backdropLoading(loginData?.isLoading, colorScheme)}
+      {backdropLoading(
+        loginData?.isLoading || registerData?.isLoading,
+        colorScheme
+      )}
       <Box
         sx={{
           display: "flex",
@@ -76,7 +79,7 @@ function Login() {
         >
           <FormLabel sx={{ fontSize: "20px" }}>Sign in</FormLabel>
           <Box gap={1} display={"flex"} flexDirection={"column"}>
-            <FormControl color={loginData?.isError ? "danger" : "neutral"}>
+            <FormControl color={loginData?.isIncorrect ? "danger" : "neutral"}>
               <FormLabel>Email</FormLabel>
               <Input
                 name="email"
@@ -86,11 +89,11 @@ function Login() {
                 startDecorator={<Mail />}
               />
               <FormHelperText>
-                {loginData?.isError && "Invalid credentials"}
+                {loginData?.isIncorrect && "Invalid credentials"}
               </FormHelperText>
             </FormControl>
 
-            <FormControl color={loginData?.isError ? "danger" : "neutral"}>
+            <FormControl color={loginData?.isIncorrect ? "danger" : "neutral"}>
               <FormLabel>Password</FormLabel>
               <Input
                 name="password"
@@ -108,7 +111,7 @@ function Login() {
                 startDecorator={<Lock />}
               />
               <FormHelperText>
-                {loginData?.isError && "Invalid credentials"}
+                {loginData?.isIncorrect && "Invalid credentials"}
               </FormHelperText>
             </FormControl>
           </Box>
@@ -148,20 +151,31 @@ function Login() {
                   email: decodedToken.email,
                   password: decodedToken.sub,
                 }).then(() => {
-                  console.log(loginData);
+                  if (loginData?.isIncorrect) {
+                    register({
+                      email: decodedToken.email,
+                      password: decodedToken.sub,
+                      firstname: decodedToken.given_name,
+                      lastname: decodedToken.family_name,
+                      isVerified: true,
+                      profilePic: decodedToken.picture,
+                    });
+                  }
                 });
               }}
               onError={() => console.log("Login Failed")}
-              useOneTap
-              auto_select
+              useOneTap={!isLoggedIn}
+              auto_select={!isLoggedIn}
             />
           </Box>
-          {/* <FormControl sx={{ width: "300px" }} color="danger">
-            <FormHelperText>
-              This email is already used by "Email & Password" method. Please
-              enter the password correctly or try another Google Account
-            </FormHelperText>
-          </FormControl> */}
+          {registerData?.isConflict && (
+            <FormControl sx={{ width: "300px" }} color="danger">
+              <FormHelperText>
+                This email is already used by "Email & Password" method. Please
+                enter the password correctly or try another Google Account
+              </FormHelperText>
+            </FormControl>
+          )}
         </Card>
       </Box>
     </form>

@@ -36,7 +36,7 @@ import {
   Typography,
   useColorScheme,
 } from "@mui/joy";
-import { isLoggedIn, redirect } from "../../utilities/defaults";
+import { isLoggedIn } from "../../utilities/defaults";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useUsers } from "../../context/Users";
@@ -49,6 +49,10 @@ function Navbar() {
   const { colorScheme, setMode } = useColorScheme();
   const { myselfData, logout } = useUsers();
   const navigate = useNavigate();
+  const navigateTo = (path: string) => {
+    navigate(path);
+    setDrawerOpen(false);
+  };
   const user = myselfData?.data as User;
   return (
     <div
@@ -200,15 +204,43 @@ function Navbar() {
                 }}
               >
                 <Avatar>
-                  {user?.firstname?.slice(0, 1)}
-                  {user?.lastname?.slice(0, 1)}
+                  {!user?.profilePic ? (
+                    <>
+                      {user?.firstname?.slice(0, 1)}
+                      {user?.lastname?.slice(0, 1)}
+                    </>
+                  ) : (
+                    <img
+                      src={user?.profilePic}
+                      alt=""
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "cover",
+                      }}
+                    />
+                  )}
                 </Avatar>
               </MenuButton>
               <Menu>
                 <MenuItem>
                   <Avatar>
-                    {user?.firstname?.slice(0, 1)}
-                    {user?.lastname?.slice(0, 1)}
+                    {!user?.profilePic ? (
+                      <>
+                        {user?.firstname?.slice(0, 1)}
+                        {user?.lastname?.slice(0, 1)}
+                      </>
+                    ) : (
+                      <img
+                        src={user?.profilePic}
+                        alt=""
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "cover",
+                        }}
+                      />
+                    )}
                   </Avatar>
                   <Tooltip title="View Profile">
                     <Stack>
@@ -287,29 +319,63 @@ function Navbar() {
         <Box padding={2} paddingTop={7}>
           <List>
             {isLoggedIn ? (
-              <ListItemButton
-                sx={{
-                  justifyContent: "space-between",
-                }}
-              >
-                <Avatar>UR</Avatar>
-                <Tooltip title="View Profile">
-                  <Stack>
-                    <Typography>Usmon Umarovich</Typography>
-                    <Typography level="body-xs">usmonw@icloud.com</Typography>
-                  </Stack>
-                </Tooltip>
-                <Tooltip title="Logout">
-                  <IconButton
-                    onClick={() => setLogoutModal(true)}
-                    color="danger"
-                  >
-                    <Logout />
-                  </IconButton>
-                </Tooltip>
-              </ListItemButton>
+              myselfData?.isLoading ? (
+                <ListItemButton
+                  sx={{
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <Skeleton variant="circular" width={50} height={40} />
+                  <Skeleton variant="text" width={"100%"} />
+                </ListItemButton>
+              ) : (
+                <ListItemButton
+                  sx={{
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <Avatar>
+                    {!user?.profilePic ? (
+                      <>
+                        {user?.firstname?.slice(0, 1)}
+                        {user?.lastname?.slice(0, 1)}
+                      </>
+                    ) : (
+                      <img
+                        src={user?.profilePic}
+                        alt=""
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "cover",
+                        }}
+                      />
+                    )}
+                  </Avatar>
+                  <Tooltip title="View Profile">
+                    <Stack>
+                      <Typography>
+                        {user?.firstname} {user?.lastname}
+                      </Typography>
+                      <Typography level="body-xs">
+                        {user?.email.length > 15
+                          ? user?.email.slice(0, 15) + "..."
+                          : user?.email}
+                      </Typography>
+                    </Stack>
+                  </Tooltip>
+                  <Tooltip title="Logout">
+                    <IconButton
+                      onClick={() => setLogoutModal(true)}
+                      color="danger"
+                    >
+                      <Logout />
+                    </IconButton>
+                  </Tooltip>
+                </ListItemButton>
+              )
             ) : (
-              <Button>Sign in</Button>
+              <Button onClick={() => navigateTo("/login")}>Sign in</Button>
             )}
           </List>
           <br />
@@ -324,15 +390,15 @@ function Navbar() {
             }}
           >
             <ListItemButton
-              onClick={() => redirect("/")}
+              onClick={() => navigateTo("/")}
               sx={{ fontWeight: "lg" }}
             >
               Home
             </ListItemButton>
-            <ListItemButton onClick={() => redirect("/about")}>
+            <ListItemButton onClick={() => navigateTo("/about")}>
               About
             </ListItemButton>
-            <ListItemButton onClick={() => redirect("/contact")}>
+            <ListItemButton onClick={() => navigateTo("/contact")}>
               Contact
             </ListItemButton>
           </List>

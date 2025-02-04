@@ -411,7 +411,9 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
         errorResponse: null,
       });
       const response = await users.register(user);
-      if (response) {
+      console.log(response);
+
+      if (!("message" in response)) {
         setRegisterData({
           isLoading: false,
           isError: false,
@@ -421,6 +423,15 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
         if ("token" in response) {
           setCookie("authToken", response.token);
         }
+      } else {
+        setRegisterData({
+          isLoading: false,
+          isError: true,
+          data: null,
+          errorResponse: response,
+          isSuccess: false,
+          isConflict: true,
+        });
       }
     } catch (error) {
       setRegisterData({
@@ -433,24 +444,36 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const login = async (user: userType.UserLogin) => {
+    setLoginData({
+      isLoading: true,
+      isError: false,
+      data: null,
+      errorResponse: null,
+    });
     try {
-      setLoginData({
-        isLoading: true,
-        isError: false,
-        data: null,
-        errorResponse: null,
-      });
       const response = await users.login(user);
-      if (response) {
+
+      if (!("message" in response)) {
         setLoginData({
           isLoading: false,
           isError: false,
           data: response as userType.TokenResponse,
           errorResponse: null,
+          isSuccess: true,
         });
+
         if ("token" in response) {
           setCookie("authToken", response.token);
         }
+      } else {
+        setLoginData({
+          isLoading: false,
+          isError: true,
+          data: null,
+          errorResponse: "Invalid email or password",
+          isSuccess: false,
+          isIncorrect: true,
+        });
       }
     } catch (error) {
       setLoginData({

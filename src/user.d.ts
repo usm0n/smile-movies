@@ -64,4 +64,7 @@ export interface ResponseType {
   isError: boolean;
   data?: User | User[] | Message | TokenResponse | null;
   errorResponse: any;
+  isSuccess?: boolean;
+  isIncorrect?: boolean;
+  isConflict?: boolean;
 }
