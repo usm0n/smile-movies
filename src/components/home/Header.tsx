@@ -1,15 +1,6 @@
 import { Swiper, SwiperSlide } from "swiper/react";
 
-// @ts-ignore
-import "swiper/css";
-// @ts-ignore
-import "swiper/css/effect-fade";
-// @ts-ignore
-import "swiper/css/pagination";
-// @ts-ignore
-import "swiper/css/navigation";
-
-import { Autoplay, Navigation } from "swiper/modules";
+import { Autoplay } from "swiper/modules";
 import { Box, Skeleton, Typography, useColorScheme } from "@mui/joy";
 import { CalendarMonth, Star } from "@mui/icons-material";
 import { useTMDB } from "../../context/TMDB";
@@ -28,11 +19,13 @@ function Header() {
       <Swiper
         slidesPerView={1}
         spaceBetween={10}
+        loop={true}
+        modules={[Autoplay]}
         autoplay={{
-          delay: 2500,
+          delay: 5000,
+          stopOnLastSlide: false,
           disableOnInteraction: false,
         }}
-        modules={[Autoplay, Navigation]}
       >
         {trendingAllData?.isLoading ? (
           <Skeleton

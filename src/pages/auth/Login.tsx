@@ -31,7 +31,7 @@ function Login() {
     password: "",
   });
 
-  const { login, loginData, register, registerData } = useUsers();
+  const { login, loginData, registerData } = useUsers();
 
   const { colorScheme } = useColorScheme();
 
@@ -55,7 +55,7 @@ function Login() {
     <form
       onSubmit={(e) => {
         e?.preventDefault();
-        login(userValue);
+        login(userValue, "email");
       }}
     >
       {backdropLoading(
@@ -147,21 +147,21 @@ function Login() {
                 const decodedToken: GoogleUserResponse = jwtDecode(
                   credentialResponse.credential || ""
                 );
-                login({
-                  email: decodedToken.email,
-                  password: decodedToken.sub,
-                }).then(() => {
-                  if (loginData?.isIncorrect) {
-                    register({
-                      email: decodedToken.email,
-                      password: decodedToken.sub,
-                      firstname: decodedToken.given_name,
-                      lastname: decodedToken.family_name,
-                      isVerified: true,
-                      profilePic: decodedToken.picture,
-                    });
+                login(
+                  {
+                    email: decodedToken.email,
+                    password: decodedToken.sub,
+                  },
+                  "google",
+                  {
+                    email: decodedToken.email,
+                    password: decodedToken.sub,
+                    firstname: decodedToken.given_name,
+                    lastname: decodedToken.family_name,
+                    isVerified: true,
+                    profilePic: decodedToken.picture,
                   }
-                });
+                );
               }}
               onError={() => console.log("Login Failed")}
               useOneTap={!isLoggedIn}
