@@ -54,8 +54,14 @@ const UsersContext = createContext({
   register: async (user: userType.UserRegister) => {
     user;
   },
-  login: async (user: userType.UserLogin) => {
+  login: async (
+    user: userType.UserLogin,
+    type: "email" | "google",
+    registerUser?: userType.UserRegister
+  ) => {
     user;
+    type;
+    registerUser;
   },
   logout: () => {},
   verify: async (token: string) => {
@@ -443,7 +449,11 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  const login = async (user: userType.UserLogin) => {
+  const login = async (
+    user: userType.UserLogin,
+    type: "email" | "google",
+    registerUser?: userType.UserRegister
+  ) => {
     setLoginData({
       isLoading: true,
       isError: false,
@@ -466,14 +476,26 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
           setCookie("authToken", response.token);
         }
       } else {
-        setLoginData({
-          isLoading: false,
-          isError: true,
-          data: null,
-          errorResponse: "Invalid email or password",
-          isSuccess: false,
-          isIncorrect: true,
-        });
+        if (type == "google") {
+          setLoginData({
+            isLoading: false,
+            isError: true,
+            data: null,
+            errorResponse: "Invalid email or password",
+            isSuccess: false,
+            isIncorrect: false,
+          });
+          register(registerUser as userType.UserRegister);
+        } else {
+          setLoginData({
+            isLoading: false,
+            isError: true,
+            data: null,
+            errorResponse: "Invalid email or password",
+            isSuccess: false,
+            isIncorrect: true,
+          });
+        }
       }
     } catch (error) {
       setLoginData({
