@@ -1,4 +1,10 @@
-import { Lock, Mail, Visibility, VisibilityOff } from "@mui/icons-material";
+import {
+  Lock,
+  Mail,
+  Person,
+  Visibility,
+  VisibilityOff,
+} from "@mui/icons-material";
 import {
   Box,
   Button,
@@ -13,7 +19,7 @@ import {
   useColorScheme,
 } from "@mui/joy";
 import { useEffect, useState } from "react";
-import { GoogleUserResponse, UserLogin } from "../../user";
+import { GoogleUserResponse, UserRegister } from "../../user";
 import {
   backdropLoading,
   isLoggedIn,
@@ -24,14 +30,17 @@ import { GoogleLogin } from "@react-oauth/google";
 import { jwtDecode } from "jwt-decode";
 import { useUsers } from "../../context/Users";
 
-function Login() {
+function Register() {
   const [passwordVisibility, setPasswordVisibility] = useState<boolean>(false);
-  const [userValue, setUserValue] = useState<UserLogin>({
+  const [cpassword, setCpassword] = useState<string>("");
+  const [userValue, setUserValue] = useState<UserRegister>({
     email: "",
     password: "",
+    firstname: "",
+    lastname: "",
   });
 
-  const { login, loginData, registerData } = useUsers();
+  const { login, loginData, registerData, register } = useUsers();
 
   const { colorScheme } = useColorScheme();
 
@@ -55,7 +64,7 @@ function Login() {
     <form
       onSubmit={(e) => {
         e?.preventDefault();
-        login(userValue, "email");
+        register(userValue);
       }}
     >
       {backdropLoading(
@@ -67,7 +76,7 @@ function Login() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          height: "100vh",
+          height: "120vh",
         }}
       >
         <Card
@@ -77,23 +86,58 @@ function Login() {
             gap: "20px",
           }}
         >
-          <FormLabel sx={{ fontSize: "20px" }}>Sign in</FormLabel>
+          <FormLabel sx={{ fontSize: "20px" }}>Sign up</FormLabel>
           <Box gap={1} display={"flex"} flexDirection={"column"}>
-            <FormControl color={loginData?.isIncorrect ? "danger" : "neutral"}>
-              <FormLabel>Email</FormLabel>
+            <FormControl required={true}>
+              <FormLabel>Firstname</FormLabel>
               <Input
+                required
+                name="firstname"
+                onChange={handleInput}
+                value={userValue.firstname}
+                placeholder="You firstname"
+                startDecorator={<Person />}
+              />
+            </FormControl>
+            <FormControl>
+              <FormLabel>Lastname</FormLabel>
+              <Input
+                name="lastname"
+                onChange={handleInput}
+                value={userValue.lastname}
+                placeholder="You lastname"
+                startDecorator={<Person />}
+              />
+            </FormControl>
+            <FormControl
+              required={true}
+              color={registerData?.isConflict ? "danger" : "neutral"}
+            >
+              <FormLabel> Email</FormLabel>
+              <Input
+                required
                 name="email"
                 onChange={handleInput}
                 value={userValue.email}
-                placeholder="Your email"
+                placeholder="user@example.com"
                 startDecorator={<Mail />}
               />
               <FormHelperText>
-                {loginData?.isIncorrect && "Invalid credentials"}
+                {registerData?.isConflict && "Email already in use"}
               </FormHelperText>
             </FormControl>
-
-            <FormControl color={loginData?.isIncorrect ? "danger" : "neutral"}>
+            <FormControl
+              required={true}
+              color={
+                userValue.password.trim() && userValue.password.length < 8
+                  ? "warning"
+                  : cpassword !== userValue.password &&
+                    cpassword.trim().length >= 8 &&
+                    userValue.password.trim().length >= 8
+                  ? "danger"
+                  : "neutral"
+              }
+            >
               <FormLabel>Password</FormLabel>
               <Input
                 name="password"
@@ -111,7 +155,49 @@ function Login() {
                 startDecorator={<Lock />}
               />
               <FormHelperText>
-                {loginData?.isIncorrect && "Invalid credentials"}
+                {!userValue.password.trim() ||
+                  (userValue.password.length < 8 && "Password is too short")}
+                {cpassword.trim().length >= 8 &&
+                  cpassword !== userValue.password &&
+                  userValue.password.trim().length >= 8 &&
+                  "Password does not match"}
+              </FormHelperText>
+            </FormControl>
+            <FormControl
+              required={true}
+              color={
+                cpassword.trim() && cpassword.length < 8
+                  ? "warning"
+                  : cpassword !== userValue.password &&
+                    cpassword.trim().length >= 8 &&
+                    userValue.password.trim().length >= 8
+                  ? "danger"
+                  : "neutral"
+              }
+            >
+              <FormLabel>Confirm Password</FormLabel>
+              <Input
+                name="cpassword"
+                onChange={(e) => setCpassword(e.target.value)}
+                value={cpassword}
+                endDecorator={
+                  <IconButton
+                    onClick={() => setPasswordVisibility(!passwordVisibility)}
+                  >
+                    {passwordVisibility ? <VisibilityOff /> : <Visibility />}
+                  </IconButton>
+                }
+                placeholder="Confirm Your Password"
+                type={passwordVisibility ? "text" : "password"}
+                startDecorator={<Lock />}
+              />
+              <FormHelperText>
+                {!cpassword.trim() ||
+                  (cpassword.length < 8 && "Password is too short")}
+                {cpassword !== userValue.password &&
+                  cpassword.trim().length >= 8 &&
+                  userValue.password.trim().length >= 8 &&
+                  "Password does not match"}
               </FormHelperText>
             </FormControl>
           </Box>
@@ -119,10 +205,12 @@ function Login() {
             type="submit"
             disabled={
               !isValidEmail(userValue.email) ||
-              !userValue.email.trim() ||
-              !userValue.password.trim() ||
+              !userValue.firstname.trim() ||
               loginData?.isLoading ||
-              registerData?.isLoading
+              registerData?.isLoading ||
+              cpassword.trim().length < 8 ||
+              cpassword !== userValue.password ||
+              userValue.password.trim().length < 8
             }
             sx={{
               background: "rgb(255, 216, 77)",
@@ -136,11 +224,11 @@ function Login() {
           >
             {loginData?.isLoading || registerData?.isLoading
               ? "Loading..."
-              : "Sign in"}
+              : "Sign up"}
           </Button>
           <FormHelperText>
-            Don't have an account yet?{" "}
-            <Link onClick={() => navigate("/register")}>Create one</Link>
+            Already have an account?{" "}
+            <Link onClick={() => navigate("/login")}>Sign in</Link>
           </FormHelperText>
           <Divider>or</Divider>
           <Box gap={2} display={"flex"} flexDirection={"column"}>
@@ -187,4 +275,4 @@ function Login() {
   );
 }
 
-export default Login;
+export default Register;
