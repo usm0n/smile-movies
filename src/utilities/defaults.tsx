@@ -61,3 +61,17 @@ export const backdropLoading = (open: boolean | undefined, theme: any) =>
       <CircularProgress value={80} variant="plain" />
     </Box>
   );
+
+export const minuteToHour = (minute: string | number) => {
+  const hours = Math.floor(Number(minute) / 60);
+  const minutes = Math.floor(Number(minute) % 60);
+  return `${hours}h ${minutes}m`;
+};
+
+export const ymdToDmy = (date: string) => {
+  const dateObj = new Date(date);
+  const day = dateObj.getDate();
+  const month = dateObj.getMonth() + 1;
+  const year = dateObj.getFullYear();
+  return `${day}/${month}/${year}`;
+};

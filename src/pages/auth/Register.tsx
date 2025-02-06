@@ -113,7 +113,7 @@ function Register() {
               required={true}
               color={registerData?.isConflict ? "danger" : "neutral"}
             >
-              <FormLabel> Email</FormLabel>
+              <FormLabel>Email</FormLabel>
               <Input
                 required
                 name="email"
@@ -228,7 +228,7 @@ function Register() {
           </Button>
           <FormHelperText>
             Already have an account?{" "}
-            <Link onClick={() => navigate("/login")}>Sign in</Link>
+            <Link onClick={() => navigate("/auth/login")}>Sign in</Link>
           </FormHelperText>
           <Divider>or</Divider>
           <Box gap={2} display={"flex"} flexDirection={"column"}>

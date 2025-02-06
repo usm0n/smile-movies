@@ -9,22 +9,28 @@ import "swiper/css/effect-fade";
 import "swiper/css/pagination";
 // @ts-ignore
 import "swiper/css/navigation";
+import { useNavigate } from "react-router-dom";
 
 function EventMC({
   eventPoster,
   eventTitle,
+  eventOriginalTitle,
   eventDate,
   eventRating,
   eventId,
+  eventType,
 }: {
   eventPoster: string;
   eventTitle: string;
+  eventOriginalTitle: string;
   eventDate: string;
   eventRating: number;
   eventId: number;
+  eventType: string;
 }) {
+  const navigate = useNavigate();
   return (
-    <Box key={eventId}>
+    <Box onClick={() => navigate(`/${eventType}/${eventId}`)} key={eventId}>
       <Card
         sx={{
           cursor: "pointer",
@@ -64,6 +70,18 @@ function EventMC({
             textColor={"common.white"}
           >
             {eventTitle}
+          </Typography>
+          <Typography
+            sx={{
+              textShadow: "0px 0px 10px rgba(0, 0, 0, 1)",
+              "@media (max-width: 800px)": {
+                fontSize: "13px",
+              },
+            }}
+            level="title-lg"
+            textColor={"neutral.300"}
+          >
+            {eventOriginalTitle !== eventTitle && eventOriginalTitle}
           </Typography>
           <Box display={"flex"} gap={2}>
             <Typography

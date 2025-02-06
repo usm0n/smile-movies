@@ -50,9 +50,24 @@ body {
   filter: blur(10px);
 }
 
+.movie-backdrop {
+  object-fit: cover;
+  background-position: center;
+  filter: blur(5px);
+}
+
+
+
 @media screen and (max-width: 1000px) {
   .backdrop_image {
     height: 90vh;
+  }
+}
+
+@media screen and (max-width: 700px) {
+  .movie-poster{
+    width: 200px;
+    height: 300px;
   }
 }
 

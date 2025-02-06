@@ -7,17 +7,17 @@ import Watchlist from "../components/home/Watchlist";
 import { useTMDB } from "../context/TMDB";
 
 function HomeLayout() {
-  const { popularMovies, popularMoviesData, topRatedTv, topRatedTvData } =
+  const { topRatedMovies, topRatedMoviesData, topRatedTv, topRatedTvData } =
     useTMDB();
   useEffect(() => {
-    popularMovies(1);
+    topRatedMovies(1);
     topRatedTv(1);
   }, []);
   return (
     <>
       <Header />
-      <Event eventTitle="Movies" eventData={popularMoviesData} />
-      <Event eventTitle="TV Shows" eventData={topRatedTvData} />
+      <Event eventTitle="Movies" eventData={topRatedMoviesData} eventType="movie" />
+      <Event eventTitle="TV Shows" eventData={topRatedTvData} eventType="tv" />
       <Watchlist />
     </>
   );

@@ -7,9 +7,11 @@ import EventMCS from "../cards/skeleton/EventMC";
 function Event({
   eventTitle,
   eventData,
+  eventType,
 }: {
   eventTitle: string;
   eventData: tmdbRes.ResponseType | null;
+  eventType: string;
 }) {
   const { colorScheme } = useColorScheme();
   return (
@@ -27,13 +29,17 @@ function Event({
         endDecorator={
           <ArrowForwardIos
             sx={{
-              color: colorScheme === "dark" ? "rgb(255, 216, 77)" : "rgb(255, 200, 0)",
+              color:
+                colorScheme === "dark"
+                  ? "rgb(255, 216, 77)"
+                  : "rgb(255, 200, 0)",
             }}
           />
         }
         level="h1"
         sx={{
-          color: colorScheme === "dark" ? "rgb(255, 216, 77)" : "rgb(255, 200, 0)",
+          color:
+            colorScheme === "dark" ? "rgb(255, 216, 77)" : "rgb(255, 200, 0)",
           "@media (max-width: 800px)": {
             fontSize: "25px",
           },
@@ -69,8 +75,10 @@ function Event({
             <EventMC
               key={event.id}
               eventTitle={event.title || event.name}
+              eventOriginalTitle={event.original_title || event.original_name}
               eventPoster={event.poster_path}
               eventId={event.id}
+              eventType={eventType}
               eventDate={event.release_date || event.first_air_date}
               eventRating={event.vote_average}
             />

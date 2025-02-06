@@ -25,6 +25,7 @@ const UsersContext = createContext({
   removeFromWatchlistData: null as userType.ResponseType | null,
   addToFavoritesData: null as userType.ResponseType | null,
   removeFromFavoritesData: null as userType.ResponseType | null,
+  signedInWithGoogle: null as boolean | null,
   getUsers: async () => {},
   getUserById: async (id: string) => {
     id;
@@ -313,12 +314,21 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
         errorResponse: null,
       });
       const response = await users.updateMyself(user);
-      if (response) {
+      if (!("message" in response)) {
         setUpdatedMyselfData({
           isLoading: false,
           isError: false,
           data: response as userType.User,
           errorResponse: null,
+        });
+        getMyself();
+      } else {
+        setUpdatedMyselfData({
+          isLoading: false,
+          isError: false,
+          data: null,
+          errorResponse: response,
+          isConflict: true,
         });
       }
     } catch (error) {
@@ -510,6 +520,10 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
   const logout = () => {
     deleteCookie("authToken");
   };
+
+  const signedInWithGoogle = (myselfData?.data as userType.User)?.profilePic
+    ? true
+    : false;
 
   const verify = async (token: string) => {
     try {
@@ -765,6 +779,7 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
   return (
     <UsersContext.Provider
       value={{
+        signedInWithGoogle,
         usersData,
         userByIdData,
         verifyData,
