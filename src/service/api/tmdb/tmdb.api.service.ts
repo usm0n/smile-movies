@@ -127,4 +127,20 @@ export const tmdb = {
       return error;
     }
   },
+  movieCredits: async (id: string) => {
+    try {
+      const response = await tmdbAPI.get("/movie/" + id + "/credits");
+      return response.data;
+    } catch (error) {
+      return error;
+    }
+  },
+  movieRecommendations: async (id: string) => {
+    try {
+      const response = await tmdbAPI.get("/movie/" + id + "/recommendations");
+      return response.data;
+    } catch (error) {
+      return error;
+    }
+  },
 };

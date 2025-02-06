@@ -133,6 +133,7 @@ export interface movieDetails {
   homepage: string;
   id: number;
   imdb_id: string;
+  origin_country: string[];
   original_language: string;
   original_title: string;
   overview: string;
@@ -155,7 +156,7 @@ export interface movieDetails {
     english_name: string;
     iso_639_1: string;
     name: string;
-  };
+  }[]
   status: string;
   tagline: string;
   title: string;
@@ -286,6 +287,40 @@ export interface trendingTV {
   total_pages: number;
   total_results: number;
 }
+export interface movieCredits {
+  id: number;
+  cast: [
+    {
+      adult: boolean;
+      gender: number;
+      id: number;
+      known_for_department: string;
+      name: string;
+      original_name: string;
+      popularity: number;
+      profile_path: string;
+      cast_id: number;
+      character: string;
+      credit_id: string;
+      order: number;
+    }
+  ];
+  crew: [
+    {
+      adult: boolean;
+      gender: number;
+      id: number;
+      known_for_department: string;
+      name: string;
+      original_name: string;
+      popularity: number;
+      profile_path: string;
+      credit_id: string;
+      department: string;
+      job: string;
+    }
+  ];
+}
 
 export interface ResponseType {
   isLoading: boolean;
@@ -310,6 +345,7 @@ export interface ResponseType {
     | trendingTV
     | Movie
     | TV
+    | movieCredits
     | null;
   errorResponse: any;
 }
