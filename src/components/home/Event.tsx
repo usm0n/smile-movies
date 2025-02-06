@@ -27,13 +27,17 @@ function Event({
         endDecorator={
           <ArrowForwardIos
             sx={{
-              color: colorScheme === "dark" ? "rgb(255, 216, 77)" : "rgb(255, 200, 0)",
+              color:
+                colorScheme === "dark"
+                  ? "rgb(255, 216, 77)"
+                  : "rgb(255, 200, 0)",
             }}
           />
         }
         level="h1"
         sx={{
-          color: colorScheme === "dark" ? "rgb(255, 216, 77)" : "rgb(255, 200, 0)",
+          color:
+            colorScheme === "dark" ? "rgb(255, 216, 77)" : "rgb(255, 200, 0)",
           "@media (max-width: 800px)": {
             fontSize: "25px",
           },
@@ -69,6 +73,7 @@ function Event({
             <EventMC
               key={event.id}
               eventTitle={event.title || event.name}
+              eventOriginalTitle={event.original_title || event.original_name}
               eventPoster={event.poster_path}
               eventId={event.id}
               eventDate={event.release_date || event.first_air_date}

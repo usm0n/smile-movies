@@ -140,7 +140,7 @@ function Login() {
           </Button>
           <FormHelperText>
             Don't have an account yet?{" "}
-            <Link onClick={() => navigate("/register")}>Create one</Link>
+            <Link onClick={() => navigate("/auth/register")}>Create one</Link>
           </FormHelperText>
           <Divider>or</Divider>
           <Box gap={2} display={"flex"} flexDirection={"column"}>

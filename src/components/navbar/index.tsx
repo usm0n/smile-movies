@@ -41,6 +41,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useUsers } from "../../context/Users";
 import { User } from "../../user";
+import { googleLogout } from "@react-oauth/google";
 
 function Navbar() {
   const [logoutModal, setLogoutModal] = useState(false);
@@ -109,7 +110,7 @@ function Navbar() {
         options={[]}
         placeholder="Search"
       />
-      <Box display={"flex"} gap={1}>
+      <Box display={"flex"} gap={1} alignItems={"center"}>
         <IconButton
           onClick={() => setSearchVisibility(!searchVisibility)}
           sx={{
@@ -135,7 +136,7 @@ function Navbar() {
         >
           {!isLoggedIn ? (
             <Button
-              onClick={() => navigate("/login")}
+              onClick={() => navigate("/auth/login")}
               sx={{
                 background: "rgb(255, 216, 77)",
                 color: "black",
@@ -169,7 +170,7 @@ function Navbar() {
                 <MenuItem>
                   <Avatar></Avatar>
                   <Tooltip title="View Profile">
-                    <Stack>
+                    <Stack onClick={() => navigate("/user/settings")}>
                       <Skeleton variant="text" sx={{ width: "120px" }} />
                       <Skeleton
                         variant="text"
@@ -203,7 +204,11 @@ function Navbar() {
                   },
                 }}
               >
-                <Avatar>
+                <Avatar
+                  sx={{
+                    border: "1px solid gray",
+                  }}
+                >
                   {!user?.profilePic ? (
                     <>
                       {user?.firstname?.slice(0, 1)}
@@ -243,7 +248,7 @@ function Navbar() {
                     )}
                   </Avatar>
                   <Tooltip title="View Profile">
-                    <Stack>
+                    <Stack onClick={() => navigate("/user/settings")}>
                       <Typography>
                         {user?.firstname} {user?.lastname}
                       </Typography>
@@ -269,6 +274,7 @@ function Navbar() {
               border: "none",
               borderRadius: "50%",
               width: "36px",
+              height: "36px",
             }}
           >
             {colorScheme === "light" ? (
@@ -301,7 +307,14 @@ function Navbar() {
           <Divider />
           <DialogContent>Are you sure you want to log out?</DialogContent>
           <DialogActions>
-            <Button variant="solid" color="danger" onClick={() => logout()}>
+            <Button
+              variant="solid"
+              color="danger"
+              onClick={() => {
+                logout();
+                googleLogout();
+              }}
+            >
               Log out
             </Button>
             <Button
@@ -353,7 +366,7 @@ function Navbar() {
                     )}
                   </Avatar>
                   <Tooltip title="View Profile">
-                    <Stack>
+                    <Stack onClick={() => navigateTo("/user/settings")}>
                       <Typography>
                         {user?.firstname} {user?.lastname}
                       </Typography>
@@ -375,7 +388,7 @@ function Navbar() {
                 </ListItemButton>
               )
             ) : (
-              <Button onClick={() => navigateTo("/login")}>Sign in</Button>
+              <Button onClick={() => navigateTo("/auth/login")}>Sign in</Button>
             )}
           </List>
           <br />

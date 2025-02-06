@@ -13,12 +13,14 @@ import "swiper/css/navigation";
 function EventMC({
   eventPoster,
   eventTitle,
+  eventOriginalTitle,
   eventDate,
   eventRating,
   eventId,
 }: {
   eventPoster: string;
   eventTitle: string;
+  eventOriginalTitle: string;
   eventDate: string;
   eventRating: number;
   eventId: number;
@@ -64,6 +66,18 @@ function EventMC({
             textColor={"common.white"}
           >
             {eventTitle}
+          </Typography>
+          <Typography
+            sx={{
+              textShadow: "0px 0px 10px rgba(0, 0, 0, 1)",
+              "@media (max-width: 800px)": {
+                fontSize: "13px",
+              },
+            }}
+            level="title-lg"
+            textColor={"neutral.300"}
+          >
+            {eventOriginalTitle !== eventTitle && eventOriginalTitle}
           </Typography>
           <Box display={"flex"} gap={2}>
             <Typography
