@@ -76,6 +76,14 @@ const TmdbContext = createContext({
   tv: (id: string) => {
     id;
   },
+  movieCreditsData: null as tmdbRes.ResponseType | null,
+  movieCredits: async (id: string) => {
+    id;
+  },
+  movieRecommendationsData: null as tmdbRes.ResponseType | null,
+  movieRecommendations: async (id: string) => {
+    id;
+  },
 });
 
 export const useTMDB = () => useContext(TmdbContext);
@@ -116,6 +124,65 @@ export const TMDBProvider = ({ children }: { children: React.ReactNode }) => {
   const [searchTvData, setSearchTvData] = useState<tmdbRes.ResponseType | null>(
     null
   );
+  const [movieCreditsData, setMovieCreditsData] =
+    useState<tmdbRes.ResponseType | null>(null);
+  const [movieRecommendationsData, setMovieRecommendationsData] =
+    useState<tmdbRes.ResponseType | null>(null);
+
+  const movieRecommendations = async (id: string) => {
+    try {
+      setMovieRecommendationsData({
+        isLoading: true,
+        isError: false,
+        data: null,
+        errorResponse: null,
+      });
+      const response = await tmdb.movieRecommendations(id);
+      if (response) {
+        setMovieRecommendationsData({
+          isLoading: false,
+          isError: false,
+          data: response as tmdbRes.DiscoverMovie,
+          errorResponse: null,
+        });
+      }
+    } catch (error) {
+      setMovieRecommendationsData({
+        isLoading: false,
+        isError: true,
+        data: null,
+        errorResponse: error,
+      });
+    }
+  };
+
+  const movieCredits = async (id: string) => {
+    try {
+      setMovieCreditsData({
+        isLoading: true,
+        isError: false,
+        data: null,
+        errorResponse: null,
+      });
+      const response = await tmdb.movieCredits(id);
+      if (response) {
+        setMovieCreditsData({
+          isLoading: false,
+          isError: false,
+          data: response as tmdbRes.movieCredits,
+          errorResponse: null,
+        });
+      }
+    } catch (error) {
+      setMovieCreditsData({
+        isLoading: false,
+        isError: true,
+        data: null,
+        errorResponse: error,
+      });
+    }
+  };
+
   const discoverMovie = async (page: number) => {
     try {
       setDiscoverMovieData({
@@ -561,6 +628,10 @@ export const TMDBProvider = ({ children }: { children: React.ReactNode }) => {
   return (
     <TmdbContext.Provider
       value={{
+        movieRecommendations,
+        movieRecommendationsData,
+        movieCredits,
+        movieCreditsData,
         popularMovies,
         popularTv,
         topRatedMovies,
