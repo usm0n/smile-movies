@@ -16,8 +16,8 @@ function HomeLayout() {
   return (
     <>
       <Header />
-      <Event eventTitle="Movies" eventData={topRatedMoviesData} />
-      <Event eventTitle="TV Shows" eventData={topRatedTvData} />
+      <Event eventTitle="Movies" eventData={topRatedMoviesData} eventType="movie" />
+      <Event eventTitle="TV Shows" eventData={topRatedTvData} eventType="tv" />
       <Watchlist />
     </>
   );

@@ -61,7 +61,7 @@ function Navbar() {
         backgroundColor:
           colorScheme === "dark"
             ? "rgba(0, 0, 0, 0.3)"
-            : "rgba(255, 255, 255, 0.3)",
+            : "rgba(255, 255, 255, 0.1)",
       }}
       className="navbar"
     >
@@ -95,6 +95,7 @@ function Navbar() {
         <Link to="/contact">Contact</Link>
       </Box>
       <Autocomplete
+        size="lg"
         sx={{
           width: "400px",
 
@@ -124,7 +125,7 @@ function Navbar() {
             },
           }}
         >
-          <Search />
+          <Search sx={{ color: colorScheme == "dark" ? "white" : "black" }} />
         </IconButton>
         <Box
           sx={{
