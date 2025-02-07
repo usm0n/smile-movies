@@ -1,3 +1,4 @@
+import NotFound from "../components/utils/NotFound";
 import HomeLayout from "../layouts/HomeLayout";
 import Login from "../pages/auth/Login";
 import Register from "../pages/auth/Register";
@@ -24,5 +25,9 @@ export const mainRoutes = [
   {
     path: "/movie/:movieId",
     element: <Movie />,
+  },
+  {
+    path: "*",
+    element: <NotFound/>
   }
 ];

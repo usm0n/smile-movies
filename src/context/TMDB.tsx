@@ -582,12 +582,20 @@ export const TMDBProvider = ({ children }: { children: React.ReactNode }) => {
         errorResponse: null,
       });
       const response = await tmdb.movie(id);
-      if (response) {
+      if (!("response" in response)) {
         setMovieDetailsData({
           isLoading: false,
           isError: false,
           data: response as tmdbRes.movieDetails,
           errorResponse: null,
+        });
+      } else {
+        setMovieDetailsData({
+          isLoading: false,
+          isError: true,
+          data: null,
+          isIncorrect: true,
+          errorResponse: response.response,
         });
       }
     } catch (error) {
