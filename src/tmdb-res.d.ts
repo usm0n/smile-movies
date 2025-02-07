@@ -325,6 +325,7 @@ export interface movieCredits {
 export interface ResponseType {
   isLoading: boolean;
   isError: boolean;
+  isIncorrect?: boolean;
   data?:
     | DiscoverMovie
     | DiscoverTV

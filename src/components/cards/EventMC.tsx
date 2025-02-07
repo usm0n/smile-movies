@@ -10,6 +10,7 @@ import "swiper/css/pagination";
 // @ts-ignore
 import "swiper/css/navigation";
 import { useNavigate } from "react-router-dom";
+import BlurImage from "../../utilities/blurImage";
 
 function EventMC({
   eventPoster,
@@ -50,7 +51,10 @@ function EventMC({
         }}
       >
         <CardCover>
-          <img src={`https://image.tmdb.org/t/p/original${eventPoster}`} />
+          {BlurImage({
+            highQualitySrc: `https://image.tmdb.org/t/p/original${eventPoster}`,
+            lowQualitySrc: `https://image.tmdb.org/t/p/w200${eventPoster}`,
+          })}
         </CardCover>
         <CardCover
           sx={{
