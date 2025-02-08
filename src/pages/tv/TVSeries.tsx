@@ -42,11 +42,15 @@ function TVSeries() {
       {backdropLoading(true, colorScheme)}
     </Box>
   ) : (
-    <TVSeriesComponent
-      tvSeriesCreditsDataArr={tvSeriesCreditsDataArr}
-      tvSeriesData={tvSeriesData}
-      tvSeriesRecommendationsDataArr={tvSeriesRecommendationsDataArr}
-    />
+    tvSeriesData &&
+    tvSeriesCreditsDataArr &&
+    tvSeriesRecommendationsDataArr && (
+      <TVSeriesComponent
+        tvSeriesCreditsDataArr={tvSeriesCreditsDataArr}
+        tvSeriesData={tvSeriesData}
+        tvSeriesRecommendationsDataArr={tvSeriesRecommendationsDataArr}
+      />
+    )
   );
 }
 

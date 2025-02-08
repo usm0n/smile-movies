@@ -159,4 +159,22 @@ export const tmdb = {
       return error;
     }
   },
+  tvSeasonsDetails: async (id: string, season: number) => {
+    try {
+      const response = await tmdbAPI.get("/tv/" + id + "/season/" + season);
+      return response.data;
+    } catch (error) {
+      return error;
+    }
+  },
+  tvSeasonsCredits: async (id: string, season: number) => {
+    try {
+      const response = await tmdbAPI.get(
+        "/tv/" + id + "/season/" + season + "/credits"
+      );
+      return response.data;
+    } catch (error) {
+      return error;
+    }
+  },
 };

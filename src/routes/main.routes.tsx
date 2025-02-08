@@ -3,6 +3,7 @@ import HomeLayout from "../layouts/HomeLayout";
 import Login from "../pages/auth/Login";
 import Register from "../pages/auth/Register";
 import Movie from "../pages/movie/Movie";
+import TVSeasons from "../pages/tv/TVSeasons";
 import TVSeries from "../pages/tv/TVSeries";
 import Settings from "../pages/user/Settings";
 
@@ -30,6 +31,10 @@ export const mainRoutes = [
   {
     path: "/tv/:tvId",
     element: <TVSeries />,
+  },
+  {
+    path: "/tv/:tvId/season/:seasonNumber",
+    element: <TVSeasons/>
   },
   {
     path: "*",

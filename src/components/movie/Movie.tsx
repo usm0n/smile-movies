@@ -46,7 +46,7 @@ function MovieComponent({
               "@media (max-width: 700px)": {
                 flexDirection: "column",
                 alignItems: "center",
-                gap: 0,
+                gap: 3,
               },
             }}
           >
