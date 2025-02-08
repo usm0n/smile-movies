@@ -323,6 +323,55 @@ export interface movieCredits {
   ];
 }
 
+export interface tvEpisodeCredits {
+  id: number;
+  cast: [
+    {
+      adult: boolean;
+      gender: number;
+      id: number;
+      known_for_department: string;
+      name: string;
+      original_name: string;
+      popularity: number;
+      profile_path: string;
+      cast_id: number;
+      character: string;
+      credit_id: string;
+      order: number;
+    }
+  ];
+  crew: [
+    {
+      adult: boolean;
+      gender: number;
+      id: number;
+      known_for_department: string;
+      name: string;
+      original_name: string;
+      popularity: number;
+      profile_path: string;
+      credit_id: string;
+      department: string;
+      job: string;
+    }
+  ];
+  guest_stars: [
+    {
+      adult: boolean;
+      gender: number;
+      id: number;
+      known_for_department: string;
+      name: string;
+      original_name: string;
+      popularity: number;
+      profile_path: string;
+      character: string;
+      credit_id: string;
+    }
+  ];
+}
+
 export interface tvSeasonsDetails {
   _id: string;
   air_date: string;
@@ -347,6 +396,49 @@ export interface tvSeasonsDetails {
   poster_path: string;
   season_number: number;
   vote_average: number;
+}
+
+export interface tvEpisodeDetails {
+  air_date: string;
+  crew: [
+    {
+      adult: boolean;
+      gender: number;
+      id: number;
+      known_for_department: string;
+      name: string;
+      original_name: string;
+      popularity: number;
+      profile_path: string;
+      credit_id: string;
+      department: string;
+      job: string;
+    }
+  ];
+  guest_stars: [
+    {
+      adult: boolean;
+      gender: number;
+      id: number;
+      known_for_department: string;
+      name: string;
+      original_name: string;
+      popularity: number;
+      profile_path: string;
+      credit_id: string;
+      character: string;
+    }
+  ];
+  id: number;
+  episode_number: number;
+  name: string;
+  overview: string;
+  runtime: number;
+  production_code: string;
+  season_number: number;
+  still_path: string;
+  vote_average: number;
+  vote_count: number;
 }
 
 export interface ResponseType {
@@ -375,6 +467,8 @@ export interface ResponseType {
     | TV
     | movieCredits
     | tvSeasonsDetails
+    | tvEpisodeDetails
+    | tvEpisodeCredits
     | null;
   errorResponse: any;
 }
