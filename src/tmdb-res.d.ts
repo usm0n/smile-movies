@@ -156,7 +156,7 @@ export interface movieDetails {
     english_name: string;
     iso_639_1: string;
     name: string;
-  }[]
+  }[];
   status: string;
   tagline: string;
   title: string;
@@ -323,6 +323,32 @@ export interface movieCredits {
   ];
 }
 
+export interface tvSeasonsDetails {
+  _id: string;
+  air_date: string;
+  episodes: [
+    {
+      air_date: string;
+      episode_number: number;
+      id: number;
+      name: string;
+      runtime: number;
+      overview: string;
+      production_code: string;
+      season_number: number;
+      still_path: string;
+      vote_average: number;
+      vote_count: number;
+    }
+  ];
+  name: string;
+  overview: string;
+  id: number;
+  poster_path: string;
+  season_number: number;
+  vote_average: number;
+}
+
 export interface ResponseType {
   isLoading: boolean;
   isError: boolean;
@@ -348,6 +374,7 @@ export interface ResponseType {
     | Movie
     | TV
     | movieCredits
+    | tvSeasonsDetails
     | null;
   errorResponse: any;
 }

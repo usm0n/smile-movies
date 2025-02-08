@@ -92,6 +92,16 @@ const TmdbContext = createContext({
   tvSeriesRecommendations: async (id: string) => {
     id;
   },
+  tvSeasonsDetailsData: null as tmdbRes.ResponseType | null,
+  tvSeasonsDetails: async (id: string, seasonNumber: number) => {
+    id;
+    seasonNumber;
+  },
+  tvSeasonsCreditsData: null as tmdbRes.ResponseType | null,
+  tvSeasonsCredits: async (id: string, seasonNumber: number) => {
+    id;
+    seasonNumber;
+  },
 });
 
 export const useTMDB = () => useContext(TmdbContext);
@@ -140,7 +150,71 @@ export const TMDBProvider = ({ children }: { children: React.ReactNode }) => {
     useState<tmdbRes.ResponseType | null>(null);
   const [tvSeriesRecommendationsData, setTvSeriesRecommendationsData] =
     useState<tmdbRes.ResponseType | null>(null);
+  const [tvSeasonsDetailsData, setTvSeasonsDetailsData] =
+    useState<tmdbRes.ResponseType | null>(null);
+  const [tvSeasonsCreditsData, setTvSeasonsCreditsData] =
+    useState<tmdbRes.ResponseType | null>(null);
 
+  const tvSeasonsDetails = async (id: string, seasonNumber: number) => {
+    try {
+      setTvSeasonsDetailsData({
+        isLoading: true,
+        isError: false,
+        data: null,
+        errorResponse: null,
+      });
+      const response = await tmdb.tvSeasonsDetails(id, seasonNumber);
+      if (!("response" in response)) {
+        setTvSeasonsDetailsData({
+          isLoading: false,
+          isError: false,
+          data: response as tmdbRes.DiscoverTV,
+          errorResponse: null,
+        });
+      } else {
+        setTvSeasonsDetailsData({
+          isLoading: false,
+          isError: true,
+          data: null,
+          errorResponse: response.response,
+          isIncorrect: true,
+        });
+      }
+    } catch (error) {
+      setTvSeasonsDetailsData({
+        isLoading: false,
+        isError: true,
+        data: null,
+        errorResponse: error,
+      });
+    }
+  };
+  const tvSeasonsCredits = async (id: string, seasonNumber: number) => {
+    try {
+      setTvSeasonsCreditsData({
+        isLoading: true,
+        isError: false,
+        data: null,
+        errorResponse: null,
+      });
+      const response = await tmdb.tvSeasonsCredits(id, seasonNumber);
+      if (response) {
+        setTvSeasonsCreditsData({
+          isLoading: false,
+          isError: false,
+          data: response as tmdbRes.DiscoverTV,
+          errorResponse: null,
+        });
+      }
+    } catch (error) {
+      setTvSeasonsCreditsData({
+        isLoading: false,
+        isError: true,
+        data: null,
+        errorResponse: error,
+      });
+    }
+  };
   const tvSeriesRecommendations = async (id: string) => {
     try {
       setTvSeriesRecommendationsData({
@@ -708,6 +782,10 @@ export const TMDBProvider = ({ children }: { children: React.ReactNode }) => {
   return (
     <TmdbContext.Provider
       value={{
+        tvSeasonsCredits,
+        tvSeasonsCreditsData,
+        tvSeasonsDetails,
+        tvSeasonsDetailsData,
         tvSeriesCredits,
         tvSeriesCreditsData,
         tvSeriesRecommendations,
