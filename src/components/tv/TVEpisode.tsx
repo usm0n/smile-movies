@@ -1,26 +1,38 @@
 import {
+  AspectRatio,
   Box,
   Card,
   CardContent,
   CardCover,
   CardOverflow,
   IconButton,
+  Tab,
+  TabList,
+  TabPanel,
+  Tabs,
   Typography,
 } from "@mui/joy";
 import { ymdToDmy } from "../../utilities/defaults";
 import { ArrowBackIos, ArrowForwardIos, Star } from "@mui/icons-material";
 import BlurImage from "../../utilities/blurImage";
-import { movieCredits, tvDetails, tvSeasonsDetails } from "../../tmdb-res";
+import {
+  tvDetails,
+  tvEpisodeCredits,
+  tvEpisodeDetails,
+  tvSeasonsDetails,
+} from "../../tmdb-res";
 import { useNavigate } from "react-router-dom";
 
-function TVSeasonsComponent({
+function TVEpisodeComponent({
   tvSeriesData,
   tvSeasonsData,
-  tvSeasonsCreditsDataArr,
+  tvEpisodeCreditsDataArr,
+  tvEpisodeData,
 }: {
   tvSeriesData: tvDetails;
   tvSeasonsData: tvSeasonsDetails;
-  tvSeasonsCreditsDataArr: movieCredits;
+  tvEpisodeCreditsDataArr: tvEpisodeCredits;
+  tvEpisodeData: tvEpisodeDetails;
 }) {
   const navigate = useNavigate();
   return (
@@ -29,7 +41,7 @@ function TVSeasonsComponent({
         <CardCover sx={{ filter: "brightness(0.4)" }}>
           <img
             className="movie-backdrop"
-            src={`https://image.tmdb.org/t/p/w200${tvSeriesData?.backdrop_path}`}
+            src={`https://image.tmdb.org/t/p/w200${tvEpisodeData?.still_path}`}
           />
         </CardCover>
         <CardContent>
@@ -41,8 +53,14 @@ function TVSeasonsComponent({
             gap={3}
             alignItems={"start"}
           >
-            <IconButton onClick={() => navigate(`/tv/${tvSeriesData?.id}`)}>
-              <ArrowBackIos /> {tvSeriesData?.name}
+            <IconButton
+              onClick={() =>
+                navigate(
+                  `/tv/${tvSeriesData?.id}/season/${tvSeasonsData?.season_number}`
+                )
+              }
+            >
+              <ArrowBackIos /> Season {tvSeasonsData?.season_number}
             </IconButton>
             <Box
               display={"flex"}
@@ -76,26 +94,19 @@ function TVSeasonsComponent({
                   level="h1"
                   textColor={"common.white"}
                 >
-                  {tvSeasonsData?.name}{" "}
-                  <Typography
-                    sx={{
-                      "@media (max-width: 700px)": {
-                        fontSize: "25px",
-                      },
-                    }}
-                    level="h1"
-                    textColor={"neutral.300"}
-                    fontWeight={300}
-                  >{`(${tvSeasonsData?.air_date?.slice(0, 4)})`}</Typography>
+                  {`S${tvSeasonsData?.season_number}-E${tvEpisodeData?.episode_number}: `}
+                  <Typography textColor={"neutral.200"} fontWeight={400}>
+                    {tvEpisodeData?.name}
+                  </Typography>
                 </Typography>
                 <Typography textColor={"neutral.200"}>
-                  {`${tvSeasonsData?.episodes.length} episodes`}
+                  {`${tvEpisodeData?.runtime} minutes`}
                 </Typography>
                 <Typography textColor={"neutral.200"}>
-                  {ymdToDmy(tvSeasonsData?.air_date)}
+                  {ymdToDmy(tvEpisodeData?.air_date)}
                   {" • "}
                   <Typography startDecorator={<Star />}>
-                    {tvSeasonsData?.vote_average}
+                    {tvEpisodeData?.vote_average}
                   </Typography>
                 </Typography>
                 <Box margin={"20px 0"}>
@@ -103,7 +114,7 @@ function TVSeasonsComponent({
                     Overview
                   </Typography>
                   <Typography textColor={"neutral.200"} fontWeight={300}>
-                    {tvSeasonsData?.overview}
+                    {tvEpisodeData?.overview}
                   </Typography>
                 </Box>
               </Box>
@@ -119,127 +130,97 @@ function TVSeasonsComponent({
           width: "95%",
         }}
       >
-        {tvSeasonsData?.season_number !== 1 ? (
+        {tvEpisodeData?.episode_number == 1 &&
+          tvSeasonsData?.season_number !== 1 && (
+            <IconButton
+              onClick={() =>
+                navigate(
+                  `/tv/${tvSeriesData?.id}/season/${
+                    tvSeasonsData?.season_number - 1
+                  }/episode/${
+                    tvSeriesData?.seasons[tvSeasonsData?.season_number - 1]
+                      .episode_count
+                  }`
+                )
+              }
+            >
+              <ArrowBackIos />
+              Season {tvSeasonsData?.season_number - 1}
+            </IconButton>
+          )}
+        {tvEpisodeData?.episode_number !== 1 ? (
           <IconButton
             onClick={() =>
               navigate(
                 `/tv/${tvSeriesData?.id}/season/${
-                  tvSeasonsData?.season_number - 1
-                }`
+                  tvSeasonsData?.season_number
+                }/episode/${tvEpisodeData?.episode_number - 1}`
               )
             }
           >
             <ArrowBackIos />
-            Season {tvSeasonsData?.season_number - 1}
+            Episode {tvEpisodeData?.episode_number - 1}
           </IconButton>
         ) : (
           <IconButton disabled></IconButton>
         )}
-        {tvSeasonsData?.season_number !== tvSeriesData?.number_of_seasons ? (
+        {tvEpisodeData?.episode_number !== tvSeasonsData?.episodes.length ? (
           <IconButton
             onClick={() =>
               navigate(
                 `/tv/${tvSeriesData?.id}/season/${
-                  tvSeasonsData?.season_number + 1
-                }`
+                  tvSeasonsData?.season_number
+                }/episode/${tvEpisodeData?.episode_number + 1}`
               )
             }
           >
-            Season {tvSeasonsData?.season_number + 1}
+            Episode {tvEpisodeData?.episode_number + 1}
             <ArrowForwardIos />
           </IconButton>
         ) : (
           <IconButton disabled></IconButton>
         )}
+        {tvEpisodeData?.episode_number == tvSeasonsData?.episodes.length &&
+          tvSeasonsData?.season_number !== tvSeriesData?.number_of_seasons && (
+            <IconButton
+              onClick={() =>
+                navigate(
+                  `/tv/${tvSeriesData?.id}/season/${
+                    tvSeasonsData?.season_number + 1
+                  }/episode/1`
+                )
+              }
+            >
+              Season {tvSeasonsData?.season_number + 1}
+              <ArrowForwardIos />
+            </IconButton>
+          )}
       </Box>
-      <Box
-        gap={2}
-        display={"flex"}
-        flexDirection={"column"}
-        width={"90%"}
-        margin={"100px auto"}
-      >
-        <Typography level="h2">
-          Episodes{" "}
-          <Typography
-            textColor={"neutral.400"}
-          >{`(${tvSeasonsData?.episodes.length})`}</Typography>
-        </Typography>
-        <Box display={"flex"} gap={2} flexDirection={"column"}>
-          {tvSeasonsData?.episodes?.map((episode, index) => {
-            return (
-              <Card
-                onClick={() =>
-                  navigate(
-                    `/tv/${tvSeriesData?.id}/season/${episode?.season_number}/episode/${episode.episode_number}`
-                  )
-                }
-                sx={{
-                  width: "90%",
-                  margin: "0 auto",
-                  cursor: "pointer",
-                  "@media (max-width: 700px)": {
-                    width: "100%",
-                    display: "flex",
-                    flexDirection: "column",
-                    justifyContent: "center",
-                  },
-                  ":hover": {
-                    filter: "brightness(0.8)",
-                    transition: "all 0.2s ease-in-out",
-                  },
-                }}
-                orientation="horizontal"
-                key={index}
-              >
-                <CardOverflow>
-                  {BlurImage({
-                    highQualitySrc: `https://image.tmdb.org/t/p/original${episode?.still_path}`,
-                    lowQualitySrc: `https://image.tmdb.org/t/p/w200${episode?.still_path}`,
-                    style: {
-                      borderRadius: "5px",
-                      width: "200px",
-                      height: "118px",
-                    },
-                  })}
-                </CardOverflow>
-                <CardContent>
-                  <Typography
-                    level="h3"
-                    sx={{
-                      "@media (max-width: 700px)": {
-                        fontSize: "20px",
-                        fontWeight: 500,
-                      },
-                    }}
-                  >
-                    {episode.episode_number}.{" "}
-                    <Typography fontWeight={300}>{episode?.name}</Typography>
-                  </Typography>
-                  <Typography level="body-md" textColor={"neutral.300"}>
-                    {new Date(episode?.air_date).toLocaleDateString("en-US", {
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric",
-                    })}{" "}
-                    • {episode?.runtime} minutes
-                  </Typography>
-                  <Typography
-                    sx={{
-                      "@media (max-width: 700px)": {
-                        display: "none",
-                      },
-                    }}
-                    level="body-md"
-                    textColor={"neutral.300"}
-                  >
-                    {episode?.overview}
-                  </Typography>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </Box>
+      <Box width={"90%"} margin={"100px auto"}>
+        <Tabs defaultValue={1}>
+          <TabList>
+            <Tab>Player V2</Tab>
+            <Tab>Player V3</Tab>
+          </TabList>
+          <TabPanel value={0}>
+            <AspectRatio ratio="16/9">
+              <iframe
+                src={`https://vidsrc.cc/v2/embed/tv/${tvSeriesData?.id}/${tvSeasonsData?.season_number}/${tvEpisodeData?.episode_number}?autoPlay=false`}
+                style={{ border: "1px solid gray", borderRadius: "10px" }}
+                allowFullScreen
+              />
+            </AspectRatio>
+          </TabPanel>
+          <TabPanel value={1}>
+            <AspectRatio ratio="16/9">
+              <iframe
+                src={`https://vidsrc.cc/v3/embed/tv/${tvSeriesData?.id}/${tvSeasonsData?.season_number}/${tvEpisodeData?.episode_number}?autoPlay=false`}
+                style={{ border: "1px solid gray", borderRadius: "10px" }}
+                allowFullScreen
+              />
+            </AspectRatio>
+          </TabPanel>
+        </Tabs>
       </Box>
       <Box
         gap={2}
@@ -250,7 +231,31 @@ function TVSeasonsComponent({
       >
         <Typography level="h2">Cast</Typography>
         <Box display={"flex"} gap={5} overflow={"scroll"}>
-          {tvSeasonsCreditsDataArr?.cast?.map((cast, index) => {
+          {tvEpisodeCreditsDataArr?.cast?.map((cast, index) => {
+            return (
+              <Card key={index}>
+                <CardOverflow>
+                  <img
+                    width={100}
+                    height={150}
+                    src={
+                      cast?.profile_path
+                        ? `https://image.tmdb.org/t/p/w200${cast.profile_path}`
+                        : "https://www.themoviedb.org/assets/2/v4/glyphicons/basic/glyphicons-basic-4-user-grey-d8fe957375e70239d6abdd549fd7568c89281b2179b5f4470e2e12895792dfa5.svg"
+                    }
+                  />
+                </CardOverflow>
+                <CardContent>
+                  <Typography level="title-md">{cast.name}</Typography>
+                  <Typography level="body-sm">{cast.character}</Typography>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </Box>
+        <Typography level="h2">Guest Stars</Typography>
+        <Box display={"flex"} gap={5} overflow={"scroll"}>
+          {tvEpisodeCreditsDataArr?.guest_stars?.map((cast, index) => {
             return (
               <Card key={index}>
                 <CardOverflow>
@@ -277,4 +282,4 @@ function TVSeasonsComponent({
   );
 }
 
-export default TVSeasonsComponent;
+export default TVEpisodeComponent;

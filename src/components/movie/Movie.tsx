@@ -7,6 +7,10 @@ import {
   CardOverflow,
   IconButton,
   Link,
+  Tab,
+  TabList,
+  TabPanel,
+  Tabs,
   Tooltip,
   Typography,
 } from "@mui/joy";
@@ -151,13 +155,30 @@ function MovieComponent({
         </CardContent>
       </Card>
       <Box width={"90%"} margin={"100px auto"}>
-        <AspectRatio ratio="16/9">
-          <iframe
-            src={`https://vidsrc.cc/v2/embed/movie/${movieId}?autoPlay=false`}
-            style={{ border: "1px solid gray", borderRadius: "10px" }}
-            allowFullScreen
-          />
-        </AspectRatio>
+        <Tabs defaultValue={1}>
+          <TabList>
+            <Tab>Player V2</Tab>
+            <Tab>Player V3</Tab>
+          </TabList>
+          <TabPanel value={0}>
+            <AspectRatio ratio="16/9">
+              <iframe
+                src={`https://vidsrc.cc/v2/embed/movie/${movieId}?autoPlay=false`}
+                style={{ border: "1px solid gray", borderRadius: "10px" }}
+                allowFullScreen
+              />
+            </AspectRatio>
+          </TabPanel>
+          <TabPanel value={1}>
+            <AspectRatio ratio="16/9">
+              <iframe
+                src={`https://vidsrc.cc/v3/embed/movie/${movieId}?autoPlay=false`}
+                style={{ border: "1px solid gray", borderRadius: "10px" }}
+                allowFullScreen
+              />
+            </AspectRatio>
+          </TabPanel>
+        </Tabs>
       </Box>
       <Box
         gap={2}

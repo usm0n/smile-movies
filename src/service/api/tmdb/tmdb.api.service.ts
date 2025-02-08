@@ -177,4 +177,24 @@ export const tmdb = {
       return error;
     }
   },
+  tvEpisodeDetails: async (id: string, season: number, episode: number) => {
+    try {
+      const response = await tmdbAPI.get(
+        "/tv/" + id + "/season/" + season + "/episode/" + episode
+      );
+      return response.data;
+    } catch (error) {
+      return error;
+    }
+  },
+  tvEpisodeCredits: async (id: string, season: number, episode: number) => {
+    try {
+      const response = await tmdbAPI.get(
+        "/tv/" + id + "/season/" + season + "/episode/" + episode + "/credits"
+      );
+      return response.data;
+    } catch (error) {
+      return error;
+    }
+  },
 };
