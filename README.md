@@ -1,6 +1,6 @@
 # Smile Movies
-This is professional Online Theatre by <a href="https://github.com/usm0n">Usmon</a> & <a href="https://github.com/botirovdevv">Mustafo</a>
+This is a professional web-site that you can watch almost every English Movies & TV Shows with different kinds of subtitles and high quality
 
-This web-site is Full Stack project
+We used React(Vite & Typescript), Node JS, Express JS, Firebase to build this web-site
 
-We used React JS(Vite & Typescript), Node JS, Express JS, Firebase to build this web-site
+Created by <a href="https://github.com/usm0n">Usmon</a>
