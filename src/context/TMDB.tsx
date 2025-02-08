@@ -17,7 +17,7 @@ const TmdbContext = createContext({
   trendingMoviesData: null as tmdbRes.ResponseType | null,
   trendingTvData: null as tmdbRes.ResponseType | null,
   movieDetailsData: null as tmdbRes.ResponseType | null,
-  tvDetailsData: null as tmdbRes.ResponseType | null,
+  tvSeriesDetailsData: null as tmdbRes.ResponseType | null,
   searchMovieData: null as tmdbRes.ResponseType | null,
   searchTvData: null as tmdbRes.ResponseType | null,
   discoverMovie: async (page: number) => {
@@ -73,7 +73,7 @@ const TmdbContext = createContext({
   movie: (id: string) => {
     id;
   },
-  tv: (id: string) => {
+  tvSeries: (id: string) => {
     id;
   },
   movieCreditsData: null as tmdbRes.ResponseType | null,
@@ -82,6 +82,14 @@ const TmdbContext = createContext({
   },
   movieRecommendationsData: null as tmdbRes.ResponseType | null,
   movieRecommendations: async (id: string) => {
+    id;
+  },
+  tvSeriesCreditsData: null as tmdbRes.ResponseType | null,
+  tvSeriesCredits: async (id: string) => {
+    id;
+  },
+  tvSeriesRecommendationsData: null as tmdbRes.ResponseType | null,
+  tvSeriesRecommendations: async (id: string) => {
     id;
   },
 });
@@ -117,7 +125,7 @@ export const TMDBProvider = ({ children }: { children: React.ReactNode }) => {
     useState<tmdbRes.ResponseType | null>(null);
   const [movieDetailsData, setMovieDetailsData] =
     useState<tmdbRes.ResponseType | null>(null);
-  const [tvDetailsData, setTvDetailsData] =
+  const [tvSeriesDetailsData, setTvSeriesDetailsData] =
     useState<tmdbRes.ResponseType | null>(null);
   const [searchMovieData, setSearchMovieData] =
     useState<tmdbRes.ResponseType | null>(null);
@@ -128,7 +136,63 @@ export const TMDBProvider = ({ children }: { children: React.ReactNode }) => {
     useState<tmdbRes.ResponseType | null>(null);
   const [movieRecommendationsData, setMovieRecommendationsData] =
     useState<tmdbRes.ResponseType | null>(null);
+  const [tvSeriesCreditsData, setTvSeriesCreditsData] =
+    useState<tmdbRes.ResponseType | null>(null);
+  const [tvSeriesRecommendationsData, setTvSeriesRecommendationsData] =
+    useState<tmdbRes.ResponseType | null>(null);
 
+  const tvSeriesRecommendations = async (id: string) => {
+    try {
+      setTvSeriesRecommendationsData({
+        isLoading: true,
+        isError: false,
+        data: null,
+        errorResponse: null,
+      });
+      const response = await tmdb.tvSeriesRecommendations(id);
+      if (response) {
+        setTvSeriesRecommendationsData({
+          isLoading: false,
+          isError: false,
+          data: response as tmdbRes.DiscoverTV,
+          errorResponse: null,
+        });
+      }
+    } catch (error) {
+      setTvSeriesRecommendationsData({
+        isLoading: false,
+        isError: true,
+        data: null,
+        errorResponse: error,
+      });
+    }
+  };
+  const tvSeriesCredits = async (id: string) => {
+    try {
+      setTvSeriesCreditsData({
+        isLoading: true,
+        isError: false,
+        data: null,
+        errorResponse: null,
+      });
+      const response = await tmdb.tvSeriesCredits(id);
+      if (response) {
+        setTvSeriesCreditsData({
+          isLoading: false,
+          isError: false,
+          data: response as tmdbRes.movieCredits,
+          errorResponse: null,
+        });
+      }
+    } catch (error) {
+      setTvSeriesCreditsData({
+        isLoading: false,
+        isError: true,
+        data: null,
+        errorResponse: error,
+      });
+    }
+  };
   const movieRecommendations = async (id: string) => {
     try {
       setMovieRecommendationsData({
@@ -607,25 +671,33 @@ export const TMDBProvider = ({ children }: { children: React.ReactNode }) => {
       });
     }
   };
-  const tv = async (id: string) => {
+  const tvSeries = async (id: string) => {
     try {
-      setTvDetailsData({
+      setTvSeriesDetailsData({
         isLoading: true,
         isError: false,
         data: null,
         errorResponse: null,
       });
       const response = await tmdb.tv(id);
-      if (response) {
-        setTvDetailsData({
+      if (!("response" in response)) {
+        setTvSeriesDetailsData({
           isLoading: false,
           isError: false,
           data: response as tmdbRes.tvDetails,
           errorResponse: null,
         });
+      } else {
+        setTvSeriesDetailsData({
+          isLoading: false,
+          isError: true,
+          data: null,
+          isIncorrect: true,
+          errorResponse: response.response,
+        });
       }
     } catch (error) {
-      setTvDetailsData({
+      setTvSeriesDetailsData({
         isLoading: false,
         isError: true,
         data: null,
@@ -636,6 +708,10 @@ export const TMDBProvider = ({ children }: { children: React.ReactNode }) => {
   return (
     <TmdbContext.Provider
       value={{
+        tvSeriesCredits,
+        tvSeriesCreditsData,
+        tvSeriesRecommendations,
+        tvSeriesRecommendationsData,
         movieRecommendations,
         movieRecommendationsData,
         movieCredits,
@@ -651,7 +727,7 @@ export const TMDBProvider = ({ children }: { children: React.ReactNode }) => {
         trendingMovies,
         trendingTv,
         movie,
-        tv,
+        tvSeries,
         popularMoviesData,
         popularTvData,
         topRatedMoviesData,
@@ -663,7 +739,7 @@ export const TMDBProvider = ({ children }: { children: React.ReactNode }) => {
         trendingMoviesData,
         trendingTvData,
         movieDetailsData,
-        tvDetailsData,
+        tvSeriesDetailsData,
         discoverMovie,
         discoverMovieData,
         discoverTv,
