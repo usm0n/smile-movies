@@ -3,6 +3,7 @@ import HomeLayout from "../layouts/HomeLayout";
 import Login from "../pages/auth/Login";
 import Register from "../pages/auth/Register";
 import Movie from "../pages/movie/Movie";
+import TVSeries from "../pages/tv/TVSeries";
 import Settings from "../pages/user/Settings";
 
 export const mainRoutes = [
@@ -27,7 +28,11 @@ export const mainRoutes = [
     element: <Movie />,
   },
   {
+    path: "/tv/:tvId",
+    element: <TVSeries />,
+  },
+  {
     path: "*",
-    element: <NotFound/>
-  }
+    element: <NotFound />,
+  },
 ];

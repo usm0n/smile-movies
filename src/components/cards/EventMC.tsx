@@ -20,18 +20,27 @@ function EventMC({
   eventRating,
   eventId,
   eventType,
+  eventSeason,
 }: {
   eventPoster: string;
   eventTitle: string;
-  eventOriginalTitle: string;
+  eventOriginalTitle: string | number;
   eventDate: string;
   eventRating: number;
   eventId: number;
   eventType: string;
+  eventSeason?: number;
 }) {
   const navigate = useNavigate();
   return (
-    <Box onClick={() => navigate(`/${eventType}/${eventId}`)} key={eventId}>
+    <Box
+      onClick={() =>
+        eventType == "season"
+          ? navigate(`/tv/${eventId}/season/${eventSeason}`)
+          : navigate(`/${eventType}/${eventId}`)
+      }
+      key={eventId}
+    >
       <Card
         sx={{
           cursor: "pointer",
@@ -85,7 +94,11 @@ function EventMC({
             level="title-lg"
             textColor={"neutral.300"}
           >
-            {eventOriginalTitle !== eventTitle && eventOriginalTitle}
+            {eventOriginalTitle !== eventTitle
+              ? eventType == "season"
+                ? `${eventOriginalTitle} episodes`
+                : eventOriginalTitle
+              : ""}
           </Typography>
           <Box display={"flex"} gap={2}>
             <Typography

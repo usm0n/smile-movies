@@ -143,4 +143,20 @@ export const tmdb = {
       return error;
     }
   },
+  tvSeriesCredits: async (id: string) => {
+    try {
+      const response = await tmdbAPI.get("/tv/" + id + "/credits");
+      return response.data;
+    } catch (error) {
+      return error;
+    }
+  },
+  tvSeriesRecommendations: async (id: string) => {
+    try {
+      const response = await tmdbAPI.get("/tv/" + id + "/recommendations");
+      return response.data;
+    } catch (error) {
+      return error;
+    }
+  },
 };
