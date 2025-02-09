@@ -4,11 +4,11 @@ import { Autoplay } from "swiper/modules";
 import { Skeleton } from "@mui/joy";
 import { CalendarMonth, Star } from "@mui/icons-material";
 import { useTMDB } from "../../context/TMDB";
-import { useEffect } from "react";
+import React, { useEffect } from "react";
 import { trendingAll } from "../../tmdb-res";
 import { useNavigate } from "react-router-dom";
 
-function Header() {
+const Header: React.FC = () => {
   const { trendingAll, trendingAllData } = useTMDB();
   const navigate = useNavigate();
 
@@ -37,8 +37,8 @@ function Header() {
             height={600}
           />
         ) : (
-          (trendingAllData?.data as trendingAll)?.results
-            .map((movie, index) => {
+          (trendingAllData?.data as trendingAll)?.results.map(
+            (movie, index) => {
               return (
                 <SwiperSlide key={index}>
                   <div
@@ -144,11 +144,12 @@ function Header() {
                   </div>
                 </SwiperSlide>
               );
-            })
+            }
+          )
         )}
       </Swiper>
     </div>
   );
-}
+};
 
 export default Header;
