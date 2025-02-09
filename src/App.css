@@ -65,6 +65,12 @@ body {
   padding: 100px 0;
 }
 
+.movie-poster {
+  border-radius: 10px;
+  width: 300px;
+  height: 450px;
+}
+
 .backdrop_image_overlay {
   position: absolute;
   bottom: 0%;
@@ -110,7 +116,7 @@ body {
   .backdrop_image_overlay_content_info {
     width: 90%;
   }
-  .backdrop_image_overlay_content_info_overview{
+  .backdrop_image_overlay_content_info_overview {
     display: none;
   }
 }

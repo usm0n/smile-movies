@@ -20,6 +20,7 @@ const Header: React.FC = () => {
         slidesPerView={1}
         effect={"fade"}
         spaceBetween={30}
+        loop={true}
         autoplay={{
           delay: 2500,
           disableOnInteraction: false,
@@ -40,8 +41,9 @@ const Header: React.FC = () => {
           />
         ) : (
           (trendingAllData?.data as trendingAll)?.results
-            .filter((movie) => movie?.media_type !== "person")
-            .map((movie, index) => {
+            ?.slice(0, 5)
+            ?.filter((movie) => movie?.media_type !== "person")
+            ?.map((movie, index) => {
               return (
                 <SwiperSlide key={index}>
                   <div
@@ -60,17 +62,10 @@ const Header: React.FC = () => {
                     {movie.backdrop_path ? (
                       <img
                         className="backdrop_image"
-                        loading="lazy"
-                        srcSet={`
-                        https://image.tmdb.org/t/p/w200${movie.backdrop_path} 200w,
-                        https://image.tmdb.org/t/p/w500${movie.backdrop_path} 500w
-                      `}
-                        sizes="(max-width: 800px) 200px, 500px"
-                        src={`https://image.tmdb.org/t/p/w500${movie.backdrop_path}`}
+                        src={`https://image.tmdb.org/t/p/w200${movie.backdrop_path}`}
                       />
                     ) : (
                       <img
-                        loading="eager"
                         className="backdrop_image"
                         src="https://salonlfc.com/wp-content/uploads/2018/01/image-not-found-scaled-1150x647.png"
                       />
@@ -81,7 +76,7 @@ const Header: React.FC = () => {
                           <img
                             loading="eager"
                             className="poster_image"
-                            src={`https://image.tmdb.org/t/p/w200${movie?.poster_path}`}
+                            src={`https://image.tmdb.org/t/p/w500${movie?.poster_path}`}
                           />
                         ) : (
                           <img

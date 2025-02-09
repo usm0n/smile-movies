@@ -78,11 +78,6 @@ function TVEpisodeComponent({
                 highQualitySrc: `https://image.tmdb.org/t/p/original${tvSeasonsData?.poster_path}`,
                 lowQualitySrc: `https://image.tmdb.org/t/p/w200${tvSeasonsData?.poster_path}`,
                 className: "movie-poster",
-                style: {
-                  borderRadius: "10px",
-                  width: "300px",
-                  height: "450px",
-                },
               })}
               <Box gap={"3px"} display={"flex"} flexDirection={"column"}>
                 <Typography
@@ -205,6 +200,9 @@ function TVEpisodeComponent({
           <TabPanel value={0}>
             <AspectRatio ratio="16/9">
               <iframe
+                sandbox={
+                  "allow-forms allow-pointer-lock allow-same-origin allow-scripts allow-top-navigation"
+                }
                 src={`https://vidsrc.cc/v2/embed/tv/${tvSeriesData?.id}/${tvSeasonsData?.season_number}/${tvEpisodeData?.episode_number}?autoPlay=false`}
                 style={{ border: "1px solid gray", borderRadius: "10px" }}
                 allowFullScreen
@@ -214,6 +212,9 @@ function TVEpisodeComponent({
           <TabPanel value={1}>
             <AspectRatio ratio="16/9">
               <iframe
+                sandbox={
+                  "allow-forms allow-pointer-lock allow-same-origin allow-scripts allow-top-navigation"
+                }
                 src={`https://vidsrc.cc/v3/embed/tv/${tvSeriesData?.id}/${tvSeasonsData?.season_number}/${tvEpisodeData?.episode_number}?autoPlay=false`}
                 style={{ border: "1px solid gray", borderRadius: "10px" }}
                 allowFullScreen
