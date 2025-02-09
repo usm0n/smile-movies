@@ -16,17 +16,19 @@ const Header: React.FC = () => {
     trendingAll("week", 1);
   }, []);
   return (
-    <div>
+    <>
       <Swiper
         slidesPerView={1}
         spaceBetween={10}
-        loop={true}
         modules={[Autoplay]}
         autoplay={{
           delay: 5000,
           stopOnLastSlide: false,
           disableOnInteraction: false,
         }}
+        lazyPreloadPrevNext={2}
+        updateOnWindowResize={true}
+        watchSlidesProgress={true}
       >
         {trendingAllData?.isLoading ? (
           <Skeleton
@@ -37,8 +39,9 @@ const Header: React.FC = () => {
             height={600}
           />
         ) : (
-          (trendingAllData?.data as trendingAll)?.results.map(
-            (movie, index) => {
+          (trendingAllData?.data as trendingAll)?.results
+            .filter((movie) => movie?.media_type !== "person")
+            .map((movie, index) => {
               return (
                 <SwiperSlide key={index}>
                   <div
@@ -56,13 +59,13 @@ const Header: React.FC = () => {
                   >
                     {movie.backdrop_path ? (
                       <img
-                        loading="lazy"
+                        loading="eager"
                         className="backdrop_image"
-                        src={`https://image.tmdb.org/t/p/w200${movie.backdrop_path}`}
+                        src={`https://image.tmdb.org/t/p/w1280${movie.backdrop_path}`}
                       />
                     ) : (
                       <img
-                        loading="lazy"
+                        loading="eager"
                         className="backdrop_image"
                         src="https://salonlfc.com/wp-content/uploads/2018/01/image-not-found-scaled-1150x647.png"
                       />
@@ -71,13 +74,13 @@ const Header: React.FC = () => {
                       <div className="backdrop_image_overlay_content">
                         {movie.poster_path ? (
                           <img
-                            loading="lazy"
+                            loading="eager"
                             className="poster_image"
-                            src={`https://image.tmdb.org/t/p/w500${movie?.poster_path}`}
+                            src={`https://image.tmdb.org/t/p/w200${movie?.poster_path}`}
                           />
                         ) : (
                           <img
-                            loading="lazy"
+                            loading="eager"
                             className="poster_image"
                             src="https://png.pngtree.com/png-vector/20190820/ourmid/pngtree-no-image-vector-illustration-isolated-png-image_1694547.jpg"
                           />
@@ -144,11 +147,10 @@ const Header: React.FC = () => {
                   </div>
                 </SwiperSlide>
               );
-            }
-          )
+            })
         )}
       </Swiper>
-    </div>
+    </>
   );
 };
 
