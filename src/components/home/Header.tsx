@@ -38,7 +38,6 @@ function Header() {
           />
         ) : (
           (trendingAllData?.data as trendingAll)?.results
-            .filter((movie) => movie.media_type !== "person")
             .map((movie, index) => {
               return (
                 <SwiperSlide key={index}>
