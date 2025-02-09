@@ -18,6 +18,7 @@ const Header: React.FC = () => {
   return (
     <>
       <Swiper
+        speed={300}
         slidesPerView={1}
         spaceBetween={10}
         modules={[Autoplay]}
@@ -26,9 +27,6 @@ const Header: React.FC = () => {
           stopOnLastSlide: false,
           disableOnInteraction: false,
         }}
-        lazyPreloadPrevNext={2}
-        updateOnWindowResize={true}
-        watchSlidesProgress={true}
       >
         {trendingAllData?.isLoading ? (
           <Skeleton
@@ -59,9 +57,14 @@ const Header: React.FC = () => {
                   >
                     {movie.backdrop_path ? (
                       <img
-                        loading="eager"
                         className="backdrop_image"
-                        src={`https://image.tmdb.org/t/p/w1280${movie.backdrop_path}`}
+                        loading="lazy"
+                        srcSet={`
+                        https://image.tmdb.org/t/p/w200${movie.backdrop_path} 200w,
+                        https://image.tmdb.org/t/p/w500${movie.backdrop_path} 500w
+                      `}
+                        sizes="(max-width: 800px) 200px, 500px"
+                        src={`https://image.tmdb.org/t/p/w500${movie.backdrop_path}`}
                       />
                     ) : (
                       <img
