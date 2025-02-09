@@ -58,11 +58,6 @@ function MovieComponent({
               highQualitySrc: `https://image.tmdb.org/t/p/original${movieData?.poster_path}`,
               lowQualitySrc: `https://image.tmdb.org/t/p/w200${movieData?.poster_path}`,
               className: "movie-poster",
-              style: {
-                borderRadius: "10px",
-                width: "300px",
-                height: "450px",
-              },
             })}
             <Box gap={"3px"} display={"flex"} flexDirection={"column"}>
               <Typography
@@ -163,6 +158,9 @@ function MovieComponent({
           <TabPanel value={0}>
             <AspectRatio ratio="16/9">
               <iframe
+                sandbox={
+                  "allow-forms allow-pointer-lock allow-same-origin allow-scripts allow-top-navigation"
+                }
                 src={`https://vidsrc.cc/v2/embed/movie/${movieId}?autoPlay=false`}
                 style={{ border: "1px solid gray", borderRadius: "10px" }}
                 allowFullScreen
@@ -172,6 +170,9 @@ function MovieComponent({
           <TabPanel value={1}>
             <AspectRatio ratio="16/9">
               <iframe
+                sandbox={
+                  "allow-forms allow-pointer-lock allow-same-origin allow-scripts allow-top-navigation"
+                }
                 src={`https://vidsrc.cc/v3/embed/movie/${movieId}?autoPlay=false`}
                 style={{ border: "1px solid gray", borderRadius: "10px" }}
                 allowFullScreen

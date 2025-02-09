@@ -60,11 +60,6 @@ function TVSeasonsComponent({
                 highQualitySrc: `https://image.tmdb.org/t/p/original${tvSeasonsData?.poster_path}`,
                 lowQualitySrc: `https://image.tmdb.org/t/p/w200${tvSeasonsData?.poster_path}`,
                 className: "movie-poster",
-                style: {
-                  borderRadius: "10px",
-                  width: "300px",
-                  height: "450px",
-                },
               })}
               <Box gap={"3px"} display={"flex"} flexDirection={"column"}>
                 <Typography
