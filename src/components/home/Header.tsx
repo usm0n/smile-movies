@@ -6,10 +6,12 @@ import { CalendarMonth, Star } from "@mui/icons-material";
 import { useTMDB } from "../../context/TMDB";
 import { useEffect } from "react";
 import { trendingAll } from "../../tmdb-res";
+import { useNavigate } from "react-router-dom";
 
 function Header() {
   const { trendingAll, trendingAllData } = useTMDB();
   const { colorScheme } = useColorScheme();
+  const navigate = useNavigate();
 
   useEffect(() => {
     trendingAll("week", 1);
@@ -41,13 +43,17 @@ function Header() {
             .map((movie, index) => {
               return (
                 <SwiperSlide key={index}>
-                  <Box
-                    sx={{
+                  <div
+                    onClick={() =>
+                      navigate(
+                        movie?.media_type === "movie"
+                          ? `/movie/${movie.id}`
+                          : `/tv/${movie.id}`
+                      )
+                    }
+                    style={{
                       transition: "all 0.2s ease-in-out",
-                      ":hover": {
-                        cursor: "pointer",
-                        filter: "brightness(90%)",
-                      },
+                      cursor: "pointer",
                     }}
                   >
                     {movie.backdrop_path ? (
@@ -184,7 +190,7 @@ function Header() {
                         </Box>
                       </Box>
                     </Box>
-                  </Box>
+                  </div>
                 </SwiperSlide>
               );
             })
