@@ -74,7 +74,16 @@ export const tmdb = {
       return error;
     }
   },
-
+  searchMulti: async (query: string, page: number) => {
+    try {
+      const response = await tmdbAPI.get(
+        "/search/multi?query=" + query + "&page=" + page
+      );
+      return response.data;
+    } catch (error) {
+      return error;
+    }
+  },
   searchMovie: async (query: string, page: number) => {
     try {
       const response = await tmdbAPI.get(

@@ -37,24 +37,37 @@ import {
   useColorScheme,
 } from "@mui/joy";
 import { isLoggedIn } from "../../utilities/defaults";
-import { useState } from "react";
+import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useUsers } from "../../context/Users";
 import { User } from "../../user";
 import { googleLogout } from "@react-oauth/google";
+import { useTMDB } from "../../context/TMDB";
+import { searchMulti } from "../../tmdb-res";
 
-function Navbar() {
+const Navbar: React.FC = () => {
   const [logoutModal, setLogoutModal] = useState(false);
   const [searchVisibility, setSearchVisibility] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const { colorScheme, setMode } = useColorScheme();
   const { myselfData, logout } = useUsers();
+  const [searchValue, setSearchValue] = useState("");
+  const { searchMultiAC, searchMultiACData } = useTMDB();
   const navigate = useNavigate();
   const navigateTo = (path: string) => {
     navigate(path);
     setDrawerOpen(false);
   };
+  const handleSearchSubmit = () => {
+    if (searchValue) {
+      navigate(`/search/${searchValue}`);
+      setSearchValue("");
+      setSearchVisibility(false);
+    }
+  };
+  const searchResults = (searchMultiACData?.data as searchMulti)?.results;
   const user = myselfData?.data as User;
+
   return (
     <div
       style={{
@@ -94,23 +107,45 @@ function Navbar() {
         <Link to="/about">About</Link>
         <Link to="/contact">Contact</Link>
       </Box>
-      <Autocomplete
-        size="lg"
-        sx={{
-          width: "400px",
-
-          "@media (max-width: 1000px)": {
-            display: searchVisibility ? "flex" : "none",
-            position: "absolute",
-            top: "90px",
-            left: "10px",
-            right: "10px",
-            width: "auto",
-          },
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          handleSearchSubmit();
         }}
-        options={[]}
-        placeholder="Search"
-      />
+      >
+        <Autocomplete
+          size="lg"
+          onInputChange={(_event, value) => {
+            setSearchValue(value);
+            searchMultiAC(value, 1);
+          }}
+          sx={{
+            width: "400px",
+            "@media (max-width: 1000px)": {
+              display: searchVisibility ? "flex" : "none",
+              position: "absolute",
+              top: "90px",
+              left: "10px",
+              right: "10px",
+              width: "auto",
+            },
+          }}
+          options={searchResults || []}
+          filterOptions={(options) => {
+            const filteredOptions = options.filter(
+              (option) => option.media_type !== "person"
+            );
+            return filteredOptions;
+          }}
+          getOptionLabel={(option) => option?.title || option?.name || ""}
+          placeholder="Search"
+          endDecorator={
+            <IconButton onClick={handleSearchSubmit}>
+              <Search />
+            </IconButton>
+          }
+        />
+      </form>
       <Box display={"flex"} gap={1} alignItems={"center"}>
         <IconButton
           onClick={() => setSearchVisibility(!searchVisibility)}
@@ -420,6 +455,5 @@ function Navbar() {
       </Drawer>
     </div>
   );
-}
-
+};
 export default Navbar;

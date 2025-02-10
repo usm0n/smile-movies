@@ -1,7 +1,23 @@
-import { Autocomplete, Box, Typography } from "@mui/joy";
+import { Autocomplete, Box, IconButton, Typography } from "@mui/joy";
+import { useState } from "react";
 import { Typewriter } from "react-simple-typewriter";
+import { useTMDB } from "../../context/TMDB";
+import { useNavigate } from "react-router-dom";
+import { searchMulti } from "../../tmdb-res";
+import { Search } from "@mui/icons-material";
 
 function Header() {
+  const navigate = useNavigate();
+  const [searchValue, setSearchValue] = useState("");
+  const { searchMultiAC, searchMultiACData } = useTMDB();
+
+  const handleSearchSubmit = () => {
+    if (searchValue) {
+      navigate(`/search/${searchValue}`);
+      setSearchValue("");
+    }
+  };
+  const searchResults = (searchMultiACData?.data as searchMulti)?.results;
   return (
     <Box
       sx={{
@@ -17,42 +33,71 @@ function Header() {
       }}
     >
       <Typography level="h1" fontWeight={700}>
-        Welcome to <span style={{color: "rgb(255, 220, 95)"}}>Smile Movies</span>
+        Welcome to{" "}
+        <span style={{ color: "rgb(255, 220, 95)" }}>Smile Movies</span>
       </Typography>
       <Typography level="body-lg" fontWeight={500}>
-        Watch millions of Movies and TV shows.{" "}
-        <Typography
-          sx={{
-            color: "rgb(255, 200, 0)",
-          }}
-          fontWeight={700}
-        >
-          <Typewriter
-            words={[
-              "No ADS",
-              "Free",
-              "High Quality",
-              "With Subtitles",
-              "Fast Streaming",
-              "Easy to Use",
-              "No Registration",
-              "Anywhere Anytime",
-            ]}
-            loop={Infinity}
-            cursor
-            cursorStyle="_"
-          />
-        </Typography>
+        Watch millions of Movies and TV shows.
+      </Typography>
+      <Typography
+        sx={{
+          color: "rgb(255, 200, 0)",
+        }}
+        fontWeight={700}
+      >
+        <Typewriter
+          words={[
+            "No ADS",
+            "Free",
+            "High Quality",
+            "With Subtitles",
+            "Fast Streaming",
+            "Easy to Use",
+            "No Registration",
+            "Anywhere Anytime",
+          ]}
+          loop={Infinity}
+          cursor
+          cursorStyle="_"
+        />
       </Typography>
       <Typography fontWeight={700} sx={{ padding: "20px 0 0 0" }}>
-        Start by searching for a movie or TV series
+        Start by searching for a movie or TV show
       </Typography>
-      <Autocomplete
-        options={[]}
-        size="lg"
-        sx={{ width: "500px", "@media (max-width: 600px)": { width: "100%" } }}
-        placeholder="Search..."
-      />
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          handleSearchSubmit();
+        }}
+      >
+        <Autocomplete
+          sx={{
+            width: "500px",
+            "@media (max-width: 600px)": {
+              width: "100%",
+            },
+          }}
+          size="lg"
+          onInputChange={(_event, value) => {
+            setSearchValue(value);
+            searchMultiAC(value, 1);
+          }}
+          options={searchResults || []}
+          filterOptions={(options) => {
+            const filteredOptions = options.filter(
+              (option) => option.media_type !== "person"
+            );
+            return filteredOptions;
+          }}
+          getOptionLabel={(option) => option?.title || option?.name || ""}
+          placeholder="Search"
+          endDecorator={
+            <IconButton onClick={handleSearchSubmit}>
+              <Search />
+            </IconButton>
+          }
+        />
+      </form>
     </Box>
   );
 }

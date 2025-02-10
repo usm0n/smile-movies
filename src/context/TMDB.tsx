@@ -122,6 +122,16 @@ const TmdbContext = createContext({
     seasonNumber;
     episodeNumber;
   },
+  searchMultiData: null as tmdbRes.ResponseType | null,
+  searchMultiACData: null as tmdbRes.ResponseType | null,
+  searchMulti: async (query: string, page: number) => {
+    query;
+    page;
+  },
+  searchMultiAC: async (query: string, page: number) => {
+    query;
+    page;
+  },
 });
 
 export const useTMDB = () => useContext(TmdbContext);
@@ -178,7 +188,69 @@ export const TMDBProvider = ({ children }: { children: React.ReactNode }) => {
     useState<tmdbRes.ResponseType | null>(null);
   const [tvEpisodeCreditsData, setTvEpisodeCreditsData] =
     useState<tmdbRes.ResponseType | null>(null);
+  const [searchMultiData, setSearchMultiData] =
+    useState<tmdbRes.ResponseType | null>(null);
+  const [searchMultiACData, setSearchMultiACData] =
+    useState<tmdbRes.ResponseType | null>(null);
 
+  const searchMultiAC = async (query: string, page: number) => {
+    try {
+      setSearchMultiACData({
+        isLoading: true,
+        isError: false,
+        data: null,
+        errorResponse: null,
+      });
+      const response = await tmdb.searchMulti(query, page);
+      if (response) {
+        setSearchMultiACData({
+          isLoading: false,
+          isError: false,
+          data: response as tmdbRes.searchMulti,
+          errorResponse: null,
+        });
+      }
+    } catch (error) {
+      setSearchMultiACData({
+        isLoading: false,
+        isError: true,
+        data: null,
+        errorResponse: error,
+      });
+    }
+  };
+  const searchMulti = async (query: string, page: number) => {
+    try {
+      setSearchMultiData({
+        isLoading: true,
+        isError: false,
+        data: null,
+        errorResponse: null,
+      });
+      setSearchMultiACData({
+        isLoading: true,
+        isError: false,
+        data: null,
+        errorResponse: null,
+      });
+      const response = await tmdb.searchMulti(query, page);
+      if (response) {
+        setSearchMultiData({
+          isLoading: false,
+          isError: false,
+          data: response as tmdbRes.searchMulti,
+          errorResponse: null,
+        });
+      }
+    } catch (error) {
+      setSearchMultiData({
+        isLoading: false,
+        isError: true,
+        data: null,
+        errorResponse: error,
+      });
+    }
+  };
   const tvEpisodeCredits = async (
     id: string,
     seasonNumber: number,
@@ -883,6 +955,10 @@ export const TMDBProvider = ({ children }: { children: React.ReactNode }) => {
   return (
     <TmdbContext.Provider
       value={{
+        searchMultiAC,
+        searchMulti,
+        searchMultiACData,
+        searchMultiData,
         tvEpisodeCredits,
         tvEpisodeCreditsData,
         tvEpisodeDetails,

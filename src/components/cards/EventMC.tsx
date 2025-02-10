@@ -47,7 +47,6 @@ function EventMC({
           minHeight: "400px",
           width: "250px",
           background: "transparent",
-          // border: "1px solid gray",
           "@media (max-width: 800px)": {
             margin: "0 auto",
             width: "200px",
@@ -60,10 +59,17 @@ function EventMC({
         }}
       >
         <CardCover>
-          {BlurImage({
-            highQualitySrc: `https://image.tmdb.org/t/p/original${eventPoster}`,
-            lowQualitySrc: `https://image.tmdb.org/t/p/w200${eventPoster}`,
-          })}
+          {eventPoster ? (
+            BlurImage({
+              highQualitySrc: `https://image.tmdb.org/t/p/original${eventPoster}`,
+              lowQualitySrc: `https://image.tmdb.org/t/p/w200${eventPoster}`,
+            })
+          ) : (
+            <img
+              src="https://lightwidget.com/wp-content/uploads/localhost-file-not-found.jpg"
+              alt="poster"
+            />
+          )}
         </CardCover>
         <CardCover
           sx={{
@@ -101,30 +107,34 @@ function EventMC({
               : ""}
           </Typography>
           <Box display={"flex"} gap={2}>
-            <Typography
-              level="body-md"
-              textColor={"neutral.300"}
-              startDecorator={<CalendarMonth />}
-              sx={{
-                "@media (max-width: 800px)": {
-                  fontSize: "13px",
-                },
-              }}
-            >
-              {eventDate}
-            </Typography>
-            <Typography
-              level="body-md"
-              textColor={"neutral.300"}
-              startDecorator={<Star />}
-              sx={{
-                "@media (max-width: 800px)": {
-                  fontSize: "13px",
-                },
-              }}
-            >
-              {eventRating.toString().slice(0, 3)}
-            </Typography>
+            {eventDate && (
+              <Typography
+                level="body-md"
+                textColor={"neutral.300"}
+                startDecorator={<CalendarMonth />}
+                sx={{
+                  "@media (max-width: 800px)": {
+                    fontSize: "13px",
+                  },
+                }}
+              >
+                {eventDate}
+              </Typography>
+            )}
+            {eventRating && (
+              <Typography
+                level="body-md"
+                textColor={"neutral.300"}
+                startDecorator={<Star />}
+                sx={{
+                  "@media (max-width: 800px)": {
+                    fontSize: "13px",
+                  },
+                }}
+              >
+                {eventRating?.toString().slice(0, 3)}
+              </Typography>
+            )}
           </Box>
         </CardContent>
       </Card>
