@@ -1,4 +1,4 @@
-import { Box, Card, CardContent, CardCover, Skeleton } from "@mui/joy";
+import { Box, Card, CardCover, Skeleton } from "@mui/joy";
 
 function EventMCS() {
   return (
@@ -24,11 +24,6 @@ function EventMCS() {
         <CardCover>
           <Skeleton sx={{ background: "gray" }} />
         </CardCover>
-
-        <CardContent sx={{ justifyContent: "flex-end" }}>
-          <Skeleton sx={{ background: "gray" }} />
-          <Skeleton sx={{ background: "gray", width: "90%" }} />
-        </CardContent>
       </Card>
     </Box>
   );
