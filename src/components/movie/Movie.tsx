@@ -1,5 +1,4 @@
 import {
-  AspectRatio,
   Box,
   Card,
   CardContent,
@@ -7,10 +6,6 @@ import {
   CardOverflow,
   IconButton,
   Link,
-  Tab,
-  TabList,
-  TabPanel,
-  Tabs,
   Tooltip,
   Typography,
 } from "@mui/joy";
@@ -19,6 +14,7 @@ import { minuteToHour, ymdToDmy } from "../../utilities/defaults";
 import { BookmarkBorderOutlined, FavoriteBorder } from "@mui/icons-material";
 import EventMC from "../../components/cards/EventMC";
 import BlurImage from "../../utilities/blurImage";
+import Video from "../utils/Video";
 
 function MovieComponent({
   movieData,
@@ -149,38 +145,7 @@ function MovieComponent({
           </Box>
         </CardContent>
       </Card>
-      <Box width={"90%"} margin={"100px auto"}>
-        <Tabs defaultValue={1}>
-          <TabList>
-            <Tab>Player V2</Tab>
-            <Tab>Player V3</Tab>
-          </TabList>
-          <TabPanel value={0}>
-            <AspectRatio ratio="16/9">
-              <iframe
-                sandbox={
-                  "allow-forms allow-pointer-lock allow-same-origin allow-scripts allow-top-navigation"
-                }
-                src={`https://vidsrc.cc/v2/embed/movie/${movieId}?autoPlay=false`}
-                style={{ border: "1px solid gray", borderRadius: "10px" }}
-                allowFullScreen
-              />
-            </AspectRatio>
-          </TabPanel>
-          <TabPanel value={1}>
-            <AspectRatio ratio="16/9">
-              <iframe
-                sandbox={
-                  "allow-forms allow-pointer-lock allow-same-origin allow-scripts allow-top-navigation"
-                }
-                src={`https://vidsrc.cc/v3/embed/movie/${movieId}?autoPlay=false`}
-                style={{ border: "1px solid gray", borderRadius: "10px" }}
-                allowFullScreen
-              />
-            </AspectRatio>
-          </TabPanel>
-        </Tabs>
-      </Box>
+      <Video link={`/movie/${movieId}`} />
       <Box
         gap={2}
         display={"flex"}
