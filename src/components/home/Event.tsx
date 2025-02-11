@@ -58,7 +58,7 @@ function Event({
         gap={3}
         overflow={"scroll"}
         sx={{
-          scrollbarColor: "rgb(255, 216, 77) rgba(255, 216, 77, 0.41)",
+          scrollbarColor: "transparent",
           scrollbarWidth: "thin",
         }}
       >

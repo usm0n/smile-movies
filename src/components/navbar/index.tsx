@@ -65,7 +65,11 @@ const Navbar: React.FC = () => {
       setSearchVisibility(false);
     }
   };
-  const searchResults = (searchMultiACData?.data as searchMulti)?.results;
+  const searchResults = (
+    searchMultiACData?.data as searchMulti
+  )?.results?.filter(
+    (item) => item.media_type !== "person" && item.poster_path
+  );
   const user = myselfData?.data as User;
 
   return (
@@ -116,8 +120,9 @@ const Navbar: React.FC = () => {
         <Autocomplete
           size="lg"
           onInputChange={(_event, value) => {
-            setSearchValue(value);
+            setSearchValue("");
             searchMultiAC(value, 1);
+            setSearchValue(value);
           }}
           sx={{
             width: "400px",
@@ -130,13 +135,7 @@ const Navbar: React.FC = () => {
               width: "auto",
             },
           }}
-          options={searchResults || []}
-          filterOptions={(options) => {
-            const filteredOptions = options.filter(
-              (option) => option.media_type !== "person"
-            );
-            return filteredOptions;
-          }}
+          options={searchResults ? searchResults : []}
           getOptionLabel={(option) => option?.title || option?.name || ""}
           placeholder="Search"
           endDecorator={

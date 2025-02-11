@@ -33,7 +33,7 @@ const BlurImage = ({
       className={className || ""}
       style={{
         ...style,
-        filter: isLoading ? "blur(20px)" : "none",
+        filter: isLoading ? "blur(5px)" : "none",
         transition: "filter 0.3s ease-in-out",
       }}
     />

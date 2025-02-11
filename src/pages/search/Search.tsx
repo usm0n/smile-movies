@@ -10,7 +10,9 @@ function Search() {
   const { query, page } = useParams();
   const { searchMulti, searchMultiData } = useTMDB();
 
-  const searchResults = (searchMultiData?.data as searchMulti)?.results;
+  const searchResults = (searchMultiData?.data as searchMulti)?.results.filter(
+    (result) => result.media_type !== "person" && result.poster_path
+  );
   const totalPages = (searchMultiData?.data as searchMulti)?.total_pages;
   const totalResults = (searchMultiData?.data as searchMulti)?.total_results;
   const currentPage = (searchMultiData?.data as searchMulti)?.page;
