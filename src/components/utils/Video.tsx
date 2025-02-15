@@ -39,7 +39,7 @@ function Video({ link }: { link: string }) {
               sandbox={
                 "allow-forms allow-pointer-lock allow-same-origin allow-scripts allow-top-navigation"
               }
-              src={`https://vidsrc.cc/v3/embed/${link}?autoPlay=false`}
+              src={`https://vidsrc.cc/v3/embed${link}?autoPlay=false`}
               style={{ border: "1px solid gray", borderRadius: "10px" }}
               allowFullScreen
             />
