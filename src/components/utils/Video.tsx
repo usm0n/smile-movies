@@ -26,7 +26,7 @@ function Video({ link }: { link: string }) {
               sandbox={
                 "allow-forms allow-pointer-lock allow-same-origin allow-scripts allow-top-navigation"
               }
-              src={`https://vidsrc.cc/v2/embed${link}?autoPlay=false`}
+              src={`https://vidsrc.cc/v2/embed${link}`}
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               style={{ border: "1px solid gray", borderRadius: "10px" }}
               allowFullScreen
@@ -40,7 +40,7 @@ function Video({ link }: { link: string }) {
                 "allow-forms allow-pointer-lock allow-same-origin allow-scripts"
               }
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              src={`https://vidsrc.cc/v3/embed${link}?autoPlay=false`}
+              src={`https://vidsrc.cc/v3/embed${link}`}
               style={{ border: "1px solid gray", borderRadius: "10px" }}
               allowFullScreen
             />
