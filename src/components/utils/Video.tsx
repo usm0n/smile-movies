@@ -12,11 +12,12 @@ function Video({ link }: { link: string }) {
         <TabPanel value={0}>
           <AspectRatio ratio="16/9">
             <iframe
-              sandbox={"allow-forms allow-same-origin allow-scripts"}
+              sandbox={
+                "allow-forms allow-pointer-lock allow-same-origin allow-scripts allow-top-navigation allow-presentation"
+              }
               src={`https://vidsrc.xyz/embed${link}`}
               style={{ border: "1px solid gray", borderRadius: "10px" }}
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
             />
           </AspectRatio>
         </TabPanel>
@@ -24,12 +25,11 @@ function Video({ link }: { link: string }) {
           <AspectRatio ratio="16/9">
             <iframe
               sandbox={
-                "allow-forms allow-pointer-lock allow-same-origin allow-scripts allow-top-navigation"
+                "allow-forms allow-pointer-lock allow-same-origin allow-scripts allow-top-navigation allow-presentation"
               }
               src={`https://vidsrc.cc/v2/embed${link}`}
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               style={{ border: "1px solid gray", borderRadius: "10px" }}
-              allowFullScreen
             />
           </AspectRatio>
         </TabPanel>
@@ -37,12 +37,11 @@ function Video({ link }: { link: string }) {
           <AspectRatio ratio="16/9">
             <iframe
               sandbox={
-                "allow-forms allow-pointer-lock allow-same-origin allow-scripts"
+                "allow-forms allow-pointer-lock allow-same-origin allow-scripts allow-presentation"
               }
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               src={`https://vidsrc.cc/v3/embed${link}`}
               style={{ border: "1px solid gray", borderRadius: "10px" }}
-              allowFullScreen
             />
           </AspectRatio>
         </TabPanel>
