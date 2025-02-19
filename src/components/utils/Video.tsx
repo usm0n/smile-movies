@@ -12,11 +12,10 @@ function Video({ link }: { link: string }) {
         <TabPanel value={0}>
           <AspectRatio ratio="16/9">
             <iframe
-              sandbox={
-                "allow-forms allow-pointer-lock allow-same-origin allow-scripts allow-top-navigation"
-              }
+              sandbox={"allow-forms allow-same-origin allow-scripts"}
               src={`https://vidsrc.xyz/embed${link}`}
               style={{ border: "1px solid gray", borderRadius: "10px" }}
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
             />
           </AspectRatio>
@@ -28,6 +27,7 @@ function Video({ link }: { link: string }) {
                 "allow-forms allow-pointer-lock allow-same-origin allow-scripts allow-top-navigation"
               }
               src={`https://vidsrc.cc/v2/embed${link}?autoPlay=false`}
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               style={{ border: "1px solid gray", borderRadius: "10px" }}
               allowFullScreen
             />
@@ -37,8 +37,9 @@ function Video({ link }: { link: string }) {
           <AspectRatio ratio="16/9">
             <iframe
               sandbox={
-                "allow-forms allow-pointer-lock allow-same-origin allow-scripts allow-top-navigation"
+                "allow-forms allow-pointer-lock allow-same-origin allow-scripts"
               }
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               src={`https://vidsrc.cc/v3/embed${link}?autoPlay=false`}
               style={{ border: "1px solid gray", borderRadius: "10px" }}
               allowFullScreen
