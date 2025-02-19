@@ -4,11 +4,14 @@ function Video({ link }: { link: string }) {
   const videoValue = (videoLink: string) => (
     <AspectRatio ratio="16/9">
       <iframe
+        onError={() => {
+          <p>Error has occurred! Please switch between players</p>;
+        }}
         sandbox={
           "allow-forms allow-pointer-lock allow-same-origin allow-scripts allow-top-navigation allow-presentation"
         }
         src={`${videoLink}?autoPlay=false`}
-        style={{ border: "1px solid gray", borderRadius: "10px", }}
+        style={{ border: "1px solid gray", borderRadius: "10px" }}
         allowFullScreen
       >
         <p>Your browser does not support iframes.</p>
