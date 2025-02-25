@@ -10,6 +10,7 @@ function Video({ link }: { link: string }) {
         "allow-pointer-lock",
         "allow-same-origin",
         "allow-scripts",
+        "allow-presentation"
       ]}
       className="iframe-video"
       allowFullScreen
