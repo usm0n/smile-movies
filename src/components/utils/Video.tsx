@@ -13,7 +13,7 @@ function Video({ link }: { link: string }) {
         "allow-presentation"
       ]}
       className="iframe-video"
-      allowFullScreen="true"
+      allowFullScreen={true}
       webkitallowfullscreen="true"
       mozallowfullscreen="true"
       loading="eager"
