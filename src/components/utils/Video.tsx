@@ -14,8 +14,6 @@ function Video({ link }: { link: string }) {
       ]}
       className="iframe-video"
       allowFullScreen={true}
-      webkitallowfullscreen="true"
-      mozallowfullscreen="true"
       loading="eager"
       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share fullscreen"
     />
