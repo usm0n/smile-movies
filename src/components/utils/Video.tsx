@@ -1,22 +1,20 @@
-import { Box, Tab, TabList, TabPanel, Tabs } from "@mui/joy";
-import Iframe from "react-iframe";
+import { AspectRatio, Box, Tab, TabList, TabPanel, Tabs } from "@mui/joy";
 
 function Video({ link }: { link: string }) {
   const videoValue = (videoLink: string) => (
-    <Iframe
-      url={`${videoLink}?autoPlay=false`}
-      sandbox={[
-        "allow-forms",
-        "allow-pointer-lock",
-        "allow-same-origin",
-        "allow-scripts",
-        "allow-presentation"
-      ]}
-      className="iframe-video"
-      allowFullScreen={true}
-      loading="eager"
-      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share fullscreen"
-    />
+    <AspectRatio ratio="16/9">
+      <iframe
+        src={videoLink}
+        allowFullScreen
+        sandbox="allow-scripts allow-same-origin allow-forms allow-presentation"
+        style={{
+          width: "100%",
+          height: "100%",
+          border: "1px solid gray",
+          borderRadius: "5px",
+        }}
+      />
+    </AspectRatio>
   );
   return (
     <Box width={"90%"} margin={"100px auto"}>
