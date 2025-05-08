@@ -1,17 +1,24 @@
-import { Box, Typography, useColorScheme } from "@mui/joy";
+import { Box, Chip, Typography, useColorScheme } from "@mui/joy";
 import EventMC from "../cards/EventMC";
 import { ArrowForwardIos } from "@mui/icons-material";
 import * as tmdbRes from "../../tmdb-res";
 import EventMCS from "../cards/skeleton/EventMC";
+import { smartText } from "../../utilities/defaults";
 
 function Event({
   eventTitle,
   eventData,
   eventType,
+  eventCategories,
+  setEventCategory,
+  eventCategory,
 }: {
   eventTitle: string;
   eventData: tmdbRes.ResponseType | null;
   eventType: string;
+  eventCategories?: string[];
+  setEventCategory?: (eventCategory: string) => void;
+  eventCategory?: string;
 }) {
   const { colorScheme } = useColorScheme();
   return (
@@ -22,7 +29,7 @@ function Event({
         margin: "0 auto",
         display: "flex",
         flexDirection: "column",
-        gap: 5,
+        gap: 3,
       }}
     >
       <Typography
@@ -53,13 +60,44 @@ function Event({
       >
         {eventTitle}
       </Typography>
+      {eventCategories && (
+        <Box
+          display={"flex"}
+          gap={1}
+          overflow={"scroll"}
+          sx={{
+            maskImage: "linear-gradient(to right, black 95%, transparent 100%)",
+            WebkitMaskImage:
+              "linear-gradient(to right, black 95%, transparent 100%)",
+          }}
+        >
+          {eventCategories.map((eventCategoryData) => (
+            <Chip
+              size="lg"
+              key={eventCategoryData}
+              variant={
+                eventCategory === eventCategoryData ? "solid" : "outlined"
+              }
+              onClick={() =>
+                setEventCategory && setEventCategory(eventCategoryData)
+              }
+            >
+              {smartText(eventCategoryData)}
+            </Chip>
+          ))}
+        </Box>
+      )}
       <Box
         display={"flex"}
         gap={3}
         overflow={"scroll"}
         sx={{
+          paddingRight: "24px",
           scrollbarColor: "transparent",
           scrollbarWidth: "thin",
+          maskImage: "linear-gradient(to right, black 95%, transparent 100%)",
+          WebkitMaskImage:
+            "linear-gradient(to right, black 95%, transparent 100%)",
         }}
       >
         {eventData?.isLoading ? (

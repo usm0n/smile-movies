@@ -75,3 +75,8 @@ export const ymdToDmy = (date: string) => {
   const year = dateObj.getFullYear();
   return `${day}/${month}/${year}`;
 };
+
+export const smartText = (text: string) => {
+  const newText = text.charAt(0).toUpperCase() + text.slice(1).replace(/([A-Z])/g, " $1");
+  return newText;
+};

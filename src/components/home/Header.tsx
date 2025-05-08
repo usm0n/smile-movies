@@ -1,6 +1,5 @@
 import { Autocomplete, Box, IconButton, Typography } from "@mui/joy";
 import { useState } from "react";
-import { Typewriter } from "react-simple-typewriter";
 import { useTMDB } from "../../context/TMDB";
 import { useNavigate } from "react-router-dom";
 import { searchMulti } from "../../tmdb-res";
@@ -38,28 +37,6 @@ function Header() {
       </Typography>
       <Typography level="body-lg" fontWeight={500}>
         Watch millions of Movies and TV shows.
-      </Typography>
-      <Typography
-        sx={{
-          color: "rgb(255, 200, 0)",
-        }}
-        fontWeight={700}
-      >
-        <Typewriter
-          words={[
-            "No ADS",
-            "Free",
-            "High Quality",
-            "With Subtitles",
-            "Fast Streaming",
-            "Easy to Use",
-            "No Registration",
-            "Anywhere Anytime",
-          ]}
-          loop={Infinity}
-          cursor
-          cursorStyle="_"
-        />
       </Typography>
       <Typography fontWeight={700} sx={{ padding: "20px 0 0 0" }}>
         Start by searching for a movie or TV show
