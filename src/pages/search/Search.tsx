@@ -71,15 +71,9 @@ function Search() {
         {!searchMultiData?.isLoading ? (
           searchResults?.map((result) => (
             <EventMC
-              eventDate={result?.release_date || result?.first_air_date}
-              eventTitle={result?.title || result?.name}
               eventPoster={result?.poster_path}
               eventId={result?.id}
-              eventOriginalTitle={
-                result?.original_title || result?.original_name
-              }
               eventType={result?.media_type}
-              eventRating={result?.vote_average}
               key={result?.id}
             />
           ))
