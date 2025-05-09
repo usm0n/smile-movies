@@ -71,9 +71,9 @@ export const minuteToHour = (minute: string | number) => {
 export const ymdToDmy = (date: string) => {
   const dateObj = new Date(date);
   const day = dateObj.getDate();
-  const month = dateObj.getMonth() + 1;
+  const month = dateObj.toLocaleString('default', { month: 'short' });
   const year = dateObj.getFullYear();
-  return `${day}/${month}/${year}`;
+  return `${month} ${day}, ${year}`;
 };
 
 export const smartText = (text: string) => {

@@ -470,6 +470,98 @@ export interface tvEpisodeDetails {
   vote_count: number;
 }
 
+export interface images {
+  backdrops: [
+    {
+      aspect_ratio: number;
+      file_path: string;
+      height: number;
+      iso_639_1: string;
+      vote_average: number;
+      vote_count: number;
+      width: number;
+    }
+  ];
+  id: number;
+  logos: [
+    {
+      aspect_ratio: number;
+      file_path: string;
+      height: number;
+      iso_639_1: string;
+      vote_average: number;
+      vote_count: number;
+      width: number;
+    }
+  ];
+  posters: [
+    {
+      aspect_ratio: number;
+      file_path: string;
+      height: number;
+      iso_639_1: string;
+      vote_average: number;
+      vote_count: number;
+      width: number;
+    }
+  ];
+}
+
+export interface movieTranslations {
+  id: number;
+  translations: [
+    {
+      iso_3166_1: string;
+      iso_639_1: string;
+      name: string;
+      english_name: string;
+      data: {
+        homepage: string;
+        overview: string;
+        runtime: number;
+        tagline: string;
+        title: string;
+      };
+    }
+  ];
+}
+
+export interface tvTranslations {
+  id: number;
+  translations: [
+    {
+      iso_3166_1: string;
+      iso_639_1: string;
+      name: string;
+      english_name: string;
+      data: {
+        homepage: string;
+        overview: string;
+        name: string;
+        tagline: string;
+      };
+    }
+  ];
+}
+
+export interface videos {
+  id: number;
+  results: [
+    {
+      iso_639_1: string;
+      iso_3166_1: string;
+      name: string;
+      key: string;
+      site: string;
+      size: number;
+      type: string;
+      official: boolean;
+      published_at: string;
+      id: string;
+    }
+  ];
+}
+
 export interface ResponseType {
   isLoading: boolean;
   isError: boolean;
@@ -499,6 +591,10 @@ export interface ResponseType {
     | tvEpisodeDetails
     | tvEpisodeCredits
     | searchMulti
+    | images
+    | movieTranslations
+    | tvTranslations
+    | videos
     | null;
   errorResponse: any;
 }

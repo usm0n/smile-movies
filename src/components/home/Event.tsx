@@ -112,13 +112,9 @@ function Event({
           (eventData?.data as tmdbRes.trendingAll)?.results.map((event) => (
             <EventMC
               key={event.id}
-              eventTitle={event.title || event.name}
-              eventOriginalTitle={event.original_title || event.original_name}
               eventPoster={event.poster_path}
               eventId={event.id}
               eventType={eventType}
-              eventDate={event.release_date || event.first_air_date}
-              eventRating={event.vote_average}
             />
           ))
         )}

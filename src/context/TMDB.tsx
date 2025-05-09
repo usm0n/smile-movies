@@ -132,6 +132,38 @@ const TmdbContext = createContext({
     query;
     page;
   },
+  movieImagesData: null as tmdbRes.ResponseType | null,
+  movieImages: async (id: string) => {
+    id;
+  },
+  tvImagesData: null as tmdbRes.ResponseType | null,
+  tvImages: async (id: string) => {
+    id;
+  },
+  movieVideosData: null as tmdbRes.ResponseType | null,
+  movieVideos: async (id: string) => {
+    id;
+  },
+  tvSeriesVideosData: null as tmdbRes.ResponseType | null,
+  tvSeriesVideos: async (id: string) => {
+    id;
+  },
+  movieTranslationsData: null as tmdbRes.ResponseType | null,
+  movieTranslations: async (id: string) => {
+    id;
+  },
+  tvSeriesTranslationsData: null as tmdbRes.ResponseType | null,
+  tvSeriesTranslations: async (id: string) => {
+    id;
+  },
+  movieSimilarData: null as tmdbRes.ResponseType | null,
+  movieSimilar: async (id: string) => {
+    id;
+  },
+  tvSeriesSimilarData: null as tmdbRes.ResponseType | null,
+  tvSeriesSimilar: async (id: string) => {
+    id;
+  },
 });
 
 export const useTMDB = () => useContext(TmdbContext);
@@ -192,6 +224,239 @@ export const TMDBProvider = ({ children }: { children: React.ReactNode }) => {
     useState<tmdbRes.ResponseType | null>(null);
   const [searchMultiACData, setSearchMultiACData] =
     useState<tmdbRes.ResponseType | null>(null);
+  const [movieImagesData, setMovieImagesData] =
+    useState<tmdbRes.ResponseType | null>(null);
+  const [tvImagesData, setTvImagesData] = useState<tmdbRes.ResponseType | null>(
+    null
+  );
+  const [movieTranslationsData, setMovieTranslationsData] =
+    useState<tmdbRes.ResponseType | null>(null);
+  const [tvSeriesTranslationsData, setTvSeriesTranslationsData] =
+    useState<tmdbRes.ResponseType | null>(null);
+  const [movieSimilarData, setMovieSimilarData] =
+    useState<tmdbRes.ResponseType | null>(null);
+  const [tvSeriesSimilarData, setTvSeriesSimilarData] =
+    useState<tmdbRes.ResponseType | null>(null);
+  const [movieVideosData, setMovieVideosData] =
+    useState<tmdbRes.ResponseType | null>(null);
+  const [tvSeriesVideosData, setTvSeriesVideosData] =
+    useState<tmdbRes.ResponseType | null>(null);
+
+  const movieImages = async (id: string) => {
+    try {
+      setMovieImagesData({
+        isLoading: true,
+        isError: false,
+        data: null,
+        errorResponse: null,
+      });
+      const response = await tmdb.movieImages(id);
+      if (response) {
+        setMovieImagesData({
+          isLoading: false,
+          isError: false,
+          data: response as tmdbRes.images,
+          errorResponse: null,
+        });
+      }
+    } catch (error) {
+      setMovieImagesData({
+        isLoading: false,
+        isError: true,
+        data: null,
+        errorResponse: error,
+      });
+    }
+  };
+
+  const tvImages = async (id: string) => {
+    try {
+      setTvImagesData({
+        isLoading: true,
+        isError: false,
+        data: null,
+        errorResponse: null,
+      });
+      const response = await tmdb.tvImages(id);
+      if (response) {
+        setTvImagesData({
+          isLoading: false,
+          isError: false,
+          data: response as tmdbRes.images,
+          errorResponse: null,
+        });
+      }
+    } catch (error) {
+      setTvImagesData({
+        isLoading: false,
+        isError: true,
+        data: null,
+        errorResponse: error,
+      });
+    }
+  };
+
+  const movieTranslations = async (id: string) => {
+    try {
+      setMovieTranslationsData({
+        isLoading: true,
+        isError: false,
+        data: null,
+        errorResponse: null,
+      });
+      const response = await tmdb.movieTranslations(id);
+      if (response) {
+        setMovieTranslationsData({
+          isLoading: false,
+          isError: false,
+          data: response as tmdbRes.movieTranslations,
+          errorResponse: null,
+        });
+      }
+    } catch (error) {
+      setMovieTranslationsData({
+        isLoading: false,
+        isError: true,
+        data: null,
+        errorResponse: error,
+      });
+    }
+  };
+
+  const tvSeriesTranslations = async (id: string) => {
+    try {
+      setTvSeriesTranslationsData({
+        isLoading: true,
+        isError: false,
+        data: null,
+        errorResponse: null,
+      });
+      const response = await tmdb.tvTranslations(id);
+      if (response) {
+        setTvSeriesTranslationsData({
+          isLoading: false,
+          isError: false,
+          data: response as tmdbRes.tvTranslations,
+          errorResponse: null,
+        });
+      }
+    } catch (error) {
+      setTvSeriesTranslationsData({
+        isLoading: false,
+        isError: true,
+        data: null,
+        errorResponse: error,
+      });
+    }
+  };
+
+  const movieSimilar = async (id: string) => {
+    try {
+      setMovieSimilarData({
+        isLoading: true,
+        isError: false,
+        data: null,
+        errorResponse: null,
+      });
+      const response = await tmdb.movieSimilar(id);
+      if (response) {
+        setMovieSimilarData({
+          isLoading: false,
+          isError: false,
+          data: response as tmdbRes.DiscoverMovie,
+          errorResponse: null,
+        });
+      }
+    } catch (error) {
+      setMovieSimilarData({
+        isLoading: false,
+        isError: true,
+        data: null,
+        errorResponse: error,
+      });
+    }
+  };
+
+  const tvSeriesSimilar = async (id: string) => {
+    try {
+      setTvSeriesSimilarData({
+        isLoading: true,
+        isError: false,
+        data: null,
+        errorResponse: null,
+      });
+      const response = await tmdb.tvSimilar(id);
+      if (response) {
+        setTvSeriesSimilarData({
+          isLoading: false,
+          isError: false,
+          data: response as tmdbRes.DiscoverTV,
+          errorResponse: null,
+        });
+      }
+    } catch (error) {
+      setTvSeriesSimilarData({
+        isLoading: false,
+        isError: true,
+        data: null,
+        errorResponse: error,
+      });
+    }
+  };
+
+  const movieVideos = async (id: string) => {
+    try {
+      setMovieVideosData({
+        isLoading: true,
+        isError: false,
+        data: null,
+        errorResponse: null,
+      });
+      const response = await tmdb.movieVideos(id);
+      if (response) {
+        setMovieVideosData({
+          isLoading: false,
+          isError: false,
+          data: response as tmdbRes.videos,
+          errorResponse: null,
+        });
+      }
+    } catch (error) {
+      setMovieVideosData({
+        isLoading: false,
+        isError: true,
+        data: null,
+        errorResponse: error,
+      });
+    }
+  };
+
+  const tvSeriesVideos = async (id: string) => {
+    try {
+      setTvSeriesVideosData({
+        isLoading: true,
+        isError: false,
+        data: null,
+        errorResponse: null,
+      });
+      const response = await tmdb.tvVideos(id);
+      if (response) {
+        setTvSeriesVideosData({
+          isLoading: false,
+          isError: false,
+          data: response as tmdbRes.videos,
+          errorResponse: null,
+        });
+      }
+    } catch (error) {
+      setTvSeriesVideosData({
+        isLoading: false,
+        isError: true,
+        data: null,
+        errorResponse: error,
+      });
+    }
+  };
 
   const searchMultiAC = async (query: string, page: number) => {
     try {
@@ -955,6 +1220,22 @@ export const TMDBProvider = ({ children }: { children: React.ReactNode }) => {
   return (
     <TmdbContext.Provider
       value={{
+        movieImages,
+        movieImagesData,
+        movieSimilar,
+        movieSimilarData,
+        movieTranslations,
+        movieTranslationsData,
+        movieVideos,
+        movieVideosData,
+        tvImages,
+        tvImagesData,
+        tvSeriesSimilar,
+        tvSeriesSimilarData,
+        tvSeriesTranslations,
+        tvSeriesTranslationsData,
+        tvSeriesVideos,
+        tvSeriesVideosData,
         searchMultiAC,
         searchMulti,
         searchMultiACData,

@@ -1,12 +1,19 @@
 import { useEffect } from "react";
 import { useTMDB } from "../../context/TMDB";
-import { DiscoverMovie, movieCredits, movieDetails } from "../../tmdb-res";
-import MovieComponent from "../../components/movie/Movie";
+import {
+  // DiscoverMovie,
+  // movieCredits,
+  images,
+  movieDetails,
+  tvDetails,
+  videos,
+} from "../../tmdb-res";
 import { useParams } from "react-router-dom";
 import NotFound from "../../components/utils/NotFound";
 // import MovieSC from "../../components/movie/MovieSkeleton";
 import { backdropLoading } from "../../utilities/defaults";
 import { Box, useColorScheme } from "@mui/joy";
+import Header from "../../components/movie/Header";
 
 function Movie() {
   const { movieId } = useParams();
@@ -17,13 +24,19 @@ function Movie() {
     movieCreditsData,
     movieRecommendations,
     movieRecommendationsData,
+    movieImages,
+    movieImagesData,
+    movieVideos,
+    movieVideosData,
   } = useTMDB();
   const { colorScheme } = useColorScheme();
 
-  const movieData = movieDetailsData?.data as movieDetails;
-  const movieCreditsDataArr = movieCreditsData?.data as movieCredits;
-  const movieRecommendationsDataArr =
-    movieRecommendationsData?.data as DiscoverMovie;
+  const movieData = movieDetailsData?.data as movieDetails & tvDetails;
+  // const movieCreditsDataArr = movieCreditsData?.data as movieCredits;
+  // const movieRecommendationsDataArr =
+  //   movieRecommendationsData?.data as DiscoverMovie;
+  const movieImagesDataArr = movieImagesData?.data as images;
+  const movieVideosDataArr = movieVideosData?.data as videos;
   const isFetching =
     movieDetailsData?.isLoading ||
     movieCreditsData?.isLoading ||
@@ -33,8 +46,9 @@ function Movie() {
       movie(movieId);
       movieCredits(movieId);
       movieRecommendations(movieId);
+      movieImages(movieId);
+      movieVideos(movieId);
     }
-    console.log(movieDetailsData);
   }, [movieId]);
   return movieDetailsData?.isIncorrect ? (
     <NotFound />
@@ -43,12 +57,15 @@ function Movie() {
       {backdropLoading(true, colorScheme)}
     </Box>
   ) : (
-    <MovieComponent
-      movieCreditsDataArr={movieCreditsDataArr}
-      movieData={movieData}
-      movieId={movieId!}
-      movieRecommendationsDataArr={movieRecommendationsDataArr}
-    />
+    <Box>
+      <Header
+        movieImages={movieImagesDataArr}
+        movieDetails={movieData}
+        movieVideos={movieVideosDataArr}
+        movieId={movieId!}
+        movieType="movie"
+      />
+    </Box>
   );
 }
 

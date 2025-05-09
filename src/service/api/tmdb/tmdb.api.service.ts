@@ -206,4 +206,68 @@ export const tmdb = {
       return error;
     }
   },
+  movieImages: async (id: string) => {
+    try {
+      const response = await tmdbAPI.get("/movie/" + id + "/images");
+      return response.data;
+    } catch (error) {
+      return error;
+    }
+  },
+  tvImages: async (id: string) => {
+    try {
+      const response = await tmdbAPI.get("/tv/" + id + "/images");
+      return response.data;
+    } catch (error) {
+      return error;
+    }
+  },
+  movieSimilar: async (id: string) => {
+    try {
+      const response = await tmdbAPI.get("/movie/" + id + "/similar");
+      return response.data;
+    } catch (error) {
+      return error;
+    }
+  },
+  tvSimilar: async (id: string) => {
+    try {
+      const response = await tmdbAPI.get("/tv/" + id + "/similar");
+      return response.data;
+    } catch (error) {
+      return error;
+    }
+  },
+  movieTranslations: async (id: string) => {
+    try {
+      const response = await tmdbAPI.get("/movie/" + id + "/translations");
+      return response.data;
+    } catch (error) {
+      return error;
+    }
+  },
+  tvTranslations: async (id: string) => {
+    try {
+      const response = await tmdbAPI.get("/tv/" + id + "/translations");
+      return response.data;
+    } catch (error) {
+      return error;
+    }
+  },
+  movieVideos: async (id: string) => {
+    try {
+      const response = await tmdbAPI.get("/movie/" + id + "/videos");
+      return response.data;
+    } catch (error) {
+      return error;
+    }
+  },
+  tvVideos: async (id: string) => {
+    try {
+      const response = await tmdbAPI.get("/tv/" + id + "/videos");
+      return response.data;
+    } catch (error) {
+      return error;
+    }
+  },
 };

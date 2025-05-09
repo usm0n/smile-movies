@@ -1,11 +1,11 @@
 import { useEffect } from "react";
 import { useTMDB } from "../../context/TMDB";
-import { DiscoverTV, movieCredits, tvDetails } from "../../tmdb-res";
+import { DiscoverTV, images, movieCredits, movieDetails, tvDetails, videos } from "../../tmdb-res";
 import { useParams } from "react-router-dom";
 import NotFound from "../../components/utils/NotFound";
 import { backdropLoading } from "../../utilities/defaults";
 import { Box, useColorScheme } from "@mui/joy";
-import TVSeriesComponent from "../../components/tv/TVSeries";
+import Header from "../../components/movie/Header";
 
 function TVSeries() {
   const { tvId } = useParams();
@@ -16,11 +16,17 @@ function TVSeries() {
     tvSeriesCredits,
     tvSeriesRecommendationsData,
     tvSeriesRecommendations,
+    tvImages,
+    tvImagesData,
+    tvSeriesVideos,
+    tvSeriesVideosData,
   } = useTMDB();
   const { colorScheme } = useColorScheme();
 
-  const tvSeriesData = tvSeriesDetailsData?.data as tvDetails;
+  const tvSeriesData = tvSeriesDetailsData?.data as movieDetails & tvDetails;
   const tvSeriesCreditsDataArr = tvSeriesCreditsData?.data as movieCredits;
+  const tvImagesDataArr = tvImagesData?.data as images;
+  const tvSeriesVideosDataArr = tvSeriesVideosData?.data as videos;
   const tvSeriesRecommendationsDataArr =
     tvSeriesRecommendationsData?.data as DiscoverTV;
   const isFetching =
@@ -33,6 +39,8 @@ function TVSeries() {
       tvSeries(tvId);
       tvSeriesCredits(tvId);
       tvSeriesRecommendations(tvId);
+      tvImages(tvId);
+      tvSeriesVideos(tvId);
     }
   }, [tvId]);
   return tvSeriesDetailsData?.isIncorrect ? (
@@ -45,13 +53,14 @@ function TVSeries() {
     tvSeriesData &&
     tvSeriesCreditsDataArr &&
     tvSeriesRecommendationsDataArr && (
-      <TVSeriesComponent
-        tvSeriesCreditsDataArr={tvSeriesCreditsDataArr}
-        tvSeriesData={tvSeriesData}
-        tvSeriesRecommendationsDataArr={tvSeriesRecommendationsDataArr}
+      <Header
+        movieDetails={tvSeriesData}
+        movieId={tvId!}
+        movieImages={tvImagesDataArr}
+        movieType="tv"
+        movieVideos={tvSeriesVideosDataArr}
       />
     )
   );
 }
-
 export default TVSeries;
