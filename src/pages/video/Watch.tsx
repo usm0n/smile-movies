@@ -14,6 +14,7 @@ function Watch() {
         borderRadius: "5px",
         position: "absolute",
         top: 0,
+        zIndex: 1000,
       }}
     ></iframe>
   );
