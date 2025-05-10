@@ -18,7 +18,6 @@
     "@react-oauth/google": "^0.12.1",
     "@types/jsonwebtoken": "^9.0.8",
     "@types/swiper": "^5.4.3",
-    "@usm0n/stream-utils": "^1.0.0",
     "axios": "^1.7.9",
     "dotenv": "^16.4.7",
     "jsonwebtoken": "^9.0.2",
