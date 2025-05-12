@@ -44,9 +44,10 @@ function Header({
       sx={{
         width: "100%",
         height: "100vh",
-         "@media (max-width: 700px)": {
-            height: "70vh",
-         }
+        border: "none",
+        "@media (max-width: 700px)": {
+          height: "70vh",
+        },
       }}
     >
       <CardCover>
@@ -73,11 +74,11 @@ function Header({
           }}
           style={{
             display: isVideoLoaded ? "block" : "none",
+            border: "none",
           }}
           width={"100%"}
           height={"100%"}
-          frameBorder={"0"}
-          src={`https://www.youtube.com/embed/${trailerKey}?autoplay=1&controls=0&mute=1&loop=1&playlist=${trailerKey}`}
+          src={`https://www.youtube.com/embed/${trailerKey}?autoplay=1&controls=0&mute=1&loop=1&playlist=${trailerKey}&hd=1&vq=hd1080`}
         />
       </CardCover>
       <CardCover
@@ -111,15 +112,21 @@ function Header({
                 width: "auto",
                 maxHeight: "100px",
                 objectFit: "contain",
+                filter: "drop-shadow(0 0 8px rgba(0,0,0,0.7))",
                 "@media (max-width: 700px)": {
-                    maxWidth: "100%",
-                    margin: "0 auto",
-                    height: "auto",
-                }
+                  maxWidth: "100%",
+                  margin: "0 auto",
+                  height: "auto",
+                },
               }}
             />
           ) : (
-            <Typography level="h1">
+            <Typography
+              sx={{
+                textShadow: "0 0 8px rgba(0,0,0,0.7)",
+              }}
+              level="h1"
+            >
               {movieDetails?.name || movieDetails?.title}
             </Typography>
           )}
@@ -144,7 +151,11 @@ function Header({
             >
               <Button
                 onClick={() => {
-                  navigate(`/${movieType}/${movieId}/watch`);
+                  navigate(
+                    `/${movieType}/${movieId}${
+                      movieType == "tv" ? `/1/1` : ""
+                    }/watch`
+                  );
                 }}
                 disabled={
                   new Date(
@@ -155,20 +166,24 @@ function Header({
                 }
                 startDecorator={<PlayArrow />}
                 sx={{
-                  padding: "15px 20px",
+                  padding: "15px 0px",
                   width: "300px",
                   color: "black",
-                  backgroundColor: "rgb(255, 220, 95)",
+                  transition: "all 0.1s ease-in-out",
+                  backgroundColor: "white",
                   "&:hover": {
-                    backgroundColor: "rgb(255, 220, 95, 0.9)",
+                    backgroundColor: "rgb(255, 255, 255, 0.9)",
                   },
                   "&:active": {
-                    backgroundColor: "rgb(255, 220, 95, 0.8)",
+                    backgroundColor: "rgb(255, 255, 255, 0.8)",
+                  },
+                  "@media (max-width: 700px)": {
+                    width: "220px",
+                    padding: "10px 0px",
                   },
                 }}
-                size="lg"
               >
-                {movieType == "tv" ? "Play S1E1" : "Watch Now"}
+                {movieType == "tv" ? "Play" : "Watch Now"}
               </Button>
               <Typography level="body-sm">
                 {new Date(
@@ -182,6 +197,7 @@ function Header({
             </Box>
             <Box
               sx={{
+                textShadow: "0 0 8px rgba(0,0,0,0.7)",
                 "@media (max-width: 700px)": {
                   display: "flex",
                   flexDirection: "column-reverse",

@@ -12,9 +12,7 @@ function App() {
     <Box
       sx={{
         backgroundColor:
-          colorScheme === "light"
-            ? "rgb(255, 255, 255)"
-            : "rgb(0, 0, 0)",
+          colorScheme === "light" ? "rgb(255, 255, 255)" : "rgb(0, 0, 0)",
       }}
     >
       <Navbar />

@@ -82,7 +82,7 @@ const Navbar: React.FC = () => {
       }}
       className="navbar"
     >
-      <Box display={"flex"} gap={1}>
+      <Box display={"flex"}>
         <IconButton
           onClick={() => setDrawerOpen(true)}
           sx={{
@@ -95,7 +95,11 @@ const Navbar: React.FC = () => {
         >
           <MenuIcon />
         </IconButton>
-        <img src={logo} width={100} alt="" />
+        <Box sx={{
+          "@media (max-width: 700px)": {
+            margin: "0 auto"
+          }
+        }} component="img" src={logo} width={100} alt="" />
       </Box>
       <Box
         sx={{

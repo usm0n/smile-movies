@@ -65,7 +65,7 @@ export const backdropLoading = (open: boolean | undefined, theme: any) =>
 export const minuteToHour = (minute: string | number) => {
   const hours = Math.floor(Number(minute) / 60);
   const minutes = Math.floor(Number(minute) % 60);
-  return `${hours}h ${minutes}m`;
+  return hours === 0 ? `${minutes}m` : `${hours}h ${minutes}m`;
 };
 
 export const ymdToDmy = (date: string) => {
