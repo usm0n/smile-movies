@@ -60,6 +60,7 @@ function Watch() {
       sx={{
         position: "relative",
         width: "100%",
+        overflow: "hidden",
         height: "100vh",
       }}
     >

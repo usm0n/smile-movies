@@ -1,8 +1,8 @@
 import { Box, Option, Select } from "@mui/joy";
 import { tvDetails, tvSeasonsDetails } from "../../../tmdb-res";
 import { useEffect } from "react";
-import EpisodeCard from "./EpisodeCard";
-import EpisodeCardSkeleton from "./EpisodeCardSkeleton";
+import EpisodeCard from "../../cards/EpisodeCard";
+import EpisodeCardSkeleton from "../../cards/skeleton/EpisodeCardSkeleton";
 
 function SeasonsEpisodes({
   tvData,

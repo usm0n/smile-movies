@@ -1,7 +1,7 @@
 import { Card, IconButton, Typography } from "@mui/joy";
-import BlurImage from "../../../utilities/blurImage";
-import { tvEpisodeDetails } from "../../../tmdb-res";
-import { minuteToHour, ymdToDmy } from "../../../utilities/defaults";
+import BlurImage from "../../utilities/blurImage";
+import { tvEpisodeDetails } from "../../tmdb-res";
+import { minuteToHour, ymdToDmy } from "../../utilities/defaults";
 import { MoreHoriz } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 
@@ -14,9 +14,13 @@ function EpisodeCard({ episode, tvId }: { episode: tvEpisodeDetails, tvId: strin
         gap: "5px",
         border: "none",
         cursor: "pointer",
+        backgroundColor: "transparent",
         ":hover": {
           backgroundColor: "rgba(255, 255, 255, 0.1)",
         },
+        ":active": {
+          backgroundColor: "rgba(255, 255, 255, 0.2)",
+        }
       }}
     >
       <IconButton
