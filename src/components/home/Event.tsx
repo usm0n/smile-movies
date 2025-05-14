@@ -30,7 +30,7 @@ function Event({
       }}
     >
       {isTitleSimple ? (
-        <Typography level="h2" sx={{ color: "text.secondary" }}>
+        <Typography level="h2">
           {eventTitle}
         </Typography>
       ) : (

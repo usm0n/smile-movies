@@ -4,6 +4,7 @@ import {
   // DiscoverMovie,
   // movieCredits,
   images,
+  movieCredits,
   movieDetails,
   tvDetails,
   videos,
@@ -12,11 +13,12 @@ import { useParams } from "react-router-dom";
 import NotFound from "../../components/utils/NotFound";
 // import MovieSC from "../../components/movie/MovieSkeleton";
 import { backdropLoading } from "../../utilities/defaults";
-import { Box, useColorScheme } from "@mui/joy";
+import { Box, Divider, useColorScheme } from "@mui/joy";
 import Header from "../../components/movie/Header";
 import Container from "../../utilities/Container";
 import Trailers from "../../components/movie/Trailers";
 import Event from "../../components/home/Event";
+import Cast from "../../components/movie/Cast";
 
 function Movie() {
   const { movieId } = useParams();
@@ -40,10 +42,14 @@ function Movie() {
   const movieData = movieDetailsData?.data as movieDetails & tvDetails;
   const movieImagesDataArr = movieImagesData?.data as images;
   const movieVideosDataArr = movieVideosData?.data as videos;
+  const movieCreditsDataArr = movieCreditsData?.data as movieCredits;
   const isFetching =
     movieDetailsData?.isLoading ||
     movieCreditsData?.isLoading ||
-    movieRecommendationsData?.isLoading;
+    movieRecommendationsData?.isLoading ||
+    movieImagesData?.isLoading ||
+    movieVideosData?.isLoading ||
+    movieSimilarData?.isLoading;
   useEffect(() => {
     if (movieId) {
       movie(movieId);
@@ -88,7 +94,17 @@ function Movie() {
         movieType="movie"
       />
       <Container>
-        <Trailers movieVideos={movieVideosDataArr} />
+        {movieVideosDataArr?.results?.filter(
+          (video) =>
+            video.type == "Trailer" ||
+            video?.official == true ||
+            video?.site == "YouTube"
+        ).length > 0 && (
+          <>
+            <Trailers movieVideos={movieVideosDataArr} />
+            <Divider />
+          </>
+        )}
         <Event
           eventData={
             eventRelatedType === "recommendations"
@@ -101,6 +117,8 @@ function Movie() {
           eventCategories={["recommendations", "similar"]}
           isTitleSimple={true}
         />
+        <Divider />
+        <Cast movieCredits={movieCreditsDataArr} />
       </Container>
     </Box>
   );

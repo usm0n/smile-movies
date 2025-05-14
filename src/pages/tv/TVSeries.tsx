@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useTMDB } from "../../context/TMDB";
 import {
   images,
+  movieCredits,
   movieDetails,
   tvDetails,
   tvSeasonsDetails,
@@ -16,6 +17,7 @@ import SeasonsEpisodes from "../../components/movie/SeasonEpisodes/SeasonsEpisod
 import Container from "../../utilities/Container";
 import Trailers from "../../components/movie/Trailers";
 import Event from "../../components/home/Event";
+import Cast from "../../components/movie/Cast";
 
 function TVSeries() {
   const { tvId } = useParams();
@@ -40,6 +42,7 @@ function TVSeries() {
   const [eventRelatedType, setEventRelatedType] = useState("recommendations");
 
   const tvSeriesData = tvSeriesDetailsData?.data as movieDetails & tvDetails;
+  const tvSeriesCreditsDataArr = tvSeriesCreditsData?.data as movieCredits;
   const tvImagesDataArr = tvImagesData?.data as images;
   const tvSeriesVideosDataArr = tvSeriesVideosData?.data as videos;
   const tvSeasonsDetailsDataArr =
@@ -130,6 +133,8 @@ function TVSeries() {
           eventCategory={eventRelatedType}
           isTitleSimple={true}
         />
+        <Divider/>
+        <Cast movieCredits={tvSeriesCreditsDataArr} />
       </Container>
     </Box>
   );
