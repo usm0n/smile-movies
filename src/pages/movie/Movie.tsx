@@ -19,6 +19,7 @@ import Container from "../../utilities/Container";
 import Trailers from "../../components/movie/Trailers";
 import Event from "../../components/home/Event";
 import Cast from "../../components/movie/Cast";
+import About from "../../components/movie/About";
 
 function Movie() {
   const { movieId } = useParams();
@@ -119,6 +120,8 @@ function Movie() {
         />
         <Divider />
         <Cast movieCredits={movieCreditsDataArr} />
+        <Divider />
+        <About movieDetails={movieData} />
       </Container>
     </Box>
   );
