@@ -6,9 +6,6 @@ function Watchlist() {
   return (
     <Box
       sx={{
-        paddingTop: "100px",
-        width: "90%",
-        margin: "0 auto",
         display: "flex",
         flexDirection: "column",
         gap: 5,

@@ -8,58 +8,61 @@ import { smartText } from "../../utilities/defaults";
 function Event({
   eventTitle,
   eventData,
-  eventType,
   eventCategories,
   setEventCategory,
   eventCategory,
+  isTitleSimple = false,
 }: {
   eventTitle: string;
   eventData: tmdbRes.ResponseType | null;
-  eventType: string;
   eventCategories?: string[];
   setEventCategory?: (eventCategory: string) => void;
   eventCategory?: string;
+  isTitleSimple?: boolean;
 }) {
   const { colorScheme } = useColorScheme();
   return (
     <Box
       sx={{
-        paddingTop: "100px",
-        width: "90%",
-        margin: "0 auto",
         display: "flex",
         flexDirection: "column",
         gap: 3,
       }}
     >
-      <Typography
-        endDecorator={
-          <ArrowForwardIos
-            sx={{
-              color:
-                colorScheme === "dark"
-                  ? "rgb(255, 216, 77)"
-                  : "rgb(255, 200, 0)",
-            }}
-          />
-        }
-        level="h1"
-        sx={{
-          color:
-            colorScheme === "dark" ? "rgb(255, 216, 77)" : "rgb(255, 200, 0)",
-          "@media (max-width: 800px)": {
-            fontSize: "25px",
-          },
-          ":hover": {
-            cursor: "pointer",
-            opacity: 0.8,
-            transition: "all 0.2s ease-in-out",
-            textDecoration: "underline",
-          },
-        }}
-      >
-        {eventTitle}
-      </Typography>
+      {isTitleSimple ? (
+        <Typography level="h2" sx={{ color: "text.secondary" }}>
+          {eventTitle}
+        </Typography>
+      ) : (
+        <Typography
+          endDecorator={
+            <ArrowForwardIos
+              sx={{
+                color:
+                  colorScheme === "dark"
+                    ? "rgb(255, 216, 77)"
+                    : "rgb(255, 200, 0)",
+              }}
+            />
+          }
+          level="h1"
+          sx={{
+            color:
+              colorScheme === "dark" ? "rgb(255, 216, 77)" : "rgb(255, 200, 0)",
+            "@media (max-width: 800px)": {
+              fontSize: "25px",
+            },
+            ":hover": {
+              cursor: "pointer",
+              opacity: 0.8,
+              transition: "all 0.2s ease-in-out",
+              textDecoration: "underline",
+            },
+          }}
+        >
+          {eventTitle}
+        </Typography>
+      )}
       {eventCategories && (
         <Box
           display={"flex"}
@@ -114,7 +117,7 @@ function Event({
               key={event.id}
               eventPoster={event.poster_path}
               eventId={event.id}
-              eventType={eventType}
+              eventType={event?.name ? "tv" : "movie"}
             />
           ))
         )}

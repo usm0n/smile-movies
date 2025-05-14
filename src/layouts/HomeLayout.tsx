@@ -5,6 +5,7 @@ import Event from "../components/home/Event";
 import Header from "../components/home/Header";
 import Watchlist from "../components/home/Watchlist";
 import { useTMDB } from "../context/TMDB";
+import Container from "../utilities/Container";
 
 function HomeLayout() {
   const [eventCategoryMovie, setEventCategoryMovie] =
@@ -65,39 +66,39 @@ function HomeLayout() {
   return (
     <>
       <Header />
-      <Event
-        eventTitle="Movies"
-        eventData={
-          eventCategoryMovie == "topRated"
-            ? topRatedMoviesData
-            : eventCategoryMovie == "nowPlaying"
-            ? nowPlayingMoviesData
-            : eventCategoryMovie == "upcoming"
-            ? upcomingMoviesData
-            : popularMoviesData
-        }
-        eventType="movie"
-        eventCategories={["topRated", "nowPlaying", "upcoming", "popular"]}
-        setEventCategory={setEventCategoryMovie}
-        eventCategory={eventCategoryMovie}
-      />
-      <Event
-        eventTitle="TV Shows"
-        eventData={
-          eventCategoryTv == "topRated"
-            ? topRatedTvData
-            : eventCategoryTv == "onTheAir"
-            ? onTheAirTvData
-            : eventCategoryTv == "airingToday"
-            ? airingTodayTvData
-            : popularTvData
-        }
-        eventType="tv"
-        eventCategories={["topRated", "onTheAir", "airingToday", "popular"]}
-        setEventCategory={setEventCategoryTv}
-        eventCategory={eventCategoryTv}
-      />
-      <Watchlist />
+      <Container>
+        <Event
+          eventTitle="Movies"
+          eventData={
+            eventCategoryMovie == "topRated"
+              ? topRatedMoviesData
+              : eventCategoryMovie == "nowPlaying"
+              ? nowPlayingMoviesData
+              : eventCategoryMovie == "upcoming"
+              ? upcomingMoviesData
+              : popularMoviesData
+          }
+          eventCategories={["topRated", "nowPlaying", "upcoming", "popular"]}
+          setEventCategory={setEventCategoryMovie}
+          eventCategory={eventCategoryMovie}
+        />
+        <Event
+          eventTitle="TV Shows"
+          eventData={
+            eventCategoryTv == "topRated"
+              ? topRatedTvData
+              : eventCategoryTv == "onTheAir"
+              ? onTheAirTvData
+              : eventCategoryTv == "airingToday"
+              ? airingTodayTvData
+              : popularTvData
+          }
+          eventCategories={["topRated", "onTheAir", "airingToday", "popular"]}
+          setEventCategory={setEventCategoryTv}
+          eventCategory={eventCategoryTv}
+        />
+        <Watchlist />
+      </Container>
     </>
   );
 }

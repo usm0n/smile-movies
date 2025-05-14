@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useTMDB } from "../../context/TMDB";
 import {
   // DiscoverMovie,
@@ -14,6 +14,9 @@ import NotFound from "../../components/utils/NotFound";
 import { backdropLoading } from "../../utilities/defaults";
 import { Box, useColorScheme } from "@mui/joy";
 import Header from "../../components/movie/Header";
+import Container from "../../utilities/Container";
+import Trailers from "../../components/movie/Trailers";
+import Event from "../../components/home/Event";
 
 function Movie() {
   const { movieId } = useParams();
@@ -24,17 +27,17 @@ function Movie() {
     movieCreditsData,
     movieRecommendations,
     movieRecommendationsData,
+    movieSimilar,
+    movieSimilarData,
     movieImages,
     movieImagesData,
     movieVideos,
     movieVideosData,
   } = useTMDB();
   const { colorScheme } = useColorScheme();
+  const [eventRelatedType, setEventRelatedType] = useState("recommendations");
 
   const movieData = movieDetailsData?.data as movieDetails & tvDetails;
-  // const movieCreditsDataArr = movieCreditsData?.data as movieCredits;
-  // const movieRecommendationsDataArr =
-  //   movieRecommendationsData?.data as DiscoverMovie;
   const movieImagesDataArr = movieImagesData?.data as images;
   const movieVideosDataArr = movieVideosData?.data as videos;
   const isFetching =
@@ -45,11 +48,23 @@ function Movie() {
     if (movieId) {
       movie(movieId);
       movieCredits(movieId);
-      movieRecommendations(movieId);
       movieImages(movieId);
       movieVideos(movieId);
     }
   }, [movieId]);
+  useEffect(() => {
+    if (movieId)
+      switch (eventRelatedType) {
+        case "recommendations":
+          movieRecommendations(movieId);
+          break;
+        case "similar":
+          movieSimilar(movieId);
+          break;
+        default:
+          break;
+      }
+  }, [movieId, eventRelatedType]);
   return movieDetailsData?.isIncorrect ? (
     <NotFound />
   ) : isFetching ? (
@@ -57,7 +72,14 @@ function Movie() {
       {backdropLoading(true, colorScheme)}
     </Box>
   ) : (
-    <Box>
+    <Box
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        gap: 5,
+        width: "100%",
+      }}
+    >
       <Header
         movieImages={movieImagesDataArr}
         movieDetails={movieData}
@@ -65,6 +87,21 @@ function Movie() {
         movieId={movieId!}
         movieType="movie"
       />
+      <Container>
+        <Trailers movieVideos={movieVideosDataArr} />
+        <Event
+          eventData={
+            eventRelatedType === "recommendations"
+              ? movieRecommendationsData
+              : movieSimilarData
+          }
+          eventTitle="Related"
+          setEventCategory={setEventRelatedType}
+          eventCategory={eventRelatedType}
+          eventCategories={["recommendations", "similar"]}
+          isTitleSimple={true}
+        />
+      </Container>
     </Box>
   );
 }
