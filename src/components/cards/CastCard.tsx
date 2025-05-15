@@ -19,9 +19,9 @@ function CastCard({ actor }: { actor: movieCredits["cast"][0] }) {
         src={`https://image.tmdb.org/t/p/w500${actor.profile_path}`}
       >
         {actor.name
-          .split(" ")
-          .map((n) => n[0])
-          .join("")}
+          ?.split(" ")
+          ?.map((n) => n[0])
+          ?.join("")}
       </Avatar>
       <Typography>{actor.name}</Typography>
       <Typography level="body-sm">{actor.character}</Typography>

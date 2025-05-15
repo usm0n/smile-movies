@@ -27,6 +27,7 @@ function Trailers({ movieVideos }: { movieVideos: videos }) {
                 width: "300px",
                 padding: "0",
                 border: "none",
+                backgroundColor: "transparent",
               }}
               key={video.id}
             >

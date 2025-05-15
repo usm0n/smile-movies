@@ -112,7 +112,7 @@ function Header({
                 width: "auto",
                 maxHeight: "100px",
                 objectFit: "contain",
-                filter: "drop-shadow(0 0 8px rgba(0,0,0,0.7))",
+                filter: "drop-shadow(0 0 15px rgba(0,0,0,1))",
                 "@media (max-width: 700px)": {
                   maxWidth: "100%",
                   margin: "0 auto",
@@ -227,8 +227,9 @@ function Header({
               )}
               <Typography level="body-sm">
                 {movieDetails?.genres.length
-                  ? movieDetails?.genres.map((genre) => genre.name).join(", ") +
-                    " • "
+                  ? movieDetails?.genres
+                      ?.map((genre) => genre.name)
+                      .join(", ") + " • "
                   : ""}
                 {ymdToDmy(
                   movieDetails?.release_date || movieDetails?.first_air_date

@@ -35,7 +35,7 @@ function About({ movieDetails }: { movieDetails: movieDetails & tvDetails }) {
         ) : (
           ""
         )}
-        {movieDetails?.runtime || movieDetails?.episode_run_time[0] ? (
+        {movieDetails?.runtime || movieDetails?.episode_run_time?.length > 0 ? (
           <Box>
             <Typography level="body-md">Runtime</Typography>
             <Typography level="body-sm">
@@ -80,7 +80,7 @@ function About({ movieDetails }: { movieDetails: movieDetails & tvDetails }) {
           <Typography level="body-md">Spoken Languages</Typography>
           <Typography level="body-sm">
             {movieDetails?.spoken_languages
-              .map((language) =>
+              ?.map((language) =>
                 language.name !== language.english_name
                   ? `${language.english_name} (${language.name})`
                   : language.name

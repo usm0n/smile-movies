@@ -9,6 +9,9 @@ function Container({ children }: { children: React.ReactNode }) {
         gap: 5,
         width: "95%",
         margin: "0 auto",
+        "@media (max-width: 700px)": {
+          width: "90%",
+        }
       }}
     >
       {children}

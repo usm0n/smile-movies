@@ -97,8 +97,8 @@ function Movie() {
       <Container>
         {movieVideosDataArr?.results?.filter(
           (video) =>
-            video.type == "Trailer" ||
-            video?.official == true ||
+            video.type == "Trailer" &&
+            video?.official == true &&
             video?.site == "YouTube"
         ).length > 0 && (
           <>

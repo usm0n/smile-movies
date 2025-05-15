@@ -17,7 +17,7 @@ function App() {
     >
       <Navbar />
       <Routes>
-        {mainRoutes.map((route, index) => (
+        {mainRoutes?.map((route, index) => (
           <Route key={index} path={route.path} element={route.element} />
         ))}
       </Routes>

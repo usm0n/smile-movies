@@ -6,6 +6,7 @@ import Header from "../components/home/Header";
 import Watchlist from "../components/home/Watchlist";
 import { useTMDB } from "../context/TMDB";
 import Container from "../utilities/Container";
+import RecentlyWatched from "../components/home/RecentlyWatched";
 
 function HomeLayout() {
   const [eventCategoryMovie, setEventCategoryMovie] =
@@ -67,6 +68,7 @@ function HomeLayout() {
     <>
       <Header />
       <Container>
+        <RecentlyWatched/>
         <Event
           eventTitle="Movies"
           eventData={

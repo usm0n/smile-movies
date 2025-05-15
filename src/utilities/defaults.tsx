@@ -71,12 +71,61 @@ export const minuteToHour = (minute: string | number) => {
 export const ymdToDmy = (date: string) => {
   const dateObj = new Date(date);
   const day = dateObj.getDate();
-  const month = dateObj.toLocaleString('default', { month: 'short' });
+  const month = dateObj.toLocaleString("default", { month: "short" });
   const year = dateObj.getFullYear();
   return `${month} ${day}, ${year}`;
 };
 
 export const smartText = (text: string) => {
-  const newText = text.charAt(0).toUpperCase() + text.slice(1).replace(/([A-Z])/g, " $1");
+  const newText =
+    text.charAt(0).toUpperCase() + text.slice(1).replace(/([A-Z])/g, " $1");
   return newText;
+};
+
+export const getRecentlyWatched = () => {
+  const recentlyWatched = JSON.parse(
+    localStorage.getItem("recentlyWatched") || "[]"
+  );
+  return recentlyWatched;
+};
+
+export const addToRecentlyWatched = (item: {
+  id: number | string;
+  type: "movie" | "tv" | string;
+  poster: string;
+}) => {
+  const recentlyWatched = JSON.parse(
+    localStorage.getItem("recentlyWatched") || "[]"
+  );
+  const exists = recentlyWatched.find((i: { id: number }) => i.id === item.id);
+  if (!exists) {
+    recentlyWatched.unshift(item);
+    localStorage.setItem("recentlyWatched", JSON.stringify(recentlyWatched));
+    reload()
+  }
+};
+
+export const removeFromRecentlyWatched = (id: number | string) => {
+  const recentlyWatched = JSON.parse(
+    localStorage.getItem("recentlyWatched") || "[]"
+  );
+  const filtered = recentlyWatched.filter(
+    (item: { id: number }) => item.id !== id
+  );
+  localStorage.setItem("recentlyWatched", JSON.stringify(filtered));
+  reload()
+};
+
+export const shareLink = async (url: string) => {
+  try {
+    if (navigator.share) {
+      await navigator.share({
+        url: url,
+      });
+    } else {
+      window.open(url, "_blank");
+    }
+  } catch (error) {
+    window.open(url, "_blank");
+  }
 };

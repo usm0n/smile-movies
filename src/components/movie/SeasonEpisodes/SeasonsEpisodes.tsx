@@ -37,7 +37,7 @@ function SeasonsEpisodes({
       >
         {tvData?.seasons
           ?.filter((s) => s.season_number !== 0)
-          .map((season) => (
+          ?.map((season) => (
             <Option key={season.id} value={season.season_number}>
               {season.name}
             </Option>

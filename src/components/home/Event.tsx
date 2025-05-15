@@ -49,7 +49,7 @@ function Event({
           sx={{
             color:
               colorScheme === "dark" ? "rgb(255, 216, 77)" : "rgb(255, 200, 0)",
-            "@media (max-width: 800px)": {
+            "@media (max-width: 700px)": {
               fontSize: "25px",
             },
             ":hover": {
@@ -74,7 +74,7 @@ function Event({
               "linear-gradient(to right, black 95%, transparent 100%)",
           }}
         >
-          {eventCategories.map((eventCategoryData) => (
+          {eventCategories?.map((eventCategoryData) => (
             <Chip
               size="lg"
               key={eventCategoryData}
@@ -112,7 +112,7 @@ function Event({
             <EventMCS />
           </>
         ) : (
-          (eventData?.data as tmdbRes.trendingAll)?.results.map((event) => (
+          (eventData?.data as tmdbRes.trendingAll)?.results?.map((event) => (
             <EventMC
               key={event.id}
               eventPoster={event.poster_path}

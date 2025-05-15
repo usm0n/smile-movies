@@ -1,37 +1,38 @@
-import { Box, Card, CardCover } from "@mui/joy";
+import {
+  Box,
+  Card,
+  CardCover,
+  Dropdown,
+  Menu,
+  MenuButton,
+  MenuItem,
+} from "@mui/joy";
 
-// @ts-ignore
-import "swiper/css";
-// @ts-ignore
-import "swiper/css/effect-fade";
-// @ts-ignore
-import "swiper/css/pagination";
-// @ts-ignore
-import "swiper/css/navigation";
 import { useNavigate } from "react-router-dom";
 import BlurImage from "../../utilities/blurImage";
+import {
+  BookmarkAdd,
+  DeleteOutline,
+  IosShare,
+  MoreVert,
+  PlayArrow,
+} from "@mui/icons-material";
+import { shareLink } from "../../utilities/defaults";
 
 function EventMC({
   eventPoster,
   eventId,
   eventType,
-  eventSeason,
+  eventDelete,
 }: {
   eventPoster: string;
-  eventId: number;
+  eventId: number | string;
   eventType: string;
-  eventSeason?: number;
+  eventDelete?: (id: string | number) => void;
 }) {
   const navigate = useNavigate();
   return (
-    <Box
-      onClick={() =>
-        eventType == "season"
-          ? navigate(`/tv/${eventId}/season/${eventSeason}`)
-          : navigate(`/${eventType}/${eventId}`)
-      }
-      key={eventId}
-    >
+    <Box onClick={() => navigate(`/${eventType}/${eventId}`)} key={eventId}>
       <Card
         sx={{
           cursor: "pointer",
@@ -62,6 +63,69 @@ function EventMC({
             />
           )}
         </CardCover>
+        <Box
+          sx={{
+            position: "absolute",
+            top: 0,
+            right: 0,
+            zIndex: 1,
+            padding: 1,
+          }}
+        >
+          <Dropdown>
+            <MenuButton
+              onClick={(e) => {
+                e.stopPropagation();
+              }}
+              sx={{
+                background: "transparent",
+                border: "none",
+              }}
+            >
+              <MoreVert />
+            </MenuButton>
+            <Menu
+              onClick={(e) => {
+                e.stopPropagation();
+              }}
+            >
+              <MenuItem
+                onClick={() =>
+                  shareLink(`https://smile-movies.uz/${eventType}/${eventId}`)
+                }
+              >
+                <IosShare /> Share this{" "}
+                {eventType == "movie" ? "Movie" : "TV show"}
+              </MenuItem>
+              <MenuItem
+                onClick={() =>
+                  navigate(
+                    `/${eventType}/${eventId}${
+                      eventType == "tv" ? "/1/1" : ""
+                    }/watch`
+                  )
+                }
+              >
+                <PlayArrow />{" "}
+                {eventType == "movie" ? "Watch Now" : "Play S1:E1"}
+              </MenuItem>
+              <MenuItem disabled>
+                <BookmarkAdd /> Add to watchlist
+              </MenuItem>
+              {eventDelete && (
+                <MenuItem
+                  color="danger"
+                  onClick={() => {
+                    eventDelete(eventId);
+                  }}
+                >
+                  <DeleteOutline /> Delete this{" "}
+                  {eventType == "movie" ? "Movie" : "TV show"}
+                </MenuItem>
+              )}
+            </Menu>
+          </Dropdown>
+        </Box>
       </Card>
     </Box>
   );

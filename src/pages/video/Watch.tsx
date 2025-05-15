@@ -9,8 +9,11 @@ import {
 } from "@mui/joy";
 import { useNavigate, useParams } from "react-router-dom";
 import { useTMDB } from "../../context/TMDB";
-import { useEffect, useState } from "react";
-import { backdropLoading } from "../../utilities/defaults";
+import { useEffect } from "react";
+import {
+  addToRecentlyWatched,
+  backdropLoading,
+} from "../../utilities/defaults";
 import NotFound from "../../components/utils/NotFound";
 import { movieDetails, tvDetails, tvSeasonsDetails } from "../../tmdb-res";
 
@@ -24,7 +27,6 @@ function Watch() {
     tvSeasonsDetailsData,
   } = useTMDB();
   const { movieId, movieType, seasonId, episodeId } = useParams();
-  const [isVideoLoaded, setIsVideoLoaded] = useState(false);
   const { colorScheme } = useColorScheme();
   const navigate = useNavigate();
 
@@ -49,6 +51,21 @@ function Watch() {
       }
     }
   }, [movieType, movieId, seasonId]);
+
+  useEffect(() => {
+    if (
+      (movieId && movieType && movieDetailsDataArr) ||
+      tvSeriesDetailsDataArr
+    ) {
+      addToRecentlyWatched({
+        id: movieId!,
+        type: movieType!,
+        poster:
+          movieDetailsDataArr?.poster_path ||
+          tvSeriesDetailsDataArr?.poster_path,
+      });
+    }
+  }, [movieId, movieType, movieDetailsDataArr, tvSeriesDetailsDataArr]);
   return isIncorrect ? (
     <NotFound />
   ) : isFetching ? (
@@ -64,7 +81,6 @@ function Watch() {
         height: "100vh",
       }}
     >
-      {backdropLoading(!isVideoLoaded, colorScheme)}
       <Box
         sx={{
           display: "flex",
@@ -132,7 +148,7 @@ function Watch() {
               defaultValue={parseInt(episodeId!)}
               value={parseInt(episodeId!)}
             >
-              {tvSeasonsDetailsArr?.episodes.map((e) => (
+              {tvSeasonsDetailsArr?.episodes?.map((e) => (
                 <Option key={e?.id} value={e?.episode_number}>
                   E{e?.episode_number}: {e?.name}
                 </Option>
@@ -144,7 +160,6 @@ function Watch() {
         )}
       </Box>
       <iframe
-        onLoad={() => setIsVideoLoaded(true)}
         src={`https://vidsrc.cc/v2/embed/${movieType}/${movieId}${
           isTvSE ? `/${seasonId}` : ""
         }${
