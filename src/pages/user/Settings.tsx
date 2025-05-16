@@ -17,6 +17,10 @@ import {
   Modal,
   ModalClose,
   ModalDialog,
+  Tab,
+  TabList,
+  TabPanel,
+  Tabs,
   Typography,
   useColorScheme,
 } from "@mui/joy";
@@ -24,21 +28,32 @@ import { useUsers } from "../../context/Users";
 import { User } from "../../user";
 import { useEffect, useState } from "react";
 import {
+  DeviceUnknown,
   Edit,
+  LaptopMac,
+  PhoneIphone,
+  TabletMac,
+  Tv,
   Visibility,
   VisibilityOff,
   WarningRounded,
 } from "@mui/icons-material";
 import {
   backdropLoading,
+  deviceId,
   isLoggedIn,
   isValidEmail,
+  smartText,
 } from "../../utilities/defaults";
 import { useNavigate } from "react-router-dom";
 
 const Settings = () => {
-  const { myselfData, updateMyself, updatedMyselfData, signedInWithGoogle } =
-    useUsers();
+  const {
+    myselfData,
+    updateMyself,
+    updatedMyselfData,
+    signedInWithGoogle,
+  } = useUsers();
   const [userValue, setUserValue] = useState<User>(myselfData?.data as User);
   const [deleteModal, setDeleteModal] = useState(false);
   const [emailModal, setEmailModal] = useState(false);
@@ -93,69 +108,80 @@ const Settings = () => {
           height: "120vh",
         }}
       >
-        <Card
+        <Tabs
           sx={{
-            width: "700px",
-            margin: "0 auto",
-            "@media (max-width: 800px)": {
-              width: "90%",
-            },
+            background: "transparent",
           }}
         >
-          <Typography level="h4">Settings</Typography>
-          <Divider />
-          <FormControl>
-            <FormLabel>Firstname</FormLabel>
-            <Input
-              required
-              name="firstname"
-              placeholder="Your firstname"
-              value={userValue?.firstname}
-              onChange={handleInput}
-            />
-          </FormControl>
-          <FormControl>
-            <FormLabel>Lastname</FormLabel>
-            <Input
-              name="lastname"
-              placeholder="Your lastname"
-              value={userValue?.lastname}
-              onChange={handleInput}
-            />
-          </FormControl>
-          <FormControl>
-            <FormLabel>Email</FormLabel>
-            <Input
-              required
-              name="email"
-              placeholder="Your email"
-              disabled
-              value={userValue?.email}
-            />
-            {!signedInWithGoogle && (
-              <IconButton
-                onClick={() => setEmailModal(true)}
-                sx={{
-                  position: "absolute",
-                  top: "25px",
-                  right: "0px",
-                }}
-              >
-                <Edit />
-              </IconButton>
-            )}
-          </FormControl>
-          {!signedInWithGoogle && (
-            <FormControl>
-              <FormLabel>Password</FormLabel>
-              <Input
-                required
-                type="password"
-                placeholder="Your password"
-                disabled
-                value={"*********"}
-              />
-              {/* <IconButton
+          <TabList>
+            <Tab>Settings</Tab>
+            <Tab>Devices</Tab>
+            <Tab>Privacy Settings</Tab>
+          </TabList>
+          <TabPanel value={0}>
+            <Card
+              sx={{
+                width: "700px",
+                margin: "0 auto",
+                "@media (max-width: 800px)": {
+                  width: "90%",
+                },
+              }}
+            >
+              <Typography level="h4">Settings</Typography>
+              <Divider />
+              <FormControl>
+                <FormLabel>Firstname</FormLabel>
+                <Input
+                  required
+                  name="firstname"
+                  placeholder="Your firstname"
+                  value={userValue?.firstname}
+                  onChange={handleInput}
+                />
+              </FormControl>
+              <FormControl>
+                <FormLabel>Lastname</FormLabel>
+                <Input
+                  name="lastname"
+                  placeholder="Your lastname"
+                  value={userValue?.lastname}
+                  onChange={handleInput}
+                />
+              </FormControl>
+              <FormControl>
+                <FormLabel>Email</FormLabel>
+                <Input
+                  required
+                  name="email"
+                  placeholder="Your email"
+                  disabled
+                  value={userValue?.email}
+                />
+                {!signedInWithGoogle && (
+                  <IconButton
+                    onClick={() => setEmailModal(true)}
+                    sx={{
+                      position: "absolute",
+                      top: "25px",
+                      right: "0px",
+                    }}
+                  >
+                    <Edit />
+                  </IconButton>
+                )}
+              </FormControl>
+              {!signedInWithGoogle && (
+                <FormControl>
+                  <FormLabel>Password</FormLabel>
+                  <Input
+                    required
+                    type="password"
+                    placeholder="Your password"
+                    disabled
+                    value={"*********"}
+                  />
+                  {/* <IconButton
                 onClick={() => setPasswordModal(true)}
                 sx={{
                   position: "absolute",
@@ -165,51 +191,114 @@ const Settings = () => {
               >
                 <Edit />
               </IconButton> */}
-            </FormControl>
-          )}
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "flex-end",
-              alignItems: "center",
-              paddingTop: "20px",
-            }}
-          >
-            <Button
-              type="submit"
-              disabled={
-                updatedMyselfData?.isLoading || !userValue?.firstname.trim()
-              }
+                </FormControl>
+              )}
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "flex-end",
+                  alignItems: "center",
+                  paddingTop: "20px",
+                }}
+              >
+                <Button
+                  type="submit"
+                  disabled={
+                    updatedMyselfData?.isLoading || !userValue?.firstname.trim()
+                  }
+                  sx={{
+                    background: "rgb(255, 200, 0)",
+                    ":hover": {
+                      background: "rgb(255, 200, 0)",
+                      opacity: 0.8,
+                    },
+                  }}
+                >
+                  {updatedMyselfData?.isLoading ? "Updating..." : "Update"}
+                </Button>
+              </Box>
+            </Card>
+          </TabPanel>
+          <TabPanel value={1}>
+            <Card
               sx={{
-                background: "rgb(255, 200, 0)",
-                ":hover": {
-                  background: "rgb(255, 200, 0)",
-                  opacity: 0.8,
+                width: "700px",
+                margin: "0 auto",
+                "@media (max-width: 800px)": {
+                  width: "90%",
                 },
               }}
             >
-              {updatedMyselfData?.isLoading ? "Updating..." : "Update"}
-            </Button>
-          </Box>
-          <Divider>Privacy Settings</Divider>
-          <Box display={"flex"} gap={"10px"} alignItems={"center"}>
-            <Typography level="title-md">Created at:</Typography>
-            <Typography>{userValue?.createdAt}</Typography>
-          </Box>
-          <Box display={"flex"} gap={"10px"} alignItems={"center"}>
-            <Typography level="title-md">Signed in with:</Typography>
-            <Typography>
-              {signedInWithGoogle ? "Google" : "Email & Password"}
-            </Typography>
-          </Box>
-          <Button
-            onClick={() => setDeleteModal(true)}
-            color="danger"
-            variant="outlined"
-          >
-            Delete account
-          </Button>
-        </Card>
+              <Typography level="h4">Devices</Typography>
+              <Card>
+                {(myselfData?.data as User)?.devices
+                  ?.filter((d) => d.deviceId == deviceId())
+                  .map((device) => (
+                    <Box
+                      key={device.deviceId}
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 3,
+                      }}
+                    >
+                      <Typography level="h4">
+                        {device.deviceType == "mobile" ? (
+                          <PhoneIphone />
+                        ) : device.deviceType == "desktop" ? (
+                          <LaptopMac />
+                        ) : device.deviceType == "tablet" ? (
+                          <TabletMac />
+                        ) : device.deviceType == "tv" ? (
+                          <Tv />
+                        ) : (
+                          <DeviceUnknown />
+                        )}
+                      </Typography>
+                      <Box>
+                        <Typography level="h4">
+                          {smartText(device.deviceName)}
+                        </Typography>
+                        <Typography level="body-sm">
+                          {smartText(device.deviceType)}
+                        </Typography>
+                      </Box>
+                    </Box>
+                  ))}
+              </Card>
+            </Card>
+          </TabPanel>
+          <TabPanel value={2}>
+            <Card
+              sx={{
+                width: "700px",
+                margin: "0 auto",
+                "@media (max-width: 800px)": {
+                  width: "90%",
+                },
+              }}
+            >
+              <Typography level="h4">Privacy Settings</Typography>
+              <Box display={"flex"} gap={"10px"} alignItems={"center"}>
+                <Typography level="title-md">Created at:</Typography>
+                <Typography>{userValue?.createdAt}</Typography>
+              </Box>
+              <Box display={"flex"} gap={"10px"} alignItems={"center"}>
+                <Typography level="title-md">Signed in with:</Typography>
+                <Typography>
+                  {signedInWithGoogle ? "Google" : "Email & Password"}
+                </Typography>
+              </Box>
+              <Button
+                onClick={() => setDeleteModal(true)}
+                color="danger"
+                variant="outlined"
+              >
+                Delete account
+              </Button>
+            </Card>
+          </TabPanel>
+        </Tabs>
         <Modal open={deleteModal} onClose={() => setDeleteModal(false)}>
           <ModalDialog minWidth={500} variant="outlined" role="alertdialog">
             <DialogTitle>
@@ -222,7 +311,12 @@ const Settings = () => {
               cannot be undone!
             </DialogContent>
             <DialogActions>
-              <Button variant="solid" color="danger" onClick={() => {}}>
+              <Button
+                disabled
+                variant="solid"
+                color="danger"
+                onClick={() => {}}
+              >
                 Delete my account
               </Button>
               <Button

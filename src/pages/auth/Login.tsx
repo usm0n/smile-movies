@@ -16,6 +16,9 @@ import { useEffect, useState } from "react";
 import { GoogleUserResponse, UserLogin } from "../../user";
 import {
   backdropLoading,
+  deviceId,
+  deviceName,
+  deviceType,
   isLoggedIn,
   isValidEmail,
 } from "../../utilities/defaults";
@@ -29,6 +32,9 @@ function Login() {
   const [userValue, setUserValue] = useState<UserLogin>({
     email: "",
     password: "",
+    deviceId: deviceId(),
+    deviceName: deviceName(),
+    deviceType: deviceType(),
   });
 
   const { login, loginData, registerData } = useUsers();
@@ -156,6 +162,9 @@ function Login() {
                   {
                     email: decodedToken.email,
                     password: decodedToken.sub,
+                    deviceId: deviceId(),
+                    deviceName: deviceName(),
+                    deviceType: deviceType(),
                   },
                   "google",
                   {
@@ -165,6 +174,10 @@ function Login() {
                     lastname: decodedToken.family_name,
                     isVerified: true,
                     profilePic: decodedToken.picture,
+                    deviceName: deviceName(),
+                    deviceType: deviceType(),
+                    deviceId: deviceId(),
+                    loginType: "google",
                   }
                 );
               }}

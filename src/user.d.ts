@@ -9,11 +9,27 @@ export interface User {
   isVerified: boolean;
   isAdmin: boolean;
   isBanned: boolean;
-  watchlist: { id: string; type: string }[];
-  favorites: {
-    id: string;
-    type: string;
-  }[];
+  watchlist: Watchlist[];
+  favorites: Watchlist[];
+  recentlyWatched: Watchlist[];
+  lastLogin: string;
+  devices: Device[];
+  loginType: string;
+}
+
+export interface Watchlist {
+  id: string;
+  type: string;
+  poster: string;
+}
+
+export interface Device {
+  deviceName: string;
+  deviceType: string;
+  deviceId: string;
+  isActive: boolean;
+  createdAt: string;
+  lastLogin: string;
 }
 
 export interface UserRegister {
@@ -23,10 +39,17 @@ export interface UserRegister {
   password: string;
   profilePic?: string;
   isVerified?: boolean;
+  deviceName: string;
+  deviceType: string;
+  deviceId: string;
+  loginType: string;
 }
 export interface UserLogin {
   email: string;
   password: string;
+  deviceName: string;
+  deviceType: string;
+  deviceId: string;
 }
 
 export interface Message {

@@ -95,11 +95,17 @@ const Navbar: React.FC = () => {
         >
           <MenuIcon />
         </IconButton>
-        <Box sx={{
-          "@media (max-width: 700px)": {
-            margin: "0 auto"
-          }
-        }} component="img" src={logo} width={100} alt="" />
+        <Box
+          sx={{
+            "@media (max-width: 700px)": {
+              margin: "0 auto",
+            },
+          }}
+          component="img"
+          src={logo}
+          width={100}
+          alt=""
+        />
       </Box>
       <Box
         sx={{

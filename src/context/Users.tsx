@@ -1,7 +1,13 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import * as userType from "../user";
 import { users } from "../service/api/smb/users.api.service";
-import { deleteCookie, isLoggedIn, setCookie } from "../utilities/defaults";
+import {
+  deleteCookie,
+  deviceId,
+  deviceType,
+  isLoggedIn,
+  setCookie,
+} from "../utilities/defaults";
 
 const UsersContext = createContext({
   usersData: null as userType.ResponseType | null,
@@ -25,6 +31,10 @@ const UsersContext = createContext({
   removeFromWatchlistData: null as userType.ResponseType | null,
   addToFavoritesData: null as userType.ResponseType | null,
   removeFromFavoritesData: null as userType.ResponseType | null,
+  addToRecentlyWatchedData: null as userType.ResponseType | null,
+  removeFromRecentlyWatchedData: null as userType.ResponseType | null,
+  addDeviceData: null as userType.ResponseType | null,
+  deleteDeviceData: null as userType.ResponseType | null,
   signedInWithGoogle: null as boolean | null,
   getUsers: async () => {},
   getUserById: async (id: string) => {
@@ -82,21 +92,44 @@ const UsersContext = createContext({
     token;
     password;
   },
-  addToWatchlist: async (type: string, id: string) => {
+  addToWatchlist: async (type: string, id: string, poster: string) => {
     type;
     id;
+    poster;
   },
   removeFromWatchlist: async (type: string, id: string) => {
     type;
     id;
   },
-  addToFavorites: async (type: string, id: string) => {
+  addToFavorites: async (type: string, id: string, poster: string) => {
     type;
     id;
+    poster;
   },
   removeFromFavorites: async (type: string, id: string) => {
     type;
     id;
+  },
+  addToRecentlyWatched: async (type: string, id: string, poster: string) => {
+    type;
+    id;
+    poster;
+  },
+  removeFromRecentlyWatched: async (type: string, id: string) => {
+    type;
+    id;
+  },
+  addDevice: async (
+    deviceId: string,
+    deviceName: string,
+    deviceType: string
+  ) => {
+    deviceId;
+    deviceName;
+    deviceType;
+  },
+  deleteDevice: async (deviceId: string) => {
+    deviceId;
   },
 });
 
@@ -149,7 +182,14 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
     useState<userType.ResponseType | null>(null);
   const [removeFromFavoritesData, setRemoveFromFavoritesData] =
     useState<userType.ResponseType | null>(null);
-
+  const [addToRecentlyWatchedData, setAddToRecentlyWatchedData] =
+    useState<userType.ResponseType | null>(null);
+  const [removeFromRecentlyWatchedData, setRemoveFromRecentlyWatchedData] =
+    useState<userType.ResponseType | null>(null);
+  const [addDeviceData, setAddDeviceData] =
+    useState<userType.ResponseType | null>(null);
+  const [deleteDeviceData, setDeleteDeviceData] =
+    useState<userType.ResponseType | null>(null);
   const getUsers = async () => {
     try {
       setUsersData({
@@ -663,7 +703,7 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  const addToWatchlist = async (type: string, id: string) => {
+  const addToWatchlist = async (type: string, id: string, poster: string) => {
     try {
       setAddToWatchlistData({
         isLoading: true,
@@ -671,7 +711,7 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
         data: null,
         errorResponse: null,
       });
-      const response = await users.addToWatchlist(type, id);
+      const response = await users.addToWatchlist(type, id, poster);
       if (response) {
         setAddToWatchlistData({
           isLoading: false,
@@ -717,7 +757,7 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  const addToFavorites = async (type: string, id: string) => {
+  const addToFavorites = async (type: string, id: string, poster: string) => {
     try {
       setAddToFavoritesData({
         isLoading: true,
@@ -725,7 +765,7 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
         data: null,
         errorResponse: null,
       });
-      const response = await users.addToFavorites(type, id);
+      const response = await users.addToFavorites(type, id, poster);
       if (response) {
         setAddToFavoritesData({
           isLoading: false,
@@ -771,11 +811,146 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  const addToRecentlyWatched = async (
+    type: string,
+    id: string,
+    poster: string
+  ) => {
+    try {
+      setAddToRecentlyWatchedData({
+        isLoading: true,
+        isError: false,
+        data: null,
+        errorResponse: null,
+      });
+      const response = await users.addToRecentlyWatched(type, id, poster);
+      if (response) {
+        setAddToRecentlyWatchedData({
+          isLoading: false,
+          isError: false,
+          data: response as userType.Message,
+          errorResponse: null,
+        });
+      }
+    } catch (error) {
+      setAddToRecentlyWatchedData({
+        isLoading: false,
+        isError: true,
+        data: null,
+        errorResponse: error,
+      });
+    }
+  };
+
+  const removeFromRecentlyWatched = async (type: string, id: string) => {
+    try {
+      setRemoveFromRecentlyWatchedData({
+        isLoading: true,
+        isError: false,
+        data: null,
+        errorResponse: null,
+      });
+      const response = await users.removeFromRecentlyWatched(type, id);
+      if (response) {
+        setRemoveFromRecentlyWatchedData({
+          isLoading: false,
+          isError: false,
+          data: response as userType.Message,
+          errorResponse: null,
+        });
+      }
+    } catch (error) {
+      setRemoveFromRecentlyWatchedData({
+        isLoading: false,
+        isError: true,
+        data: null,
+        errorResponse: error,
+      });
+    }
+  };
+
+  const addDevice = async (
+    deviceId: string,
+    deviceType: string,
+    deviceName: string
+  ) => {
+    try {
+      setAddDeviceData({
+        isLoading: true,
+        isError: false,
+        data: null,
+        errorResponse: null,
+      });
+      const response = await users.addDevice(deviceId, deviceType, deviceName);
+      if (response) {
+        setAddDeviceData({
+          isLoading: false,
+          isError: false,
+          data: response as userType.Message,
+          errorResponse: null,
+        });
+      }
+    } catch (error) {
+      setAddDeviceData({
+        isLoading: false,
+        isError: true,
+        data: null,
+        errorResponse: error,
+      });
+    }
+  };
+
+  const deleteDevice = async (deviceId: string) => {
+    try {
+      setDeleteDeviceData({
+        isLoading: true,
+        isError: false,
+        data: null,
+        errorResponse: null,
+      });
+      const response = await users.deleteDevice(deviceId);
+      if (response) {
+        setDeleteDeviceData({
+          isLoading: false,
+          isError: false,
+          data: response as userType.Message,
+          errorResponse: null,
+        });
+      }
+    } catch (error) {
+      setDeleteDeviceData({
+        isLoading: false,
+        isError: true,
+        data: null,
+        errorResponse: error,
+      });
+    }
+  };
+
   useEffect(() => {
     if (isLoggedIn) {
       getMyself();
     }
   }, [isLoggedIn]);
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      if (
+        (myselfData?.data as userType.User)?.devices?.length === 0 ||
+        (myselfData?.data as userType.User)?.devices?.filter(
+          (device: userType.Device) => device?.deviceId === deviceId()
+        ).length === 0
+      ) {
+        logout();
+      } else {
+        users?.lastLogin(deviceId());
+        console.log("last login");
+        console.log((myselfData?.data as userType.User)?.devices);
+        console.log(deviceType());
+        
+      }
+    }
+  }, [isLoggedIn, myselfData]);
   return (
     <UsersContext.Provider
       value={{
@@ -823,6 +998,14 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
         removeFromFavoritesData,
         removeFromWatchlist,
         removeFromWatchlistData,
+        addDevice,
+        addDeviceData,
+        addToRecentlyWatched,
+        addToRecentlyWatchedData,
+        deleteDevice,
+        deleteDeviceData,
+        removeFromRecentlyWatched,
+        removeFromRecentlyWatchedData,
       }}
     >
       {children}

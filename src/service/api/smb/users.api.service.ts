@@ -100,7 +100,7 @@ export const users = {
   login: async (user: UserLogin) => {
     try {
       const response = await smbAPI.post("/users/login", user);
-      return response.data;  
+      return response.data;
     } catch (error: any) {
       console.log(error);
 
@@ -153,11 +153,17 @@ export const users = {
       return error.response.data as CatchError;
     }
   },
-  addToWatchlist: async (typeMovie: string, movieId: string) => {
+  addToWatchlist: async (
+    typeMovie: string,
+    movieId: string,
+    poster: string
+  ) => {
     try {
-      const response = await smbAPI.post(
-        `/users/watchlist/${typeMovie}/${movieId}`
-      );
+      const response = await smbAPI.post(`/users/watchlist/`, {
+        typeMovie,
+        movieId,
+        poster,
+      });
       return response.data as Message;
     } catch (error: any) {
       return error.response.data as CatchError;
@@ -173,11 +179,17 @@ export const users = {
       return error.response.data as CatchError;
     }
   },
-  addToFavorites: async (typeMovie: string, movieId: string) => {
+  addToFavorites: async (
+    typeMovie: string,
+    movieId: string,
+    poster: string
+  ) => {
     try {
-      const response = await smbAPI.post(
-        `/users/favorites/${typeMovie}/${movieId}`
-      );
+      const response = await smbAPI.post(`/users/favorites/`, {
+        typeMovie,
+        movieId,
+        poster,
+      });
       return response.data as Message;
     } catch (error: any) {
       return error.response.data as CatchError;
@@ -188,6 +200,64 @@ export const users = {
       const response = await smbAPI.delete(
         `/users/favorites/${typeMovie}/${movieId}`
       );
+      return response.data as Message;
+    } catch (error: any) {
+      return error.response.data as CatchError;
+    }
+  },
+  addToRecentlyWatched: async (
+    typeMovie: string,
+    movieId: string,
+    poster: string
+  ) => {
+    try {
+      const response = await smbAPI.post(`/users/recentlyWatched/`, {
+        typeMovie,
+        movieId,
+        poster,
+      });
+      return response.data as Message;
+    } catch (error: any) {
+      return error.response.data as CatchError;
+    }
+  },
+  removeFromRecentlyWatched: async (typeMovie: string, movieId: string) => {
+    try {
+      const response = await smbAPI.delete(
+        `/users/recentlyWated/${typeMovie}/${movieId}`
+      );
+      return response.data as Message;
+    } catch (error: any) {
+      return error.response.data as CatchError;
+    }
+  },
+  lastLogin: async (deviceId: string) => {
+    try {
+      const response = await smbAPI.post(`/users/lastLogin/`, { deviceId });
+      return response.data as Message;
+    } catch (error: any) {
+      return error.response.data as CatchError;
+    }
+  },
+  addDevice: async (
+    deviceId: string,
+    deviceType: string,
+    deviceName: string
+  ) => {
+    try {
+      const response = await smbAPI.post(`/users/addDevice`, {
+        deviceId,
+        deviceType,
+        deviceName,
+      });
+      return response.data as Message;
+    } catch (error: any) {
+      return error.response.data as CatchError;
+    }
+  },
+  deleteDevice: async (deviceId: string) => {
+    try {
+      const response = await smbAPI.delete(`/users/deleteDevice/${deviceId}`);
       return response.data as Message;
     } catch (error: any) {
       return error.response.data as CatchError;

@@ -22,6 +22,9 @@ import { useEffect, useState } from "react";
 import { GoogleUserResponse, UserRegister } from "../../user";
 import {
   backdropLoading,
+  deviceId,
+  deviceName,
+  deviceType,
   isLoggedIn,
   isValidEmail,
 } from "../../utilities/defaults";
@@ -38,6 +41,10 @@ function Register() {
     password: "",
     firstname: "",
     lastname: "",
+    deviceId: deviceId(),
+    deviceName: deviceName(),
+    deviceType: deviceType(),
+    loginType: "email",
   });
 
   const { login, loginData, registerData, register } = useUsers();
@@ -244,6 +251,9 @@ function Register() {
                   {
                     email: decodedToken.email,
                     password: decodedToken.sub,
+                    deviceId: deviceId(),
+                    deviceName: deviceName(),
+                    deviceType: deviceType(),
                   },
                   "google",
                   {
@@ -253,6 +263,10 @@ function Register() {
                     lastname: decodedToken.family_name,
                     isVerified: true,
                     profilePic: decodedToken.picture,
+                    deviceId: deviceId(),
+                    deviceName: deviceName(),
+                    deviceType: deviceType(),
+                    loginType: "google",
                   }
                 );
               }}

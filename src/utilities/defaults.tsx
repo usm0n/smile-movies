@@ -130,7 +130,7 @@ export const shareLink = async (url: string) => {
   }
 };
 
-export const deviceType = () => {
+export const deviceName = () => {
   const ua = navigator.userAgent;
   let device = "Unknown";
 
@@ -161,8 +161,8 @@ export const deviceType = () => {
   return device;
 };
 
-export const deviceTypeClass = (): string => {
-  const currentDevice = device();
+export const deviceType = (): string => {
+  const currentDevice = deviceName();
   if (["Mac", "Windows", "Linux"].includes(currentDevice)) {
     return "desktop";
   } else if (["iPhone", "Android Phone"].includes(currentDevice)) {
@@ -175,8 +175,15 @@ export const deviceTypeClass = (): string => {
     return "unknown";
   }
 };
-
-export const device = () => {
+export function deviceId(): string {
   const ua = navigator.userAgent;
-  return ua;
-};
+  const lang = navigator.language;
+  const platform = navigator.platform;
+  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const screenSize = `${screen.width}x${screen.height}`;
+
+  const raw = `${ua}|${lang}|${platform}|${timezone}|${screenSize}`;
+  const hash = btoa(raw);
+
+  return hash;
+}
