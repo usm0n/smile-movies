@@ -101,7 +101,7 @@ export const addToRecentlyWatched = (item: {
   if (!exists) {
     recentlyWatched.unshift(item);
     localStorage.setItem("recentlyWatched", JSON.stringify(recentlyWatched));
-    reload()
+    reload();
   }
 };
 
@@ -113,7 +113,7 @@ export const removeFromRecentlyWatched = (id: number | string) => {
     (item: { id: number }) => item.id !== id
   );
   localStorage.setItem("recentlyWatched", JSON.stringify(filtered));
-  reload()
+  reload();
 };
 
 export const shareLink = async (url: string) => {
@@ -128,4 +128,55 @@ export const shareLink = async (url: string) => {
   } catch (error) {
     window.open(url, "_blank");
   }
+};
+
+export const deviceType = () => {
+  const ua = navigator.userAgent;
+  let device = "Unknown";
+
+  if (/(Macintosh|MacIntel|MacPPC|Mac68K)/.test(ua)) {
+    device = "Mac";
+  } else if (/(Win32|Win64|Windows|WinCE)/.test(ua)) {
+    device = "Windows";
+  } else if (/(Linux)/.test(ua)) {
+    device = "Linux";
+  } else if (/(iPhone)/.test(ua)) {
+    device = "iPhone";
+  } else if (/(iPad)/.test(ua)) {
+    device = "iPad";
+  } else if (/(Android)/.test(ua)) {
+    if (/(tablet|Nexus 7)/.test(ua)) {
+      device = "Android Tablet";
+    } else {
+      device = "Android Phone";
+    }
+  } else if (
+    /(TV|SmartTV|SMART-TV|WebTV|HbbTV|AppleTV|Opera TV|POV_TV|BRAVIA|Roku)/.test(
+      ua
+    )
+  ) {
+    device = "Smart TV";
+  }
+
+  return device;
+};
+
+export const deviceTypeClass = (): string => {
+  const currentDevice = device();
+  if (["Mac", "Windows", "Linux"].includes(currentDevice)) {
+    return "desktop";
+  } else if (["iPhone", "Android Phone"].includes(currentDevice)) {
+    return "mobile";
+  } else if (["iPad", "Android Tablet"].includes(currentDevice)) {
+    return "tablet";
+  } else if (currentDevice === "Smart TV") {
+    return "tv";
+  } else {
+    return "unknown";
+  }
+};
+
+export const device = () => {
+  const ua = navigator.userAgent;
+  return ua;
 };
