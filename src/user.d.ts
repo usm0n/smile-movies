@@ -23,6 +23,18 @@ export interface Watchlist {
   poster: string;
 }
 
+export interface Location {
+  latitude: number;
+  longitude: number;
+  continent: string;
+  country: string;
+  state: string;
+  county: string;
+  road: string;
+  town: string;
+  lastSeen?: string;
+}
+
 export interface Device {
   deviceName: string;
   deviceType: string;
@@ -43,6 +55,7 @@ export interface UserRegister {
   deviceType: string;
   deviceId: string;
   loginType: string;
+  deviceLocation: Location;
 }
 export interface UserLogin {
   email: string;
@@ -50,6 +63,7 @@ export interface UserLogin {
   deviceName: string;
   deviceType: string;
   deviceId: string;
+  deviceLocation: Location;
 }
 
 export interface Message {

@@ -1,8 +1,17 @@
-import { Lock, Mail, Visibility, VisibilityOff } from "@mui/icons-material";
+import {
+  Lock,
+  Mail,
+  Visibility,
+  VisibilityOff,
+  Warning,
+} from "@mui/icons-material";
 import {
   Box,
   Button,
   Card,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   Divider,
   FormControl,
   FormHelperText,
@@ -10,10 +19,12 @@ import {
   IconButton,
   Input,
   Link,
+  Modal,
+  ModalDialog,
   useColorScheme,
 } from "@mui/joy";
-import { useEffect, useState } from "react";
-import { GoogleUserResponse, UserLogin } from "../../user";
+import React, { useEffect, useState } from "react";
+import { GoogleUserResponse, Location, UserLogin } from "../../user";
 import {
   backdropLoading,
   deviceId,
@@ -21,11 +32,13 @@ import {
   deviceType,
   isLoggedIn,
   isValidEmail,
+  reload,
 } from "../../utilities/defaults";
 import { useNavigate } from "react-router-dom";
 import { GoogleLogin } from "@react-oauth/google";
 import { jwtDecode } from "jwt-decode";
 import { useUsers } from "../../context/Users";
+import { useOC } from "../../context/OC";
 
 function Login() {
   const [passwordVisibility, setPasswordVisibility] = useState<boolean>(false);
@@ -35,9 +48,11 @@ function Login() {
     deviceId: deviceId(),
     deviceName: deviceName(),
     deviceType: deviceType(),
+    deviceLocation: {} as Location,
   });
 
   const { login, loginData, registerData } = useUsers();
+  const { getLocation, locationData } = useOC();
 
   const { colorScheme } = useColorScheme();
 
@@ -54,8 +69,17 @@ function Login() {
   useEffect(() => {
     if (isLoggedIn) {
       navigate("/");
+    }else{
+      getLocation();
     }
   }, [isLoggedIn]);
+
+  useEffect(() => {
+    setUserValue((prevUserData) => ({
+      ...prevUserData,
+      deviceLocation: locationData.data,
+    }));
+  }, [locationData]);
 
   return (
     <form
@@ -68,6 +92,27 @@ function Login() {
         loginData?.isLoading || registerData?.isLoading,
         colorScheme
       )}
+      <Modal open={locationData.error}>
+        <ModalDialog>
+          <DialogTitle>
+            <Warning />
+            You denied location access
+          </DialogTitle>
+          <DialogContent>
+            Please allow location access to continue
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => reload()}>Allow</Button>
+            <Button
+              color="neutral"
+              variant="soft"
+              onClick={() => navigate("/")}
+            >
+              Don't Allow
+            </Button>
+          </DialogActions>
+        </ModalDialog>
+      </Modal>
       <Box
         sx={{
           display: "flex",
@@ -165,6 +210,7 @@ function Login() {
                     deviceId: deviceId(),
                     deviceName: deviceName(),
                     deviceType: deviceType(),
+                    deviceLocation: userValue.deviceLocation,
                   },
                   "google",
                   {
@@ -178,6 +224,7 @@ function Login() {
                     deviceType: deviceType(),
                     deviceId: deviceId(),
                     loginType: "google",
+                    deviceLocation: userValue.deviceLocation,
                   }
                 );
               }}
@@ -199,5 +246,4 @@ function Login() {
     </form>
   );
 }
-
 export default Login;

@@ -4,11 +4,15 @@ import {
   Person,
   Visibility,
   VisibilityOff,
+  Warning,
 } from "@mui/icons-material";
 import {
   Box,
   Button,
   Card,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   Divider,
   FormControl,
   FormHelperText,
@@ -16,6 +20,8 @@ import {
   IconButton,
   Input,
   Link,
+  Modal,
+  ModalDialog,
   useColorScheme,
 } from "@mui/joy";
 import { useEffect, useState } from "react";
@@ -27,11 +33,14 @@ import {
   deviceType,
   isLoggedIn,
   isValidEmail,
+  reload,
 } from "../../utilities/defaults";
 import { useNavigate } from "react-router-dom";
 import { GoogleLogin } from "@react-oauth/google";
 import { jwtDecode } from "jwt-decode";
 import { useUsers } from "../../context/Users";
+import { useOC } from "../../context/OC";
+import React from "react";
 
 function Register() {
   const [passwordVisibility, setPasswordVisibility] = useState<boolean>(false);
@@ -45,9 +54,20 @@ function Register() {
     deviceName: deviceName(),
     deviceType: deviceType(),
     loginType: "email",
+    deviceLocation: {
+      latitude: 0,
+      longitude: 0,
+      continent: "",
+      country: "",
+      county: "",
+      state: "",
+      road: "",
+      town: "",
+    },
   });
 
   const { login, loginData, registerData, register } = useUsers();
+  const { getLocation, locationData } = useOC();
 
   const { colorScheme } = useColorScheme();
 
@@ -57,15 +77,24 @@ function Register() {
     const { name, value } = e.target;
     setUserValue((prevUserData) => ({
       ...prevUserData,
-      [name]: value.toLocaleLowerCase(),
+      [name]: name == "email" ? value.toLocaleLowerCase() : value,
     }));
   };
 
   useEffect(() => {
     if (isLoggedIn) {
       navigate("/");
+    } else {
+      getLocation();
     }
   }, [isLoggedIn]);
+
+  useEffect(() => {
+    setUserValue((prevUserData) => ({
+      ...prevUserData,
+      deviceLocation: locationData.data,
+    }));
+  }, [locationData]);
 
   return (
     <form
@@ -78,6 +107,27 @@ function Register() {
         loginData?.isLoading || registerData?.isLoading,
         colorScheme
       )}
+      <Modal open={locationData.error}>
+        <ModalDialog>
+          <DialogTitle>
+            <Warning />
+            You denied location access
+          </DialogTitle>
+          <DialogContent>
+            Please allow location access to continue
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => reload()}>Allow</Button>
+            <Button
+              color="neutral"
+              variant="soft"
+              onClick={() => navigate("/")}
+            >
+              Don't Allow
+            </Button>
+          </DialogActions>
+        </ModalDialog>
+      </Modal>
       <Box
         sx={{
           display: "flex",
@@ -254,6 +304,7 @@ function Register() {
                     deviceId: deviceId(),
                     deviceName: deviceName(),
                     deviceType: deviceType(),
+                    deviceLocation: userValue?.deviceLocation,
                   },
                   "google",
                   {
@@ -267,6 +318,7 @@ function Register() {
                     deviceName: deviceName(),
                     deviceType: deviceType(),
                     loginType: "google",
+                    deviceLocation: userValue?.deviceLocation,
                   }
                 );
               }}
@@ -288,5 +340,4 @@ function Register() {
     </form>
   );
 }
-
 export default Register;

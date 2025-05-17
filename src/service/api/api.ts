@@ -15,3 +15,7 @@ export const tmdbAPI = axios.create({
     Authorization: `Bearer ${import.meta.env.VITE_TMDB_API_KEY}`,
   },
 });
+
+export const ocAPI = axios.create({
+  baseURL: import.meta.env.VITE_OC_API_URL,
+});

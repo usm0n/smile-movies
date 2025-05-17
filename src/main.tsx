@@ -7,18 +7,21 @@ import UsersProvider from "./context/Users.tsx";
 import { BrowserRouter } from "react-router-dom";
 import { CssVarsProvider } from "@mui/joy";
 import { GoogleOAuthProvider } from "@react-oauth/google";
+import OCProvider from "./context/OC.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
     <CssVarsProvider defaultMode="dark">
       <BrowserRouter>
-        <UsersProvider>
-          <TMDBProvider>
-            <StrictMode>
-              <App />
-            </StrictMode>
-          </TMDBProvider>
-        </UsersProvider>
+        <OCProvider>
+          <UsersProvider>
+            <TMDBProvider>
+              <StrictMode>
+                <App />
+              </StrictMode>
+            </TMDBProvider>
+          </UsersProvider>
+        </OCProvider>
       </BrowserRouter>
     </CssVarsProvider>
   </GoogleOAuthProvider>
