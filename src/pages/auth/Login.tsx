@@ -69,12 +69,13 @@ function Login() {
   useEffect(() => {
     if (isLoggedIn) {
       navigate("/");
-    }else{
+    } else {
       getLocation();
     }
   }, [isLoggedIn]);
 
   useEffect(() => {
+    console.log(locationData);
     setUserValue((prevUserData) => ({
       ...prevUserData,
       deviceLocation: locationData.data,
@@ -89,10 +90,17 @@ function Login() {
       }}
     >
       {backdropLoading(
-        loginData?.isLoading || registerData?.isLoading,
+        loginData?.isLoading ||
+          registerData?.isLoading ||
+          locationData?.loading,
         colorScheme
       )}
-      <Modal open={locationData.error}>
+      <Modal
+        sx={{
+          zIndex: 10000,
+        }}
+        open={locationData.error}
+      >
         <ModalDialog>
           <DialogTitle>
             <Warning />

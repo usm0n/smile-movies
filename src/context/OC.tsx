@@ -57,6 +57,8 @@ const OCProvider = ({ children }: { children: React.ReactNode }) => {
         const { latitude, longitude } = position.coords;
         const response = await oc.getLocation(latitude, longitude);
         if (response) {
+          console.log(response);
+
           setLocationData({
             loading: false,
             error: false,
@@ -73,7 +75,8 @@ const OCProvider = ({ children }: { children: React.ReactNode }) => {
           });
         }
       },
-      () => {
+      (error) => {
+        console.log(error);
         setLocationData({
           loading: false,
           error: true,
