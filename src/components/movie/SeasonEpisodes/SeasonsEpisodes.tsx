@@ -1,6 +1,5 @@
 import { Box, Option, Select } from "@mui/joy";
 import { tvDetails, tvSeasonsDetails } from "../../../tmdb-res";
-import { useEffect } from "react";
 import EpisodeCard from "../../cards/EpisodeCard";
 import EpisodeCardSkeleton from "../../cards/skeleton/EpisodeCardSkeleton";
 
@@ -17,9 +16,6 @@ function SeasonsEpisodes({
   setCurrentSeason: (season: number) => void;
   isLoading: boolean;
 }) {
-  useEffect(() => {
-    console.log(currentSeason);
-  }, [currentSeason, setCurrentSeason]);
   return (
     <Box
       sx={{

@@ -4,7 +4,6 @@ import { users } from "../service/api/smb/users.api.service";
 import {
   deleteCookie,
   deviceId,
-  deviceType,
   isLoggedIn,
   setCookie,
 } from "../utilities/defaults";
@@ -467,7 +466,6 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
         errorResponse: null,
       });
       const response = await users.register(user);
-      console.log(response);
 
       if (!("message" in response)) {
         setRegisterData({
@@ -558,7 +556,9 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const logout = () => {
-    deleteCookie("authToken");
+    deleteDevice(deviceId()).then(() => {
+      deleteCookie("authToken");
+    });
   };
 
   const signedInWithGoogle = (myselfData?.data as userType.User)?.profilePic
@@ -932,7 +932,6 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
       getMyself();
     }
   }, [isLoggedIn]);
-
   useEffect(() => {
     if (isLoggedIn) {
       if (
@@ -943,11 +942,9 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
       ) {
         logout();
       } else {
-        users?.lastLogin(deviceId());
-        console.log("last login");
-        console.log((myselfData?.data as userType.User)?.devices);
-        console.log(deviceType());
-        
+        setInterval(() => {
+          users?.lastLogin(deviceId());
+        }, 60000);
       }
     }
   }, [isLoggedIn, myselfData]);

@@ -75,7 +75,6 @@ function Login() {
   }, [isLoggedIn]);
 
   useEffect(() => {
-    console.log(locationData);
     setUserValue((prevUserData) => ({
       ...prevUserData,
       deviceLocation: locationData.data,

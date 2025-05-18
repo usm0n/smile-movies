@@ -5,7 +5,7 @@ import Register from "../pages/auth/Register";
 import Movie from "../pages/movie/Movie";
 import Search from "../pages/search/Search";
 import TVSeries from "../pages/tv/TVSeries";
-import Settings from "../pages/user/Settings";
+import Settings from "../pages/user";
 import Watch from "../pages/video/Watch";
 
 export const mainRoutes = [

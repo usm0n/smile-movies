@@ -102,8 +102,6 @@ export const users = {
       const response = await smbAPI.post("/users/login", user);
       return response.data;
     } catch (error: any) {
-      console.log(error);
-
       return error.response.data as CatchError;
     }
   },

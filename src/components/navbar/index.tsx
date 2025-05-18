@@ -50,7 +50,7 @@ const Navbar: React.FC = () => {
   const [searchVisibility, setSearchVisibility] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const { colorScheme, setMode } = useColorScheme();
-  const { myselfData, logout } = useUsers();
+  const { myselfData, logout, deleteDeviceData } = useUsers();
   const [searchValue, setSearchValue] = useState("");
   const { searchMultiAC, searchMultiACData } = useTMDB();
   const navigate = useNavigate();
@@ -354,6 +354,7 @@ const Navbar: React.FC = () => {
           <DialogContent>Are you sure you want to log out?</DialogContent>
           <DialogActions>
             <Button
+              disabled={deleteDeviceData?.isLoading}
               variant="solid"
               color="danger"
               onClick={() => {
@@ -361,7 +362,7 @@ const Navbar: React.FC = () => {
                 googleLogout();
               }}
             >
-              Log out
+              {deleteDeviceData?.isLoading ? "Loading..." : "Log out"}
             </Button>
             <Button
               variant="plain"

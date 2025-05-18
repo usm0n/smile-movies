@@ -42,6 +42,7 @@ export interface Device {
   isActive: boolean;
   createdAt: string;
   lastLogin: string;
+  location: Location;
 }
 
 export interface UserRegister {
