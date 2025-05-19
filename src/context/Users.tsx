@@ -7,6 +7,7 @@ import {
   isLoggedIn,
   setCookie,
 } from "../utilities/defaults";
+import { useNavigate } from "react-router-dom";
 
 const UsersContext = createContext({
   usersData: null as userType.ResponseType | null,
@@ -932,6 +933,8 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
       getMyself();
     }
   }, [isLoggedIn]);
+
+  const navigate = useNavigate();
   useEffect(() => {
     if (isLoggedIn) {
       if (
@@ -942,6 +945,12 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
       ) {
         logout();
       } else {
+        if (
+          myselfData?.data &&
+          !(myselfData?.data as userType.User)?.isVerified
+        ) {
+          navigate("/verify");
+        }
         setInterval(() => {
           users?.lastLogin(deviceId());
         }, 60000);

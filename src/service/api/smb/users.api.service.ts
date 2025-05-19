@@ -107,7 +107,7 @@ export const users = {
   },
   verify: async (token: string) => {
     try {
-      const response = await smbAPI.post("/users/verify" + token);
+      const response = await smbAPI.post("/users/verify/" + token);
       return response.data as Message;
     } catch (error: any) {
       return error.response.data as CatchError;
@@ -143,7 +143,7 @@ export const users = {
   resetPassword: async (email: string, token: string, password: string) => {
     try {
       const response = await smbAPI.post(
-        "/users/resetPassword" + email + token,
+        "/users/resetPassword/" + email + "/" + token,
         { password }
       );
       return response.data as Message;

@@ -2,6 +2,7 @@ import NotFound from "../components/utils/NotFound";
 import HomeLayout from "../layouts/HomeLayout";
 import Login from "../pages/auth/Login";
 import Register from "../pages/auth/Register";
+import VerifyEmail from "../pages/auth/VerifyEmail";
 import Movie from "../pages/movie/Movie";
 import Search from "../pages/search/Search";
 import TVSeries from "../pages/tv/TVSeries";
@@ -41,13 +42,13 @@ export const mainRoutes = [
     path: "/search/:query/:page",
     element: <Search />,
   },
-  // {
-  //   path: "/:movieType/:movieId/watch",
-  //   element: <Watch/>
-  // },
   {
     path: "/:movieType/:movieId/:seasonId?/:episodeId?/watch",
-    element: <Watch/>
+    element: <Watch />,
+  },
+  {
+    path: "/verify",
+    element: <VerifyEmail />,
   },
   {
     path: "*",

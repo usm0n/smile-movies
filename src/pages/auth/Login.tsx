@@ -62,7 +62,7 @@ function Login() {
     const { name, value } = e.target;
     setUserValue((prevUserData) => ({
       ...prevUserData,
-      [name]: value.toLocaleLowerCase(),
+      [name]: name == "email" ? value.toLocaleLowerCase() : value,
     }));
   };
 
