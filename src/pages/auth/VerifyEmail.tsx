@@ -1,35 +1,51 @@
 import {
   Box,
+  Button,
   CircularProgress,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Divider,
+  FormControl,
+  FormHelperText,
+  FormLabel,
   IconButton,
   Input,
   Link,
+  Modal,
+  ModalClose,
+  ModalDialog,
   Snackbar,
   Typography,
   useColorScheme,
 } from "@mui/joy";
-import logo from "../../assets/images/logo.png";
 import { useEffect, useState } from "react";
 import { useUsers } from "../../context/Users";
 import { Message, User } from "../../user";
-import { Check, Logout } from "@mui/icons-material";
+import { Check, Edit, Email } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import NotFound from "../../components/utils/NotFound";
-import { isLoggedIn } from "../../utilities/defaults";
+import {
+  backdropLoading,
+  isLoggedIn,
+  isValidEmail,
+} from "../../utilities/defaults";
 
 function VerifyEmail() {
   const {
     myselfData,
     resendTokenVerification,
     resendTokenVerificationData,
-    logout,
     verify,
     verifyData,
-    deleteDeviceData,
+    updateMyself,
+    updatedMyselfData,
   } = useUsers();
   const { colorScheme } = useColorScheme();
   const [otp, setOtp] = useState<string>("");
   const [openRVC, setOpenRVC] = useState<boolean>(false);
+  const [openChangeEmail, setOpenChangeEmail] = useState<boolean>(false);
+  const [newEmail, setNewEmail] = useState<string>("");
 
   const navigate = useNavigate();
   const handleInputChange = (
@@ -72,13 +88,13 @@ function VerifyEmail() {
     ) {
       setTimeout(() => {
         navigate("/");
-      }, 2000);
+      }, 1000);
     }
-  }, [verifyData]);
+    setNewEmail((myselfData?.data as User)?.email);
+  }, [verifyData, myselfData]);
 
-  return !isLoggedIn &&
-    myselfData?.data &&
-    (myselfData?.data as User)?.isVerified ? (
+  return !isLoggedIn ||
+    (myselfData?.data && (myselfData?.data as User)?.isVerified) ? (
     <NotFound />
   ) : (
     <Box
@@ -87,11 +103,56 @@ function VerifyEmail() {
         alignItems: "center",
         justifyContent: "center",
         height: "100vh",
-        width: "100vw",
-        backgroundColor:
-          colorScheme === "light" ? "rgb(255, 255, 255)" : "rgb(0, 0, 0)",
       }}
     >
+      {backdropLoading(myselfData?.isLoading, colorScheme)}
+      <Modal open={openChangeEmail} onClose={() => setOpenChangeEmail(false)}>
+        <ModalDialog>
+          <ModalClose />
+          <DialogTitle>Change Email</DialogTitle>
+          <Divider />
+          <DialogContent>
+            <FormControl
+              color={updatedMyselfData?.isConflict ? "danger" : "neutral"}
+            >
+              <FormLabel>Email</FormLabel>
+              <Input
+                startDecorator={<Email />}
+                type="email"
+                placeholder="Email"
+                value={newEmail}
+                onChange={(e) =>
+                  setNewEmail(e.target.value.toLocaleLowerCase())
+                }
+              />
+              {updatedMyselfData?.isConflict && (
+                <FormHelperText color="danger">
+                  Email already exists
+                </FormHelperText>
+              )}
+              <FormHelperText></FormHelperText>
+            </FormControl>
+          </DialogContent>
+          <DialogActions>
+            <Button
+              onClick={() =>
+                updateMyself({ ...(myselfData?.data as User), email: newEmail })
+              }
+              disabled={
+                !newEmail ||
+                newEmail === (myselfData?.data as User)?.email ||
+                !isValidEmail(newEmail) ||
+                updatedMyselfData?.isLoading
+              }
+              sx={{
+                width: "100%",
+              }}
+            >
+              {updatedMyselfData?.isLoading ? "Loading..." : "Change"}
+            </Button>
+          </DialogActions>
+        </ModalDialog>
+      </Modal>
       <Snackbar
         startDecorator={<Check />}
         endDecorator={
@@ -107,43 +168,6 @@ function VerifyEmail() {
       </Snackbar>
       <Box
         sx={{
-          position: "absolute",
-          backgroundColor: "black",
-          top: 0,
-          left: 0,
-          width: "100%",
-          height: "100px",
-          zIndex: 1000,
-        }}
-      >
-        <img
-          style={{
-            position: "absolute",
-            top: "1rem",
-            left: "1rem",
-          }}
-          width={100}
-          src={logo}
-          alt=""
-        />
-        <IconButton
-          onClick={() => {
-            logout()
-            navigate("/");
-          }}
-          disabled={deleteDeviceData?.isLoading}
-          color="danger"
-          sx={{
-            position: "absolute",
-            top: "1rem",
-            right: "1rem",
-          }}
-        >
-          <Logout />
-        </IconButton>
-      </Box>
-      <Box
-        sx={{
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
@@ -156,8 +180,24 @@ function VerifyEmail() {
         <Typography level="h1">Verify your email</Typography>
         <Typography level="body-md">
           We sent you a 6-digit code to your email address{" "}
-          <Link>{(myselfData?.data as User)?.email}</Link>. Enter the code
         </Typography>
+        <Box sx={{ position: "relative" }}>
+          <Input
+            disabled
+            startDecorator={<Email />}
+            value={(myselfData?.data as User)?.email}
+          />
+          <IconButton
+            onClick={() => setOpenChangeEmail(true)}
+            sx={{
+              position: "absolute",
+              right: "0",
+              top: "0",
+            }}
+          >
+            <Edit />
+          </IconButton>
+        </Box>
         <Box
           sx={{
             display: "flex",

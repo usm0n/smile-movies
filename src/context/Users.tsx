@@ -7,7 +7,6 @@ import {
   isLoggedIn,
   setCookie,
 } from "../utilities/defaults";
-import { useNavigate } from "react-router-dom";
 
 const UsersContext = createContext({
   usersData: null as userType.ResponseType | null,
@@ -36,6 +35,8 @@ const UsersContext = createContext({
   addDeviceData: null as userType.ResponseType | null,
   deleteDeviceData: null as userType.ResponseType | null,
   signedInWithGoogle: null as boolean | null,
+  isVerified: null as boolean | null,
+  setIsVerified: (_isVerified: boolean) => {},
   getUsers: async () => {},
   getUserById: async (id: string) => {
     id;
@@ -190,6 +191,7 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
     useState<userType.ResponseType | null>(null);
   const [deleteDeviceData, setDeleteDeviceData] =
     useState<userType.ResponseType | null>(null);
+  const [isVerified, setIsVerified] = useState(false);
   const getUsers = async () => {
     try {
       setUsersData({
@@ -933,8 +935,6 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
       getMyself();
     }
   }, [isLoggedIn]);
-
-  const navigate = useNavigate();
   useEffect(() => {
     if (isLoggedIn) {
       if (
@@ -945,11 +945,10 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
       ) {
         logout();
       } else {
-        if (
-          myselfData?.data &&
-          !(myselfData?.data as userType.User)?.isVerified
-        ) {
-          navigate("/verify");
+        if ((myselfData?.data as userType.User)?.isVerified == false) {
+          setIsVerified(false);
+        } else {
+          setIsVerified(true);
         }
         setInterval(() => {
           users?.lastLogin(deviceId());
@@ -1012,6 +1011,8 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
         deleteDeviceData,
         removeFromRecentlyWatched,
         removeFromRecentlyWatchedData,
+        setIsVerified,
+        isVerified,
       }}
     >
       {children}

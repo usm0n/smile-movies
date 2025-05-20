@@ -47,7 +47,7 @@ export const mainRoutes = [
     element: <Watch />,
   },
   {
-    path: "/verify",
+    path: "/auth/verify-email",
     element: <VerifyEmail />,
   },
   {

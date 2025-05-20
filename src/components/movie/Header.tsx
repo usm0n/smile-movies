@@ -14,6 +14,10 @@ import { PlayArrow } from "@mui/icons-material";
 import { minuteToHour, ymdToDmy } from "../../utilities/defaults";
 import BlurImage from "../../utilities/blurImage";
 import { useNavigate } from "react-router-dom";
+import { useUsers } from "../../context/Users";
+import { User } from "../../user";
+import NotVerified from "../utils/NotVerified";
+import NotLoggedIn from "../utils/NotLoggedIn";
 
 function Header({
   movieImages,
@@ -28,6 +32,11 @@ function Header({
   movieType: "movie" | "tv";
   movieVideos: videos;
 }) {
+  const { myselfData } = useUsers();
+  const [modalOpen, setModalOpen] = useState({
+    verified: false,
+    loggedIn: false,
+  });
   const [isVideoLoaded, setIsVideoLoaded] = useState(false);
   const navigate = useNavigate();
   const trailerKey = movieVideos?.results?.filter(
@@ -149,20 +158,41 @@ function Header({
                 alignItems: "center",
               }}
             >
+              <NotVerified
+                type="modal"
+                setModalOpen={(value) =>
+                  setModalOpen({ ...modalOpen, verified: value })
+                }
+                modalOpen={modalOpen.verified}
+              />
+              <NotLoggedIn
+                type="modal"
+                setModalOpen={(value) =>
+                  setModalOpen({ ...modalOpen, loggedIn: value })
+                }
+                modalOpen={modalOpen.loggedIn}
+              />
               <Button
                 onClick={() => {
-                  navigate(
-                    `/${movieType}/${movieId}${
-                      movieType == "tv" ? `/1/1` : ""
-                    }/watch`
-                  );
+                  !myselfData?.data
+                    ? setModalOpen({
+                        ...modalOpen,
+                        loggedIn: true,
+                      })
+                    : !(myselfData?.data as User)?.isVerified
+                    ? setModalOpen({ ...modalOpen, verified: true })
+                    : navigate(
+                        `/${movieType}/${movieId}${
+                          movieType == "tv" ? `/1/1` : ""
+                        }/watch`
+                      );
                 }}
                 disabled={
                   new Date(
                     movieDetails?.release_date ||
                       movieDetails?.first_air_date ||
                       ""
-                  ).getTime() > Date.now()
+                  ).getTime() > Date.now() || myselfData?.isLoading
                 }
                 startDecorator={<PlayArrow />}
                 sx={{

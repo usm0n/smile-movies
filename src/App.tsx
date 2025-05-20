@@ -14,6 +14,7 @@ import {
 } from "@mui/joy";
 import { useEffect, useState } from "react";
 import { GitHub, Telegram } from "@mui/icons-material";
+import NotVerified from "./components/utils/NotVerified";
 
 function App() {
   const { colorScheme } = useColorScheme();
@@ -33,6 +34,7 @@ function App() {
           colorScheme === "light" ? "rgb(255, 255, 255)" : "rgb(0, 0, 0)",
       }}
     >
+      <NotVerified type="snackbar" />
       <Snackbar
         anchorOrigin={{ vertical: "top", horizontal: "center" }}
         open={snackbar}

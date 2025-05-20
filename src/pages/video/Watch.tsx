@@ -16,6 +16,10 @@ import {
 } from "../../utilities/defaults";
 import NotFound from "../../components/utils/NotFound";
 import { movieDetails, tvDetails, tvSeasonsDetails } from "../../tmdb-res";
+import { useUsers } from "../../context/Users";
+import { User } from "../../user";
+import NotVerified from "../../components/utils/NotVerified";
+import NotLoggedIn from "../../components/utils/NotLoggedIn";
 
 function Watch() {
   const {
@@ -27,6 +31,7 @@ function Watch() {
     tvSeasonsDetailsData,
   } = useTMDB();
   const { movieId, movieType, seasonId, episodeId } = useParams();
+  const { myselfData } = useUsers();
   const { colorScheme } = useColorScheme();
   const navigate = useNavigate();
 
@@ -68,6 +73,10 @@ function Watch() {
   }, [movieId, movieType, movieDetailsDataArr, tvSeriesDetailsDataArr]);
   return isIncorrect ? (
     <NotFound />
+  ) : !myselfData?.data ? (
+    <NotLoggedIn type="page" />
+  ) : !(myselfData?.data as User)?.isVerified ? (
+    <NotVerified type="page" />
   ) : isFetching ? (
     <Box width={"100%"} height={"100vh"}>
       {backdropLoading(true, colorScheme)}
