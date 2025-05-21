@@ -11,7 +11,10 @@ import {
 import { images, movieDetails, tvDetails, videos } from "../../tmdb-res";
 import { useState } from "react";
 import { PlayArrow } from "@mui/icons-material";
-import { minuteToHour, ymdToDmy } from "../../utilities/defaults";
+import {
+  minuteToHour,
+  ymdToDmy,
+} from "../../utilities/defaults";
 import BlurImage from "../../utilities/blurImage";
 import { useNavigate } from "react-router-dom";
 import { useUsers } from "../../context/Users";
@@ -32,7 +35,7 @@ function Header({
   movieType: "movie" | "tv";
   movieVideos: videos;
 }) {
-  const { myselfData } = useUsers();
+  const { myselfData, addToRecentlyWatched } = useUsers();
   const [modalOpen, setModalOpen] = useState({
     verified: false,
     loggedIn: false,
@@ -181,11 +184,16 @@ function Header({
                       })
                     : !(myselfData?.data as User)?.isVerified
                     ? setModalOpen({ ...modalOpen, verified: true })
-                    : navigate(
+                    : (addToRecentlyWatched(
+                        movieType,
+                        movieId.toString(),
+                        movieDetails?.poster_path
+                      ),
+                      navigate(
                         `/${movieType}/${movieId}${
                           movieType == "tv" ? `/1/1` : ""
                         }/watch`
-                      );
+                      ));
                 }}
                 disabled={
                   new Date(

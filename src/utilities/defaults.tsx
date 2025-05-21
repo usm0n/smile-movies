@@ -45,20 +45,22 @@ export const isValidEmail = (email: string) =>
 
 export const backdropLoading = (open: boolean | undefined, theme: any) =>
   open && (
-    <Box
-      sx={{
-        zIndex: 999999999,
-        position: "absolute",
-        display: "flex",
-        width: "100%",
-        height: "100vh",
-        alignItems: "center",
-        justifyContent: "center",
-        background:
-          theme === "dark" ? "rgb(0, 0, 0, 0.5)" : "rgb(255, 255, 255, 0.5)",
-      }}
-    >
-      <CircularProgress value={80} variant="plain" />
+    <Box>
+      <Box
+        sx={{
+          zIndex: 999999999,
+          position: "absolute",
+          display: "flex",
+          width: "100%",
+          height: "100vh",
+          alignItems: "center",
+          justifyContent: "center",
+          background:
+            theme === "dark" ? "rgb(0, 0, 0, 0.5)" : "rgb(255, 255, 255, 0.5)",
+        }}
+      >
+        <CircularProgress value={80} variant="plain" />
+      </Box>
     </Box>
   );
 
@@ -80,40 +82,6 @@ export const smartText = (text: string) => {
   const newText =
     text.charAt(0).toUpperCase() + text.slice(1).replace(/([A-Z])/g, " $1");
   return newText;
-};
-
-export const getRecentlyWatched = () => {
-  const recentlyWatched = JSON.parse(
-    localStorage.getItem("recentlyWatched") || "[]"
-  );
-  return recentlyWatched;
-};
-
-export const addToRecentlyWatched = (item: {
-  id: number | string;
-  type: "movie" | "tv" | string;
-  poster: string;
-}) => {
-  const recentlyWatched = JSON.parse(
-    localStorage.getItem("recentlyWatched") || "[]"
-  );
-  const exists = recentlyWatched.find((i: { id: number }) => i.id === item.id);
-  if (!exists) {
-    recentlyWatched.unshift(item);
-    localStorage.setItem("recentlyWatched", JSON.stringify(recentlyWatched));
-    reload();
-  }
-};
-
-export const removeFromRecentlyWatched = (id: number | string) => {
-  const recentlyWatched = JSON.parse(
-    localStorage.getItem("recentlyWatched") || "[]"
-  );
-  const filtered = recentlyWatched.filter(
-    (item: { id: number }) => item.id !== id
-  );
-  localStorage.setItem("recentlyWatched", JSON.stringify(filtered));
-  reload();
 };
 
 export const shareLink = async (url: string) => {
@@ -189,7 +157,12 @@ export function deviceId(): string {
 }
 
 export function formatTimeAgo(dateString: string): string {
-  const date = new Date(dateString?.replace(/(\d{2})\.(\d{2})\.(\d{4}) (\d{2}):(\d{2})/, '$3-$2-$1T$4:$5'));
+  const date = new Date(
+    dateString?.replace(
+      /(\d{2})\.(\d{2})\.(\d{4}) (\d{2}):(\d{2})/,
+      "$3-$2-$1T$4:$5"
+    )
+  );
   const now = new Date();
   const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
   const diffInMinutes = Math.floor(diffInSeconds / 60);
@@ -197,13 +170,16 @@ export function formatTimeAgo(dateString: string): string {
   const diffInDays = Math.floor(diffInHours / 24);
 
   if (diffInSeconds < 60) {
-    return 'now';
+    return "now";
   } else if (diffInMinutes < 60) {
     return `${diffInMinutes}m ago`;
   } else if (diffInHours < 24) {
     return `${diffInHours}h ago`;
   } else if (diffInDays === 1) {
-    return `yesterday at ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+    return `yesterday at ${date.getHours().toString().padStart(2, "0")}:${date
+      .getMinutes()
+      .toString()
+      .padStart(2, "0")}`;
   } else {
     return dateString;
   }

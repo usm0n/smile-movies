@@ -834,6 +834,7 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
           data: response as userType.Message,
           errorResponse: null,
         });
+        getMyself();
       }
     } catch (error) {
       setAddToRecentlyWatchedData({
@@ -861,6 +862,9 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
           data: response as userType.Message,
           errorResponse: null,
         });
+        console.log(response);
+
+        getMyself();
       }
     } catch (error) {
       setRemoveFromRecentlyWatchedData({

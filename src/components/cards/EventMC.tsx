@@ -18,6 +18,7 @@ import {
   PlayArrow,
 } from "@mui/icons-material";
 import { shareLink } from "../../utilities/defaults";
+import { useUsers } from "../../context/Users";
 
 function EventMC({
   eventPoster,
@@ -31,6 +32,7 @@ function EventMC({
   eventDelete?: (id: string | number) => void;
 }) {
   const navigate = useNavigate();
+  const { addToRecentlyWatched } = useUsers();
   return (
     <Box onClick={() => navigate(`/${eventType}/${eventId}`)} key={eventId}>
       <Card
@@ -98,13 +100,18 @@ function EventMC({
                 {eventType == "movie" ? "Movie" : "TV show"}
               </MenuItem>
               <MenuItem
-                onClick={() =>
+                onClick={() => {
+                  addToRecentlyWatched(
+                    eventType,
+                    eventId.toString(),
+                    eventPoster
+                  );
                   navigate(
                     `/${eventType}/${eventId}${
                       eventType == "tv" ? "/1/1" : ""
                     }/watch`
-                  )
-                }
+                  );
+                }}
               >
                 <PlayArrow />{" "}
                 {eventType == "movie" ? "Watch Now" : "Play S1:E1"}

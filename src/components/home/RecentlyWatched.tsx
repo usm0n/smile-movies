@@ -1,14 +1,18 @@
 import { ArrowForwardIos } from "@mui/icons-material";
 import { Box, Typography } from "@mui/joy";
-import {
-  getRecentlyWatched,
-  removeFromRecentlyWatched,
-} from "../../utilities/defaults";
 import EventMC from "../cards/EventMC";
+import { useUsers } from "../../context/Users";
+import { User } from "../../user";
+import EventMCS from "../cards/skeleton/EventMC";
 
 function RecentlyWatched() {
+  const {
+    myselfData,
+    removeFromRecentlyWatched,
+    removeFromRecentlyWatchedData,
+  } = useUsers();
   return (
-    getRecentlyWatched().length > 0 && (
+    (myselfData?.data as User)?.recentlyWatched?.length > 0 && (
       <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
         <Typography
           endDecorator={<ArrowForwardIos />}
@@ -40,18 +44,28 @@ function RecentlyWatched() {
               "linear-gradient(to right, black 95%, transparent 100%)",
           }}
         >
-          {getRecentlyWatched()?.map(
-            (m: { id: string; type: string; poster: string }) => {
-              return (
-                <EventMC
-                  eventId={m.id}
-                  eventType={m.type}
-                  eventPoster={m.poster}
-                  eventDelete={() => removeFromRecentlyWatched(m.id)}
-                  key={m.id}
-                />
-              );
-            }
+          {removeFromRecentlyWatchedData?.isLoading || myselfData?.isLoading ? (
+            <>
+              <EventMCS />
+              <EventMCS />
+              <EventMCS />
+              <EventMCS />
+              <EventMCS />
+            </>
+          ) : (
+            (myselfData?.data as User)?.recentlyWatched?.map(
+              (m: { id: string; type: string; poster: string }) => {
+                return (
+                  <EventMC
+                    eventId={m.id}
+                    eventType={m.type}
+                    eventPoster={m.poster}
+                    eventDelete={() => removeFromRecentlyWatched(m.type, m.id)}
+                    key={m.id}
+                  />
+                );
+              }
+            )
           )}
         </Box>
       </Box>

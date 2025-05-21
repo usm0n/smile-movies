@@ -10,10 +10,7 @@ import {
 import { useNavigate, useParams } from "react-router-dom";
 import { useTMDB } from "../../context/TMDB";
 import { useEffect } from "react";
-import {
-  addToRecentlyWatched,
-  backdropLoading,
-} from "../../utilities/defaults";
+import { backdropLoading } from "../../utilities/defaults";
 import NotFound from "../../components/utils/NotFound";
 import { movieDetails, tvDetails, tvSeasonsDetails } from "../../tmdb-res";
 import { useUsers } from "../../context/Users";
@@ -57,22 +54,12 @@ function Watch() {
     }
   }, [movieType, movieId, seasonId]);
 
-  useEffect(() => {
-    if (
-      (movieId && movieType && movieDetailsDataArr) ||
-      tvSeriesDetailsDataArr
-    ) {
-      addToRecentlyWatched({
-        id: movieId!,
-        type: movieType!,
-        poster:
-          movieDetailsDataArr?.poster_path ||
-          tvSeriesDetailsDataArr?.poster_path,
-      });
-    }
-  }, [movieId, movieType, movieDetailsDataArr, tvSeriesDetailsDataArr]);
   return isIncorrect ? (
     <NotFound />
+  ) : myselfData?.isLoading ? (
+    <Box width={"100%"} height={"100vh"}>
+      {backdropLoading(myselfData?.isLoading, colorScheme)}
+    </Box>
   ) : !myselfData?.data ? (
     <NotLoggedIn type="page" />
   ) : !(myselfData?.data as User)?.isVerified ? (

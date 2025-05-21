@@ -209,7 +209,7 @@ export const users = {
     poster: string
   ) => {
     try {
-      const response = await smbAPI.post(`/users/recentlyWatched/`, {
+      const response = await smbAPI.post(`/users/recentlyWatched`, {
         typeMovie,
         movieId,
         poster,
@@ -217,12 +217,13 @@ export const users = {
       return response.data as Message;
     } catch (error: any) {
       return error.response.data as CatchError;
+      
     }
   },
   removeFromRecentlyWatched: async (typeMovie: string, movieId: string) => {
     try {
       const response = await smbAPI.delete(
-        `/users/recentlyWated/${typeMovie}/${movieId}`
+        `/users/recentlyWatched/${typeMovie}/${movieId}`
       );
       return response.data as Message;
     } catch (error: any) {
