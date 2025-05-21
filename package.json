@@ -16,18 +16,10 @@
     "@mui/joy": "^5.0.0-beta.51",
     "@mui/material": "^6.4.1",
     "@react-oauth/google": "^0.12.1",
-    "@types/jsonwebtoken": "^9.0.8",
-    "@types/swiper": "^5.4.3",
     "axios": "^1.8.2",
-    "dotenv": "^16.4.7",
-    "jsonwebtoken": "^9.0.2",
-    "jwt-decode": "^4.0.0",
     "react": "^18.3.1",
-    "react-blur-image-loader": "^0.2.2",
     "react-dom": "^18.3.1",
-    "react-iframe": "^1.8.5",
     "react-router-dom": "^7.6.0",
-    "react-simple-typewriter": "^5.0.1",
     "swiper": "^11.2.2"
   },
   "devDependencies": {
