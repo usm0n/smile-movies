@@ -100,8 +100,11 @@ export const users = {
   login: async (user: UserLogin) => {
     try {
       const response = await smbAPI.post("/users/login", user);
+      console.log(response);
       return response.data;
     } catch (error: any) {
+      console.log(error);
+      console.log(user);
       return error.response.data as CatchError;
     }
   },

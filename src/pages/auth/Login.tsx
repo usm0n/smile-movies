@@ -112,7 +112,7 @@ function Login() {
           deviceId: deviceId(),
           deviceName: deviceName(),
           deviceType: deviceType(),
-          deviceLocation: userValue.deviceLocation,
+          deviceLocation: userValue.deviceLocation || ({} as Location),
         },
         "google",
         {
@@ -126,7 +126,7 @@ function Login() {
           deviceType: deviceType(),
           deviceId: deviceId(),
           loginType: "google",
-          deviceLocation: userValue.deviceLocation,
+          deviceLocation: userValue.deviceLocation || ({} as Location),
         }
       );
     },

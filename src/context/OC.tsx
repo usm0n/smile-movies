@@ -14,7 +14,6 @@ const OCContext = createContext({
       state: "",
       county: "",
       road: "",
-      town: "",
     },
   },
 });
@@ -33,7 +32,6 @@ const OCProvider = ({ children }: { children: React.ReactNode }) => {
       state: "",
       county: "",
       road: "",
-      town: "",
     },
   });
 
@@ -51,7 +49,6 @@ const OCProvider = ({ children }: { children: React.ReactNode }) => {
             state: "",
             county: "",
             road: "",
-            town: "",
           },
         });
         const { latitude, longitude } = position.coords;
@@ -68,7 +65,6 @@ const OCProvider = ({ children }: { children: React.ReactNode }) => {
               state: response.state,
               county: response.county,
               road: response.road,
-              town: response.town,
             },
           });
         }
@@ -85,7 +81,6 @@ const OCProvider = ({ children }: { children: React.ReactNode }) => {
             state: "",
             county: "",
             road: "",
-            town: "",
           },
         });
       }

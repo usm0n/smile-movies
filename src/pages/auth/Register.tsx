@@ -90,7 +90,6 @@ function Register() {
       county: "",
       state: "",
       road: "",
-      town: "",
     },
   });
 

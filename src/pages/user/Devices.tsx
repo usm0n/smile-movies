@@ -161,7 +161,7 @@ function Devices({ myselfData }: { myselfData: ResponseType | null }) {
                       ></iframe>
                     </AspectRatio>
                     <Typography level="body-sm">
-                      {device.location.county}, {device.location.town},{" "}
+                      {device.location.county},{" "}
                       {device.location.road}
                     </Typography>
                   </Card>

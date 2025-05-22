@@ -31,7 +31,6 @@ export interface Location {
   state: string;
   county: string;
   road: string;
-  town: string;
   lastSeen?: string;
 }
 
@@ -64,7 +63,7 @@ export interface UserLogin {
   deviceName: string;
   deviceType: string;
   deviceId: string;
-  deviceLocation: Location;
+  deviceLocation?: Location;
 }
 
 export interface Message {
