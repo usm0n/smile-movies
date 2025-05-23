@@ -13,6 +13,7 @@ import { useEffect } from "react";
 import { backdropLoading } from "../../utilities/defaults";
 import NotFound from "../../components/utils/NotFound";
 import { movieDetails, tvDetails, tvSeasonsDetails } from "../../tmdb-res";
+import { Helmet } from "react-helmet";
 
 function Watch() {
   const {
@@ -64,6 +65,30 @@ function Watch() {
         height: "100vh",
       }}
     >
+      <Helmet>
+        <title>
+          {movieType === "movie"
+            ? movieDetailsDataArr?.title
+            : tvSeriesDetailsDataArr?.name}{" "}
+          - Watch
+        </title>
+        <meta
+          name="description"
+          content={`Watch ${
+            movieType === "movie"
+              ? movieDetailsDataArr?.title
+              : tvSeriesDetailsDataArr?.name
+          } on Smile Movies`}
+        />
+        <meta
+          http-equiv="Content-Security-Policy"
+          content="frame-src 'self' https://vidsrc.cc;"
+        ></meta>
+        <meta
+          http-equiv="Content-Security-Policy"
+          content="default-src 'self'; connect-src *; img-src *; script-src * 'unsafe-inline' 'unsafe-eval'; style-src * 'unsafe-inline'; frame-src https://vidsrc.cc;"
+        ></meta>
+      </Helmet>
       <Box
         sx={{
           display: "flex",
@@ -143,6 +168,7 @@ function Watch() {
         )}
       </Box>
       <iframe
+        referrerPolicy="no-referrer-when-downgrade"
         src={`https://vidsrc.cc/v2/embed/${movieType}/${movieId}${
           isTvSE ? `/${seasonId}` : ""
         }${

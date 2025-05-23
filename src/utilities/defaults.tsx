@@ -143,6 +143,24 @@ export const deviceType = (): string => {
     return "unknown";
   }
 };
+export const deviceBrowser = () => {
+  const ua = navigator.userAgent;
+  let browser = "Unknown";
+
+  if (ua.indexOf("Chrome") > -1) {
+    browser = "Chrome";
+  } else if (ua.indexOf("Firefox") > -1) {
+    browser = "Firefox";
+  } else if (ua.indexOf("Safari") > -1) {
+    browser = "Safari";
+  } else if (ua.indexOf("MSIE") > -1 || ua.indexOf("Trident") > -1) {
+    browser = "Internet Explorer";
+  } else if (ua.indexOf("Opera") > -1 || ua.indexOf("OPR") > -1) {
+    browser = "Opera";
+  }
+
+  return browser;
+};
 export function deviceId(): string {
   const ua = navigator.userAgent;
   const lang = navigator.language;

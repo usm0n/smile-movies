@@ -16,9 +16,11 @@
     "@mui/joy": "^5.0.0-beta.51",
     "@mui/material": "^6.4.1",
     "@react-oauth/google": "^0.12.1",
+    "@types/react-helmet": "^6.1.11",
     "axios": "^1.8.2",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-helmet": "^6.1.0",
     "react-router-dom": "^7.6.0",
     "swiper": "^11.2.2"
   },
