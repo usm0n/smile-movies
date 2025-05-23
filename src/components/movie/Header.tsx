@@ -11,16 +11,10 @@ import {
 import { images, movieDetails, tvDetails, videos } from "../../tmdb-res";
 import { useState } from "react";
 import { PlayArrow } from "@mui/icons-material";
-import {
-  minuteToHour,
-  ymdToDmy,
-} from "../../utilities/defaults";
+import { minuteToHour, ymdToDmy } from "../../utilities/defaults";
 import BlurImage from "../../utilities/blurImage";
 import { useNavigate } from "react-router-dom";
 import { useUsers } from "../../context/Users";
-import { User } from "../../user";
-import NotVerified from "../utils/NotVerified";
-import NotLoggedIn from "../utils/NotLoggedIn";
 
 function Header({
   movieImages,
@@ -36,10 +30,6 @@ function Header({
   movieVideos: videos;
 }) {
   const { myselfData, addToRecentlyWatched } = useUsers();
-  const [modalOpen, setModalOpen] = useState({
-    verified: false,
-    loggedIn: false,
-  });
   const [isVideoLoaded, setIsVideoLoaded] = useState(false);
   const navigate = useNavigate();
   const trailerKey = movieVideos?.results?.filter(
@@ -161,39 +151,18 @@ function Header({
                 alignItems: "center",
               }}
             >
-              <NotVerified
-                type="modal"
-                setModalOpen={(value) =>
-                  setModalOpen({ ...modalOpen, verified: value })
-                }
-                modalOpen={modalOpen.verified}
-              />
-              <NotLoggedIn
-                type="modal"
-                setModalOpen={(value) =>
-                  setModalOpen({ ...modalOpen, loggedIn: value })
-                }
-                modalOpen={modalOpen.loggedIn}
-              />
               <Button
                 onClick={() => {
-                  !myselfData?.data
-                    ? setModalOpen({
-                        ...modalOpen,
-                        loggedIn: true,
-                      })
-                    : !(myselfData?.data as User)?.isVerified
-                    ? setModalOpen({ ...modalOpen, verified: true })
-                    : (addToRecentlyWatched(
-                        movieType,
-                        movieId.toString(),
-                        movieDetails?.poster_path
-                      ),
-                      navigate(
-                        `/${movieType}/${movieId}${
-                          movieType == "tv" ? `/1/1` : ""
-                        }/watch`
-                      ));
+                  addToRecentlyWatched(
+                    movieType,
+                    movieId.toString(),
+                    movieDetails?.poster_path
+                  ),
+                    navigate(
+                      `/${movieType}/${movieId}${
+                        movieType == "tv" ? `/1/1` : ""
+                      }/watch`
+                    );
                 }}
                 disabled={
                   new Date(

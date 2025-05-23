@@ -14,6 +14,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { useUsers } from "../../context/Users";
 import { User } from "../../user";
+import { isLoggedIn } from "../../utilities/defaults";
 
 function NotVerified({
   type,
@@ -88,6 +89,7 @@ function NotVerified({
     );
   } else if (type == "snackbar") {
     return (
+      isLoggedIn &&
       myselfData?.data &&
       !isVerified && (
         <Snackbar open={!isVerified || false}>
