@@ -19,7 +19,10 @@ import { useEffect, useState } from "react";
 import {
   backdropLoading,
   deviceBrowser,
+  deviceName,
+  deviceType,
   isLoggedIn,
+  trackEvent,
 } from "../../utilities/defaults";
 import NotFound from "../../components/utils/NotFound";
 import { movieDetails, tvDetails, tvSeasonsDetails } from "../../tmdb-res";
@@ -77,6 +80,27 @@ function Watch() {
       );
     }
   }, [isLoggedIn, movieId, movieType]);
+
+  useEffect(() => {
+    if (
+      movieType &&
+      movieId &&
+      (movieDetailsDataArr || tvSeriesDetailsDataArr)
+    ) {
+      trackEvent("Watch Page", {
+        title:
+          movieType == "movie"
+            ? movieDetailsDataArr?.title
+            : tvSeriesDetailsDataArr?.name,
+        type: movieType,
+        id: movieId,
+        season: seasonId,
+        episode: episodeId,
+        isLoggedIn: isLoggedIn,
+        device: `${deviceName()}, ${deviceType()}, ${browser}`,
+      });
+    }
+  }, [movieType, movieId, seasonId, episodeId, isLoggedIn]);
 
   return isIncorrect ? (
     <NotFound />
