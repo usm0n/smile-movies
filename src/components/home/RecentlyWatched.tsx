@@ -53,8 +53,9 @@ function RecentlyWatched() {
               <EventMCS />
             </>
           ) : (
-            (myselfData?.data as User)?.recentlyWatched?.map(
-              (m: { id: string; type: string; poster: string }) => {
+            [...((myselfData?.data as User)?.recentlyWatched ?? [])]
+              .reverse()
+              .map((m: { id: string; type: string; poster: string }) => {
                 return (
                   <EventMC
                     eventId={m.id}
@@ -64,8 +65,7 @@ function RecentlyWatched() {
                     key={m.id}
                   />
                 );
-              }
-            )
+              })
           )}
         </Box>
       </Box>

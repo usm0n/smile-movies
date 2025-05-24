@@ -10,10 +10,11 @@ import {
 import { useNavigate, useParams } from "react-router-dom";
 import { useTMDB } from "../../context/TMDB";
 import { useEffect } from "react";
-import { backdropLoading } from "../../utilities/defaults";
+import { backdropLoading, isLoggedIn } from "../../utilities/defaults";
 import NotFound from "../../components/utils/NotFound";
 import { movieDetails, tvDetails, tvSeasonsDetails } from "../../tmdb-res";
 import { Helmet } from "react-helmet";
+import { useUsers } from "../../context/Users";
 
 function Watch() {
   const {
@@ -26,6 +27,7 @@ function Watch() {
   } = useTMDB();
   const { movieId, movieType, seasonId, episodeId } = useParams();
   const { colorScheme } = useColorScheme();
+  const { addToRecentlyWatched } = useUsers();
   const navigate = useNavigate();
 
   const isTvSE = seasonId && episodeId;
@@ -50,6 +52,35 @@ function Watch() {
     }
   }, [movieType, movieId, seasonId]);
 
+  useEffect(() => {
+    if (isLoggedIn && movieId && movieType) {
+      addToRecentlyWatched(
+        movieType,
+        movieId,
+        movieType == "tv"
+          ? tvSeriesDetailsDataArr?.poster_path
+          : movieDetailsDataArr?.poster_path
+      );
+    }
+  }, [isLoggedIn, movieId, movieType]);
+
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.origin !== "https://vidsrc.cc") {
+        console.warn("Message from unauthorized origin:", event.origin);
+        return;
+      }
+  
+      if (event.data && event.data.type === "PLAYER_EVENT") {
+        const { event: eventType, currentTime, duration } = event.data.data;
+        // Handle the event
+        console.log(`Player ${eventType} at ${currentTime}s of ${duration}s`);
+      }
+    };
+    window.addEventListener("message", handleMessage);
+    return () => window.removeEventListener("message", handleMessage);
+  }, []);
+
   return isIncorrect ? (
     <NotFound />
   ) : isFetching ? (
@@ -67,9 +98,11 @@ function Watch() {
     >
       <Helmet>
         <title>
-          {movieType === "movie"
-            ? movieDetailsDataArr?.title
-            : tvSeriesDetailsDataArr?.name}{" "}
+          {`${
+            movieType === "movie"
+              ? movieDetailsDataArr?.title
+              : tvSeriesDetailsDataArr?.name
+          }`}{" "}
           - Watch
         </title>
         <meta
@@ -80,14 +113,6 @@ function Watch() {
               : tvSeriesDetailsDataArr?.name
           } on Smile Movies`}
         />
-        <meta
-          http-equiv="Content-Security-Policy"
-          content="frame-src 'self' https://vidsrc.cc;"
-        ></meta>
-        <meta
-          http-equiv="Content-Security-Policy"
-          content="default-src 'self'; connect-src *; img-src *; script-src * 'unsafe-inline' 'unsafe-eval'; style-src * 'unsafe-inline'; frame-src https://vidsrc.cc;"
-        ></meta>
       </Helmet>
       <Box
         sx={{
