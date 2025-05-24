@@ -1,7 +1,13 @@
-import { ArrowBackIos } from "@mui/icons-material";
+import { ArrowBackIos, Warning } from "@mui/icons-material";
 import {
   Box,
+  Button,
+  DialogActions,
   IconButton,
+  Link,
+  Modal,
+  ModalClose,
+  ModalDialog,
   Option,
   Select,
   Typography,
@@ -9,11 +15,16 @@ import {
 } from "@mui/joy";
 import { useNavigate, useParams } from "react-router-dom";
 import { useTMDB } from "../../context/TMDB";
-import { useEffect } from "react";
-import { backdropLoading } from "../../utilities/defaults";
+import { useEffect, useState } from "react";
+import {
+  backdropLoading,
+  deviceBrowser,
+  isLoggedIn,
+} from "../../utilities/defaults";
 import NotFound from "../../components/utils/NotFound";
 import { movieDetails, tvDetails, tvSeasonsDetails } from "../../tmdb-res";
 import { Helmet } from "react-helmet";
+import { useUsers } from "../../context/Users";
 
 function Watch() {
   const {
@@ -26,7 +37,12 @@ function Watch() {
   } = useTMDB();
   const { movieId, movieType, seasonId, episodeId } = useParams();
   const { colorScheme } = useColorScheme();
+  const { addToRecentlyWatched } = useUsers();
   const navigate = useNavigate();
+  const browser = deviceBrowser();
+  const [openWarning, setOpenWarning] = useState(
+    browser === "Chrome" ? true : false
+  );
 
   const isTvSE = seasonId && episodeId;
   const isFetching =
@@ -50,6 +66,18 @@ function Watch() {
     }
   }, [movieType, movieId, seasonId]);
 
+  useEffect(() => {
+    if (isLoggedIn && movieId && movieType) {
+      addToRecentlyWatched(
+        movieType,
+        movieId,
+        movieType == "tv"
+          ? tvSeriesDetailsDataArr?.poster_path
+          : movieDetailsDataArr?.poster_path
+      );
+    }
+  }, [isLoggedIn, movieId, movieType]);
+
   return isIncorrect ? (
     <NotFound />
   ) : isFetching ? (
@@ -65,11 +93,50 @@ function Watch() {
         height: "100vh",
       }}
     >
+      <Modal
+        open={openWarning}
+        onClose={() => setOpenWarning(false)}
+        sx={{ zIndex: 1002 }}
+      >
+        <ModalDialog color="warning" variant="outlined">
+          <ModalClose onClick={() => setOpenWarning(false)} />
+          <Typography color="warning" level="h4" startDecorator={<Warning />}>
+            Warning - You are using an unsupported browser
+          </Typography>
+          <Typography sx={{ mt: 2 }}>
+            For the best experience, we recommend using browsers like{" "}
+            <Link href="https://www.mozilla.org/en-US/firefox/new/">
+              Firefox
+            </Link>
+            ,<Link href="https://www.microsoft.com/en-us/edge">Edge</Link>, or{" "}
+            <Link href="https://www.apple.com/safari/">Safari</Link>. Some
+            features may not work as expected in Chrome.
+          </Typography>
+          <DialogActions>
+            <Button
+              variant="soft"
+              color="neutral"
+              onClick={() => navigate(`/${movieType}/${movieId}`)}
+            >
+              Go Back
+            </Button>
+            <Button
+              onClick={() => setOpenWarning(false)}
+              variant="soft"
+              color="danger"
+            >
+              Continue Anyway
+            </Button>
+          </DialogActions>
+        </ModalDialog>
+      </Modal>
       <Helmet>
         <title>
-          {movieType === "movie"
-            ? movieDetailsDataArr?.title
-            : tvSeriesDetailsDataArr?.name}{" "}
+          {`${
+            movieType === "movie"
+              ? movieDetailsDataArr?.title
+              : tvSeriesDetailsDataArr?.name
+          }`}{" "}
           - Watch
         </title>
         <meta
@@ -80,14 +147,6 @@ function Watch() {
               : tvSeriesDetailsDataArr?.name
           } on Smile Movies`}
         />
-        <meta
-          http-equiv="Content-Security-Policy"
-          content="frame-src 'self' https://vidsrc.cc;"
-        ></meta>
-        <meta
-          http-equiv="Content-Security-Policy"
-          content="default-src 'self'; connect-src *; img-src *; script-src * 'unsafe-inline' 'unsafe-eval'; style-src * 'unsafe-inline'; frame-src https://vidsrc.cc;"
-        ></meta>
       </Helmet>
       <Box
         sx={{

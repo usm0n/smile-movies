@@ -29,7 +29,7 @@ function Header({
   movieType: "movie" | "tv";
   movieVideos: videos;
 }) {
-  const { myselfData, addToRecentlyWatched } = useUsers();
+  const { myselfData } = useUsers();
   const [isVideoLoaded, setIsVideoLoaded] = useState(false);
   const navigate = useNavigate();
   const trailerKey = movieVideos?.results?.filter(
@@ -153,16 +153,11 @@ function Header({
             >
               <Button
                 onClick={() => {
-                  addToRecentlyWatched(
-                    movieType,
-                    movieId.toString(),
-                    movieDetails?.poster_path
-                  ),
-                    navigate(
-                      `/${movieType}/${movieId}${
-                        movieType == "tv" ? `/1/1` : ""
-                      }/watch`
-                    );
+                  navigate(
+                    `/${movieType}/${movieId}${
+                      movieType == "tv" ? `/1/1` : ""
+                    }/watch`
+                  );
                 }}
                 disabled={
                   new Date(
