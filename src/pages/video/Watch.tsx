@@ -1,7 +1,13 @@
-import { ArrowBackIos } from "@mui/icons-material";
+import { ArrowBackIos, Warning } from "@mui/icons-material";
 import {
   Box,
+  Button,
+  DialogActions,
   IconButton,
+  Link,
+  Modal,
+  ModalClose,
+  ModalDialog,
   Option,
   Select,
   Typography,
@@ -9,8 +15,12 @@ import {
 } from "@mui/joy";
 import { useNavigate, useParams } from "react-router-dom";
 import { useTMDB } from "../../context/TMDB";
-import { useEffect } from "react";
-import { backdropLoading, isLoggedIn } from "../../utilities/defaults";
+import { useEffect, useState } from "react";
+import {
+  backdropLoading,
+  deviceBrowser,
+  isLoggedIn,
+} from "../../utilities/defaults";
 import NotFound from "../../components/utils/NotFound";
 import { movieDetails, tvDetails, tvSeasonsDetails } from "../../tmdb-res";
 import { Helmet } from "react-helmet";
@@ -29,6 +39,10 @@ function Watch() {
   const { colorScheme } = useColorScheme();
   const { addToRecentlyWatched } = useUsers();
   const navigate = useNavigate();
+  const browser = deviceBrowser();
+  const [openWarning, setOpenWarning] = useState(
+    browser === "Chrome" ? true : false
+  );
 
   const isTvSE = seasonId && episodeId;
   const isFetching =
@@ -64,23 +78,6 @@ function Watch() {
     }
   }, [isLoggedIn, movieId, movieType]);
 
-  useEffect(() => {
-    const handleMessage = (event: MessageEvent) => {
-      if (event.origin !== "https://vidsrc.cc") {
-        console.warn("Message from unauthorized origin:", event.origin);
-        return;
-      }
-  
-      if (event.data && event.data.type === "PLAYER_EVENT") {
-        const { event: eventType, currentTime, duration } = event.data.data;
-        // Handle the event
-        console.log(`Player ${eventType} at ${currentTime}s of ${duration}s`);
-      }
-    };
-    window.addEventListener("message", handleMessage);
-    return () => window.removeEventListener("message", handleMessage);
-  }, []);
-
   return isIncorrect ? (
     <NotFound />
   ) : isFetching ? (
@@ -96,6 +93,43 @@ function Watch() {
         height: "100vh",
       }}
     >
+      <Modal
+        open={openWarning}
+        onClose={() => setOpenWarning(false)}
+        sx={{ zIndex: 1002 }}
+      >
+        <ModalDialog color="warning" variant="outlined">
+          <ModalClose onClick={() => setOpenWarning(false)} />
+          <Typography color="warning" level="h4" startDecorator={<Warning />}>
+            Warning - You are using an unsupported browser
+          </Typography>
+          <Typography sx={{ mt: 2 }}>
+            For the best experience, we recommend using browsers like{" "}
+            <Link href="https://www.mozilla.org/en-US/firefox/new/">
+              Firefox
+            </Link>
+            ,<Link href="https://www.microsoft.com/en-us/edge">Edge</Link>, or{" "}
+            <Link href="https://www.apple.com/safari/">Safari</Link>. Some
+            features may not work as expected in Chrome.
+          </Typography>
+          <DialogActions>
+            <Button
+              variant="soft"
+              color="neutral"
+              onClick={() => navigate(`/${movieType}/${movieId}`)}
+            >
+              Go Back
+            </Button>
+            <Button
+              onClick={() => setOpenWarning(false)}
+              variant="soft"
+              color="danger"
+            >
+              Continue Anyway
+            </Button>
+          </DialogActions>
+        </ModalDialog>
+      </Modal>
       <Helmet>
         <title>
           {`${

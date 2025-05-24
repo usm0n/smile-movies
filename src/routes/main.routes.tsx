@@ -7,7 +7,6 @@ import Movie from "../pages/movie/Movie";
 import Search from "../pages/search/Search";
 import TVSeries from "../pages/tv/TVSeries";
 import Settings from "../pages/user";
-import VidsrcPlayer from "../pages/video/VidsrcPlayer";
 import Watch from "../pages/video/Watch";
 
 export const mainRoutes = [
@@ -46,10 +45,6 @@ export const mainRoutes = [
   {
     path: "/:movieType/:movieId/:seasonId?/:episodeId?/watch",
     element: <Watch />,
-  },
-  {
-    path: "/vidsrc",
-    element: <VidsrcPlayer />,
   },
   {
     path: "/auth/verify-email",
