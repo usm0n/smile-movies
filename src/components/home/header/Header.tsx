@@ -21,7 +21,6 @@ import {
   Typography,
 } from "@mui/joy";
 import { useNavigate } from "react-router-dom";
-// import BlurImage from "../../../utilities/blurImage";
 import { ymdToDmy } from "../../../utilities/defaults";
 import { Info, PlayArrow } from "@mui/icons-material";
 
@@ -82,14 +81,19 @@ const Header = React.memo(
           ? ((movieImagesData as ResponseType)?.data as images)
           : ((tvImagesData as ResponseType)?.data as images);
 
+      const logoLoading =
+        current.media_type === "movie"
+          ? (movieImagesData as ResponseType)?.isLoading
+          : (tvImagesData as ResponseType)?.isLoading;
+
       const logoPath =
         imgData?.logos?.find((logo) => logo.iso_639_1 === "en")?.file_path ||
         null;
 
-      return { logoPath };
+      return { logoPath, logoLoading };
     }, [activeIndex, movieImagesData, tvImagesData, trendingResults]);
 
-    const { logoPath } = logoData;
+    const { logoPath, logoLoading } = logoData;
 
     const navigate = useNavigate();
 
@@ -142,13 +146,7 @@ const Header = React.memo(
           }}
         >
           <CardCover>
-            {/* {BlurImage({
-              highQualitySrc: `https://image.tmdb.org/t/p/original${details?.backdrop_path}`,
-              lowQualitySrc: `https://image.tmdb.org/t/p/original${details?.backdrop_path}`,
-              style: {
-                display: isVideoLoaded ? "none" : "block",
-              },
-            })} */}
+            <img src={`https://image.tmdb.org/t/p/original${details?.backdrop_path}`} alt="" />
             {isActive && isVideoReady && (
               <iframe
                 onLoad={() => {
@@ -195,7 +193,9 @@ const Header = React.memo(
                 },
               }}
             >
-              {isActive && logoPath ? (
+              {logoLoading ? (
+                <Skeleton variant="rectangular" width={250} height={70} />
+              ) : isActive && logoPath ? (
                 <Box
                   component="img"
                   src={`https://image.tmdb.org/t/p/original${logoPath}`}
