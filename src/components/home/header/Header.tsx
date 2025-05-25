@@ -17,12 +17,13 @@ import {
   Card,
   CardContent,
   CardCover,
+  IconButton,
   Skeleton,
   Typography,
 } from "@mui/joy";
 import { useNavigate } from "react-router-dom";
 import { ymdToDmy } from "../../../utilities/defaults";
-import { Info, PlayArrow } from "@mui/icons-material";
+import { ArrowBackIos, ArrowForwardIos, Info, PlayArrow } from "@mui/icons-material";
 
 const Header = React.memo(
   ({
@@ -140,7 +141,6 @@ const Header = React.memo(
               src={`https://image.tmdb.org/t/p/original${details?.backdrop_path}`}
               style={{
                 display: isVideoLoaded ? "none" : "block",
-                
               }}
             />
             {isActive && (
@@ -298,58 +298,94 @@ const Header = React.memo(
     };
 
     return (
-      <Swiper
-        style={
-          {
-            // @ts-ignore
-            "--swiper-pagination-color": "#FFBA08",
-            "--swiper-pagination-bullet-inactive-color": "#999999",
-            "--swiper-pagination-bullet-inactive-opacity": "1",
-            "--swiper-pagination-bullet-size": "7px",
-            "--swiper-pagination-bullet-horizontal-gap": "3px",
-          } as any
-        }
-        onSlideChange={(swiper) => setActiveIndex(swiper.activeIndex)}
-        slidesPerView={1}
-        effect={"fade"}
-        spaceBetween={30}
-        pagination={{
-          clickable: true,
-        }}
-        modules={[EffectFade, Autoplay, Pagination, Navigation]}
-      >
-        {trendingAllData?.isLoading ? (
-          <Box
-            sx={{
-              width: "100%",
-              height: "100vh",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              "@media (max-width: 700px)": {
-                height: "70vh",
-              },
-            }}
-          >
-            <Skeleton
+      <Box sx={{ position: "relative" }}>
+        <Swiper
+          style={
+            {
+              // @ts-ignore
+              "--swiper-pagination-color": "#FFBA08",
+              "--swiper-pagination-bullet-inactive-color": "#999999",
+              "--swiper-pagination-bullet-inactive-opacity": "1",
+              "--swiper-pagination-bullet-size": "7px",
+              "--swiper-pagination-bullet-horizontal-gap": "3px",
+            } as any
+          }
+          onSlideChange={(swiper) => setActiveIndex(swiper.activeIndex)}
+          slidesPerView={1}
+          effect={"fade"}
+          spaceBetween={30}
+          pagination={{
+            clickable: true,
+          }}
+          navigation={{
+            nextEl: ".custom-swiper-next",
+            prevEl: ".custom-swiper-prev",
+          }}
+          modules={[EffectFade, Autoplay, Pagination, Navigation]}
+        >
+          {trendingAllData?.isLoading ? (
+            <Box
               sx={{
-                background: "gray",
+                width: "100%",
+                height: "100vh",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                "@media (max-width: 700px)": {
+                  height: "70vh",
+                },
               }}
-            />
-          </Box>
-        ) : (
-          trendingResults?.map((details, index) => (
-            <SwiperSlide key={details.id}>
-              <SlideContent
-                details={details}
-                isActive={index === activeIndex}
-                trailerKey={trailerKey}
-                isTrailerAvailable={isTrailerAvailable}
+            >
+              <Skeleton
+                sx={{
+                  background: "gray",
+                }}
               />
-            </SwiperSlide>
-          ))
-        )}
-      </Swiper>
+            </Box>
+          ) : (
+            trendingResults?.map((details, index) => (
+              <SwiperSlide key={details.id}>
+                <SlideContent
+                  details={details}
+                  isActive={index === activeIndex}
+                  trailerKey={trailerKey}
+                  isTrailerAvailable={isTrailerAvailable}
+                />
+              </SwiperSlide>
+            ))
+          )}
+        </Swiper>
+        <IconButton
+          className="custom-swiper-prev"
+          sx={{
+            position: "absolute",
+            top: "50%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            left: 16,
+            zIndex: 10,
+            borderRadius: "50%",
+          }}
+        >
+          <ArrowBackIos />
+        </IconButton>
+        <IconButton
+          className="custom-swiper-next"
+          sx={{
+            position: "absolute",
+            top: "50%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            right: 16,
+            zIndex: 10,
+            borderRadius: "50%",
+          }}
+        >
+          <ArrowForwardIos />
+        </IconButton>
+      </Box>
     );
   }
 );
