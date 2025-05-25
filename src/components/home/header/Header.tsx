@@ -93,15 +93,6 @@ const Header = React.memo(
 
     const navigate = useNavigate();
 
-    const isFetching = useMemo(() => {
-      return (
-        movieVideosData?.isLoading ||
-        tvVideosData?.isLoading ||
-        movieImagesData?.isLoading ||
-        tvImagesData?.isLoading
-      );
-    }, [movieVideosData, tvVideosData, movieImagesData, tvImagesData]);
-
     useEffect(() => {
       trendingAll("week", 1);
     }, []);
@@ -351,37 +342,16 @@ const Header = React.memo(
             />
           </Box>
         ) : (
-          trendingResults?.map((details, index) =>
-            isFetching ? (
-              <Box
-                sx={{
-                  width: "100%",
-                  height: "100vh",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  "@media (max-width: 700px)": {
-                    height: "70vh",
-                  },
-                }}
-              >
-                <Skeleton
-                  sx={{
-                    background: "gray",
-                  }}
-                />
-              </Box>
-            ) : (
-              <SwiperSlide key={details.id}>
-                <SlideContent
-                  details={details}
-                  isActive={index === activeIndex}
-                  trailerKey={trailerKey}
-                  isTrailerAvailable={isTrailerAvailable}
-                />
-              </SwiperSlide>
-            )
-          )
+          trendingResults?.map((details, index) => (
+            <SwiperSlide key={details.id}>
+              <SlideContent
+                details={details}
+                isActive={index === activeIndex}
+                trailerKey={trailerKey}
+                isTrailerAvailable={isTrailerAvailable}
+              />
+            </SwiperSlide>
+          ))
         )}
       </Swiper>
     );
