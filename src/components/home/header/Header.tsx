@@ -21,7 +21,7 @@ import {
   Typography,
 } from "@mui/joy";
 import { useNavigate } from "react-router-dom";
-import BlurImage from "../../../utilities/blurImage";
+// import BlurImage from "../../../utilities/blurImage";
 import { ymdToDmy } from "../../../utilities/defaults";
 import { Info, PlayArrow } from "@mui/icons-material";
 
@@ -142,13 +142,13 @@ const Header = React.memo(
           }}
         >
           <CardCover>
-            {BlurImage({
+            {/* {BlurImage({
               highQualitySrc: `https://image.tmdb.org/t/p/original${details?.backdrop_path}`,
               lowQualitySrc: `https://image.tmdb.org/t/p/original${details?.backdrop_path}`,
               style: {
                 display: isVideoLoaded ? "none" : "block",
               },
-            })}
+            })} */}
             {isActive && isVideoReady && (
               <iframe
                 onLoad={() => {
