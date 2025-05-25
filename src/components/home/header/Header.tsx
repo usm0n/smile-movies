@@ -122,17 +122,7 @@ const Header = React.memo(
       trailerKey: string | null;
       isTrailerAvailable: boolean;
     }) => {
-      const [isVideoReady, setIsVideoReady] = useState(false);
       const [isVideoLoaded, setIsVideoLoaded] = useState(false);
-
-      React.useEffect(() => {
-        if (isActive) {
-          const timeout = setTimeout(() => setIsVideoReady(true), 300);
-          return () => clearTimeout(timeout);
-        } else {
-          setIsVideoReady(false);
-        }
-      }, [isActive]);
 
       return (
         <Card
@@ -146,8 +136,14 @@ const Header = React.memo(
           }}
         >
           <CardCover>
-            <img src={`https://image.tmdb.org/t/p/original${details?.backdrop_path}`} alt="" />
-            {isActive && isVideoReady && (
+            <img
+              src={`https://image.tmdb.org/t/p/original${details?.backdrop_path}`}
+              style={{
+                display: isVideoLoaded ? "none" : "block",
+                
+              }}
+            />
+            {isActive && (
               <iframe
                 onLoad={() => {
                   if (isTrailerAvailable) {
