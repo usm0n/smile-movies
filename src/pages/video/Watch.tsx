@@ -40,7 +40,7 @@ function Watch() {
   } = useTMDB();
   const { movieId, movieType, seasonId, episodeId } = useParams();
   const { colorScheme } = useColorScheme();
-  const { addToRecentlyWatched } = useUsers();
+  const { addToWatchlist } = useUsers();
   const navigate = useNavigate();
   const browser = deviceBrowser();
   const [openWarning, setOpenWarning] = useState(
@@ -71,7 +71,7 @@ function Watch() {
 
   useEffect(() => {
     if (isLoggedIn && movieId && movieType) {
-      addToRecentlyWatched(
+      addToWatchlist(
         movieType,
         movieId,
         movieType == "tv"
@@ -79,7 +79,13 @@ function Watch() {
           : movieDetailsDataArr?.poster_path
       );
     }
-  }, [isLoggedIn, movieId, movieType]);
+  }, [
+    isLoggedIn,
+    movieId,
+    movieType,
+    tvSeriesDetailsDataArr,
+    movieDetailsDataArr,
+  ]);
 
   useEffect(() => {
     if (

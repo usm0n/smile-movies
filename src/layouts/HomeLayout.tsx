@@ -2,13 +2,13 @@
 
 import { useEffect, useState } from "react";
 import Event from "../components/home/Event";
-import Header from "../components/home/header/Header";
+import Header from "../components/home/Header";
 import Watchlist from "../components/home/Watchlist";
 import { useTMDB } from "../context/TMDB";
 import Container from "../utilities/Container";
-import RecentlyWatched from "../components/home/RecentlyWatched";
 import { ResponseType } from "../tmdb-res";
 import { Box } from "@mui/joy";
+import { useUsers } from "../context/Users";
 
 function HomeLayout() {
   const [eventCategoryMovie, setEventCategoryMovie] =
@@ -42,6 +42,14 @@ function HomeLayout() {
     tvImages,
     tvImagesData,
   } = useTMDB();
+
+  const {
+    addToWatchlist,
+    addToWatchlistData,
+    removeFromWatchlist,
+    removeFromWatchlistData,
+    myselfData,
+  } = useUsers();
 
   useEffect(() => {
     switch (eventCategoryMovie) {
@@ -93,10 +101,15 @@ function HomeLayout() {
         movieImagesData={movieImagesData as ResponseType}
         tvImages={tvImages}
         tvImagesData={tvImagesData as ResponseType}
+        addToWatchlist={addToWatchlist}
+        addToWatchlistData={addToWatchlistData as ResponseType}
+        removeFromWatchlist={removeFromWatchlist}
+        removeFromWatchlistData={removeFromWatchlistData as ResponseType}
+        myselfData={myselfData as ResponseType}
       />
 
       <Container>
-        <RecentlyWatched />
+        <Watchlist />
         <Event
           eventTitle="Movies"
           eventData={
@@ -127,7 +140,6 @@ function HomeLayout() {
           setEventCategory={setEventCategoryTv}
           eventCategory={eventCategoryTv}
         />
-        <Watchlist />
       </Container>
     </Box>
   );

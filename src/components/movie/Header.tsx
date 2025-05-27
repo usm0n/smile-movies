@@ -10,11 +10,12 @@ import {
 } from "@mui/joy";
 import { images, movieDetails, tvDetails, videos } from "../../tmdb-res";
 import { useState } from "react";
-import { PlayArrow } from "@mui/icons-material";
+import { Add, Check, PlayArrow } from "@mui/icons-material";
 import { minuteToHour, ymdToDmy } from "../../utilities/defaults";
 import BlurImage from "../../utilities/blurImage";
 import { useNavigate } from "react-router-dom";
 import { useUsers } from "../../context/Users";
+import { User } from "../../user";
 
 function Header({
   movieImages,
@@ -29,7 +30,13 @@ function Header({
   movieType: "movie" | "tv";
   movieVideos: videos;
 }) {
-  const { myselfData } = useUsers();
+  const {
+    myselfData,
+    addToWatchlistData,
+    removeFromWatchlistData,
+    addToWatchlist,
+    removeFromWatchlist,
+  } = useUsers();
   const [isVideoLoaded, setIsVideoLoaded] = useState(false);
   const navigate = useNavigate();
   const trailerKey = movieVideos?.results?.filter(
@@ -136,10 +143,11 @@ function Header({
             sx={{
               display: "flex",
               gap: 4,
-              alignItems: "center",
+              alignItems: "flex-end",
               "@media (max-width: 700px)": {
                 flexDirection: "column",
                 gap: 1,
+                alignItems: "center",
               },
             }}
           >
@@ -196,6 +204,61 @@ function Header({
                   ? movieDetails?.status
                   : ""}
               </Typography>
+              <Button
+                disabled={
+                  myselfData?.isLoading ||
+                  addToWatchlistData?.isLoading ||
+                  removeFromWatchlistData?.isLoading
+                }
+                onClick={(e) => {
+                  e.stopPropagation();
+                  (myselfData?.data as unknown as User)?.watchlist?.find(
+                    (item) => item.id == movieId
+                  )
+                    ? removeFromWatchlist(movieType, movieId.toString())
+                    : addToWatchlist(
+                        movieType,
+                        movieId.toString(),
+                        movieDetails.poster_path
+                      );
+                }}
+                startDecorator={
+                  (myselfData?.data as unknown as User)?.watchlist?.find(
+                    (item) => item.id == movieId
+                  ) ? (
+                    <Check />
+                  ) : (
+                    <Add />
+                  )
+                }
+                sx={{
+                  padding: "15px 0px",
+                  width: "300px",
+                  color: "black",
+                  transition: "all 0.1s ease-in-out",
+                  backgroundColor: "white",
+                  "&:hover": {
+                    backgroundColor: "rgb(255, 255, 255, 0.9)",
+                  },
+                  "&:active": {
+                    backgroundColor: "rgb(255, 255, 255, 0.8)",
+                  },
+                  "@media (max-width: 700px)": {
+                    width: "220px",
+                    padding: "10px 0px",
+                  },
+                }}
+              >
+                {(myselfData?.data as unknown as User)?.watchlist?.find(
+                  (item) => item.id == movieId
+                )
+                  ? removeFromWatchlistData?.isLoading
+                    ? "Removing from Watchlist..."
+                    : "In Watchlist"
+                  : addToWatchlistData?.isLoading
+                  ? "Adding to Watchlist..."
+                  : "Add to Watchlist"}
+              </Button>
             </Box>
             <Box
               sx={{

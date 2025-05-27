@@ -1,4 +1,4 @@
-import { images, ResponseType, searchMulti, videos } from "../../../tmdb-res";
+import { images, ResponseType, searchMulti, videos } from "../../tmdb-res";
 import React, { useEffect, useState, useMemo } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { EffectFade, Autoplay, Pagination, Navigation } from "swiper/modules";
@@ -22,8 +22,15 @@ import {
   Typography,
 } from "@mui/joy";
 import { useNavigate } from "react-router-dom";
-import { ymdToDmy } from "../../../utilities/defaults";
-import { ArrowBackIos, ArrowForwardIos, Info, PlayArrow } from "@mui/icons-material";
+import { ymdToDmy } from "../../utilities/defaults";
+import {
+  Add,
+  ArrowBackIos,
+  ArrowForwardIos,
+  Check,
+  PlayArrow,
+} from "@mui/icons-material";
+import { User } from "../../user";
 
 const Header = React.memo(
   ({
@@ -37,6 +44,11 @@ const Header = React.memo(
     movieImagesData,
     tvImages,
     tvImagesData,
+    addToWatchlist,
+    removeFromWatchlist,
+    addToWatchlistData,
+    removeFromWatchlistData,
+    myselfData,
   }: {
     trendingAll: Function;
     trendingAllData: ResponseType;
@@ -48,6 +60,11 @@ const Header = React.memo(
     movieImagesData: ResponseType;
     tvImages: Function;
     tvImagesData: ResponseType;
+    addToWatchlist: (type: "movie" | "tv", id: string, poster: string) => void;
+    removeFromWatchlist: (type: "movie" | "tv", id: string) => void;
+    addToWatchlistData: ResponseType | null;
+    removeFromWatchlistData: ResponseType | null;
+    myselfData: ResponseType | null;
   }) => {
     const trendingResults = (trendingAllData?.data as searchMulti)?.results;
     const [activeIndex, setActiveIndex] = useState(0);
@@ -127,6 +144,9 @@ const Header = React.memo(
 
       return (
         <Card
+          onClick={() => {
+            navigate(`/${details?.media_type}/${details?.id}`);
+          }}
           sx={{
             width: "100%",
             height: "100vh",
@@ -134,6 +154,7 @@ const Header = React.memo(
             "@media (max-width: 700px)": {
               height: "70vh",
             },
+            cursor: "pointer",
           }}
         >
           <CardCover>
@@ -233,7 +254,8 @@ const Header = React.memo(
                   : "N/A"}
               </Typography>
               <Button
-                onClick={() => {
+                onClick={(e) => {
+                  e.stopPropagation();
                   navigate(
                     `/${details?.media_type}/${details?.id}${
                       details?.media_type == "tv" ? `/1/1` : ""
@@ -267,10 +289,35 @@ const Header = React.memo(
                 {details?.media_type == "tv" ? "Play" : "Watch Now"}
               </Button>
               <Button
-                onClick={() => {
-                  navigate(`/${details?.media_type}/${details?.id}`);
+                disabled={
+                  myselfData?.isLoading ||
+                  addToWatchlistData?.isLoading ||
+                  removeFromWatchlistData?.isLoading
+                }
+                onClick={(e) => {
+                  e.stopPropagation();
+                  (myselfData?.data as unknown as User)?.watchlist?.find(
+                    (item) => item.id == details.id
+                  )
+                    ? removeFromWatchlist(
+                        details.media_type,
+                        details.id.toString()
+                      )
+                    : addToWatchlist(
+                        details.media_type,
+                        details.id.toString(),
+                        details.poster_path
+                      );
                 }}
-                startDecorator={<Info />}
+                startDecorator={
+                  (myselfData?.data as unknown as User)?.watchlist?.find(
+                    (item) => item.id == details.id
+                  ) ? (
+                    <Check />
+                  ) : (
+                    <Add />
+                  )
+                }
                 sx={{
                   padding: "15px 0px",
                   width: "300px",
@@ -289,7 +336,15 @@ const Header = React.memo(
                   },
                 }}
               >
-                More Info
+                {(myselfData?.data as unknown as User)?.watchlist?.find(
+                  (item) => item.id == details.id
+                )
+                  ? removeFromWatchlistData?.isLoading
+                    ? "Removing from Watchlist..."
+                    : "In Watchlist"
+                  : addToWatchlistData?.isLoading
+                  ? "Adding to Watchlist..."
+                  : "Add to Watchlist"}
               </Button>
             </Box>
           </CardContent>

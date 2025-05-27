@@ -11,7 +11,8 @@ import {
 import { useNavigate } from "react-router-dom";
 import BlurImage from "../../utilities/blurImage";
 import {
-  BookmarkAdd,
+  Add,
+  Check,
   DeleteOutline,
   IosShare,
   MoreVert,
@@ -19,6 +20,7 @@ import {
 } from "@mui/icons-material";
 import { shareLink } from "../../utilities/defaults";
 import { useUsers } from "../../context/Users";
+import { User } from "../../user";
 
 function EventMC({
   eventPoster,
@@ -32,7 +34,13 @@ function EventMC({
   eventDelete?: (id: string | number) => void;
 }) {
   const navigate = useNavigate();
-  const { addToRecentlyWatched } = useUsers();
+  const {
+    addToWatchlist,
+    removeFromWatchlist,
+    addToWatchlistData,
+    removeFromWatchlistData,
+    myselfData,
+  } = useUsers();
   return (
     <Box onClick={() => navigate(`/${eventType}/${eventId}`)} key={eventId}>
       <Card
@@ -101,11 +109,6 @@ function EventMC({
               </MenuItem>
               <MenuItem
                 onClick={() => {
-                  addToRecentlyWatched(
-                    eventType,
-                    eventId.toString(),
-                    eventPoster
-                  );
                   navigate(
                     `/${eventType}/${eventId}${
                       eventType == "tv" ? "/1/1" : ""
@@ -116,8 +119,43 @@ function EventMC({
                 <PlayArrow />{" "}
                 {eventType == "movie" ? "Watch Now" : "Play S1:E1"}
               </MenuItem>
-              <MenuItem disabled>
-                <BookmarkAdd /> Add to watchlist
+              <MenuItem
+                disabled={
+                  myselfData?.isLoading ||
+                  addToWatchlistData?.isLoading ||
+                  removeFromWatchlistData?.isLoading
+                }
+                onClick={() => {
+                  (myselfData?.data as User)?.watchlist?.find(
+                    (item) => item.id == eventId
+                  )
+                    ? removeFromWatchlist(eventType, eventId.toString())
+                    : addToWatchlist(
+                        eventType,
+                        eventId.toString(),
+                        eventPoster
+                      );
+                }}
+              >
+                {myselfData?.isLoading ? (
+                  "Loading..."
+                ) : (myselfData?.data as User)?.watchlist?.find(
+                    (item) => item.id == eventId
+                  ) ? (
+                  removeFromWatchlistData?.isLoading ? (
+                    "Removing from Watchlist..."
+                  ) : (
+                    <>
+                      <Check /> In watchlist
+                    </>
+                  )
+                ) : addToWatchlistData?.isLoading ? (
+                  "Adding to Watchlist..."
+                ) : (
+                  <>
+                    <Add /> Add to watchlist
+                  </>
+                )}
               </MenuItem>
               {eventDelete && (
                 <MenuItem
