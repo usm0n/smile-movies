@@ -50,11 +50,43 @@ function App() {
           }}
         >
           <Box>
-            <Typography level="title-lg">This website is in BETA</Typography>
+            <Typography level="title-lg">
+              You’re Using the Beta Version
+            </Typography>
             <Typography level="body-md">
-              We are still adding features and fixing bugs. Please be patient
-              for the release. If you find any bugs or new feature that you want
-              to see on this website, please report them on our{" "}
+              <Typography
+                sx={{
+                  color: "rgb(255, 220, 92)",
+                  fontWeight: "bold",
+                  textShadow: "0 0 10px rgba(255, 220, 92, 0.5)",
+                }}
+              >
+                Smile Movies V2
+              </Typography>{" "}
+              is still under development and not yet in its final form. A
+              complete rebuild (
+              <Typography
+                sx={{
+                  color: "rgb(255, 220, 92)",
+                  fontWeight: "bold",
+                  textShadow: "0 0 10px rgba(255, 220, 92, 0.5)",
+                }}
+              >
+                V3
+              </Typography>
+              ) is planned with major improvements. In the meantime, you can
+              continue enjoying the current{" "}
+              <Typography
+                sx={{
+                  color: "rgb(255, 220, 92)",
+                  fontWeight: "bold",
+                  textShadow: "0 0 10px rgba(255, 220, 92, 0.5)",
+                }}
+              >
+                V2 BETA
+              </Typography>
+              . If you encounter any issues or have suggestions, feel free to
+              share them on our{" "}
               <Link
                 href="https://github.com/usm0n/Smile-Movies/issues/new"
                 target="_blank"
@@ -63,7 +95,7 @@ function App() {
                 {" "}
                 GitHub repository
               </Link>{" "}
-              or on my{" "}
+              or via{" "}
               <Link
                 href="https://t.me/usmondev"
                 target="_blank"
@@ -119,6 +151,7 @@ function App() {
           <Route key={index} path={route.path} element={route.element} />
         ))}
       </Routes>
+      {/* <Navigation /> */}
     </Box>
   );
 }

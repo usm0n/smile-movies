@@ -22,7 +22,7 @@ import {
   Typography,
 } from "@mui/joy";
 import { useNavigate } from "react-router-dom";
-import { ymdToDmy } from "../../utilities/defaults";
+import { isLoggedIn, ymdToDmy } from "../../utilities/defaults";
 import {
   Add,
   ArrowBackIos,
@@ -296,9 +296,11 @@ const Header = React.memo(
                 }
                 onClick={(e) => {
                   e.stopPropagation();
-                  (myselfData?.data as unknown as User)?.watchlist?.find(
-                    (item) => item.id == details.id
-                  )
+                  !isLoggedIn
+                    ? navigate("/auth/login")
+                    : (myselfData?.data as unknown as User)?.watchlist?.find(
+                        (item) => item.id == details.id
+                      )
                     ? removeFromWatchlist(
                         details.media_type,
                         details.id.toString()

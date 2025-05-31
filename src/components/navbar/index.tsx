@@ -73,14 +73,27 @@ const Navbar: React.FC = () => {
   const user = myselfData?.data as User;
 
   return (
-    <div
-      style={{
-        backgroundColor:
-          colorScheme === "dark"
-            ? "rgba(0, 0, 0, 0.3)"
-            : "rgba(255, 255, 255, 0.1)",
+    <Box
+      sx={{
+        backdropFilter: "blur(20px)",
+        boxShadow: "0 0 30px rgba(255, 255, 255, 0.1)",
+        padding: "15px",
+        paddingLeft: "20px",
+        paddingRight: "20px",
+        color: "#f5f5f5",
+        position: "fixed",
+        top: 0,
+        left: 0,
+        width: "100%",
+        zIndex: 1000,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+
+        // "@media (max-width: 700px)": {
+        //   display: "none",
+        // },
       }}
-      className="navbar"
     >
       <Box display={"flex"}>
         <IconButton
@@ -464,7 +477,7 @@ const Navbar: React.FC = () => {
           </List>
         </Box>
       </Drawer>
-    </div>
+    </Box>
   );
 };
 export default Navbar;

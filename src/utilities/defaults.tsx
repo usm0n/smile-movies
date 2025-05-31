@@ -203,8 +203,11 @@ export function formatTimeAgo(dateString: string): string {
   }
 }
 
-export const trackEvent = (action: string, params: Record<string, any> = {}) => {
-  if (typeof window !== 'undefined' && (window as any).gtag) {
-    (window as any).gtag('event', action, params);
+export const trackEvent = (
+  action: string,
+  params: Record<string, any> = {}
+) => {
+  if (typeof window !== "undefined" && (window as any).gtag) {
+    (window as any).gtag("event", action, params);
   }
 };

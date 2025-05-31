@@ -166,7 +166,7 @@ export const users = {
         poster,
       });
       return response.data as Message;
-    } catch (error: any) {      
+    } catch (error: any) {
       return error.response.data as CatchError;
     }
   },

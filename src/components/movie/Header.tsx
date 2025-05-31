@@ -11,7 +11,7 @@ import {
 import { images, movieDetails, tvDetails, videos } from "../../tmdb-res";
 import { useState } from "react";
 import { Add, Check, PlayArrow } from "@mui/icons-material";
-import { minuteToHour, ymdToDmy } from "../../utilities/defaults";
+import { isLoggedIn, minuteToHour, ymdToDmy } from "../../utilities/defaults";
 import BlurImage from "../../utilities/blurImage";
 import { useNavigate } from "react-router-dom";
 import { useUsers } from "../../context/Users";
@@ -212,9 +212,11 @@ function Header({
                 }
                 onClick={(e) => {
                   e.stopPropagation();
-                  (myselfData?.data as unknown as User)?.watchlist?.find(
-                    (item) => item.id == movieId
-                  )
+                  !isLoggedIn
+                    ? navigate("/auth/login")
+                    : (myselfData?.data as unknown as User)?.watchlist?.find(
+                        (item) => item.id == movieId
+                      )
                     ? removeFromWatchlist(movieType, movieId.toString())
                     : addToWatchlist(
                         movieType,

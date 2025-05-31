@@ -18,7 +18,7 @@ import {
   MoreVert,
   PlayArrow,
 } from "@mui/icons-material";
-import { shareLink } from "../../utilities/defaults";
+import { isLoggedIn, shareLink } from "../../utilities/defaults";
 import { useUsers } from "../../context/Users";
 import { User } from "../../user";
 
@@ -126,9 +126,11 @@ function EventMC({
                   removeFromWatchlistData?.isLoading
                 }
                 onClick={() => {
-                  (myselfData?.data as User)?.watchlist?.find(
-                    (item) => item.id == eventId
-                  )
+                  !isLoggedIn
+                    ? navigate("/auth/login")
+                    : (myselfData?.data as User)?.watchlist?.find(
+                        (item) => item.id == eventId
+                      )
                     ? removeFromWatchlist(eventType, eventId.toString())
                     : addToWatchlist(
                         eventType,
