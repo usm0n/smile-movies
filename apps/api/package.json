@@ -1,0 +1,11 @@
+{
+  "name": "smile-movies-api",
+  "version": "1.0.0",
+  "private": true,
+  "description": "API for Smile Movies",
+  "main": "index.ts",
+  "scripts": {
+    "dev": "nodemon index.ts",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  }
+}
