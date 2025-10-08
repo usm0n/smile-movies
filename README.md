@@ -28,8 +28,8 @@ Welcome to **Smile Movies V2 Beta** — a modern, ad-free platform for watching 
 
 Please report issues or request features via:
 
-- [GitHub Issues](https://github.com/your-repo/issues)
-- [Telegram Contact](https://t.me/your-telegram)
+- [GitHub Issues](https://github.com/smile-movies/issues)
+- [Telegram Contact](https://t.me/usmondev)
 
 Your feedback helps shape the future of Smile Movies.
 
