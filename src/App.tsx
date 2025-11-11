@@ -27,11 +27,7 @@ function App() {
     sessionStorage.setItem("openSnackbar", snackbar.toString());
   }, [snackbar]);
 
-    useEffect(() => {
-    window.addEventListener("message", (event) => {
-      console.log(event.data);
-    });
-  }, []);
+  
   return (
     <Box
       sx={{

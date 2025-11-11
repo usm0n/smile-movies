@@ -54,8 +54,8 @@ function Watchlist() {
       >
         {isLoggedIn ? (
           myselfData?.isLoading ||
-          removeFromWatchlistData?.isLoading ||
-          addToWatchlistData?.isLoading ? (
+            removeFromWatchlistData?.isLoading ||
+            addToWatchlistData?.isLoading ? (
             <Box
               sx={{
                 display: "flex",
@@ -89,6 +89,11 @@ function Watchlist() {
                   eventPoster={item.poster}
                   eventType={item.type}
                   eventDelete={() => removeFromWatchlist(item.type, item.id)}
+                  eventStatus={item.status}
+                  eventDuration={item.duration}
+                  eventCurrentTime={item.currentTime}
+                  eventSeason={item.season}
+                  eventEpisode={item.episode}
                 />
               ))}
             </Box>

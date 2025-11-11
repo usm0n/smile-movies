@@ -18,9 +18,14 @@ export interface User {
 }
 
 export interface Watchlist {
-  id: string;
-  type: string;
   poster: string;
+  type: string;
+  status: string;
+  duration?: number;
+  currentTime?: number;
+  id: string;
+  season?: number,
+  episode?: number
 }
 
 export interface Location {

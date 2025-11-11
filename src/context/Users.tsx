@@ -89,10 +89,15 @@ const UsersContext = createContext({
     token;
     password;
   },
-  addToWatchlist: async (type: string, id: string, poster: string) => {
+  addToWatchlist: async (type: string, id: string, poster: string, status: string, duration: number, currentTime: number, season: number, episode: number) => {
     type;
     id;
     poster;
+    status;
+    duration;
+    currentTime;
+    season;
+    episode;
   },
   removeFromWatchlist: async (type: string, id: string) => {
     type;
@@ -676,7 +681,7 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  const addToWatchlist = async (type: string, id: string, poster: string) => {
+  const addToWatchlist = async (type: string, id: string, poster: string, status: string, duration: number, currentTime: number, season: number, episode: number) => {
     try {
       setAddToWatchlistData({
         isLoading: true,
@@ -684,7 +689,7 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
         data: null,
         errorResponse: null,
       });
-      const response = await users.addToWatchlist(type, id, poster);
+      const response = await users.addToWatchlist(type, id, poster, status, duration, currentTime, season, episode);
       if (response) {
         setAddToWatchlistData({
           isLoading: false,

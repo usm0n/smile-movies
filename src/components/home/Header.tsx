@@ -60,7 +60,7 @@ const Header = React.memo(
     movieImagesData: ResponseType;
     tvImages: Function;
     tvImagesData: ResponseType;
-    addToWatchlist: (type: "movie" | "tv", id: string, poster: string) => void;
+    addToWatchlist: (type: "movie" | "tv", id: string, poster: string, status: string, duration: number, currentTime: number, season: number, episode: number) => void;
     removeFromWatchlist: (type: "movie" | "tv", id: string) => void;
     addToWatchlistData: ResponseType | null;
     removeFromWatchlistData: ResponseType | null;
@@ -141,6 +141,10 @@ const Header = React.memo(
       isTrailerAvailable: boolean;
     }) => {
       const [isVideoLoaded, setIsVideoLoaded] = useState(false);
+
+      const watchlistItem = (myselfData?.data as unknown as User)?.watchlist?.find(
+        (item) => item.id == details?.id
+      )
 
       return (
         <Card
@@ -257,9 +261,9 @@ const Header = React.memo(
                 onClick={(e) => {
                   e.stopPropagation();
                   navigate(
-                    `/${details?.media_type}/${details?.id}${
-                      details?.media_type == "tv" ? `/1/1` : ""
-                    }/watch`
+                    watchlistItem ? `/${details?.media_type}/${details?.id}${details?.media_type == "tv" ? `/${watchlistItem.season}/${watchlistItem.episode}` : ""}/watch` :
+                      `/${details?.media_type}/${details?.id}${details?.media_type == "tv" ? `/1/1` : ""
+                      }/watch`
                   );
                 }}
                 disabled={
@@ -286,7 +290,11 @@ const Header = React.memo(
                   },
                 }}
               >
-                {details?.media_type == "tv" ? "Play" : "Watch Now"}
+                {details?.media_type === "movie" ? (
+                  watchlistItem ? (watchlistItem.status == "watching" && "Continue Watching" || watchlistItem.status == "new" && "Start Watching") : "Watch Now"
+                ) : (
+                  watchlistItem ? (watchlistItem.status == "watching" && `Continue S${watchlistItem.season}:E${watchlistItem.episode}` || watchlistItem.status == "new" && "Start Watching") : "Play Now"
+                )}
               </Button>
               <Button
                 disabled={
@@ -299,16 +307,21 @@ const Header = React.memo(
                   !isLoggedIn
                     ? navigate("/auth/login")
                     : (myselfData?.data as unknown as User)?.watchlist?.find(
-                        (item) => item.id == details.id
-                      )
-                    ? removeFromWatchlist(
+                      (item) => item.id == details.id
+                    )
+                      ? removeFromWatchlist(
                         details.media_type,
                         details.id.toString()
                       )
-                    : addToWatchlist(
+                      : addToWatchlist(
                         details.media_type,
                         details.id.toString(),
-                        details.poster_path
+                        details.poster_path,
+                        "new",
+                        0,
+                        0,
+                        details.media_type == "tv" ? 1 : 0,
+                        details.media_type == "tv" ? 1 : 0
                       );
                 }}
                 startDecorator={
@@ -345,8 +358,8 @@ const Header = React.memo(
                     ? "Removing from Watchlist..."
                     : "In Watchlist"
                   : addToWatchlistData?.isLoading
-                  ? "Adding to Watchlist..."
-                  : "Add to Watchlist"}
+                    ? "Adding to Watchlist..."
+                    : "Add to Watchlist"}
               </Button>
             </Box>
           </CardContent>

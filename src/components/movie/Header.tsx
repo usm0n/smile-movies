@@ -48,6 +48,10 @@ function Header({
   const movieLogo = movieImages?.logos?.filter(
     (logo) => logo.iso_639_1 === "en"
   )[0]?.file_path;
+
+  const watchlistItem = (myselfData?.data as unknown as User)?.watchlist?.find(
+    (item) => item.id == movieId
+  );
   return (
     <Card
       sx={{
@@ -162,16 +166,16 @@ function Header({
               <Button
                 onClick={() => {
                   navigate(
-                    `/${movieType}/${movieId}${
-                      movieType == "tv" ? `/1/1` : ""
-                    }/watch`
+                    watchlistItem ? `/${movieType}/${movieId}${movieType == "tv" ? `/${watchlistItem.season}/${watchlistItem.episode}` : ""}/watch` :
+                      `/${movieType}/${movieId}${movieType == "tv" ? `/1/1` : ""
+                      }/watch`
                   );
                 }}
                 disabled={
                   new Date(
                     movieDetails?.release_date ||
-                      movieDetails?.first_air_date ||
-                      ""
+                    movieDetails?.first_air_date ||
+                    ""
                   ).getTime() > Date.now() || myselfData?.isLoading
                 }
                 startDecorator={<PlayArrow />}
@@ -193,13 +197,17 @@ function Header({
                   },
                 }}
               >
-                {movieType == "tv" ? "Play" : "Watch Now"}
+                {movieType === "movie" ? (
+                  watchlistItem ? (watchlistItem.status == "watching" && "Continue Watching" || watchlistItem.status == "new" && "Start Watching") : "Watch Now"
+                ) : (
+                  watchlistItem ? (watchlistItem.status == "watching" && `Continue S${watchlistItem.season}:E${watchlistItem.episode}` || watchlistItem.status == "new" && "Start Watching") : "Play Now"
+                )}
               </Button>
               <Typography level="body-sm">
                 {new Date(
                   movieDetails?.release_date ||
-                    movieDetails?.first_air_date ||
-                    ""
+                  movieDetails?.first_air_date ||
+                  ""
                 ).getTime() > Date.now()
                   ? movieDetails?.status
                   : ""}
@@ -215,13 +223,15 @@ function Header({
                   !isLoggedIn
                     ? navigate("/auth/login")
                     : (myselfData?.data as unknown as User)?.watchlist?.find(
-                        (item) => item.id == movieId
-                      )
-                    ? removeFromWatchlist(movieType, movieId.toString())
-                    : addToWatchlist(
+                      (item) => item.id == movieId
+                    )
+                      ? removeFromWatchlist(movieType, movieId.toString())
+                      : addToWatchlist(
                         movieType,
                         movieId.toString(),
-                        movieDetails.poster_path
+                        movieDetails.poster_path,
+                        "new",
+                        0, 0, movieType == "tv" ? 1 : 0, movieType == "tv" ? 1 : 0
                       );
                 }}
                 startDecorator={
@@ -258,8 +268,8 @@ function Header({
                     ? "Removing from Watchlist..."
                     : "In Watchlist"
                   : addToWatchlistData?.isLoading
-                  ? "Adding to Watchlist..."
-                  : "Add to Watchlist"}
+                    ? "Adding to Watchlist..."
+                    : "Add to Watchlist"}
               </Button>
             </Box>
             <Box
@@ -295,17 +305,17 @@ function Header({
               <Typography level="body-sm">
                 {movieDetails?.genres.length
                   ? movieDetails?.genres
-                      ?.map((genre) => genre.name)
-                      .join(", ") + " • "
+                    ?.map((genre) => genre.name)
+                    .join(", ") + " • "
                   : ""}
                 {ymdToDmy(
                   movieDetails?.release_date || movieDetails?.first_air_date
                 )}{" "}
                 {movieDetails?.runtime || movieDetails?.episode_run_time?.length
                   ? " • " +
-                    minuteToHour(
-                      movieDetails?.runtime || movieDetails?.episode_run_time[0]
-                    )
+                  minuteToHour(
+                    movieDetails?.runtime || movieDetails?.episode_run_time[0]
+                  )
                   : ""}
               </Typography>
             </Box>

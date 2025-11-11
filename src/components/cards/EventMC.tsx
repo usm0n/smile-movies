@@ -1,11 +1,16 @@
 import {
   Box,
+  Button,
+  ButtonGroup,
   Card,
   CardCover,
+  Chip,
   Dropdown,
+  LinearProgress,
   Menu,
   MenuButton,
   MenuItem,
+  Typography,
 } from "@mui/joy";
 
 import { useNavigate } from "react-router-dom";
@@ -27,11 +32,21 @@ function EventMC({
   eventId,
   eventType,
   eventDelete,
+  eventDuration,
+  eventCurrentTime,
+  eventStatus,
+  eventSeason,
+  eventEpisode,
 }: {
   eventPoster: string;
   eventId: number | string;
   eventType: string;
   eventDelete?: (id: string | number) => void;
+  eventDuration?: number;
+  eventCurrentTime?: number;
+  eventStatus?: string;
+  eventSeason?: number;
+  eventEpisode?: number;
 }) {
   const navigate = useNavigate();
   const {
@@ -110,8 +125,7 @@ function EventMC({
               <MenuItem
                 onClick={() => {
                   navigate(
-                    `/${eventType}/${eventId}${
-                      eventType == "tv" ? "/1/1" : ""
+                    `/${eventType}/${eventId}${eventType == "tv" ? "/1/1" : ""
                     }/watch`
                   );
                 }}
@@ -129,21 +143,26 @@ function EventMC({
                   !isLoggedIn
                     ? navigate("/auth/login")
                     : (myselfData?.data as User)?.watchlist?.find(
-                        (item) => item.id == eventId
-                      )
-                    ? removeFromWatchlist(eventType, eventId.toString())
-                    : addToWatchlist(
+                      (item) => item.id == eventId
+                    )
+                      ? removeFromWatchlist(eventType, eventId.toString())
+                      : addToWatchlist(
                         eventType,
                         eventId.toString(),
-                        eventPoster
+                        eventPoster,
+                        "new",
+                        0,
+                        0,
+                        eventType == "tv" ? 1 : 0,
+                        eventType == "tv" ? 1 : 0
                       );
                 }}
               >
                 {myselfData?.isLoading ? (
                   "Loading..."
                 ) : (myselfData?.data as User)?.watchlist?.find(
-                    (item) => item.id == eventId
-                  ) ? (
+                  (item) => item.id == eventId
+                ) ? (
                   removeFromWatchlistData?.isLoading ? (
                     "Removing from Watchlist..."
                   ) : (
@@ -173,6 +192,89 @@ function EventMC({
             </Menu>
           </Dropdown>
         </Box>
+        {eventStatus && eventStatus == "watching" && (
+          <ButtonGroup orientation="vertical" sx={{
+            position: 'absolute',
+            zIndex: 3,
+            bottom: 30,
+            width: "90%",
+          }}>
+            <Button sx={{
+              width: "100%",
+              backgroundColor: "rgba(255, 255, 255, 1)",
+              color: "black",
+              gap: 1,
+              border: "none",
+              ":hover": {
+                backgroundColor: "rgba(255, 255, 255, 1)",
+                opacity: 0.9
+              },
+              ":active": {
+                backgroundColor: "rgba(255, 255, 255, 1)",
+                opacity: 0.8
+              }
+            }} onClick={(e) => {
+              e.stopPropagation();
+              navigate(`/${eventType}/${eventId}${eventType == "tv" ? `/${eventSeason}/${eventEpisode}` : ""
+                }/watch`);
+            }}>
+              <PlayArrow sx={{
+                color: "black"
+              }} />
+              Continue {eventType == "movie" ? null : `S${eventSeason}:E${eventEpisode}`}
+            </Button>
+            {/* {eventType == "tv" && eventSeason && eventEpisode ? (
+              <Button sx={{
+                backgroundColor: "rgba(0, 0, 0, 0.5)",
+                color: "white",
+                gap: 1,
+                border: "none",
+                ":hover": {
+                  backgroundColor: "rgba(0, 0, 0, 0.5)",
+                  opacity: 0.9
+                },
+                ":active": {
+                  backgroundColor: "rgba(0, 0, 0, 0.5)",
+                  opacity: 0.8
+                }
+              }} onClick={(e) => {
+                e.stopPropagation();
+                navigate(`/${eventType}/${eventId}`);
+              }}>
+                <SkipNext/> Next Episode
+              </Button>
+            ) : null} */}
+          </ButtonGroup>
+        )}
+        {eventStatus && eventStatus == "watching" && (
+          <LinearProgress sx={{
+            position: "absolute",
+            zIndex: 2,
+            bottom: 10,
+            width: "90%",
+            color: "rgb(255, 220, 92)",
+            "--LinearProgress-thickness": "3px"
+          }} determinate value={eventCurrentTime && eventDuration ? (eventCurrentTime / eventDuration) * 100 : 0} />)}
+        {
+          eventType == "tv" && eventSeason && eventEpisode ? (
+            <Chip sx={{
+              padding: "0px 15px",
+            }}>
+              <Typography level="body-sm">
+                S{eventSeason}-E{eventEpisode}
+              </Typography>
+            </Chip>
+          ) : null
+        }
+        {
+          eventStatus == "new" ? (
+            <Chip sx={{
+              color: "rgb(255, 200, 92)"
+            }}>
+              New
+            </Chip>
+          ) : null
+        }
       </Card>
     </Box>
   );

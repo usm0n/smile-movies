@@ -70,22 +70,28 @@ function Watch() {
   }, [movieType, movieId, seasonId]);
 
   useEffect(() => {
-    if (isLoggedIn && movieId && movieType) {
-      addToWatchlist(
-        movieType,
-        movieId,
-        movieType == "tv"
-          ? tvSeriesDetailsDataArr?.poster_path
-          : movieDetailsDataArr?.poster_path
-      );
-    }
-  }, [
-    isLoggedIn,
-    movieId,
-    movieType,
-    tvSeriesDetailsDataArr,
-    movieDetailsDataArr,
-  ]);
+    window.addEventListener('message', (event) => {
+      if (event.origin !== 'https://vidsrc.cc') return;
+
+      if (event.data && event.data.type === 'PLAYER_EVENT') {
+        const { event: eventType, currentTime, duration } = event.data.data;
+        if (isLoggedIn && movieId && movieType && eventType == "time") {
+          addToWatchlist(
+            movieType,
+            movieId,
+            movieType == "tv"
+              ? tvSeriesDetailsDataArr?.poster_path
+              : movieDetailsDataArr?.poster_path,
+            "watching",
+            duration,
+            currentTime,
+            seasonId ? parseInt(seasonId) : 0,
+            episodeId ? parseInt(episodeId) : 0
+          );
+        }
+      }
+    })
+  }, [isLoggedIn, movieId, movieType, seasonId, episodeId, tvSeriesDetailsDataArr, movieDetailsDataArr]);
 
   useEffect(() => {
     if (
@@ -162,20 +168,18 @@ function Watch() {
       </Modal>
       <Helmet>
         <title>
-          {`${
-            movieType === "movie"
-              ? movieDetailsDataArr?.title
-              : tvSeriesDetailsDataArr?.name
-          }`}{" "}
+          {`${movieType === "movie"
+            ? movieDetailsDataArr?.title
+            : tvSeriesDetailsDataArr?.name
+            }`}{" "}
           - Watch
         </title>
         <meta
           name="description"
-          content={`Watch ${
-            movieType === "movie"
-              ? movieDetailsDataArr?.title
-              : tvSeriesDetailsDataArr?.name
-          } on Smile Movies`}
+          content={`Watch ${movieType === "movie"
+            ? movieDetailsDataArr?.title
+            : tvSeriesDetailsDataArr?.name
+            } on Smile Movies`}
         />
       </Helmet>
       <Box
@@ -248,11 +252,9 @@ function Watch() {
       </Box>
       <iframe
         referrerPolicy="no-referrer-when-downgrade"
-        src={`https://vidsrc.cc/v2/embed/${movieType}/${movieId}${
-          isTvSE ? `/${seasonId}` : ""
-        }${
-          isTvSE ? `/${episodeId}` : ""
-        }?autoPlay=true&fullScreen=true&mute=false`}
+        src={`https://vidsrc.cc/v2/embed/${movieType}/${movieId}${isTvSE ? `/${seasonId}` : ""
+          }${isTvSE ? `/${episodeId}` : ""
+          }?autoPlay=true&fullScreen=true&mute=false`}
         allowFullScreen
         sandbox="allow-scripts allow-same-origin allow-forms allow-presentation"
         style={{

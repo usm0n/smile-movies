@@ -157,13 +157,23 @@ export const users = {
   addToWatchlist: async (
     typeMovie: string,
     movieId: string,
-    poster: string
+    poster: string,
+    status: string,
+    duration: number,
+    currentTime: number,
+    season: number,
+    episode: number
   ) => {
     try {
       const response = await smbAPI.post(`/users/watchlist/`, {
         typeMovie,
         movieId,
         poster,
+        status,
+        duration,
+        currentTime,
+        season,
+        episode,
       });
       return response.data as Message;
     } catch (error: any) {
