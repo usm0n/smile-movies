@@ -43,7 +43,7 @@ export const mainRoutes = [
     element: <Search />,
   },
   {
-    path: "/:movieType/:movieId/:seasonId?/:episodeId?/watch",
+    path: "/:movieType/:movieId/:seasonId?/:episodeId?/watch/:startAt?",
     element: <Watch />,
   },
   {

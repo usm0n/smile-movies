@@ -4,15 +4,15 @@ import {
   Person,
   Visibility,
   VisibilityOff,
-  Warning,
+  // Warning,
 } from "@mui/icons-material";
 import {
   Box,
   Button,
   Card,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
+  // DialogActions,
+  // DialogContent,
+  // DialogTitle,
   Divider,
   FormControl,
   FormHelperText,
@@ -20,8 +20,8 @@ import {
   IconButton,
   Input,
   Link,
-  Modal,
-  ModalDialog,
+  // Modal,
+  // ModalDialog,
   useColorScheme,
 } from "@mui/joy";
 import { useEffect, useState } from "react";
@@ -33,7 +33,7 @@ import {
   deviceType,
   isLoggedIn,
   isValidEmail,
-  reload,
+  // reload,
 } from "../../utilities/defaults";
 import { useNavigate } from "react-router-dom";
 import { useGoogleLogin } from "@react-oauth/google";
@@ -175,7 +175,7 @@ function Register() {
         loginData?.isLoading || registerData?.isLoading,
         colorScheme
       )}
-      <Modal open={locationData.error}>
+      {/* <Modal open={locationData.error}>
         <ModalDialog>
           <DialogTitle>
             <Warning />
@@ -195,7 +195,7 @@ function Register() {
             </Button>
           </DialogActions>
         </ModalDialog>
-      </Modal>
+      </Modal> */}
       <Box
         sx={{
           display: "flex",

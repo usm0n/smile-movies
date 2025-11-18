@@ -3,15 +3,15 @@ import {
   Mail,
   Visibility,
   VisibilityOff,
-  Warning,
+  // Warning,
 } from "@mui/icons-material";
 import {
   Box,
   Button,
   Card,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
+  // DialogActions,
+  // DialogContent,
+  // DialogTitle,
   Divider,
   FormControl,
   FormHelperText,
@@ -19,8 +19,8 @@ import {
   IconButton,
   Input,
   Link,
-  Modal,
-  ModalDialog,
+  // Modal,
+  // ModalDialog,
   useColorScheme,
 } from "@mui/joy";
 import React, { useEffect, useState } from "react";
@@ -32,7 +32,7 @@ import {
   deviceType,
   isLoggedIn,
   isValidEmail,
-  reload,
+  // reload,
 } from "../../utilities/defaults";
 import { useNavigate } from "react-router-dom";
 import { useGoogleLogin } from "@react-oauth/google";
@@ -163,7 +163,7 @@ function Login() {
           locationData?.loading,
         colorScheme
       )}
-      <Modal
+      {/* <Modal
         sx={{
           zIndex: 10000,
         }}
@@ -188,7 +188,7 @@ function Login() {
             </Button>
           </DialogActions>
         </ModalDialog>
-      </Modal>
+      </Modal> */}
       <Box
         sx={{
           display: "flex",

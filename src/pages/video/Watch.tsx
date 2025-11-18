@@ -19,10 +19,7 @@ import { useEffect, useState } from "react";
 import {
   backdropLoading,
   deviceBrowser,
-  deviceName,
-  deviceType,
   isLoggedIn,
-  trackEvent,
 } from "../../utilities/defaults";
 import NotFound from "../../components/utils/NotFound";
 import { movieDetails, tvDetails, tvSeasonsDetails } from "../../tmdb-res";
@@ -38,7 +35,7 @@ function Watch() {
     tvSeasonsDetails,
     tvSeasonsDetailsData,
   } = useTMDB();
-  const { movieId, movieType, seasonId, episodeId } = useParams();
+  const { movieId, movieType, seasonId, episodeId, startAt } = useParams();
   const { colorScheme } = useColorScheme();
   const { addToWatchlist } = useUsers();
   const navigate = useNavigate();
@@ -92,27 +89,6 @@ function Watch() {
       }
     })
   }, [isLoggedIn, movieId, movieType, seasonId, episodeId, tvSeriesDetailsDataArr, movieDetailsDataArr]);
-
-  useEffect(() => {
-    if (
-      movieType &&
-      movieId &&
-      (movieDetailsDataArr || tvSeriesDetailsDataArr)
-    ) {
-      trackEvent("Watch Page", {
-        title:
-          movieType == "movie"
-            ? movieDetailsDataArr?.title
-            : tvSeriesDetailsDataArr?.name,
-        type: movieType,
-        id: movieId,
-        season: seasonId,
-        episode: episodeId,
-        isLoggedIn: isLoggedIn,
-        device: `${deviceName()}, ${deviceType()}, ${browser}`,
-      });
-    }
-  }, [movieType, movieId, seasonId, episodeId, isLoggedIn]);
 
   return isIncorrect ? (
     <NotFound />
@@ -254,7 +230,7 @@ function Watch() {
         referrerPolicy="no-referrer-when-downgrade"
         src={`https://vidsrc.cc/v2/embed/${movieType}/${movieId}${isTvSE ? `/${seasonId}` : ""
           }${isTvSE ? `/${episodeId}` : ""
-          }?autoPlay=true&fullScreen=true&mute=false`}
+          }?startAt=${startAt ? startAt : "0"}`}
         allowFullScreen
         sandbox="allow-scripts allow-same-origin allow-forms allow-presentation"
         style={{
