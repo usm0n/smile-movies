@@ -4,7 +4,7 @@ interface BlurImageProps {
   lowQualitySrc: string;
   highQualitySrc: string;
   className?: string;
-  style?: React.CSSProperties;
+  style?: React.CSSProperties | Record<string, any>;
 }
 
 const BlurImage = ({

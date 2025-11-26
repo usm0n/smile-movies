@@ -27,7 +27,7 @@ function App() {
     sessionStorage.setItem("openSnackbar", snackbar.toString());
   }, [snackbar]);
 
-  
+
   return (
     <Box
       sx={{
@@ -89,6 +89,7 @@ function App() {
               . If you encounter any issues or have suggestions, feel free to
               share them on our{" "}
               <Link
+                disabled
                 href="https://github.com/usm0n/Smile-Movies/issues/new"
                 target="_blank"
                 rel="noopener noreferrer"
@@ -123,6 +124,7 @@ function App() {
               Close
             </Button>
             <Button
+              disabled
               onClick={() =>
                 window.open(
                   "https://github.com/usm0n/Smile-Movies/issues/new",

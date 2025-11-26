@@ -9,7 +9,8 @@ import {
   WarningRounded,
 } from "@mui/icons-material";
 import MenuIcon from "@mui/icons-material/Menu";
-import logo from "../../assets/images/logo.png";
+import highLogo from "../../assets/images/logo-1000.png";
+import lowLogo from "../../assets/images/logo-100.png";
 import {
   Autocomplete,
   Avatar,
@@ -44,6 +45,7 @@ import { User } from "../../user";
 import { googleLogout } from "@react-oauth/google";
 import { useTMDB } from "../../context/TMDB";
 import { searchMulti } from "../../tmdb-res";
+import BlurImage from "../../utilities/blurImage";
 
 const Navbar: React.FC = () => {
   const [logoutModal, setLogoutModal] = useState(false);
@@ -108,17 +110,16 @@ const Navbar: React.FC = () => {
         >
           <MenuIcon />
         </IconButton>
-        <Box
-          sx={{
+        {BlurImage({
+          highQualitySrc: highLogo,
+          lowQualitySrc: lowLogo,
+          style: {
+            width: "100px",
             "@media (max-width: 700px)": {
               margin: "0 auto",
             },
-          }}
-          component="img"
-          src={logo}
-          width={100}
-          alt=""
-        />
+          },
+        })}
       </Box>
       <Box
         sx={{
