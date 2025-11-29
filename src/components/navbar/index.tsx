@@ -10,7 +10,7 @@ import {
 } from "@mui/icons-material";
 import MenuIcon from "@mui/icons-material/Menu";
 import highLogo from "../../assets/images/logo-1000.png";
-import lowLogo from "../../assets/images/logo-100.png";
+// import lowLogo from "../../assets/images/logo-100.png";
 import {
   Autocomplete,
   Avatar,
@@ -45,7 +45,6 @@ import { User } from "../../user";
 import { googleLogout } from "@react-oauth/google";
 import { useTMDB } from "../../context/TMDB";
 import { searchMulti } from "../../tmdb-res";
-import BlurImage from "../../utilities/blurImage";
 
 const Navbar: React.FC = () => {
   const [logoutModal, setLogoutModal] = useState(false);
@@ -110,16 +109,7 @@ const Navbar: React.FC = () => {
         >
           <MenuIcon />
         </IconButton>
-        {BlurImage({
-          highQualitySrc: highLogo,
-          lowQualitySrc: lowLogo,
-          style: {
-            width: "100px",
-            "@media (max-width: 700px)": {
-              margin: "0 auto",
-            },
-          },
-        })}
+        <img src={highLogo} alt="Smile Movies Logo" style={{ width: "100px", filter: "drop-shadow(0 0 10px rgba(0,0,0,1))" }} />
       </Box>
       <Box
         sx={{

@@ -261,7 +261,7 @@ const Header = React.memo(
                 onClick={(e) => {
                   e.stopPropagation();
                   navigate(
-                    watchlistItem ? `/${details?.media_type}/${details?.id}${details?.media_type == "tv" ? `/${watchlistItem.season}/${watchlistItem.episode}` : ""}/watch` :
+                    watchlistItem ? `/${details?.media_type}/${details?.id}${details?.media_type == "tv" ? `/${watchlistItem.season}/${watchlistItem.episode}` : ""}/watch/${watchlistItem.currentTime ? watchlistItem.currentTime : 0}` :
                       `/${details?.media_type}/${details?.id}${details?.media_type == "tv" ? `/1/1` : ""
                       }/watch`
                   );

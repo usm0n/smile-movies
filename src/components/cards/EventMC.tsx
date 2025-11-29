@@ -216,7 +216,7 @@ function EventMC({
             }} onClick={(e) => {
               e.stopPropagation();
               navigate(`/${eventType}/${eventId}${eventType == "tv" ? `/${eventSeason}/${eventEpisode}` : ""
-                }/watch/startAt=${eventCurrentTime ? eventCurrentTime : 0}`);
+                }/watch/${eventCurrentTime ? eventCurrentTime : 0}`);
             }}>
               <PlayArrow sx={{
                 color: "black"

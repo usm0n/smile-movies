@@ -43,6 +43,7 @@ function Watch() {
   const [openWarning, setOpenWarning] = useState(
     browser === "Chrome" ? true : false
   );
+  const [adsWarning, setAdsWarning] = useState(true);
 
   const isTvSE = seasonId && episodeId;
   const isFetching =
@@ -142,6 +143,44 @@ function Watch() {
           </DialogActions>
         </ModalDialog>
       </Modal>
+      <Modal open={adsWarning} onClose={() => setAdsWarning(false)} sx={{ zIndex: 1003 }}>
+        <ModalDialog color="warning" variant="outlined">
+          <ModalClose onClick={() => setAdsWarning(false)} />
+          <Typography color="warning" level="h4" startDecorator={<Warning />}>
+            Advertisement Notice
+          </Typography>
+          <Typography sx={{ mt: 2 }}>
+            Please be aware that the video player may display advertisements
+            during playback. These ads are served by our third-party provider to
+            support our services. We appreciate your understanding.
+          </Typography>
+            <Typography sx={{ mt: 1 }} textColor={"neutral.400"}>
+              Note: This issue is temporary and will be resolved in the upcoming complete update - <Typography
+                sx={{
+                  color: "rgb(255, 220, 92)",
+                  fontWeight: "bold",
+                  textShadow: "0 0 10px rgba(255, 220, 92, 0.5)",
+                }}
+              >Smile Movies V3</Typography> 
+            </Typography>
+          <DialogActions>
+            <Button
+              variant="soft"
+              color="neutral"
+              onClick={() => navigate(`/${movieType}/${movieId}`)}
+            >
+              Go Back
+            </Button>
+            <Button
+              onClick={() => setAdsWarning(false)}
+              variant="soft"
+              color="danger"
+            >
+              Continue to Video
+            </Button>
+          </DialogActions>
+        </ModalDialog>
+      </Modal>
       <Helmet>
         <title>
           {`${movieType === "movie"
@@ -232,7 +271,6 @@ function Watch() {
           }${isTvSE ? `/${episodeId}` : ""
           }?startAt=${startAt ? startAt : "0"}`}
         allowFullScreen
-        sandbox="allow-scripts allow-same-origin allow-forms allow-presentation"
         style={{
           width: "100%",
           height: "100%",

@@ -166,7 +166,7 @@ function Header({
               <Button
                 onClick={() => {
                   navigate(
-                    watchlistItem ? `/${movieType}/${movieId}${movieType == "tv" ? `/${watchlistItem.season}/${watchlistItem.episode}` : ""}/watch` :
+                    watchlistItem ? `/${movieType}/${movieId}${movieType == "tv" ? `/${watchlistItem.season}/${watchlistItem.episode}` : ""}/watch/${watchlistItem.currentTime ? watchlistItem.currentTime : 0}` :
                       `/${movieType}/${movieId}${movieType == "tv" ? `/1/1` : ""
                       }/watch`
                   );
