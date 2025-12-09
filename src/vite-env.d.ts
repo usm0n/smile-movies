@@ -9,6 +9,8 @@ interface ImportMetaEnv {
   readonly VITE_GOOGLE_CLIENT_SECRET: string;
   readonly VITE_OC_API_KEY: string;
   readonly VITE_OC_API_URL: string;
+  readonly VITE_NUVIO_API_URL: string;
+  readonly VITE_COOKIE_SECRET: string;
 }
 
 interface ImportMeta {
