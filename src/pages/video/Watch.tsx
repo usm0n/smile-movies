@@ -151,7 +151,7 @@ function Watch() {
         </DialogActions>
       </ModalDialog>
     </Modal>
-  ) : !streamServer && getStreamData.isAvailable ? (
+  ) : streamServer && !getStreamData.isAvailable ? (
     <Modal open={true} sx={{ zIndex: 1002 }}>
       <ModalOverflow>
         <ModalDialog layout="center">
@@ -159,14 +159,14 @@ function Watch() {
             Select Stream Server
           </Typography>
           <Typography sx={{ mb: 2 }}>
-            Please choose a stream server from the options below to start <br /> PS: Vixsrc is recommended for the best experience.
+            Please choose a stream server from the options below to start <br /> PS: <Typography color="primary">Vixsrc</Typography> is recommended for the best experience.
           </Typography>
           <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
             {getStreamData.data?.streams.map((server, index) => (
               <ButtonGroup key={index} variant="outlined" color="neutral" sx={{ display: "flex", justifyContent: "space-between" }}>
                 <Button sx={{
                   width: "80%"
-                }} key={index} variant="outlined" color="neutral" onClick={() => setStreamServer(server)}>
+                }} key={index} variant="outlined" color={server.name.includes("Vixsrc") ? "primary" : "neutral"} onClick={() => setStreamServer(server)}>
                   {server.name}
                 </Button>
                 <Button sx={{
