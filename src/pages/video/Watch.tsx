@@ -61,6 +61,11 @@ function Watch() {
   const movieDetailsDataArr = movieDetailsData?.data as movieDetails;
   const tvSeasonsDetailsArr = tvSeasonsDetailsData?.data as tvSeasonsDetails;
 
+  const episodeChange = (n: string) => {
+    setStreamServer(null)
+    navigate(n)
+  }
+
   useEffect(() => {
     if (movieType === "movie" && movieId) {
       movie(movieId);
@@ -151,7 +156,7 @@ function Watch() {
         </DialogActions>
       </ModalDialog>
     </Modal>
-  ) : streamServer && !getStreamData.isAvailable ? (
+  ) : !streamServer && getStreamData.isAvailable ? (
     <Modal open={true} sx={{ zIndex: 1002 }}>
       <ModalOverflow>
         <ModalDialog layout="center">
@@ -328,7 +333,7 @@ function Watch() {
               value={parseInt(seasonId!)}
               defaultValue={parseInt(seasonId!)}
               onChange={(_e, v) => {
-                navigate(`/${movieType}/${movieId}/${v}/1/watch`);
+                episodeChange(`/${movieType}/${movieId}/${v}/1/watch`)
               }}
             >
               {tvSeriesDetailsDataArr?.seasons
@@ -341,7 +346,7 @@ function Watch() {
             </Select>
             <Select
               onChange={(_e, v) => {
-                navigate(`/${movieType}/${movieId}/${seasonId}/${v}/watch`);
+                episodeChange(`/${movieType}/${movieId}/${seasonId}/${v}/watch`);
               }}
               defaultValue={parseInt(episodeId!)}
               value={parseInt(episodeId!)}
