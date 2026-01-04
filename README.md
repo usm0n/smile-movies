@@ -1,6 +1,6 @@
 # Smile Movies V2 Beta 🎬
 
-Welcome to **Smile Movies V2 Beta** — a modern, ad-free platform for watching movies and TV shows with high-quality streaming, subtitles, and detailed metadata.
+This project is a technical demonstration of frontend, backend, and media-handling skills. No content is hosted directly.
 
 > ⚠️ This version is still in active development and may not represent the final product.
 
