@@ -32,7 +32,7 @@ function Trailers({ movieVideos }: { movieVideos: videos }) {
               key={video.id}
             >
               <iframe
-                src={`https://www.youtube.com/embed/${video.key}`}
+                src={`https://www.youtube.com/embed/${video.key}?origin=https://smile-movies.uz`}
                 title={video.name}
                 style={{
                   border: "none",

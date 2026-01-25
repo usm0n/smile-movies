@@ -170,18 +170,13 @@ const Header = React.memo(
             />
             {isActive && (
               <iframe
+                referrerPolicy="strict-origin-when-cross-origin"
                 onLoad={() => {
                   if (isTrailerAvailable) {
                     setTimeout(() => {
                       setIsVideoLoaded(true);
                     }, 2000);
-                  } else {
-                    setIsVideoLoaded(false);
-                    (window as any).onYouTubeIframeAPIReady?.stopVideo?.();
                   }
-                }}
-                onErrorCapture={() => {
-                  setIsVideoLoaded(false);
                 }}
                 style={{
                   display: isVideoLoaded ? "block" : "none",
@@ -189,7 +184,7 @@ const Header = React.memo(
                 }}
                 width={"100%"}
                 height={"100%"}
-                src={`https://www.youtube.com/embed/${trailerKey}?autoplay=1&controls=0&mute=1&loop=1&playlist=${trailerKey}&hd=1&vq=hd1080`}
+                src={`https://www.youtube.com/embed/${trailerKey}?autoplay=1&controls=0&mute=1&loop=1`}
               />
             )}
           </CardCover>

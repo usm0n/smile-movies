@@ -39,7 +39,7 @@ import {
 } from "@mui/joy";
 import { isLoggedIn } from "../../utilities/defaults";
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useUsers } from "../../context/Users";
 import { User } from "../../user";
 import { googleLogout } from "@react-oauth/google";
@@ -109,9 +109,23 @@ const Navbar: React.FC = () => {
         >
           <MenuIcon />
         </IconButton>
-        <img src={highLogo} alt="Smile Movies Logo" style={{ width: "100px", filter: "drop-shadow(0 0 10px rgba(0,0,0,1))" }} />
+        <Box
+          component="img"
+          onClick={() => navigate("/")}
+          src={highLogo}
+          alt="Smile Movies Logo"
+          sx={{
+            width: "100px",
+            filter: "drop-shadow(0 0 10px rgba(0,0,0,1))",
+            cursor: "pointer",
+            transition: "200ms",
+            ":active": {
+              transform: "scale(0.95)",
+            },
+          }}
+        />
       </Box>
-      <Box
+      {/* <Box
         sx={{
           textShadow: "0 0 3px rgb(0, 0, 0, 0.7)",
           "@media (max-width: 700px)": {
@@ -125,7 +139,7 @@ const Navbar: React.FC = () => {
         <Link to="/about">About</Link>
         <Link to="/contact">Contact</Link>
         <Link to="/download">Download</Link>
-      </Box>
+      </Box> */}
       <form
         onSubmit={(e) => {
           e.preventDefault();

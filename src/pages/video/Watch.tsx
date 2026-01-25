@@ -4,6 +4,7 @@ import {
   Button,
   ButtonGroup,
   DialogActions,
+  Divider,
   IconButton,
   LinearProgress,
   Link,
@@ -40,17 +41,17 @@ function Watch() {
   } = useTMDB();
   const { movieId, movieType, seasonId, episodeId } = useParams();
   const { colorScheme } = useColorScheme();
-  // const { addToWatchlist } = useUsers();
   const { getStreamData, getStream } = useStream();
   const navigate = useNavigate();
   const browser = deviceBrowser();
   const [openWarning, setOpenWarning] = useState(
     browser === "Chrome" ? true : false
   );
-  // const [adsWarning, setAdsWarning] = useState(true);
   const [streamServer, setStreamServer] = useState<StreamServer | null>(null)
+  const [streamType, setStreamType] = useState<"WADS" | "WOADS">("WOADS")
+  const [adsWarning, setAdsWarning] = useState(streamType == "WADS");
 
-  // const isTvSE = seasonId && episodeId;
+  const isTvSE = seasonId && episodeId;
   const isFetching =
     tvSeriesDetailsData?.isLoading ||
     movieDetailsData?.isLoading ||
@@ -67,17 +68,25 @@ function Watch() {
   }
 
   useEffect(() => {
-    if (movieType === "movie" && movieId) {
+    if (!movieId || !movieType) return;
+
+    const isAdsStream = streamType === "WADS";
+    const showAdsWarning = () => setAdsWarning(true);
+    const fetchStream = (type: "movie" | "tv") => {
+      getStream(type, movieId, seasonId, episodeId);
+    };
+
+    if (movieType === "movie") {
       movie(movieId);
-      getStream("movie", movieId);
-    } else if (movieType === "tv" && movieId) {
+      isAdsStream ? showAdsWarning() : fetchStream("movie");
+    } else if (movieType === "tv") {
       tvSeries(movieId);
-      getStream("tv", movieId, seasonId, episodeId);
+      isAdsStream ? showAdsWarning() : fetchStream("tv");
       if (seasonId) {
         tvSeasonsDetails(movieId, parseInt(seasonId));
       }
     }
-  }, [movieType, movieId, seasonId, episodeId]);
+  }, [movieType, movieId, seasonId, episodeId, streamType]);
 
   // useEffect(() => {
   //   window.addEventListener('message', (event) => {
@@ -109,16 +118,16 @@ function Watch() {
     <Box width={"100%"} height={"100vh"}>
       {backdropLoading(true, colorScheme)}
     </Box>
-  ) : getStreamData.isLoading ? (
+  ) : getStreamData.isLoading && streamType == "WOADS" ? (
     <Box width={"100%"} height={"100vh"}>
       <Modal open={true} sx={{ zIndex: 1002 }}>
         <ModalDialog>
           <LinearProgress thickness={1} />
-          <Typography level="h4" sx={{ mb: 2 }}>
-            Please wait while we prepare your stream...
+          <Typography level="h3">
+            Please wait...
           </Typography>
           <Typography>
-            This may take a few moments depending on server load and your
+            We are preparing your stream. This may take a few moments depending on server load and your
             internet connection.
           </Typography>
           <DialogActions>
@@ -126,10 +135,14 @@ function Watch() {
               Go Back
             </Button>
           </DialogActions>
+          <Divider>or</Divider>
+          <Link onClick={() => setStreamType("WADS")} sx={{
+            margin: "0 auto"
+          }}>Continue with ADS(recommended)</Link>
         </ModalDialog>
       </Modal>
     </Box>
-  ) : !getStreamData.isAvailable && !getStreamData.isLoading ? (
+  ) : !getStreamData.isAvailable && !getStreamData.isLoading && streamType == "WOADS" ? (
     <Modal open={true} sx={{ zIndex: 1002 }} >
       <ModalDialog color="danger" variant="outlined">
         <ModalClose onClick={() => navigate(`/${movieType}/${movieId}`)} />
@@ -154,9 +167,13 @@ function Watch() {
             Try Again
           </Button>
         </DialogActions>
+        <Divider>or</Divider>
+        <Link onClick={() => setStreamType("WADS")} sx={{
+          margin: "0 auto"
+        }}>Try with ADS(recommended)</Link>
       </ModalDialog>
     </Modal>
-  ) : !streamServer && getStreamData.isAvailable ? (
+  ) : !streamServer && getStreamData.isAvailable && streamType == "WOADS" ? (
     <Modal open={true} sx={{ zIndex: 1002 }}>
       <ModalOverflow>
         <ModalDialog layout="center">
@@ -191,6 +208,10 @@ function Watch() {
               Go Back
             </Button>
           </DialogActions>
+          <Divider>or</Divider>
+          <Link onClick={() => setStreamType("WADS")} sx={{
+            margin: "0 auto"
+          }}>Continue with ADS(recommended)</Link>
         </ModalDialog>
       </ModalOverflow>
     </Modal>
@@ -240,7 +261,7 @@ function Watch() {
           </DialogActions>
         </ModalDialog>
       </Modal>
-      {/* <Modal open={adsWarning} onClose={() => setAdsWarning(false)} sx={{ zIndex: 1003 }}>
+      <Modal open={adsWarning} onClose={() => setAdsWarning(false)} sx={{ zIndex: 1003 }}>
         <ModalDialog color="warning" variant="outlined">
           <ModalClose onClick={() => setAdsWarning(false)} />
           <Typography color="warning" level="h4" startDecorator={<Warning />}>
@@ -277,7 +298,7 @@ function Watch() {
             </Button>
           </DialogActions>
         </ModalDialog>
-      </Modal> */}
+      </Modal>
       <Helmet>
         <title>
           {`${movieType === "movie"
@@ -362,29 +383,31 @@ function Watch() {
           ""
         )}
       </Box>
-      {/* <iframe
-        referrerPolicy="no-referrer-when-downgrade"
-        src={`https://vidsrc.cc/v2/embed/${movieType}/${movieId}${isTvSE ? `/${seasonId}` : ""
-          }${isTvSE ? `/${episodeId}` : ""
-          }?startAt=${startAt ? startAt : "0"}`}
-        allowFullScreen
-        style={{
+      {streamType == "WADS" ?
+        <iframe
+          referrerPolicy="no-referrer-when-downgrade"
+          sandbox="allow-forms allow-modals allow-orientation-lock allow-pointer-lock allow-presentation allow-same-origin allow-scripts"
+          src={`https://vidsrc.cc/v2/embed/${movieType}/${movieId}${isTvSE ? `/${seasonId}` : ""
+            }${isTvSE ? `/${episodeId}` : ""
+            }`}
+          allowFullScreen
+          style={{
+            width: "100%",
+            height: "100%",
+            border: "none",
+            borderRadius: "5px",
+            position: "absolute",
+            top: 0,
+            zIndex: 1000,
+          }}
+        ></iframe> :
+        <video controls style={{
           width: "100%",
           height: "100%",
-          border: "none",
-          borderRadius: "5px",
           position: "absolute",
           top: 0,
           zIndex: 1000,
-        }}
-      ></iframe> */}
-      <video controls style={{
-        width: "100%",
-        height: "100%",
-        position: "absolute",
-        top: 0,
-        zIndex: 1000,
-      }} src={streamServer?.url}></video>
+        }} src={streamServer?.url}></video>}
     </Box>
   );
 }
