@@ -4,6 +4,7 @@ import { ArrowForwardIos } from "@mui/icons-material";
 import * as tmdbRes from "../../tmdb-res";
 import EventMCS from "../cards/skeleton/EventMC";
 import { smartText } from "../../utilities/defaults";
+import { useNavigate } from "react-router";
 
 function Event({
   eventTitle,
@@ -21,6 +22,7 @@ function Event({
   isTitleSimple?: boolean;
 }) {
   const { colorScheme } = useColorScheme();
+  const navigate = useNavigate();
   return (
     <Box
       sx={{
@@ -30,11 +32,12 @@ function Event({
       }}
     >
       {isTitleSimple ? (
-        <Typography level="h2">
-          {eventTitle}
-        </Typography>
+        <Typography level="h2">{eventTitle}</Typography>
       ) : (
         <Typography
+          onClick={() => {
+            navigate(`/discover/${eventTitle}/1`);
+          }}
           endDecorator={
             <ArrowForwardIos
               sx={{

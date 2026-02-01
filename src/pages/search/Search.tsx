@@ -1,20 +1,21 @@
-import { Box, Button, ButtonGroup, IconButton, Typography } from "@mui/joy";
+import { Box, ButtonGroup, IconButton, Typography } from "@mui/joy";
 import { useTMDB } from "../../context/TMDB";
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import type { searchMovie, searchTV } from "../../tmdb-res";
 import EventMC from "../../components/cards/EventMC";
 import EventMCS from "../../components/cards/skeleton/EventMC";
 import AutoGraphIcon from '@mui/icons-material/AutoGraph';
+import Pagination from "../../components/navigation/Pagination";
 
 function Search() {
   const { query, page } = useParams();
   const [type, setType] = useState<"tv" | "movie" | "all">("all")
   const { searchMovie, searchMovieData, searchTv, searchTvData } = useTMDB();
 
-  const movieResults = (searchMovieData?.data as searchMovie)?.results.sort((a, b) => b.popularity - a.popularity) || [];
-  const tvResults = (searchTvData?.data as searchTV)?.results.sort((a, b) => b.popularity - a.popularity) || [];
-  const searchResults = type === "movie" ? movieResults : type === "tv" ? tvResults : [...tvResults, ...movieResults].sort((a, b) => b.popularity - a.popularity);
+  const movieResults = (searchMovieData?.data as searchMovie)?.results?.sort((a, b) => b.popularity - a.popularity) || [];
+  const tvResults = (searchTvData?.data as searchTV)?.results?.sort((a, b) => b.popularity - a.popularity) || [];
+  const searchResults = type === "movie" ? movieResults : type === "tv" ? tvResults : [...tvResults, ...movieResults]?.sort((a, b) => b.popularity - a.popularity);
 
   const totalPages = type === "movie"
     ? (searchMovieData?.data as searchMovie)?.total_pages
@@ -27,7 +28,6 @@ function Search() {
       ? (searchMovieData?.data as searchMovie)?.total_results
       : (searchTvData?.data as searchTV)?.total_results;
   const currentPage = page ? +page : 1;
-  const navigate = useNavigate();
 
   useEffect(() => {
     if (query) {
@@ -65,11 +65,7 @@ function Search() {
         )}
 
         {searchResults.length > 0 && (
-          <Box sx={{ width: "100%", display: "flex", justifyContent: "center", gap: 2, mt: 4 }}>
-            <Button variant="outlined" disabled={currentPage === 1} onClick={() => navigate(`/search/${query}/${currentPage - 1}`)}>Previous</Button>
-            <Typography level="body-md" sx={{ display: "flex", alignItems: "center", gap: 1 }}>Page {currentPage} of {totalPages || 1}</Typography>
-            <Button variant="outlined" disabled={currentPage === (totalPages || 1)} onClick={() => navigate(`/search/${query}/${currentPage + 1}`)}>Next</Button>
-          </Box>
+          <Pagination currentPage={currentPage} totalPages={totalPages} whereTo={`/search/${query}`} />
         )}
       </Box>
     </Box>

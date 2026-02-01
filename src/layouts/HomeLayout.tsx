@@ -12,8 +12,8 @@ import { useUsers } from "../context/Users";
 
 function HomeLayout() {
   const [eventCategoryMovie, setEventCategoryMovie] =
-    useState<string>("topRated");
-  const [eventCategoryTv, setEventCategoryTv] = useState<string>("topRated");
+    useState<string>("nowPlaying");
+  const [eventCategoryTv, setEventCategoryTv] = useState<string>("onTheAir");
   const {
     topRatedMovies,
     topRatedMoviesData,

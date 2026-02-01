@@ -22,13 +22,16 @@ import { useTMDB } from "../../context/TMDB";
 import { useEffect, useState } from "react";
 import {
   backdropLoading,
-  deviceBrowser,
+  isLoggedIn,
 } from "../../utilities/defaults";
 import NotFound from "../../components/utils/NotFound";
 import { movieDetails, tvDetails, tvSeasonsDetails } from "../../tmdb-res";
 import { Helmet } from "react-helmet";
 import { useStream } from "../../context/Stream";
 import { StreamServer } from "../../stream-res";
+import { useUsers } from "../../context/Users";
+import StorageIcon from '@mui/icons-material/Storage';
+import LiveTvIcon from '@mui/icons-material/LiveTv';
 
 function Watch() {
   const {
@@ -42,14 +45,10 @@ function Watch() {
   const { movieId, movieType, seasonId, episodeId } = useParams();
   const { colorScheme } = useColorScheme();
   const { getStreamData, getStream } = useStream();
+  const { addToWatchlist } = useUsers();
   const navigate = useNavigate();
-  const browser = deviceBrowser();
-  const [openWarning, setOpenWarning] = useState(
-    browser === "Chrome" ? true : false
-  );
   const [streamServer, setStreamServer] = useState<StreamServer | null>(null)
-  const [streamType, setStreamType] = useState<"WADS" | "WOADS">("WOADS")
-  const [adsWarning, setAdsWarning] = useState(streamType == "WADS");
+  const [streamType, setStreamType] = useState<"WADS" | "WOADS">("WADS")
 
   const isTvSE = seasonId && episodeId;
   const isFetching =
@@ -69,48 +68,49 @@ function Watch() {
 
   useEffect(() => {
     if (!movieId || !movieType) return;
-
-    const isAdsStream = streamType === "WADS";
-    const showAdsWarning = () => setAdsWarning(true);
     const fetchStream = (type: "movie" | "tv") => {
+      if (streamType === "WADS") {
+        setStreamServer(null)
+        return;
+      }
       getStream(type, movieId, seasonId, episodeId);
     };
 
     if (movieType === "movie") {
       movie(movieId);
-      isAdsStream ? showAdsWarning() : fetchStream("movie");
+      fetchStream("movie");
     } else if (movieType === "tv") {
       tvSeries(movieId);
-      isAdsStream ? showAdsWarning() : fetchStream("tv");
+      fetchStream("tv");
       if (seasonId) {
         tvSeasonsDetails(movieId, parseInt(seasonId));
       }
     }
   }, [movieType, movieId, seasonId, episodeId, streamType]);
 
-  // useEffect(() => {
-  //   window.addEventListener('message', (event) => {
-  //     if (event.origin !== 'https://vidsrc.cc') return;
+  useEffect(() => {
+    window.addEventListener('message', (event) => {
+      if (event.origin !== 'https://vidsrc.cc') return;
 
-  //     if (event.data && event.data.type === 'PLAYER_EVENT') {
-  //       const { event: eventType, currentTime, duration } = event.data.data;
-  //       if (isLoggedIn && movieId && movieType && eventType == "time") {
-  //         addToWatchlist(
-  //           movieType,
-  //           movieId,
-  //           movieType == "tv"
-  //             ? tvSeriesDetailsDataArr?.poster_path
-  //             : movieDetailsDataArr?.poster_path,
-  //           "watching",
-  //           duration,
-  //           currentTime,
-  //           seasonId ? parseInt(seasonId) : 0,
-  //           episodeId ? parseInt(episodeId) : 0
-  //         );
-  //       }
-  //     }
-  //   })
-  // }, [isLoggedIn, movieId, movieType, seasonId, episodeId, tvSeriesDetailsDataArr, movieDetailsDataArr]);
+      if (event.data && event.data.type === 'PLAYER_EVENT') {
+        const { event: eventType, currentTime, duration } = event.data.data;
+        if (isLoggedIn && movieId && movieType && eventType == "time") {
+          addToWatchlist(
+            movieType,
+            movieId,
+            movieType == "tv"
+              ? tvSeriesDetailsDataArr?.poster_path
+              : movieDetailsDataArr?.poster_path,
+            "watching",
+            duration,
+            currentTime,
+            seasonId ? parseInt(seasonId) : 0,
+            episodeId ? parseInt(episodeId) : 0
+          );
+        }
+      }
+    })
+  }, [isLoggedIn, movieId, movieType, seasonId, episodeId, tvSeriesDetailsDataArr, movieDetailsDataArr]);
 
   return isIncorrect ? (
     <NotFound />
@@ -224,7 +224,7 @@ function Watch() {
         height: "100vh",
       }}
     >
-      <Modal
+      {/* <Modal
         open={openWarning}
         onClose={() => setOpenWarning(false)}
         sx={{ zIndex: 1002 }}
@@ -260,8 +260,8 @@ function Watch() {
             </Button>
           </DialogActions>
         </ModalDialog>
-      </Modal>
-      <Modal open={adsWarning} onClose={() => setAdsWarning(false)} sx={{ zIndex: 1003 }}>
+      </Modal> */}
+      {/* <Modal open={adsWarning} onClose={() => setAdsWarning(false)} sx={{ zIndex: 1003 }}>
         <ModalDialog color="warning" variant="outlined">
           <ModalClose onClick={() => setAdsWarning(false)} />
           <Typography color="warning" level="h4" startDecorator={<Warning />}>
@@ -298,7 +298,7 @@ function Watch() {
             </Button>
           </DialogActions>
         </ModalDialog>
-      </Modal>
+      </Modal> */}
       <Helmet>
         <title>
           {`${movieType === "movie"
@@ -339,6 +339,12 @@ function Watch() {
             ? movieDetailsDataArr?.title
             : tvSeriesDetailsDataArr?.name}
         </Typography>
+        <IconButton onClick={() => {
+          streamType === "WADS" ? setStreamType("WOADS") : setStreamType("WADS")
+        }}>
+          {streamType === "WOADS" ? <LiveTvIcon /> :
+            <StorageIcon />}
+        </IconButton>
       </Box>
       <Box
         sx={{

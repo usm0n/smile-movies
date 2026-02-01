@@ -3,6 +3,7 @@ import HomeLayout from "../layouts/HomeLayout";
 import Login from "../pages/auth/Login";
 import Register from "../pages/auth/Register";
 import VerifyEmail from "../pages/auth/VerifyEmail";
+import Discover from "../pages/Discover";
 import Movie from "../pages/movie/Movie";
 import Search from "../pages/search/Search";
 import TVSeries from "../pages/tv/TVSeries";
@@ -49,6 +50,10 @@ export const mainRoutes = [
   {
     path: "/auth/verify-email",
     element: <VerifyEmail />,
+  },
+  {
+    path: "/discover/:type?/:page?",
+    element: <Discover />,
   },
   {
     path: "*",
