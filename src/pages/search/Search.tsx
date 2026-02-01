@@ -2,18 +2,19 @@ import { Box, Button, ButtonGroup, IconButton, Typography } from "@mui/joy";
 import { useTMDB } from "../../context/TMDB";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { searchMovie, searchTV } from "../../tmdb-res";
+import type { searchMovie, searchTV } from "../../tmdb-res";
 import EventMC from "../../components/cards/EventMC";
 import EventMCS from "../../components/cards/skeleton/EventMC";
+import AutoGraphIcon from '@mui/icons-material/AutoGraph';
 
 function Search() {
   const { query, page } = useParams();
   const [type, setType] = useState<"tv" | "movie" | "all">("all")
   const { searchMovie, searchMovieData, searchTv, searchTvData } = useTMDB();
 
-  const movieResults = (searchMovieData?.data as searchMovie)?.results || [];
-  const tvResults = (searchTvData?.data as searchTV)?.results || [];
-  const searchResults = type === "movie" ? movieResults : type === "tv" ? tvResults : [...tvResults, ...movieResults];
+  const movieResults = (searchMovieData?.data as searchMovie)?.results.sort((a, b) => b.popularity - a.popularity) || [];
+  const tvResults = (searchTvData?.data as searchTV)?.results.sort((a, b) => b.popularity - a.popularity) || [];
+  const searchResults = type === "movie" ? movieResults : type === "tv" ? tvResults : [...tvResults, ...movieResults].sort((a, b) => b.popularity - a.popularity);
 
   const totalPages = type === "movie"
     ? (searchMovieData?.data as searchMovie)?.total_pages
@@ -50,6 +51,7 @@ function Search() {
       </ButtonGroup>
 
       {!isLoading && searchResults.length > 0 && <Typography>{totalResults} results found</Typography>}
+      {!isLoading && searchResults.length > 0 && <Typography startDecorator={<AutoGraphIcon sx={{ color: "neutral.300" }} />}>Sorted by popularity</Typography>}
 
       <Box display={"flex"} flexWrap={"wrap"} justifyContent={"center"} gap={"10px"}>
         {!searchResults.length && !isLoading && <Typography textColor={"neutral.300"} level="h2" fontWeight={700}>No Results Found</Typography>}
