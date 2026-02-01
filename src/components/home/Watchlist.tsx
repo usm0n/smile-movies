@@ -25,6 +25,9 @@ function Watchlist() {
       }}
     >
       <Typography
+      onClick={() => {
+        navigate(`/watchlist`);
+      }}
         endDecorator={<ArrowForwardIos />}
         level="h1"
         sx={{
@@ -54,8 +57,8 @@ function Watchlist() {
       >
         {isLoggedIn ? (
           myselfData?.isLoading ||
-            removeFromWatchlistData?.isLoading ||
-            addToWatchlistData?.isLoading ? (
+          removeFromWatchlistData?.isLoading ||
+          addToWatchlistData?.isLoading ? (
             <Box
               sx={{
                 display: "flex",

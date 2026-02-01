@@ -120,18 +120,18 @@ function EventMC({
                 }
               >
                 <IosShare /> Share this{" "}
-                {eventType == "movie" ? "Movie" : "TV show"}
+                {eventType === "movie" ? "Movie" : "TV show"}
               </MenuItem>
               <MenuItem
                 onClick={() => {
                   navigate(
-                    `/${eventType}/${eventId}${eventType == "tv" ? "/1/1" : ""
+                    `/${eventType}/${eventId}${eventType === "tv" ? "/1/1" : ""
                     }/watch`
                   );
                 }}
               >
                 <PlayArrow />{" "}
-                {eventType == "movie" ? "Watch Now" : "Play S1:E1"}
+                {eventType === "movie" ? "Watch Now" : "Play S1:E1"}
               </MenuItem>
               <MenuItem
                 disabled={
@@ -143,7 +143,7 @@ function EventMC({
                   !isLoggedIn
                     ? navigate("/auth/login")
                     : (myselfData?.data as User)?.watchlist?.find(
-                      (item) => item.id == eventId
+                      (item) => item.id === eventId
                     )
                       ? removeFromWatchlist(eventType, eventId.toString())
                       : addToWatchlist(
@@ -153,15 +153,15 @@ function EventMC({
                         "new",
                         0,
                         0,
-                        eventType == "tv" ? 1 : 0,
-                        eventType == "tv" ? 1 : 0
+                        eventType === "tv" ? 1 : 0,
+                        eventType === "tv" ? 1 : 0
                       );
                 }}
               >
                 {myselfData?.isLoading ? (
                   "Loading..."
                 ) : (myselfData?.data as User)?.watchlist?.find(
-                  (item) => item.id == eventId
+                  (item) => item.id === eventId
                 ) ? (
                   removeFromWatchlistData?.isLoading ? (
                     "Removing from Watchlist..."
@@ -192,7 +192,7 @@ function EventMC({
             </Menu>
           </Dropdown>
         </Box>
-        {eventStatus && eventStatus == "watching" && (
+        {eventStatus && eventStatus === "watching" && (
           <ButtonGroup orientation="vertical" sx={{
             position: 'absolute',
             zIndex: 3,
@@ -215,13 +215,13 @@ function EventMC({
               }
             }} onClick={(e) => {
               e.stopPropagation();
-              navigate(`/${eventType}/${eventId}${eventType == "tv" ? `/${eventSeason}/${eventEpisode}` : ""
+              navigate(`/${eventType}/${eventId}${eventType === "tv" ? `/${eventSeason}/${eventEpisode}` : ""
                 }/watch/${eventCurrentTime ? eventCurrentTime : 0}`);
             }}>
               <PlayArrow sx={{
                 color: "black"
               }} />
-              Continue {eventType == "movie" ? null : `S${eventSeason}:E${eventEpisode}`}
+              Continue {eventType === "movie" ? null : `S${eventSeason}:E${eventEpisode}`}
             </Button>
             {/* {eventType == "tv" && eventSeason && eventEpisode ? (
               <Button sx={{
@@ -246,7 +246,7 @@ function EventMC({
             ) : null} */}
           </ButtonGroup>
         )}
-        {eventStatus && eventStatus == "watching" && (
+        {eventStatus && eventStatus === "watching" && (
           <LinearProgress sx={{
             position: "absolute",
             zIndex: 2,
@@ -256,7 +256,7 @@ function EventMC({
             "--LinearProgress-thickness": "3px"
           }} determinate value={eventCurrentTime && eventDuration ? (eventCurrentTime / eventDuration) * 100 : 0} />)}
         {
-          eventType == "tv" && eventSeason && eventEpisode ? (
+          eventType === "tv" && eventSeason && eventEpisode ? (
             <Chip sx={{
               padding: "0px 15px",
             }}>
@@ -267,7 +267,7 @@ function EventMC({
           ) : null
         }
         {
-          eventStatus == "new" ? (
+          eventStatus === "new" ? (
             <Chip sx={{
               color: "rgb(255, 200, 92)"
             }}>

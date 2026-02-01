@@ -152,7 +152,6 @@ function Discover() {
           Movies & TV Shows Await
         </Typography>
       </Box>
-
       <Box
         sx={{
           display: "flex",

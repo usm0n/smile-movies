@@ -9,6 +9,7 @@ import Search from "../pages/search/Search";
 import TVSeries from "../pages/tv/TVSeries";
 import Settings from "../pages/user";
 import Watch from "../pages/video/Watch";
+import Watchlist from "../pages/Watchlist";
 
 export const mainRoutes = [
   {
@@ -54,6 +55,10 @@ export const mainRoutes = [
   {
     path: "/discover/:type?/:page?",
     element: <Discover />,
+  },
+  {
+    path: "/watchlist",
+    element: <Watchlist/>,
   },
   {
     path: "*",
