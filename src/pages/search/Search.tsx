@@ -56,7 +56,7 @@ function Search() {
 
         {!isLoading ? (
           searchResults.map((result) => (
-            <EventMC key={result?.id} eventPoster={result?.poster_path} eventId={result?.id} eventType={type === "tv" ? "tv" : "movie"} />
+            <EventMC key={result?.id} eventPoster={result?.poster_path} eventId={result?.id} eventType={'name' in result ? "tv" : "movie"} />
           ))
         ) : (
           <>{Array(10).fill(null).map((_, i) => <EventMCS key={i} />)}</>
