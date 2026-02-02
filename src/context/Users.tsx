@@ -1,12 +1,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import * as userType from "../user";
 import { users } from "../service/api/smb/users.api.service";
-import {
-  deleteCookie,
-  deviceId,
-  isLoggedIn,
-  setCookie,
-} from "../utilities/defaults";
+import { deviceId, isLoggedIn, reload } from "../utilities/defaults";
 
 const UsersContext = createContext({
   usersData: null as userType.ResponseType | null,
@@ -65,7 +60,7 @@ const UsersContext = createContext({
   login: async (
     user: userType.UserLogin,
     type: "email" | "google",
-    registerUser?: userType.UserRegister
+    registerUser?: userType.UserRegister,
   ) => {
     user;
     type;
@@ -89,7 +84,16 @@ const UsersContext = createContext({
     token;
     password;
   },
-  addToWatchlist: async (type: string, id: string, poster: string, status: string, duration: number, currentTime: number, season: number, episode: number) => {
+  addToWatchlist: async (
+    type: string,
+    id: string,
+    poster: string,
+    status: string,
+    duration: number,
+    currentTime: number,
+    season: number,
+    episode: number,
+  ) => {
     type;
     id;
     poster;
@@ -106,7 +110,7 @@ const UsersContext = createContext({
   addDevice: async (
     deviceId: string,
     deviceName: string,
-    deviceType: string
+    deviceType: string,
   ) => {
     deviceId;
     deviceName;
@@ -121,14 +125,14 @@ export const useUsers = () => useContext(UsersContext);
 
 const UsersProvider = ({ children }: { children: React.ReactNode }) => {
   const [usersData, setUsersData] = useState<userType.ResponseType | null>(
-    null
+    null,
   );
   const [userByIdData, setUserByIdData] =
     useState<userType.ResponseType | null>(null);
   const [userByEmailData, setUserByEmailData] =
     useState<userType.ResponseType | null>(null);
   const [myselfData, setMyselfData] = useState<userType.ResponseType | null>(
-    null
+    null,
   );
   const [updatedUserByIdData, setUpdatedUserByIdData] =
     useState<userType.ResponseType | null>(null);
@@ -145,10 +149,10 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
   const [registerData, setRegisterData] =
     useState<userType.ResponseType | null>(null);
   const [loginData, setLoginData] = useState<userType.ResponseType | null>(
-    null
+    null,
   );
   const [verifyData, setVerifyData] = useState<userType.ResponseType | null>(
-    null
+    null,
   );
   const [resendTokenVerificationData, setResendTokenVerificationData] =
     useState<userType.ResponseType | null>(null);
@@ -445,24 +449,23 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
       });
       const response = await users.register(user);
 
-      if (!("message" in response)) {
+      if (
+        "message" in response &&
+        response.message === "User registered successfully"
+      ) {
         setRegisterData({
           isLoading: false,
           isError: false,
-          data: response as userType.TokenResponse,
+          data: response as userType.Message,
           errorResponse: null,
         });
-        if ("token" in response) {
-          setCookie("authToken", response.token);
-        }
+        reload();
       } else {
         setRegisterData({
           isLoading: false,
           isError: true,
           data: null,
           errorResponse: response,
-          isSuccess: false,
-          isConflict: true,
         });
       }
     } catch (error) {
@@ -478,7 +481,7 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
   const login = async (
     user: userType.UserLogin,
     type: "email" | "google",
-    registerUser?: userType.UserRegister
+    registerUser?: userType.UserRegister,
   ) => {
     setLoginData({
       isLoading: true,
@@ -489,18 +492,15 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       const response = await users.login(user);
 
-      if (!("message" in response)) {
+      if ("message" in response && response.message === "Login successful") {
         setLoginData({
           isLoading: false,
           isError: false,
-          data: response as userType.TokenResponse,
+          data: response as userType.Message,
           errorResponse: null,
           isSuccess: true,
         });
-
-        if ("token" in response) {
-          setCookie("authToken", response.token);
-        }
+        reload();
       } else {
         if (type == "google") {
           setLoginData({
@@ -535,7 +535,9 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
 
   const logout = () => {
     deleteDevice(deviceId()).then(() => {
-      deleteCookie("authToken");
+      users.logout().then(() => {
+        reload();
+      });
     });
   };
 
@@ -653,7 +655,7 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
   const resetPassword = async (
     email: string,
     token: string,
-    password: string
+    password: string,
   ) => {
     try {
       setResetPasswordData({
@@ -681,7 +683,16 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  const addToWatchlist = async (type: string, id: string, poster: string, status: string, duration: number, currentTime: number, season: number, episode: number) => {
+  const addToWatchlist = async (
+    type: string,
+    id: string,
+    poster: string,
+    status: string,
+    duration: number,
+    currentTime: number,
+    season: number,
+    episode: number,
+  ) => {
     try {
       setAddToWatchlistData({
         isLoading: true,
@@ -689,7 +700,16 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
         data: null,
         errorResponse: null,
       });
-      const response = await users.addToWatchlist(type, id, poster, status, duration, currentTime, season, episode);
+      const response = await users.addToWatchlist(
+        type,
+        id,
+        poster,
+        status,
+        duration,
+        currentTime,
+        season,
+        episode,
+      );
       if (response) {
         setAddToWatchlistData({
           isLoading: false,
@@ -740,7 +760,7 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
   const addDevice = async (
     deviceId: string,
     deviceType: string,
-    deviceName: string
+    deviceName: string,
   ) => {
     try {
       setAddDeviceData({
@@ -805,7 +825,7 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
       if (
         (myselfData?.data as userType.User)?.devices?.length === 0 ||
         (myselfData?.data as userType.User)?.devices?.filter(
-          (device: userType.Device) => device?.deviceId === deviceId()
+          (device: userType.Device) => device?.deviceId === deviceId(),
         ).length === 0
       ) {
         logout();

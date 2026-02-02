@@ -105,6 +105,14 @@ export const users = {
       return error.response.data as CatchError;
     }
   },
+  logout: async () => {
+    try {
+      const response = await smbAPI.post("/users/logout");
+      return response.data as Message;
+    } catch (error: any) {
+      return error.response.data as CatchError;
+    }
+  },
   verify: async (token: string) => {
     try {
       const response = await smbAPI.post("/users/verify/" + token);
@@ -133,7 +141,7 @@ export const users = {
     try {
       const response = await smbAPI.post(
         "/users/resendForgotPasswordToken",
-        email
+        email,
       );
       return response.data as Message;
     } catch (error: any) {
@@ -144,7 +152,7 @@ export const users = {
     try {
       const response = await smbAPI.post(
         "/users/resetPassword/" + email + "/" + token,
-        { password }
+        { password },
       );
       return response.data as Message;
     } catch (error: any) {
@@ -159,7 +167,7 @@ export const users = {
     duration: number,
     currentTime: number,
     season: number,
-    episode: number
+    episode: number,
   ) => {
     try {
       const response = await smbAPI.post(`/users/watchlist/`, {
@@ -180,7 +188,7 @@ export const users = {
   removeFromWatchlist: async (typeMovie: string, movieId: string) => {
     try {
       const response = await smbAPI.delete(
-        `/users/watchlist/${typeMovie}/${movieId}`
+        `/users/watchlist/${typeMovie}/${movieId}`,
       );
       return response.data as Message;
     } catch (error: any) {
@@ -198,7 +206,7 @@ export const users = {
   addDevice: async (
     deviceId: string,
     deviceType: string,
-    deviceName: string
+    deviceName: string,
   ) => {
     try {
       const response = await smbAPI.post(`/users/addDevice`, {
