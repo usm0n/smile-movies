@@ -15,12 +15,15 @@ export function getCookie(cname: string) {
   }
   return "";
 }
-export function setCookie(cname: string, cvalue: string) {
-  document.cookie = cname + "=" + cvalue + ";";
+export function setCookie(cname: string, cvalue: string, days: number = 7) {
+  // Convert days to seconds
+  const seconds = days * 24 * 60 * 60;
+
+  document.cookie = `${cname}=${cvalue}; path=/; max-age=${seconds}; SameSite=Lax;`;
   reload();
 }
 export function deleteCookie(cname: string) {
-  document.cookie = cname + "=;";
+  document.cookie = `${cname}=; path=/; max-age=0; SameSite=Lax;`;
   reload();
 }
 
@@ -40,7 +43,7 @@ export const redirect = (url: string) => {
 
 export const isValidEmail = (email: string) =>
   /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|.(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/.test(
-    email
+    email,
   );
 
 export const backdropLoading = (open: boolean | undefined, theme: any) =>
@@ -120,7 +123,7 @@ export const deviceName = () => {
     }
   } else if (
     /(TV|SmartTV|SMART-TV|WebTV|HbbTV|AppleTV|Opera TV|POV_TV|BRAVIA|Roku)/.test(
-      ua
+      ua,
     )
   ) {
     device = "Smart TV";
@@ -178,8 +181,8 @@ export function formatTimeAgo(dateString: string): string {
   const date = new Date(
     dateString?.replace(
       /(\d{2})\.(\d{2})\.(\d{4}) (\d{2}):(\d{2})/,
-      "$3-$2-$1T$4:$5"
-    )
+      "$3-$2-$1T$4:$5",
+    ),
   );
   const now = new Date();
   const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
@@ -205,7 +208,7 @@ export function formatTimeAgo(dateString: string): string {
 
 export const trackEvent = (
   action: string,
-  params: Record<string, any> = {}
+  params: Record<string, any> = {},
 ) => {
   if (typeof window !== "undefined" && (window as any).gtag) {
     (window as any).gtag("event", action, params);

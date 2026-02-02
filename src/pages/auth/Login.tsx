@@ -102,7 +102,7 @@ function Login() {
           headers: {
             Authorization: `Bearer ${tokenResponse.access_token}`,
           },
-        }
+        },
       );
       const userData: GoogleUserResponse = userInfo.data;
       login(
@@ -127,7 +127,7 @@ function Login() {
           deviceId: deviceId(),
           loginType: "google",
           deviceLocation: userValue.deviceLocation || ({} as Location),
-        }
+        },
       );
     },
     onError: (error) => {
@@ -161,7 +161,7 @@ function Login() {
         loginData?.isLoading ||
           registerData?.isLoading ||
           locationData?.loading,
-        colorScheme
+        colorScheme,
       )}
       {/* <Modal
         sx={{
@@ -285,6 +285,13 @@ function Login() {
               <FormHelperText>
                 This email is already used by "Email & Password" method. Please
                 enter the password correctly or try another Google Account
+              </FormHelperText>
+            </FormControl>
+          )}
+          {loginData?.isSuccess && (
+            <FormControl sx={{ width: "300px" }} color="success">
+              <FormHelperText>
+                Logged in successfully! Redirecting...
               </FormHelperText>
             </FormControl>
           )}
