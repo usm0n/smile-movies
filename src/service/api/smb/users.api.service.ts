@@ -91,9 +91,7 @@ export const users = {
   },
   register: async (user: UserRegister) => {
     try {
-      const response = await smbAPI.post("/users/register", user, {
-        withCredentials: true,
-      });
+      const response = await smbAPI.post("/users/register", user);
       return response.data as Message | TokenResponse;
     } catch (error: any) {
       return error.response.data as CatchError;
@@ -101,9 +99,7 @@ export const users = {
   },
   login: async (user: UserLogin) => {
     try {
-      const response = await smbAPI.post("/users/login", user, {
-        withCredentials: true,
-      });
+      const response = await smbAPI.post("/users/login", user);
       return response.data;
     } catch (error: any) {
       return error.response.data as CatchError;
