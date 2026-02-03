@@ -1,7 +1,12 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import * as userType from "../user";
 import { users } from "../service/api/smb/users.api.service";
-import { deviceId, isLoggedIn, reload } from "../utilities/defaults";
+import {
+  deviceId,
+  isLoggedIn,
+  reload,
+  setIsLoggedIn,
+} from "../utilities/defaults";
 
 const UsersContext = createContext({
   usersData: null as userType.ResponseType | null,
@@ -257,12 +262,20 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
         errorResponse: null,
       });
       const response = await users.getMyself();
-      if (response) {
+      if (!("message" in response)) {
         setMyselfData({
           isLoading: false,
           isError: false,
           data: response as userType.User,
           errorResponse: null,
+        });
+        setIsLoggedIn(true);
+      } else {
+        setMyselfData({
+          isLoading: false,
+          isError: false,
+          data: null,
+          errorResponse: response,
         });
       }
     } catch (error) {
@@ -816,10 +829,8 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   useEffect(() => {
-    if (isLoggedIn) {
-      getMyself();
-    }
-  }, [isLoggedIn]);
+    getMyself();
+  }, []);
   useEffect(() => {
     if (isLoggedIn) {
       if (

@@ -1,33 +1,9 @@
 import { Box, CircularProgress } from "@mui/joy";
 
-export function getCookie(cname: string) {
-  let name = cname + "=";
-  let decodedCookie = decodeURIComponent(document.cookie);
-  let ca = decodedCookie.split(";");
-  for (let i = 0; i < ca.length; i++) {
-    let c = ca[i];
-    while (c.charAt(0) == " ") {
-      c = c.substring(1);
-    }
-    if (c.indexOf(name) == 0) {
-      return c.substring(name.length, c.length);
-    }
-  }
-  return "";
-}
-export function setCookie(cname: string, cvalue: string, days: number = 7) {
-  // Convert days to seconds
-  const seconds = days * 24 * 60 * 60;
-
-  document.cookie = `${cname}=${cvalue}; path=/; max-age=${seconds}; SameSite=Lax;`;
-  reload();
-}
-export function deleteCookie(cname: string) {
-  document.cookie = `${cname}=; path=/; max-age=0; SameSite=Lax;`;
-  reload();
-}
-
-export const isLoggedIn = getCookie("authToken").trim() !== "";
+export let isLoggedIn = false;
+export const setIsLoggedIn = (value: boolean) => {
+  isLoggedIn = value;
+};
 
 export const reload = () => {
   window.location.reload();
