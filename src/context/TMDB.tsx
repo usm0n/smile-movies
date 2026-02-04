@@ -106,7 +106,7 @@ const TmdbContext = createContext({
   tvEpisodeDetails: async (
     id: string,
     seasonNumber: number,
-    episodeNumber: number
+    episodeNumber: number,
   ) => {
     id;
     seasonNumber;
@@ -116,7 +116,7 @@ const TmdbContext = createContext({
   tvEpisodeCredits: async (
     id: string,
     seasonNumber: number,
-    episodeNumber: number
+    episodeNumber: number,
   ) => {
     id;
     seasonNumber;
@@ -164,6 +164,18 @@ const TmdbContext = createContext({
   tvSeriesSimilar: async (id: string) => {
     id;
   },
+  peopleDetailsData: null as tmdbRes.ResponseType | null,
+  peopleDetails: async (id: string) => {
+    id;
+  },
+  peopleCombinedCreditsData: null as tmdbRes.ResponseType | null,
+  peopleCombinedCredits: async (id: string) => {
+    id;
+  },
+  peopleImagesData: null as tmdbRes.ResponseType | null,
+  peopleImages: async (id: string) => {
+    id;
+  },
 });
 
 export const useTMDB = () => useContext(TmdbContext);
@@ -202,7 +214,7 @@ export const TMDBProvider = ({ children }: { children: React.ReactNode }) => {
   const [searchMovieData, setSearchMovieData] =
     useState<tmdbRes.ResponseType | null>(null);
   const [searchTvData, setSearchTvData] = useState<tmdbRes.ResponseType | null>(
-    null
+    null,
   );
   const [movieCreditsData, setMovieCreditsData] =
     useState<tmdbRes.ResponseType | null>(null);
@@ -227,7 +239,7 @@ export const TMDBProvider = ({ children }: { children: React.ReactNode }) => {
   const [movieImagesData, setMovieImagesData] =
     useState<tmdbRes.ResponseType | null>(null);
   const [tvImagesData, setTvImagesData] = useState<tmdbRes.ResponseType | null>(
-    null
+    null,
   );
   const [movieTranslationsData, setMovieTranslationsData] =
     useState<tmdbRes.ResponseType | null>(null);
@@ -241,6 +253,93 @@ export const TMDBProvider = ({ children }: { children: React.ReactNode }) => {
     useState<tmdbRes.ResponseType | null>(null);
   const [tvSeriesVideosData, setTvSeriesVideosData] =
     useState<tmdbRes.ResponseType | null>(null);
+  const [peopleDetailsData, setPeopleDetailsData] =
+    useState<tmdbRes.ResponseType | null>(null);
+  const [peopleCombinedCreditsData, setPeopleCombinedCreditsData] =
+    useState<tmdbRes.ResponseType | null>(null);
+  const [peopleImagesData, setPeopleImagesData] =
+    useState<tmdbRes.ResponseType | null>(null);
+
+  const peopleImages = async (id: string) => {
+    try {
+      setPeopleImagesData({
+        isLoading: true,
+        isError: false,
+        data: null,
+        errorResponse: null,
+      });
+      const response = await tmdb.peopleImages(id);
+      if (response) {
+        setPeopleImagesData({
+          isLoading: false,
+          isError: false,
+          data: response as tmdbRes.images,
+          errorResponse: null,
+        });
+      }
+    } catch (error) {
+      setPeopleImagesData({
+        isLoading: false,
+        isError: true,
+        data: null,
+        errorResponse: error,
+      });
+    }
+  };
+
+  const peopleCombinedCredits = async (id: string) => {
+    try {
+      setPeopleCombinedCreditsData({
+        isLoading: true,
+        isError: false,
+        data: null,
+        errorResponse: null,
+      });
+      const response = await tmdb.peopleCombinedCredits(id);
+      if (response) {
+        setPeopleCombinedCreditsData({
+          isLoading: false,
+          isError: false,
+          data: response as tmdbRes.peopleCombinedCredits,
+          errorResponse: null,
+        });
+      }
+    } catch (error) {
+      setPeopleCombinedCreditsData({
+        isLoading: false,
+        isError: true,
+        data: null,
+        errorResponse: error,
+      });
+    }
+  };
+
+  const peopleDetails = async (id: string) => {
+    try {
+      setPeopleDetailsData({
+        isLoading: true,
+        isError: false,
+        data: null,
+        errorResponse: null,
+      });
+      const response = await tmdb.peopleDetails(id);
+      if (response) {
+        setPeopleDetailsData({
+          isLoading: false,
+          isError: false,
+          data: response as tmdbRes.peopleDetails,
+          errorResponse: null,
+        });
+      }
+    } catch (error) {
+      setPeopleDetailsData({
+        isLoading: false,
+        isError: true,
+        data: null,
+        errorResponse: error,
+      });
+    }
+  };
 
   const movieImages = async (id: string) => {
     try {
@@ -519,7 +618,7 @@ export const TMDBProvider = ({ children }: { children: React.ReactNode }) => {
   const tvEpisodeCredits = async (
     id: string,
     seasonNumber: number,
-    episodeNumber: number
+    episodeNumber: number,
   ) => {
     try {
       setTvEpisodeCreditsData({
@@ -531,7 +630,7 @@ export const TMDBProvider = ({ children }: { children: React.ReactNode }) => {
       const response = await tmdb.tvEpisodeCredits(
         id,
         seasonNumber,
-        episodeNumber
+        episodeNumber,
       );
       if (response) {
         setTvEpisodeCreditsData({
@@ -553,7 +652,7 @@ export const TMDBProvider = ({ children }: { children: React.ReactNode }) => {
   const tvEpisodeDetails = async (
     id: string,
     seasonNumber: number,
-    episodeNumber: number
+    episodeNumber: number,
   ) => {
     try {
       setTvEpisodeDetailsData({
@@ -565,7 +664,7 @@ export const TMDBProvider = ({ children }: { children: React.ReactNode }) => {
       const response = await tmdb.tvEpisodeDetails(
         id,
         seasonNumber,
-        episodeNumber
+        episodeNumber,
       );
       if (!("response" in response)) {
         setTvEpisodeDetailsData({
@@ -1220,6 +1319,12 @@ export const TMDBProvider = ({ children }: { children: React.ReactNode }) => {
   return (
     <TmdbContext.Provider
       value={{
+        peopleDetails,
+        peopleDetailsData,
+        peopleCombinedCredits,
+        peopleCombinedCreditsData,
+        peopleImages,
+        peopleImagesData,
         movieImages,
         movieImagesData,
         movieSimilar,

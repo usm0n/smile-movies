@@ -20,18 +20,15 @@ import {
 import { useNavigate, useParams } from "react-router-dom";
 import { useTMDB } from "../../context/TMDB";
 import { useEffect, useState } from "react";
-import {
-  backdropLoading,
-  isLoggedIn,
-} from "../../utilities/defaults";
+import { backdropLoading, isLoggedIn } from "../../utilities/defaults";
 import NotFound from "../../components/utils/NotFound";
 import { movieDetails, tvDetails, tvSeasonsDetails } from "../../tmdb-res";
 import { Helmet } from "react-helmet";
 import { useStream } from "../../context/Stream";
 import { StreamServer } from "../../stream-res";
 import { useUsers } from "../../context/Users";
-import StorageIcon from '@mui/icons-material/Storage';
-import LiveTvIcon from '@mui/icons-material/LiveTv';
+import StorageIcon from "@mui/icons-material/Storage";
+import LiveTvIcon from "@mui/icons-material/LiveTv";
 
 function Watch() {
   const {
@@ -47,8 +44,8 @@ function Watch() {
   const { getStreamData, getStream } = useStream();
   const { addToWatchlist } = useUsers();
   const navigate = useNavigate();
-  const [streamServer, setStreamServer] = useState<StreamServer | null>(null)
-  const [streamType, setStreamType] = useState<"WADS" | "WOADS">("WADS")
+  const [streamServer, setStreamServer] = useState<StreamServer | null>(null);
+  const [streamType, setStreamType] = useState<"WADS" | "WOADS">("WADS");
 
   const isTvSE = seasonId && episodeId;
   const isFetching =
@@ -62,15 +59,15 @@ function Watch() {
   const tvSeasonsDetailsArr = tvSeasonsDetailsData?.data as tvSeasonsDetails;
 
   const episodeChange = (n: string) => {
-    setStreamServer(null)
-    navigate(n)
-  }
+    setStreamServer(null);
+    navigate(n);
+  };
 
   useEffect(() => {
     if (!movieId || !movieType) return;
     const fetchStream = (type: "movie" | "tv") => {
       if (streamType === "WADS") {
-        setStreamServer(null)
+        setStreamServer(null);
         return;
       }
       getStream(type, movieId, seasonId, episodeId);
@@ -89,10 +86,10 @@ function Watch() {
   }, [movieType, movieId, seasonId, episodeId, streamType]);
 
   useEffect(() => {
-    window.addEventListener('message', (event) => {
-      if (event.origin !== 'https://vidsrc.cc') return;
+    window.addEventListener("message", (event) => {
+      if (event.origin !== "https://vidsrc.cc") return;
 
-      if (event.data && event.data.type === 'PLAYER_EVENT') {
+      if (event.data && event.data.type === "PLAYER_EVENT") {
         const { event: eventType, currentTime, duration } = event.data.data;
         if (isLoggedIn && movieId && movieType && eventType == "time") {
           addToWatchlist(
@@ -105,12 +102,20 @@ function Watch() {
             duration,
             currentTime,
             seasonId ? parseInt(seasonId) : 0,
-            episodeId ? parseInt(episodeId) : 0
+            episodeId ? parseInt(episodeId) : 0,
           );
         }
       }
-    })
-  }, [isLoggedIn, movieId, movieType, seasonId, episodeId, tvSeriesDetailsDataArr, movieDetailsDataArr]);
+    });
+  }, [
+    isLoggedIn,
+    movieId,
+    movieType,
+    seasonId,
+    episodeId,
+    tvSeriesDetailsDataArr,
+    movieDetailsDataArr,
+  ]);
 
   return isIncorrect ? (
     <NotFound />
@@ -123,27 +128,36 @@ function Watch() {
       <Modal open={true} sx={{ zIndex: 1002 }}>
         <ModalDialog>
           <LinearProgress thickness={1} />
-          <Typography level="h3">
-            Please wait...
-          </Typography>
+          <Typography level="h3">Please wait...</Typography>
           <Typography>
-            We are preparing your stream. This may take a few moments depending on server load and your
-            internet connection.
+            We are preparing your stream. This may take a few moments depending
+            on server load and your internet connection.
           </Typography>
           <DialogActions>
-            <Button color="neutral" variant="soft" onClick={() => navigate(`/${movieType}/${movieId}`)}>
+            <Button
+              color="neutral"
+              variant="soft"
+              onClick={() => navigate(`/${movieType}/${movieId}`)}
+            >
               Go Back
             </Button>
           </DialogActions>
           <Divider>or</Divider>
-          <Link onClick={() => setStreamType("WADS")} sx={{
-            margin: "0 auto"
-          }}>Continue with ADS(recommended)</Link>
+          <Link
+            onClick={() => setStreamType("WADS")}
+            sx={{
+              margin: "0 auto",
+            }}
+          >
+            Continue with ADS(recommended)
+          </Link>
         </ModalDialog>
       </Modal>
     </Box>
-  ) : !getStreamData.isAvailable && !getStreamData.isLoading && streamType == "WOADS" ? (
-    <Modal open={true} sx={{ zIndex: 1002 }} >
+  ) : !getStreamData.isAvailable &&
+    !getStreamData.isLoading &&
+    streamType == "WOADS" ? (
+    <Modal open={true} sx={{ zIndex: 1002 }}>
       <ModalDialog color="danger" variant="outlined">
         <ModalClose onClick={() => navigate(`/${movieType}/${movieId}`)} />
         <Typography color="danger" level="h4" startDecorator={<Warning />}>
@@ -163,14 +177,30 @@ function Watch() {
           >
             Go Back
           </Button>
-          <Button onClick={() => getStream(movieType == "tv" ? "tv" : "movie", movieId!, seasonId, episodeId)} variant="soft" color="danger">
+          <Button
+            onClick={() =>
+              getStream(
+                movieType == "tv" ? "tv" : "movie",
+                movieId!,
+                seasonId,
+                episodeId,
+              )
+            }
+            variant="soft"
+            color="danger"
+          >
             Try Again
           </Button>
         </DialogActions>
         <Divider>or</Divider>
-        <Link onClick={() => setStreamType("WADS")} sx={{
-          margin: "0 auto"
-        }}>Try with ADS(recommended)</Link>
+        <Link
+          onClick={() => setStreamType("WADS")}
+          sx={{
+            margin: "0 auto",
+          }}
+        >
+          Try with ADS(recommended)
+        </Link>
       </ModalDialog>
     </Modal>
   ) : !streamServer && getStreamData.isAvailable && streamType == "WOADS" ? (
@@ -181,20 +211,40 @@ function Watch() {
             Select Stream Server
           </Typography>
           <Typography sx={{ mb: 2 }}>
-            Please choose a stream server from the options below to start <br /> PS: <Typography color="primary">Vixsrc</Typography> is recommended for the best experience.
+            Please choose a stream server from the options below to start <br />{" "}
+            PS: <Typography color="primary">Vixsrc</Typography> is recommended
+            for the best experience.
           </Typography>
           <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
             {getStreamData.data?.streams.map((server, index) => (
-              <ButtonGroup key={index} variant="outlined" color="neutral" sx={{ display: "flex", justifyContent: "space-between" }}>
-                <Button sx={{
-                  width: "80%"
-                }} key={index} variant="outlined" color={server.name.includes("Vixsrc") ? "primary" : "neutral"} onClick={() => setStreamServer(server)}>
+              <ButtonGroup
+                key={index}
+                variant="outlined"
+                color="neutral"
+                sx={{ display: "flex", justifyContent: "space-between" }}
+              >
+                <Button
+                  sx={{
+                    width: "80%",
+                  }}
+                  key={index}
+                  variant="outlined"
+                  color={server.name.includes("Vixsrc") ? "primary" : "neutral"}
+                  onClick={() => setStreamServer(server)}
+                >
                   {server.name}
                 </Button>
-                <Button sx={{
-                  width: "20%"
-                }} disabled variant="outlined" color="primary">
-                  {!server.title.split('\n')[1]?.trim?.() ? "N/A" : server.title.split('\n')[1]}
+                <Button
+                  sx={{
+                    width: "20%",
+                  }}
+                  disabled
+                  variant="outlined"
+                  color="primary"
+                >
+                  {!server.title.split("\n")[1]?.trim?.()
+                    ? "N/A"
+                    : server.title.split("\n")[1]}
                 </Button>
               </ButtonGroup>
             ))}
@@ -209,9 +259,14 @@ function Watch() {
             </Button>
           </DialogActions>
           <Divider>or</Divider>
-          <Link onClick={() => setStreamType("WADS")} sx={{
-            margin: "0 auto"
-          }}>Continue with ADS(recommended)</Link>
+          <Link
+            onClick={() => setStreamType("WADS")}
+            sx={{
+              margin: "0 auto",
+            }}
+          >
+            Continue with ADS(recommended)
+          </Link>
         </ModalDialog>
       </ModalOverflow>
     </Modal>
@@ -301,18 +356,20 @@ function Watch() {
       </Modal> */}
       <Helmet>
         <title>
-          {`${movieType === "movie"
-            ? movieDetailsDataArr?.title
-            : tvSeriesDetailsDataArr?.name
-            }`}{" "}
+          {`${
+            movieType === "movie"
+              ? movieDetailsDataArr?.title
+              : tvSeriesDetailsDataArr?.name
+          }`}{" "}
           - Watch
         </title>
         <meta
           name="description"
-          content={`Watch ${movieType === "movie"
-            ? movieDetailsDataArr?.title
-            : tvSeriesDetailsDataArr?.name
-            } on Smile Movies`}
+          content={`Watch ${
+            movieType === "movie"
+              ? movieDetailsDataArr?.title
+              : tvSeriesDetailsDataArr?.name
+          } on Smile Movies`}
         />
       </Helmet>
       <Box
@@ -339,11 +396,14 @@ function Watch() {
             ? movieDetailsDataArr?.title
             : tvSeriesDetailsDataArr?.name}
         </Typography>
-        <IconButton onClick={() => {
-          streamType === "WADS" ? setStreamType("WOADS") : setStreamType("WADS")
-        }}>
-          {streamType === "WOADS" ? <LiveTvIcon /> :
-            <StorageIcon />}
+        <IconButton
+          onClick={() => {
+            streamType === "WADS"
+              ? setStreamType("WOADS")
+              : setStreamType("WADS");
+          }}
+        >
+          {streamType === "WOADS" ? <LiveTvIcon /> : <StorageIcon />}
         </IconButton>
       </Box>
       <Box
@@ -360,7 +420,7 @@ function Watch() {
               value={parseInt(seasonId!)}
               defaultValue={parseInt(seasonId!)}
               onChange={(_e, v) => {
-                episodeChange(`/${movieType}/${movieId}/${v}/1/watch`)
+                episodeChange(`/${movieType}/${movieId}/${v}/1/watch`);
               }}
             >
               {tvSeriesDetailsDataArr?.seasons
@@ -373,7 +433,9 @@ function Watch() {
             </Select>
             <Select
               onChange={(_e, v) => {
-                episodeChange(`/${movieType}/${movieId}/${seasonId}/${v}/watch`);
+                episodeChange(
+                  `/${movieType}/${movieId}/${seasonId}/${v}/watch`,
+                );
               }}
               defaultValue={parseInt(episodeId!)}
               value={parseInt(episodeId!)}
@@ -389,13 +451,13 @@ function Watch() {
           ""
         )}
       </Box>
-      {streamType == "WADS" ?
+      {streamType == "WADS" ? (
         <iframe
           referrerPolicy="no-referrer-when-downgrade"
           sandbox="allow-forms allow-modals allow-orientation-lock allow-pointer-lock allow-presentation allow-same-origin allow-scripts"
-          src={`https://vidsrc.cc/v2/embed/${movieType}/${movieId}${isTvSE ? `/${seasonId}` : ""
-            }${isTvSE ? `/${episodeId}` : ""
-            }`}
+          src={`https://vidsrc.cc/v2/embed/${movieType}/${movieId}${
+            isTvSE ? `/${seasonId}` : ""
+          }${isTvSE ? `/${episodeId}` : ""}`}
           allowFullScreen
           style={{
             width: "100%",
@@ -406,14 +468,20 @@ function Watch() {
             top: 0,
             zIndex: 1000,
           }}
-        ></iframe> :
-        <video controls style={{
-          width: "100%",
-          height: "100%",
-          position: "absolute",
-          top: 0,
-          zIndex: 1000,
-        }} src={streamServer?.url}></video>}
+        ></iframe>
+      ) : (
+        <video
+          controls
+          style={{
+            width: "100%",
+            height: "100%",
+            position: "absolute",
+            top: 0,
+            zIndex: 1000,
+          }}
+          src={streamServer?.url}
+        ></video>
+      )}
     </Box>
   );
 }

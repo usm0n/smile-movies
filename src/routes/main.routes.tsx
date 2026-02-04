@@ -5,6 +5,7 @@ import Register from "../pages/auth/Register";
 import VerifyEmail from "../pages/auth/VerifyEmail";
 import Discover from "../pages/Discover";
 import Movie from "../pages/movie/Movie";
+import Person from "../pages/person/Person";
 import Search from "../pages/search/Search";
 import TVSeries from "../pages/tv/TVSeries";
 import Settings from "../pages/user";
@@ -37,6 +38,10 @@ export const mainRoutes = [
     element: <TVSeries />,
   },
   {
+    path: "/person/:personId",
+    element: <Person />,
+  },
+  {
     path: "/search/:query",
     element: <Search />,
   },
@@ -58,7 +63,7 @@ export const mainRoutes = [
   },
   {
     path: "/watchlist",
-    element: <Watchlist/>,
+    element: <Watchlist />,
   },
   {
     path: "*",

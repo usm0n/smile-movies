@@ -1,10 +1,14 @@
 import { Avatar, Card, Typography } from "@mui/joy";
 import { movieCredits } from "../../tmdb-res";
+import { useNavigate } from "react-router-dom";
 
 function CastCard({ actor }: { actor: movieCredits["cast"][0] }) {
+  const navigate = useNavigate();
   return (
     <Card
+      onClick={() => navigate(`/person/${actor.id}`)}
       sx={{
+        cursor: "pointer",
         border: "none",
         textAlign: "center",
         backgroundColor: "transparent",

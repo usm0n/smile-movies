@@ -57,6 +57,17 @@ export const ymdToDmy = (date: string) => {
   return `${month} ${day}, ${year}`;
 };
 
+export const ageCount = (birthDate: string, deathDate?: string) => {
+  const birth = new Date(birthDate);
+  const death = deathDate ? new Date(deathDate) : new Date();
+  let age = death.getFullYear() - birth.getFullYear();
+  const m = death.getMonth() - birth.getMonth();
+  if (m < 0 || (m === 0 && death.getDate() < birth.getDate())) {
+    age--;
+  }
+  return age;
+}
+
 export const smartText = (text: string) => {
   const newText =
     text.charAt(0).toUpperCase() + text.slice(1).replace(/([A-Z])/g, " $1");

@@ -127,7 +127,7 @@ export interface searchMulti {
       original_title: string;
       release_date: string;
       video: boolean;
-    }
+    },
   ];
   total_pages: number;
   total_results: number;
@@ -300,7 +300,7 @@ export interface trendingAll {
       original_title: string;
       release_date: string;
       video: boolean;
-    }
+    },
   ];
   total_pages: number;
   total_results: number;
@@ -333,7 +333,7 @@ export interface movieCredits {
       character: string;
       credit_id: string;
       order: number;
-    }
+    },
   ];
   crew: [
     {
@@ -348,7 +348,7 @@ export interface movieCredits {
       credit_id: string;
       department: string;
       job: string;
-    }
+    },
   ];
 }
 
@@ -368,7 +368,7 @@ export interface tvEpisodeCredits {
       character: string;
       credit_id: string;
       order: number;
-    }
+    },
   ];
   crew: [
     {
@@ -383,7 +383,7 @@ export interface tvEpisodeCredits {
       credit_id: string;
       department: string;
       job: string;
-    }
+    },
   ];
   guest_stars: [
     {
@@ -397,7 +397,7 @@ export interface tvEpisodeCredits {
       profile_path: string;
       character: string;
       credit_id: string;
-    }
+    },
   ];
 }
 
@@ -417,7 +417,7 @@ export interface tvSeasonsDetails {
       still_path: string;
       vote_average: number;
       vote_count: number;
-    }
+    },
   ];
   name: string;
   overview: string;
@@ -442,7 +442,7 @@ export interface tvEpisodeDetails {
       credit_id: string;
       department: string;
       job: string;
-    }
+    },
   ];
   guest_stars: [
     {
@@ -456,7 +456,7 @@ export interface tvEpisodeDetails {
       profile_path: string;
       credit_id: string;
       character: string;
-    }
+    },
   ];
   id: number;
   episode_number: number;
@@ -480,7 +480,7 @@ export interface images {
       vote_average: number;
       vote_count: number;
       width: number;
-    }
+    },
   ];
   id: number;
   logos: [
@@ -492,7 +492,7 @@ export interface images {
       vote_average: number;
       vote_count: number;
       width: number;
-    }
+    },
   ];
   posters: [
     {
@@ -503,7 +503,7 @@ export interface images {
       vote_average: number;
       vote_count: number;
       width: number;
-    }
+    },
   ];
 }
 
@@ -522,7 +522,7 @@ export interface movieTranslations {
         tagline: string;
         title: string;
       };
-    }
+    },
   ];
 }
 
@@ -540,7 +540,7 @@ export interface tvTranslations {
         name: string;
         tagline: string;
       };
-    }
+    },
   ];
 }
 
@@ -558,7 +558,86 @@ export interface videos {
       official: boolean;
       published_at: string;
       id: string;
-    }
+    },
+  ];
+}
+
+export interface peopleDetails {
+  adult: boolean;
+  also_known_as: string[];
+  biography: string;
+  birthday: string;
+  deathday: string;
+  gender: number;
+  homepage: string;
+  id: number;
+  imdb_id: string;
+  known_for_department: string;
+  name: string;
+  place_of_birth: string;
+  popularity: number;
+  profile_path: string;
+}
+
+export interface peopleCombinedCredits {
+  cast: [
+    {
+      adult: boolean;
+      backdrop_path: string;
+      genre_ids: number[];
+      id: number;
+      original_language: string;
+      original_title: string;
+      overview: string;
+      popularity: number;
+      poster_path: string;
+      release_date: string;
+      title: string;
+      video: boolean;
+      vote_average: number;
+      vote_count: number;
+      character: string;
+      credit_id: string;
+      order: number;
+      media_type: string;
+    },
+  ];
+  crew: [
+    {
+      adult: boolean;
+      backdrop_path: string;
+      genre_ids: number[];
+      id: number;
+      original_language: string;
+      original_title: string;
+      overview: string;
+      popularity: number;
+      poster_path: string;
+      release_date: string;
+      title: string;
+      video: boolean;
+      vote_average: number;
+      vote_count: number;
+      credit_id: string;
+      department: string;
+      job: string;
+      media_type: string;
+    },
+  ];
+}
+
+export interface peopleImages {
+  id: number;
+  profiles: [
+    {
+      aspect_ratio: number;
+      file_path: string;
+      height: number;
+      iso_639_1: string;
+      vote_average: number;
+      vote_count: number;
+      width: number;
+    },
   ];
 }
 
@@ -595,6 +674,9 @@ export interface ResponseType {
     | movieTranslations
     | tvTranslations
     | videos
+    | peopleDetails
+    | peopleCombinedCredits
+    | peopleImages
     | null;
   errorResponse: any;
 }

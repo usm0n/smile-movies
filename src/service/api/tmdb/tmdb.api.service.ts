@@ -77,7 +77,7 @@ export const tmdb = {
   searchMulti: async (query: string, page: number) => {
     try {
       const response = await tmdbAPI.get(
-        "/search/multi?query=" + query + "&page=" + page
+        "/search/multi?query=" + query + "&page=" + page,
       );
       return response.data;
     } catch (error) {
@@ -87,7 +87,7 @@ export const tmdb = {
   searchMovie: async (query: string, page: number) => {
     try {
       const response = await tmdbAPI.get(
-        "/search/movie?query=" + query + "&page=" + page
+        "/search/movie?query=" + query + "&page=" + page,
       );
       return response.data;
     } catch (error) {
@@ -97,7 +97,7 @@ export const tmdb = {
   searchTv: async (query: string, page: number) => {
     try {
       const response = await tmdbAPI.get(
-        "/search/tv?query=" + query + "&page=" + page
+        "/search/tv?query=" + query + "&page=" + page,
       );
       return response.data;
     } catch (error) {
@@ -108,11 +108,11 @@ export const tmdb = {
   trending: async (
     kind: "movie" | "tv" | "all",
     time: "day" | "week",
-    page: number
+    page: number,
   ) => {
     try {
       const response = await tmdbAPI.get(
-        `/trending/${kind}/${time}?page=${page}`
+        `/trending/${kind}/${time}?page=${page}`,
       );
       return response.data;
     } catch (error) {
@@ -179,7 +179,7 @@ export const tmdb = {
   tvSeasonsCredits: async (id: string, season: number) => {
     try {
       const response = await tmdbAPI.get(
-        "/tv/" + id + "/season/" + season + "/credits"
+        "/tv/" + id + "/season/" + season + "/credits",
       );
       return response.data;
     } catch (error) {
@@ -189,7 +189,7 @@ export const tmdb = {
   tvEpisodeDetails: async (id: string, season: number, episode: number) => {
     try {
       const response = await tmdbAPI.get(
-        "/tv/" + id + "/season/" + season + "/episode/" + episode
+        "/tv/" + id + "/season/" + season + "/episode/" + episode,
       );
       return response.data;
     } catch (error) {
@@ -199,7 +199,7 @@ export const tmdb = {
   tvEpisodeCredits: async (id: string, season: number, episode: number) => {
     try {
       const response = await tmdbAPI.get(
-        "/tv/" + id + "/season/" + season + "/episode/" + episode + "/credits"
+        "/tv/" + id + "/season/" + season + "/episode/" + episode + "/credits",
       );
       return response.data;
     } catch (error) {
@@ -265,6 +265,30 @@ export const tmdb = {
   tvVideos: async (id: string) => {
     try {
       const response = await tmdbAPI.get("/tv/" + id + "/videos");
+      return response.data;
+    } catch (error) {
+      return error;
+    }
+  },
+  peopleDetails: async (id: string) => {
+    try {
+      const response = await tmdbAPI.get("/person/" + id);
+      return response.data;
+    } catch (error) {
+      return error;
+    }
+  },
+  peopleCombinedCredits: async (id: string) => {
+    try {
+      const response = await tmdbAPI.get("/person/" + id + "/combined_credits");
+      return response.data;
+    } catch (error) {
+      return error;
+    }
+  },
+  peopleImages: async (id: string) => {
+    try {
+      const response = await tmdbAPI.get("/person/" + id + "/images");
       return response.data;
     } catch (error) {
       return error;
