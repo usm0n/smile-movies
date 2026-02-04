@@ -176,6 +176,11 @@ const TmdbContext = createContext({
   peopleImages: async (id: string) => {
     id;
   },
+  searchPersonData: null as tmdbRes.ResponseType | null,
+  searchPerson: async (query: string, page: number) => {
+    query;
+    page;
+  },
 });
 
 export const useTMDB = () => useContext(TmdbContext);
@@ -259,6 +264,35 @@ export const TMDBProvider = ({ children }: { children: React.ReactNode }) => {
     useState<tmdbRes.ResponseType | null>(null);
   const [peopleImagesData, setPeopleImagesData] =
     useState<tmdbRes.ResponseType | null>(null);
+  const [searchPersonData, setSearchPersonData] =
+    useState<tmdbRes.ResponseType | null>(null);
+
+  const searchPerson = async (query: string, page: number) => {
+    try {
+      setSearchPersonData({
+        isLoading: true,
+        isError: false,
+        data: null,
+        errorResponse: null,
+      });
+      const response = await tmdb.searchPerson(query, page);
+      if (response) {
+        setSearchPersonData({
+          isLoading: false,
+          isError: false,
+          data: response as tmdbRes.searchPerson,
+          errorResponse: null,
+        });
+      }
+    } catch (error) {
+      setSearchPersonData({
+        isLoading: false,
+        isError: true,
+        data: null,
+        errorResponse: error,
+      });
+    }
+  };
 
   const peopleImages = async (id: string) => {
     try {
@@ -1319,6 +1353,8 @@ export const TMDBProvider = ({ children }: { children: React.ReactNode }) => {
   return (
     <TmdbContext.Provider
       value={{
+        searchPerson,
+        searchPersonData,
         peopleDetails,
         peopleDetailsData,
         peopleCombinedCredits,

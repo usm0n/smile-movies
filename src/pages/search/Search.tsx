@@ -2,7 +2,7 @@ import { Box, ButtonGroup, IconButton, Typography } from "@mui/joy";
 import { useTMDB } from "../../context/TMDB";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import type { searchMovie, searchTV } from "../../tmdb-res";
+import type { searchMovie, searchPerson, searchTV } from "../../tmdb-res";
 import EventMC from "../../components/cards/EventMC";
 import EventMCS from "../../components/cards/skeleton/EventMC";
 import AutoGraphIcon from "@mui/icons-material/AutoGraph";
@@ -10,8 +10,15 @@ import Pagination from "../../components/navigation/Pagination";
 
 function Search() {
   const { query, page } = useParams();
-  const [type, setType] = useState<"tv" | "movie" | "all">("all");
-  const { searchMovie, searchMovieData, searchTv, searchTvData } = useTMDB();
+  const [type, setType] = useState<"tv" | "movie" | "all" | "person">("all");
+  const {
+    searchMovie,
+    searchMovieData,
+    searchTv,
+    searchTvData,
+    searchPerson,
+    searchPersonData,
+  } = useTMDB();
 
   const movieResults =
     (searchMovieData?.data as searchMovie)?.results?.sort(
@@ -21,43 +28,57 @@ function Search() {
     (searchTvData?.data as searchTV)?.results?.sort(
       (a, b) => b.popularity - a.popularity,
     ) || [];
+  const personResults =
+    (searchPersonData?.data as searchPerson)?.results?.sort(
+      (a, b) => b.popularity - a.popularity,
+    ) || [];
   const searchResults =
     type === "movie"
       ? movieResults
       : type === "tv"
         ? tvResults
-        : [...tvResults, ...movieResults]?.sort(
-            (a, b) => b.popularity - a.popularity,
-          );
+        : type === "person"
+          ? personResults
+          : [...tvResults, ...movieResults, ...personResults]?.sort(
+              (a, b) => b.popularity - a.popularity,
+            );
 
   const totalPages =
     type === "movie"
       ? (searchMovieData?.data as searchMovie)?.total_pages
       : type === "tv"
         ? (searchTvData?.data as searchTV)?.total_pages
-        : Math.max(
-            (searchMovieData?.data as searchMovie)?.total_pages || 0,
-            (searchTvData?.data as searchTV)?.total_pages || 0,
-          );
-
+        : type === "person"
+          ? (searchPersonData?.data as searchPerson)?.total_pages
+          : Math.max(
+              (searchMovieData?.data as searchMovie)?.total_pages || 0,
+              (searchTvData?.data as searchTV)?.total_pages || 0,
+              (searchPersonData?.data as searchPerson)?.total_pages || 0,
+            );
   const totalResults =
     type === "all"
       ? ((searchMovieData?.data as searchMovie)?.total_results || 0) +
-        ((searchTvData?.data as searchTV)?.total_results || 0)
+        ((searchTvData?.data as searchTV)?.total_results || 0) +
+        ((searchPersonData?.data as searchPerson)?.total_results || 0)
       : type === "movie"
         ? (searchMovieData?.data as searchMovie)?.total_results
-        : (searchTvData?.data as searchTV)?.total_results;
+        : type === "tv"
+          ? (searchTvData?.data as searchTV)?.total_results
+          : (searchPersonData?.data as searchPerson)?.total_results || 0;
   const currentPage = page ? +page : 1;
+
+  const isLoading =
+    searchMovieData?.isLoading ||
+    searchTvData?.isLoading ||
+    searchPersonData?.isLoading;
 
   useEffect(() => {
     if (query) {
       searchMovie(query, page ? +page : 1);
       searchTv(query, page ? +page : 1);
+      searchPerson(query, page ? +page : 1);
     }
   }, [query, page]);
-
-  const isLoading = searchMovieData?.isLoading || searchTvData?.isLoading;
-
   return (
     <Box
       sx={{
@@ -106,6 +127,14 @@ function Search() {
         >
           TV shows
         </IconButton>
+        <IconButton
+          onClick={() => setType("person")}
+          color={type === "person" ? "primary" : "neutral"}
+          variant={type === "person" ? "solid" : "outlined"}
+          sx={{ padding: "0 20px" }}
+        >
+          People
+        </IconButton>
       </ButtonGroup>
 
       {!isLoading && searchResults.length > 0 && (
@@ -135,9 +164,16 @@ function Search() {
           searchResults.map((result) => (
             <EventMC
               key={result?.id}
-              eventPoster={result?.poster_path}
+              eventPoster={
+                "poster_path" in result
+                  ? result?.poster_path
+                  : "profile_path" in result
+                    ? result?.profile_path
+                    : ""
+              }
+              eventTitle={"gender" in result ? result?.name : ""}
               eventId={result?.id}
-              eventType={"name" in result ? "tv" : "movie"}
+              eventType={"gender" in result ? "person" : "name" in result ? "tv" : "movie"}
             />
           ))
         ) : (

@@ -3,6 +3,7 @@ import {
   Button,
   ButtonGroup,
   Card,
+  CardContent,
   CardCover,
   Chip,
   Dropdown,
@@ -21,6 +22,8 @@ import {
   DeleteOutline,
   IosShare,
   MoreVert,
+  Movie,
+  Person,
   PlayArrow,
 } from "@mui/icons-material";
 import { isLoggedIn, shareLink } from "../../utilities/defaults";
@@ -37,6 +40,7 @@ function EventMC({
   eventStatus,
   eventSeason,
   eventEpisode,
+  eventTitle,
 }: {
   eventPoster: string;
   eventId: number | string;
@@ -47,6 +51,7 @@ function EventMC({
   eventStatus?: string;
   eventSeason?: number;
   eventEpisode?: number;
+  eventTitle?: string;
 }) {
   const navigate = useNavigate();
   const {
@@ -81,13 +86,28 @@ function EventMC({
               highQualitySrc: `https://image.tmdb.org/t/p/original${eventPoster}`,
               lowQualitySrc: `https://image.tmdb.org/t/p/w200${eventPoster}`,
             })
+          ) : eventType === "movie" || eventType === "tv" ? (
+            <Movie />
           ) : (
-            <img
-              src="https://lightwidget.com/wp-content/uploads/localhost-file-not-found.jpg"
-              alt="poster"
-            />
+            <Person />
           )}
         </CardCover>
+        <CardContent
+          sx={{
+            display: "flex",
+            justifyContent: "end",
+          }}
+        >
+          <Typography
+            level="h2"
+            sx={{
+              fontWeight: "bold",
+              textShadow: "0 0 5px rgba(0,0,0,0.5)",
+            }}
+          >
+            {eventTitle}
+          </Typography>
+        </CardContent>
         <Box
           sx={{
             position: "absolute",
@@ -120,108 +140,131 @@ function EventMC({
                 }
               >
                 <IosShare /> Share this{" "}
-                {eventType === "movie" ? "Movie" : "TV show"}
+                {eventType === "movie"
+                  ? "Movie"
+                  : eventType === "tv"
+                    ? "TV show"
+                    : "Person"}
               </MenuItem>
-              <MenuItem
-                onClick={() => {
-                  navigate(
-                    `/${eventType}/${eventId}${eventType === "tv" ? "/1/1" : ""
-                    }/watch`
-                  );
-                }}
-              >
-                <PlayArrow />{" "}
-                {eventType === "movie" ? "Watch Now" : "Play S1:E1"}
-              </MenuItem>
-              <MenuItem
-                disabled={
-                  myselfData?.isLoading ||
-                  addToWatchlistData?.isLoading ||
-                  removeFromWatchlistData?.isLoading
-                }
-                onClick={() => {
-                  !isLoggedIn
-                    ? navigate("/auth/login")
-                    : (myselfData?.data as User)?.watchlist?.find(
-                      (item) => item.id === eventId
-                    )
-                      ? removeFromWatchlist(eventType, eventId.toString())
-                      : addToWatchlist(
-                        eventType,
-                        eventId.toString(),
-                        eventPoster,
-                        "new",
-                        0,
-                        0,
-                        eventType === "tv" ? 1 : 0,
-                        eventType === "tv" ? 1 : 0
+              {eventType !== "person" && (
+                <>
+                  <MenuItem
+                    onClick={() => {
+                      navigate(
+                        `/${eventType}/${eventId}${
+                          eventType === "tv" ? "/1/1" : ""
+                        }/watch`,
                       );
-                }}
-              >
-                {myselfData?.isLoading ? (
-                  "Loading..."
-                ) : (myselfData?.data as User)?.watchlist?.find(
-                  (item) => item.id === eventId
-                ) ? (
-                  removeFromWatchlistData?.isLoading ? (
-                    "Removing from Watchlist..."
-                  ) : (
-                    <>
-                      <Check /> In watchlist
-                    </>
-                  )
-                ) : addToWatchlistData?.isLoading ? (
-                  "Adding to Watchlist..."
-                ) : (
-                  <>
-                    <Add /> Add to watchlist
-                  </>
-                )}
-              </MenuItem>
-              {eventDelete && (
-                <MenuItem
-                  color="danger"
-                  onClick={() => {
-                    eventDelete(eventId);
-                  }}
-                >
-                  <DeleteOutline /> Delete this{" "}
-                  {eventType == "movie" ? "Movie" : "TV show"}
-                </MenuItem>
+                    }}
+                  >
+                    <PlayArrow />{" "}
+                    {eventType === "movie" ? "Watch Now" : "Play S1:E1"}
+                  </MenuItem>
+                  <MenuItem
+                    disabled={
+                      myselfData?.isLoading ||
+                      addToWatchlistData?.isLoading ||
+                      removeFromWatchlistData?.isLoading
+                    }
+                    onClick={() => {
+                      !isLoggedIn
+                        ? navigate("/auth/login")
+                        : (myselfData?.data as User)?.watchlist?.find(
+                              (item) => item.id === eventId,
+                            )
+                          ? removeFromWatchlist(eventType, eventId.toString())
+                          : addToWatchlist(
+                              eventType,
+                              eventId.toString(),
+                              eventPoster,
+                              "new",
+                              0,
+                              0,
+                              eventType === "tv" ? 1 : 0,
+                              eventType === "tv" ? 1 : 0,
+                            );
+                    }}
+                  >
+                    {myselfData?.isLoading ? (
+                      "Loading..."
+                    ) : (myselfData?.data as User)?.watchlist?.find(
+                        (item) => item.id === eventId,
+                      ) ? (
+                      removeFromWatchlistData?.isLoading ? (
+                        "Removing from Watchlist..."
+                      ) : (
+                        <>
+                          <Check /> In watchlist
+                        </>
+                      )
+                    ) : addToWatchlistData?.isLoading ? (
+                      "Adding to Watchlist..."
+                    ) : (
+                      <>
+                        <Add /> Add to watchlist
+                      </>
+                    )}
+                  </MenuItem>
+                  {eventDelete && (
+                    <MenuItem
+                      color="danger"
+                      onClick={() => {
+                        eventDelete(eventId);
+                      }}
+                    >
+                      <DeleteOutline /> Delete this{" "}
+                      {eventType == "movie" ? "Movie" : "TV show"}
+                    </MenuItem>
+                  )}
+                </>
               )}
             </Menu>
           </Dropdown>
         </Box>
         {eventStatus && eventStatus === "watching" && (
-          <ButtonGroup orientation="vertical" sx={{
-            position: 'absolute',
-            zIndex: 3,
-            bottom: 30,
-            width: "90%",
-          }}>
-            <Button sx={{
-              width: "100%",
-              backgroundColor: "rgba(255, 255, 255, 1)",
-              color: "black",
-              gap: 1,
-              border: "none",
-              ":hover": {
+          <ButtonGroup
+            orientation="vertical"
+            sx={{
+              position: "absolute",
+              zIndex: 3,
+              bottom: 30,
+              width: "90%",
+            }}
+          >
+            <Button
+              sx={{
+                width: "100%",
                 backgroundColor: "rgba(255, 255, 255, 1)",
-                opacity: 0.9
-              },
-              ":active": {
-                backgroundColor: "rgba(255, 255, 255, 1)",
-                opacity: 0.8
-              }
-            }} onClick={(e) => {
-              e.stopPropagation();
-              navigate(`/${eventType}/${eventId}${eventType === "tv" ? `/${eventSeason}/${eventEpisode}` : ""
-                }/watch/${eventCurrentTime ? eventCurrentTime : 0}`);
-            }}>
-              <PlayArrow sx={{
-                color: "black"
-              }} />
-              Continue {eventType === "movie" ? null : `S${eventSeason}:E${eventEpisode}`}
+                color: "black",
+                gap: 1,
+                border: "none",
+                ":hover": {
+                  backgroundColor: "rgba(255, 255, 255, 1)",
+                  opacity: 0.9,
+                },
+                ":active": {
+                  backgroundColor: "rgba(255, 255, 255, 1)",
+                  opacity: 0.8,
+                },
+              }}
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate(
+                  `/${eventType}/${eventId}${
+                    eventType === "tv" ? `/${eventSeason}/${eventEpisode}` : ""
+                  }/watch/${eventCurrentTime ? eventCurrentTime : 0}`,
+                );
+              }}
+            >
+              <PlayArrow
+                sx={{
+                  color: "black",
+                }}
+              />
+              Continue{" "}
+              {eventType === "movie"
+                ? null
+                : `S${eventSeason}:E${eventEpisode}`}
             </Button>
             {/* {eventType == "tv" && eventSeason && eventEpisode ? (
               <Button sx={{
@@ -247,34 +290,43 @@ function EventMC({
           </ButtonGroup>
         )}
         {eventStatus && eventStatus === "watching" && (
-          <LinearProgress sx={{
-            position: "absolute",
-            zIndex: 2,
-            bottom: 10,
-            width: "90%",
-            color: "rgb(255, 220, 92)",
-            "--LinearProgress-thickness": "3px"
-          }} determinate value={eventCurrentTime && eventDuration ? (eventCurrentTime / eventDuration) * 100 : 0} />)}
-        {
-          eventType === "tv" && eventSeason && eventEpisode ? (
-            <Chip sx={{
+          <LinearProgress
+            sx={{
+              position: "absolute",
+              zIndex: 2,
+              bottom: 10,
+              width: "90%",
+              color: "rgb(255, 220, 92)",
+              "--LinearProgress-thickness": "3px",
+            }}
+            determinate
+            value={
+              eventCurrentTime && eventDuration
+                ? (eventCurrentTime / eventDuration) * 100
+                : 0
+            }
+          />
+        )}
+        {eventType === "tv" && eventSeason && eventEpisode ? (
+          <Chip
+            sx={{
               padding: "0px 15px",
-            }}>
-              <Typography level="body-sm">
-                S{eventSeason}-E{eventEpisode}
-              </Typography>
-            </Chip>
-          ) : null
-        }
-        {
-          eventStatus === "new" ? (
-            <Chip sx={{
-              color: "rgb(255, 200, 92)"
-            }}>
-              New
-            </Chip>
-          ) : null
-        }
+            }}
+          >
+            <Typography level="body-sm">
+              S{eventSeason}-E{eventEpisode}
+            </Typography>
+          </Chip>
+        ) : null}
+        {eventStatus === "new" ? (
+          <Chip
+            sx={{
+              color: "rgb(255, 200, 92)",
+            }}
+          >
+            New
+          </Chip>
+        ) : null}
       </Card>
     </Box>
   );

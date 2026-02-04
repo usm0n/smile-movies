@@ -104,6 +104,16 @@ export const tmdb = {
       return error;
     }
   },
+  searchPerson: async (query: string, page: number) => {
+    try {
+      const response = await tmdbAPI.get(
+        "/search/person?query=" + query + "&page=" + page,
+      );
+      return response.data;
+    } catch (error) {
+      return error;
+    }
+  },
 
   trending: async (
     kind: "movie" | "tv" | "all",

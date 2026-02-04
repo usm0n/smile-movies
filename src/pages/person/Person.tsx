@@ -127,28 +127,30 @@ function Person() {
               {isExpanded ? "Show less" : "Show more"}
             </Button>
           )}
-          <Typography
-            startDecorator={
-              <Typography
-                level="body-sm"
-                sx={{ color: "text.secondary", fontWeight: "bold" }}
-              >
-                Birthday:{" "}
-              </Typography>
-            }
-            level="body-sm"
-            sx={{ marginTop: "20px", color: "text.secondary" }}
-          >
-            {ymdToDmy(peopleDetailsDataArr?.birthday || "N/A")}
-            {ageCount(
-              peopleDetailsDataArr?.birthday,
-              peopleDetailsDataArr?.deathday,
-            ) &&
-              ` (${ageCount(
+          {peopleDetailsDataArr?.birthday && (
+            <Typography
+              startDecorator={
+                <Typography
+                  level="body-sm"
+                  sx={{ color: "text.secondary", fontWeight: "bold" }}
+                >
+                  Birthday:{" "}
+                </Typography>
+              }
+              level="body-sm"
+              sx={{ marginTop: "20px", color: "text.secondary" }}
+            >
+              {ymdToDmy(peopleDetailsDataArr?.birthday || "N/A")}
+              {ageCount(
                 peopleDetailsDataArr?.birthday,
                 peopleDetailsDataArr?.deathday,
-              )} years old)`}
-          </Typography>
+              ) &&
+                ` (${ageCount(
+                  peopleDetailsDataArr?.birthday,
+                  peopleDetailsDataArr?.deathday,
+                )} years old)`}
+            </Typography>
+          )}
           {peopleDetailsDataArr?.deathday && (
             <Typography
               startDecorator={
@@ -213,7 +215,7 @@ function Person() {
               {peopleDetailsDataArr?.known_for_department}
             </Typography>
           )}
-          {peopleDetailsDataArr?.also_known_as && (
+          {peopleDetailsDataArr?.also_known_as.length && (
             <Typography
               startDecorator={
                 <Typography
@@ -247,68 +249,72 @@ function Person() {
           )}
         </Box>
       </Box>
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: "column",
-          gap: "20px",
-        }}
-      >
-        <Typography level="h2">Cast</Typography>
+      {peopleCombinedCreditsDataArr?.cast?.length > 0 && (
         <Box
           sx={{
             display: "flex",
-            width: "100%",
-            overflow: "scroll",
-            gap: 2,
+            flexDirection: "column",
+            gap: "20px",
           }}
         >
-          {peopleCombinedCreditsDataArr?.cast
-            ?.sort((itemA, itemB) => {
-              const aPopularity = itemA.popularity || 0;
-              const bPopularity = itemB.popularity || 0;
-              return bPopularity - aPopularity;
-            })
-            .map((credit) => (
-              <EventMC
-                eventId={credit.id}
-                key={credit.id}
-                eventPoster={credit.poster_path}
-                eventType={credit.media_type}
+          <Typography level="h2">Cast</Typography>
+          <Box
+            sx={{
+              display: "flex",
+              width: "100%",
+              overflow: "scroll",
+              gap: 2,
+            }}
+          >
+            {peopleCombinedCreditsDataArr?.cast
+              ?.sort((itemA, itemB) => {
+                const aPopularity = itemA.popularity || 0;
+                const bPopularity = itemB.popularity || 0;
+                return bPopularity - aPopularity;
+              })
+              .map((credit) => (
+                <EventMC
+                  eventId={credit.id}
+                  key={credit.id}
+                  eventPoster={credit.poster_path}
+                  eventType={credit.media_type}
+                />
+              ))}
+          </Box>
+        </Box>
+      )}
+      {peopleImagesDataArr?.profiles?.length > 0 && (
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            gap: "20px",
+          }}
+        >
+          <Typography level="h2">Images</Typography>
+          <Box
+            sx={{
+              display: "flex",
+              width: "100%",
+              overflow: "scroll",
+              gap: 2,
+            }}
+          >
+            {peopleImagesDataArr?.profiles?.map((image, index) => (
+              <Box
+                component="img"
+                key={index}
+                sx={{
+                  height: "200px",
+                  borderRadius: "8px",
+                }}
+                src={`https://image.tmdb.org/t/p/original${image.file_path}`}
+                alt={`Image ${index + 1}`}
               />
             ))}
+          </Box>
         </Box>
-      </Box>
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: "column",
-          gap: "20px",
-        }}
-      >
-        <Typography level="h2">Images</Typography>
-        <Box
-          sx={{
-            display: "flex",
-            width: "100%",
-            overflow: "scroll",
-            gap: 2,
-          }}
-        >
-          {peopleImagesDataArr?.profiles?.map((image, index) => (
-            <Box
-              component="img"
-              key={index}
-              sx={{
-                height: "200px",
-                borderRadius: "8px",
-              }}
-              src={`https://image.tmdb.org/t/p/original${image.file_path}`}
-              alt={`Image ${index + 1}`}
-            />
-          ))}
-        </Box>
-      </Box>
+      )}
     </Box>
   );
 }

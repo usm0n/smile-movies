@@ -69,7 +69,9 @@ const Navbar: React.FC = () => {
   const searchResults = (
     searchMultiACData?.data as searchMulti
   )?.results?.filter(
-    (item) => item.media_type !== "person" && item.poster_path
+    (result, index, self) =>
+      index ===
+      self.findIndex((r) => (r.name || r.title) === (result.name || result.title)),
   );
   const user = myselfData?.data as User;
 
@@ -121,7 +123,9 @@ const Navbar: React.FC = () => {
             transition: "200ms",
             ":active": {
               transform: "scale(0.95)",
+              filter: "drop-shadow(0 0 5px rgba(0,0,0,0))",
             },
+            userSelect: "none"
           }}
         />
       </Box>
