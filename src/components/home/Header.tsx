@@ -66,9 +66,11 @@ const Header = React.memo(
     removeFromWatchlistData: ResponseType | null;
     myselfData: ResponseType | null;
   }) => {
-    const trendingResults = (trendingAllData?.data as searchMulti)?.results.filter(
-      (item) => item.media_type === "movie" || item.media_type === "tv"
-    );
+    const trendingResults = useMemo(() => {
+      return (((trendingAllData?.data as searchMulti)?.results) || []).filter(
+        (item) => item?.media_type !== "person"
+      );
+    }, [trendingAllData?.data]);
     const [activeIndex, setActiveIndex] = useState(0);
 
     const trailerData = useMemo(() => {
@@ -122,12 +124,14 @@ const Header = React.memo(
     }, []);
 
     useEffect(() => {
-      if (trendingResults?.[activeIndex].media_type == "movie") {
-        movieVideos(trendingResults[activeIndex].id);
-        movieImages(trendingResults[activeIndex].id);
-      } else if (trendingResults?.[activeIndex].media_type == "tv") {
-        tvVideos(trendingResults[activeIndex].id);
-        tvImages(trendingResults[activeIndex].id);
+      const current = trendingResults[activeIndex];
+      if (!current) return;
+      if (current.media_type === "movie") {
+        movieVideos(current.id);
+        movieImages(current.id);
+      } else if (current.media_type === "tv") {
+        tvVideos(current.id);
+        tvImages(current.id);
       }
     }, [activeIndex, trendingResults]);
 
