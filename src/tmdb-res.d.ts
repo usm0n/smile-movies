@@ -593,6 +593,10 @@ export interface peopleCombinedCredits {
       poster_path: string;
       release_date: string;
       title: string;
+      name: string;
+      original_name: string;
+      first_air_date: string;
+      origin_country: string[];
       video: boolean;
       vote_average: number;
       vote_count: number;
@@ -600,6 +604,7 @@ export interface peopleCombinedCredits {
       credit_id: string;
       order: number;
       media_type: string;
+      episode_count: number;
     },
   ];
   crew: [

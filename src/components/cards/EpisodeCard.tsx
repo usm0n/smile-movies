@@ -1,7 +1,6 @@
 import {
   Card,
   Dropdown,
-  IconButton,
   Menu,
   MenuButton,
   MenuItem,
@@ -12,7 +11,6 @@ import { tvEpisodeDetails } from "../../tmdb-res";
 import { minuteToHour, shareLink, ymdToDmy } from "../../utilities/defaults";
 import { IosShare, MoreHoriz, PlayArrow } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
 
 function EpisodeCard({
   episode,
