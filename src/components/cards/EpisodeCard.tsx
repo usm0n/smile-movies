@@ -1,15 +1,34 @@
-import { Card, IconButton, Typography } from "@mui/joy";
+import {
+  Card,
+  Dropdown,
+  IconButton,
+  Menu,
+  MenuButton,
+  MenuItem,
+  Typography,
+} from "@mui/joy";
 import BlurImage from "../../utilities/blurImage";
 import { tvEpisodeDetails } from "../../tmdb-res";
-import { minuteToHour, ymdToDmy } from "../../utilities/defaults";
-import { MoreHoriz } from "@mui/icons-material";
+import { minuteToHour, shareLink, ymdToDmy } from "../../utilities/defaults";
+import { IosShare, MoreHoriz, PlayArrow } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 
-function EpisodeCard({ episode, tvId }: { episode: tvEpisodeDetails, tvId: string | number }) {
-  const navigate = useNavigate()
+function EpisodeCard({
+  episode,
+  tvId,
+}: {
+  episode: tvEpisodeDetails;
+  tvId: string | number;
+}) {
+  const navigate = useNavigate();
   return (
     <Card
-      onClick={() => navigate(`/tv/${tvId}/${episode?.season_number}/${episode?.episode_number}/watch`)}
+      onClick={() =>
+        navigate(
+          `/tv/${tvId}/${episode?.season_number}/${episode?.episode_number}/watch`,
+        )
+      }
       sx={{
         gap: "5px",
         border: "none",
@@ -20,21 +39,46 @@ function EpisodeCard({ episode, tvId }: { episode: tvEpisodeDetails, tvId: strin
         },
         ":active": {
           backgroundColor: "rgba(255, 255, 255, 0.2)",
-        }
+        },
       }}
     >
-      <IconButton
-        sx={{
-          position: "absolute",
-          top: "165px",
-          right: "20px",
-          "&:hover": {
-            borderRadius: "50%",
-          },
-        }}
-      >
-        <MoreHoriz />
-      </IconButton>
+      <Dropdown>
+        <MenuButton
+          onClick={(e) => {
+            e.stopPropagation();
+          }}
+          sx={{
+            position: "absolute",
+            top: "165px",
+            right: "20px",
+            background: "transparent",
+            border: "none",
+            zIndex: 1,
+          }}
+        >
+          <MoreHoriz />
+        </MenuButton>
+        <Menu onClick={(e) => e.stopPropagation()}>
+          <MenuItem
+            onClick={() => {
+              navigate(
+                `/tv/${tvId}/${episode?.season_number}/${episode?.episode_number}/watch`,
+              );
+            }}
+          >
+            <PlayArrow /> Watch now
+          </MenuItem>
+          <MenuItem
+            onClick={() =>
+              shareLink(
+                `https://smile-movies.uz/tv/${tvId}/${episode?.season_number}/${episode?.episode_number}/watch`,
+              )
+            }
+          >
+            <IosShare /> Share this episode
+          </MenuItem>
+        </Menu>
+      </Dropdown>
       {BlurImage({
         highQualitySrc: `https://image.tmdb.org/t/p/original${episode?.still_path}`,
         lowQualitySrc: `https://image.tmdb.org/t/p/w200${episode?.still_path}`,

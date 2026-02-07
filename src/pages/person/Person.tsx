@@ -66,6 +66,7 @@ function Person() {
         sx={{
           display: "flex",
           gap: "30px",
+          alignItems: "flex-start",
           "@media (max-width: 768px)": {
             flexDirection: "column",
             alignItems: "center",

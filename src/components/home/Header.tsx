@@ -66,7 +66,9 @@ const Header = React.memo(
     removeFromWatchlistData: ResponseType | null;
     myselfData: ResponseType | null;
   }) => {
-    const trendingResults = (trendingAllData?.data as searchMulti)?.results;
+    const trendingResults = (trendingAllData?.data as searchMulti)?.results.filter(
+      (item) => item.media_type === "movie" || item.media_type === "tv"
+    );
     const [activeIndex, setActiveIndex] = useState(0);
 
     const trailerData = useMemo(() => {
