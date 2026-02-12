@@ -1,7 +1,9 @@
 import NotFound from "../components/utils/NotFound";
 import HomeLayout from "../layouts/HomeLayout";
+import ForgotPassword from "../pages/auth/forgot-password";
 import Login from "../pages/auth/Login";
 import Register from "../pages/auth/Register";
+import ResetPassword from "../pages/auth/ResetPassword";
 import VerifyEmail from "../pages/auth/VerifyEmail";
 import Discover from "../pages/Discover";
 import Movie from "../pages/movie/Movie";
@@ -64,6 +66,14 @@ export const mainRoutes = [
   {
     path: "/watchlist",
     element: <Watchlist />,
+  },
+  {
+    path: "/auth/forgot-password",
+    element: <ForgotPassword />
+  },
+  {
+    path: "/reset-password/:email/:token",
+    element: <ResetPassword />
   },
   {
     path: "*",

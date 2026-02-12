@@ -269,6 +269,7 @@ function Login() {
             Don't have an account yet?{" "}
             <Link onClick={() => navigate("/auth/register")}>Create one</Link>
           </FormHelperText>
+          <FormHelperText><Link onClick={() => navigate("/auth/forgot-password")}>Forgot your password?</Link></FormHelperText>
           <Divider>or</Divider>
           <Box gap={2} display={"flex"} flexDirection={"column"}>
             <Button

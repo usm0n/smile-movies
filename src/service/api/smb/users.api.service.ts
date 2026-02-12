@@ -141,7 +141,7 @@ export const users = {
     try {
       const response = await smbAPI.post(
         "/users/resendForgotPasswordToken",
-        email,
+        { email },
       );
       return response.data as Message;
     } catch (error: any) {

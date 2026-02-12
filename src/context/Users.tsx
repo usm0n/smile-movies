@@ -32,15 +32,15 @@ const UsersContext = createContext({
   deleteDeviceData: null as userType.ResponseType | null,
   signedInWithGoogle: null as boolean | null,
   isVerified: null as boolean | null,
-  setIsVerified: (_isVerified: boolean) => {},
-  getUsers: async () => {},
+  setIsVerified: (_isVerified: boolean) => { },
+  getUsers: async () => { },
   getUserById: async (id: string) => {
     id;
   },
   getUserByEmail: async (email: string) => {
     email;
   },
-  getMyself: async () => {},
+  getMyself: async () => { },
   updateUserById: async (id: string, user: userType.User) => {
     id;
     user;
@@ -58,7 +58,7 @@ const UsersContext = createContext({
   deleteUserByEmail: async (email: string) => {
     email;
   },
-  deleteMyself: async () => {},
+  deleteMyself: async () => { },
   register: async (user: userType.UserRegister) => {
     user;
   },
@@ -71,7 +71,7 @@ const UsersContext = createContext({
     type;
     registerUser;
   },
-  logout: () => {},
+  logout: () => { },
   verify: async (token: string) => {
     token;
   },
@@ -620,13 +620,21 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
         errorResponse: null,
       });
       const response = await users.forgotPassword(email);
-      if (response) {
+      if ("message" in response && response.message == "Reset password link sent") {
         setForgotPasswordData({
           isLoading: false,
           isError: false,
           data: response as userType.Message,
           errorResponse: null,
         });
+      } else {
+        setForgotPasswordData({
+          isLoading: false,
+          isError: false,
+          data: null,
+          errorResponse: "Invalid user",
+          isIncorrect: true
+        })
       }
     } catch (error) {
       setForgotPasswordData({
@@ -678,12 +686,21 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
         errorResponse: null,
       });
       const response = await users.resetPassword(email, token, password);
-      if (response) {
+      if ("message" in response && response.message == "User not found" || response.message == "Token not found") {
         setResetPasswordData({
           isLoading: false,
           isError: false,
-          data: response as userType.Message,
+          data: null,
           errorResponse: null,
+          isIncorrect: true
+        });
+      } else if ("message" in response && response.message == "Password reset") {
+        setResetPasswordData({
+          isLoading: false,
+          isError: false,
+          data: response,
+          errorResponse: null,
+          isSuccess: true
         });
       }
     } catch (error) {
