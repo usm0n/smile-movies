@@ -236,7 +236,7 @@ function Register() {
             </FormControl>
             <FormControl
               required={true}
-              color={registerData?.isConflict ? "danger" : "neutral"}
+              // color={registerData?.isConflict ? "danger" : "neutral"}
             >
               <FormLabel>Email</FormLabel>
               <Input
@@ -248,7 +248,7 @@ function Register() {
                 startDecorator={<Mail />}
               />
               <FormHelperText>
-                {registerData?.isConflict && "Email already in use"}
+                {/* {registerData?.isConflict && "Email already in use"} */}
               </FormHelperText>
             </FormControl>
             <FormControl
@@ -366,14 +366,14 @@ function Register() {
               Sign in with Google
             </Button>
           </Box>
-          {registerData?.isConflict && (
+          {/* {registerData?.isConflict && (
             <FormControl sx={{ width: "300px" }} color="danger">
               <FormHelperText>
                 This email is already used by "Email & Password" method. Please
                 enter the password correctly or try another Google Account
               </FormHelperText>
             </FormControl>
-          )}
+          )} */}
         </Card>
       </Box>
     </form>

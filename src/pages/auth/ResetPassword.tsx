@@ -1,6 +1,6 @@
 import { useNavigate, useParams } from "react-router-dom"
 import { useUsers } from "../../context/Users"
-import { Box, Button, Card, FormControl, FormHelperText, FormLabel, IconButton, Input, Typography } from "@mui/joy"
+import { Box, Button, Card, FormControl, FormHelperText, FormLabel, IconButton, Input } from "@mui/joy"
 import { useEffect, useState } from "react"
 import { Lock, Visibility, VisibilityOff } from "@mui/icons-material"
 import { isValidEmail } from "../../utilities/defaults"
@@ -42,7 +42,7 @@ function ResetPassword() {
                         gap: "20px",
                     }}
                 >
-                    <Typography color="danger">{resetPasswordData?.isIncorrect && "This link has expired or you've entered wrong link"}</Typography>
+                    {/* <Typography color="danger">{resetPasswordData?.isIncorrect && "This link has expired or you've entered wrong link"}</Typography> */}
                     <FormLabel sx={{ fontSize: "20px" }}>Reset Password</FormLabel>
                     <FormControl
                         required={true}
@@ -56,7 +56,7 @@ function ResetPassword() {
                                     : "neutral"
                         }
                     >
-                        <FormLabel>Password</FormLabel>
+                        <FormLabel>New Password</FormLabel>
                         <Input
                             name="password"
                             onChange={(e) => setPassword({ ...password, newPassword: e.target.value, })}
@@ -93,7 +93,7 @@ function ResetPassword() {
                                     : "neutral"
                         }
                     >
-                        <FormLabel>Confirm Password</FormLabel>
+                        <FormLabel>Confirm New Password</FormLabel>
                         <Input
                             name="cpassword"
                             onChange={(e) => setPassword({ ...password, newPasswordConfirm: e.target.value })}

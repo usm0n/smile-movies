@@ -113,7 +113,7 @@ function VerifyEmail() {
           <Divider />
           <DialogContent>
             <FormControl
-              color={updatedMyselfData?.isConflict ? "danger" : "neutral"}
+              // color={updatedMyselfData?.isConflict ? "danger" : "neutral"}
             >
               <FormLabel>Email</FormLabel>
               <Input
@@ -125,11 +125,11 @@ function VerifyEmail() {
                   setNewEmail(e.target.value.toLocaleLowerCase())
                 }
               />
-              {updatedMyselfData?.isConflict && (
+              {/* {updatedMyselfData?.isConflict && (
                 <FormHelperText color="danger">
                   Email already exists
                 </FormHelperText>
-              )}
+              )} */}
               <FormHelperText></FormHelperText>
             </FormControl>
           </DialogContent>

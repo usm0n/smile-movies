@@ -16,7 +16,7 @@ import {
   Typography,
 } from "@mui/joy";
 import { ResponseType, User } from "../../user";
-import { Edit, Visibility, VisibilityOff } from "@mui/icons-material";
+import { Edit, Lock, Visibility, VisibilityOff } from "@mui/icons-material";
 import { isValidEmail } from "../../utilities/defaults";
 import { useState } from "react";
 
@@ -37,18 +37,24 @@ function Settings({
   const [passwordModal, setPasswordModal] = useState(false);
   const [passwordVisibility, setPasswordVisibility] = useState<boolean>(false);
 
-  // const handlePasswordInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-  //   const { name, value } = e.target;
-  //   setPasswords((prevPassword) => ({
-  //     ...prevPassword,
-  //     [name]: value,
-  //   }));
-  // };
-  // const [passwords, setPasswords] = useState({
-  //   oldPassword: "",
-  //   password: "",
-  //   cpassword: "",
-  // });
+  const handlePasswordInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setPasswords((prevPassword) => ({
+      ...prevPassword,
+      [name]: value,
+    }));
+    if (name === "newPassword") {
+      setUserValue((prevUserData) => ({
+        ...prevUserData,
+        password: value,
+      }));
+    }
+  };
+  const [passwords, setPasswords] = useState({
+    oldPassword: "",
+    newPassword: "",
+    newPasswordConfirm: "",
+  });
 
   const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -120,16 +126,16 @@ function Settings({
             disabled
             value={"*********"}
           />
-          {/* <IconButton
-                    onClick={() => setPasswordModal(true)}
-                    sx={{
-                      position: "absolute",
-                      top: "25px",
-                      right: "0px",
-                    }}
-                  >
-                    <Edit />
-                  </IconButton> */}
+          <IconButton
+            onClick={() => setPasswordModal(true)}
+            sx={{
+              position: "absolute",
+              top: "25px",
+              right: "0px",
+            }}
+          >
+            <Edit />
+          </IconButton>
         </FormControl>
       )}
       <Box
@@ -212,11 +218,11 @@ function Settings({
         open={passwordModal}
         onClose={() => {
           setPasswordModal(false);
-          // setPasswords({
-          //   oldPassword: "",
-          //   password: "",
-          //   cpassword: "",
-          // });
+          setPasswords({
+            oldPassword: "",
+            newPassword: "",
+            newPasswordConfirm: "",
+          });
           setUserValue({
             ...userValue,
             password: (myselfData?.data as User).password,
@@ -228,11 +234,13 @@ function Settings({
           <DialogTitle>Password Change</DialogTitle>
           <Divider />
           <DialogContent>
-            <FormControl color={"neutral"}>
+            <FormControl required={true} color={"neutral"}>
               <FormLabel>Old Password</FormLabel>
               <Input
+                startDecorator={<Lock />}
+                value={passwords.oldPassword}
                 name="oldPassword"
-                // onChange={handlePasswordInput}
+                onChange={handlePasswordInput}
                 endDecorator={
                   <IconButton
                     onClick={() => setPasswordVisibility(!passwordVisibility)}
@@ -243,11 +251,103 @@ function Settings({
                 placeholder="Your Password"
                 type={passwordVisibility ? "text" : "password"}
               />
+              <FormHelperText></FormHelperText>
             </FormControl>
+            <FormControl required={true}
+              color={
+                passwords.newPassword.trim() && passwords.newPassword.length < 8
+                  ? "warning"
+                  : passwords.newPasswordConfirm !== passwords.newPassword &&
+                    passwords.newPasswordConfirm.trim().length >= 8 &&
+                    passwords.newPassword.trim().length >= 8
+                    ? "danger"
+                    : "neutral"
+              }>
+              <FormLabel>New Password</FormLabel>
+              <Input
+                value={passwords?.newPassword}
+                name="newPassword"
+                onChange={handlePasswordInput}
+                startDecorator={<Lock />}
+                endDecorator={
+                  <IconButton
+                    onClick={() => setPasswordVisibility(!passwordVisibility)}
+                  >
+                    {passwordVisibility ? <VisibilityOff /> : <Visibility />}
+                  </IconButton>
+                }
+                placeholder="Your Password"
+                type={passwordVisibility ? "text" : "password"}
+              />
+              <FormHelperText>
+                {!passwords?.newPassword.trim() ||
+                  (passwords?.newPassword.length < 8 && "Password is too short")}
+                {passwords?.newPasswordConfirm.trim().length >= 8 &&
+                  passwords?.newPasswordConfirm !== passwords?.newPassword &&
+                  passwords?.newPassword.trim().length >= 8 &&
+                  "Password does not match"}
+              </FormHelperText>
+            </FormControl>
+            <FormControl required={true}
+              color={
+                passwords?.newPasswordConfirm.trim() && passwords?.newPasswordConfirm.length < 8
+                  ? "warning"
+                  : passwords?.newPasswordConfirm !== passwords?.newPassword &&
+                    passwords?.newPasswordConfirm.trim().length >= 8 &&
+                    passwords?.newPassword.trim().length >= 8
+                    ? "danger"
+                    : "neutral"
+              }>
+              <FormLabel>New Password Confirm</FormLabel>
+              <Input
+                name="newPasswordConfirm"
+                onChange={handlePasswordInput}
+                value={passwords.newPasswordConfirm}
+                startDecorator={<Lock />}
+                endDecorator={
+                  <IconButton
+                    onClick={() => setPasswordVisibility(!passwordVisibility)}
+                  >
+                    {passwordVisibility ? <VisibilityOff /> : <Visibility />}
+                  </IconButton>
+                }
+                placeholder="Your Password"
+                type={passwordVisibility ? "text" : "password"}
+              />
+              <FormHelperText>
+                {!passwords?.newPasswordConfirm.trim() ||
+                  (passwords?.newPasswordConfirm.length < 8 && "Password is too short")}
+                {passwords?.newPasswordConfirm !== passwords?.newPassword &&
+                  passwords?.newPasswordConfirm.trim().length >= 8 &&
+                  passwords?.newPassword.trim().length >= 8 &&
+                  "Password does not match"}
+              </FormHelperText>
+            </FormControl>
+            <Button onClick={() => { updateMyself(userValue); setPasswordModal(false) }} type="submit"
+              disabled={
+                myselfData?.isLoading ||
+                passwords?.newPasswordConfirm.trim().length < 8 ||
+                passwords?.newPasswordConfirm !== passwords?.newPassword ||
+                passwords?.newPassword.trim().length < 8 || passwords?.oldPassword.trim().length < 8
+              }
+              sx={{
+                background: "rgb(255, 216, 77)",
+                color: "black",
+                ":hover": {
+                  background: "rgb(255, 216, 77)",
+                  opacity: 0.8,
+                  transition: "all 0.2s ease-in-out",
+                },
+              }}
+            >
+              {myselfData?.isLoading
+                ? "Loading..."
+                : "Submit"}
+            </Button>
           </DialogContent>
         </ModalDialog>
       </Modal>
-    </Card>
+    </Card >
   );
 }
 

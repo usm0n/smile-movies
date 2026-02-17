@@ -32,98 +32,57 @@ const UsersContext = createContext({
   deleteDeviceData: null as userType.ResponseType | null,
   signedInWithGoogle: null as boolean | null,
   isVerified: null as boolean | null,
-  setIsVerified: (_isVerified: boolean) => { },
-  getUsers: async () => { },
-  getUserById: async (id: string) => {
-    id;
-  },
-  getUserByEmail: async (email: string) => {
-    email;
-  },
-  getMyself: async () => { },
-  updateUserById: async (id: string, user: userType.User) => {
-    id;
-    user;
-  },
-  updateUserByEmail: async (email: string, user: userType.User) => {
-    email;
-    user;
-  },
-  updateMyself: async (user: userType.User) => {
-    user;
-  },
-  deleteUserById: async (id: string) => {
-    id;
-  },
-  deleteUserByEmail: async (email: string) => {
-    email;
-  },
-  deleteMyself: async () => { },
-  register: async (user: userType.UserRegister) => {
-    user;
-  },
+  logoutData: null as userType.ResponseType | null,
+  activateDeviceData: null as userType.ResponseType | null,
+  requestActivateDeviceData: null as userType.ResponseType | null,
+  verifyDeviceData: null as userType.ResponseType | null,
+  setIsVerified: (_isVerified: boolean) => {},
+  getUsers: async () => {},
+  getUserById: async (_id: string) => {},
+  getUserByEmail: async (_email: string) => {},
+  getMyself: async () => {},
+  updateUserById: async (_id: string, _user: userType.User) => {},
+  updateUserByEmail: async (_email: string, _user: userType.User) => {},
+  updateMyself: async (_user: userType.User) => {},
+  deleteUserById: async (_id: string) => {},
+  deleteUserByEmail: async (_email: string) => {},
+  deleteMyself: async () => {},
+  register: async (_user: userType.UserRegister) => {},
   login: async (
-    user: userType.UserLogin,
-    type: "email" | "google",
-    registerUser?: userType.UserRegister,
-  ) => {
-    user;
-    type;
-    registerUser;
-  },
-  logout: () => { },
-  verify: async (token: string) => {
-    token;
-  },
-  resendTokenVerification: async (email: string) => {
-    email;
-  },
-  forgotPassword: async (email: string) => {
-    email;
-  },
-  resendForgotPasswordToken: async (email: string) => {
-    email;
-  },
-  resetPassword: async (email: string, token: string, password: string) => {
-    email;
-    token;
-    password;
-  },
+    _user: userType.UserLogin,
+    _type: "email" | "google",
+    _registerUser?: userType.UserRegister,
+  ) => {},
+  logout: () => {},
+  verify: async (_token: string) => {},
+  resendTokenVerification: async (_email: string) => {},
+  forgotPassword: async (_email: string) => {},
+  resendForgotPasswordToken: async (_email: string) => {},
+  resetPassword: async (
+    _email: string,
+    _token: string,
+    _password: string,
+  ) => {},
   addToWatchlist: async (
-    type: string,
-    id: string,
-    poster: string,
-    status: string,
-    duration: number,
-    currentTime: number,
-    season: number,
-    episode: number,
-  ) => {
-    type;
-    id;
-    poster;
-    status;
-    duration;
-    currentTime;
-    season;
-    episode;
-  },
-  removeFromWatchlist: async (type: string, id: string) => {
-    type;
-    id;
-  },
+    _type: string,
+    _id: string,
+    _poster: string,
+    _status: string,
+    _duration: number,
+    _currentTime: number,
+    _season: number,
+    _episode: number,
+  ) => {},
+  removeFromWatchlist: async (_type: string, _id: string) => {},
   addDevice: async (
-    deviceId: string,
-    deviceName: string,
-    deviceType: string,
-  ) => {
-    deviceId;
-    deviceName;
-    deviceType;
-  },
-  deleteDevice: async (deviceId: string) => {
-    deviceId;
-  },
+    _deviceId: string,
+    _deviceName: string,
+    _deviceType: string,
+  ) => {},
+  deleteDevice: async (_deviceId: string) => {},
+  activateDevice: async (_deviceId: string) => {},
+  requestActivateDevice: async (_email: string, _deviceId: string) => {},
+  verifyDevice: async (_email: string, _deviceId: string, _token: string) => {},
 });
 
 export const useUsers = () => useContext(UsersContext);
@@ -156,6 +115,9 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
   const [loginData, setLoginData] = useState<userType.ResponseType | null>(
     null,
   );
+  const [logoutData, setLogoutData] = useState<userType.ResponseType | null>(
+    null,
+  );
   const [verifyData, setVerifyData] = useState<userType.ResponseType | null>(
     null,
   );
@@ -176,382 +138,300 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
   const [deleteDeviceData, setDeleteDeviceData] =
     useState<userType.ResponseType | null>(null);
   const [isVerified, setIsVerified] = useState(false);
+  const [activateDeviceData, setActivateDeviceData] =
+    useState<userType.ResponseType | null>(null);
+  const [requestActivateDeviceData, setRequestActivateDeviceData] =
+    useState<userType.ResponseType | null>(null);
+  const [verifyDeviceData, setVerifyDeviceData] =
+    useState<userType.ResponseType | null>(null);
+
   const getUsers = async () => {
+    setUsersData((prev) => ({ ...prev, isLoading: true }));
     try {
-      setUsersData({
-        isLoading: true,
-        isError: false,
-        data: null,
-        errorResponse: null,
-      });
       const response = await users.getAll();
-      if (response) {
-        setUsersData({
-          isLoading: false,
-          isError: false,
-          data: response as userType.User[],
-          errorResponse: null,
-        });
-      }
-    } catch (error) {
+      setUsersData({
+        isLoading: false,
+        isError: false,
+        isSuccess: true,
+        data: response.data,
+        code: response.status,
+      });
+    } catch (error: unknown) {
       setUsersData({
         isLoading: false,
         isError: true,
-        data: null,
-        errorResponse: error,
+        isSuccess: false,
+        data: (error as userType.ErrorResponse)?.data,
+        code: (error as userType.ErrorResponse)?.status,
       });
     }
   };
 
   const getUserById = async (id: string) => {
+    setUserByIdData((prev) => ({ ...prev, isLoading: true }));
     try {
-      setUserByIdData({
-        isLoading: true,
-        isError: false,
-        data: null,
-        errorResponse: null,
-      });
       const response = await users.getById(id);
       setUserByIdData({
         isLoading: false,
         isError: false,
-        data: response as userType.User,
-        errorResponse: null,
+        isSuccess: true,
+        data: response.data,
+        code: response.status,
       });
-    } catch (error) {
+    } catch (error: unknown) {
       setUserByIdData({
         isLoading: false,
         isError: true,
-        data: null,
-        errorResponse: error,
+        isSuccess: false,
+        data: (error as userType.ErrorResponse)?.data,
+        code: (error as userType.ErrorResponse)?.status,
       });
     }
   };
   const getUserByEmail = async (email: string) => {
+    setUserByEmailData((prev) => ({ ...prev, isLoading: true }));
     try {
-      setUserByEmailData({
-        isLoading: true,
-        isError: false,
-        data: null,
-        errorResponse: null,
-      });
       const response = await users.getByEmail(email);
       if (response) {
         setUserByEmailData({
           isLoading: false,
           isError: false,
-          data: response as userType.User,
-          errorResponse: null,
+          isSuccess: true,
+          data: response.data,
+          code: response.status,
         });
       }
-    } catch (error) {
+    } catch (error: unknown) {
       setUserByEmailData({
         isLoading: false,
         isError: true,
-        data: null,
-        errorResponse: error,
+        isSuccess: false,
+        data: (error as userType.ErrorResponse)?.data,
+        code: (error as userType.ErrorResponse)?.status,
       });
     }
   };
   const getMyself = async () => {
+    setMyselfData((prev) => ({ ...prev, isLoading: true }));
     try {
-      setMyselfData({
-        isLoading: true,
-        isError: false,
-        data: null,
-        errorResponse: null,
-      });
       const response = await users.getMyself();
-      if (!("message" in response)) {
-        setMyselfData({
-          isLoading: false,
-          isError: false,
-          data: response as userType.User,
-          errorResponse: null,
-        });
-        setIsLoggedIn(true);
-      } else {
-        setMyselfData({
-          isLoading: false,
-          isError: false,
-          data: null,
-          errorResponse: response,
-        });
-      }
-    } catch (error) {
+      setMyselfData({
+        isLoading: false,
+        isError: false,
+        isSuccess: true,
+        data: response.data,
+        code: response.status,
+      });
+      setIsLoggedIn(true);
+    } catch (error: unknown) {
       setMyselfData({
         isLoading: false,
         isError: true,
-        data: null,
-        errorResponse: error,
+        isSuccess: false,
+        data: (error as userType.ErrorResponse)?.data,
+        code: (error as userType.ErrorResponse)?.status,
       });
     }
   };
   const updateUserById = async (id: string, user: userType.User) => {
+    setUpdatedUserByIdData((prev) => ({ ...prev, isLoading: true }));
     try {
-      setUpdatedUserByIdData({
-        isLoading: true,
-        isError: false,
-        data: null,
-        errorResponse: null,
-      });
       const response = await users.updateById(id, user);
-      if (response) {
-        setUpdatedUserByIdData({
-          isLoading: false,
-          isError: false,
-          data: response as userType.User,
-          errorResponse: null,
-        });
-      }
-    } catch (error) {
+      setUpdatedUserByIdData({
+        isLoading: false,
+        isError: false,
+        isSuccess: true,
+        data: response.data,
+        code: response.status,
+      });
+    } catch (error: unknown) {
       setUpdatedUserByIdData({
         isLoading: false,
         isError: true,
-        data: null,
-        errorResponse: error,
+        isSuccess: false,
+        data: (error as userType.ErrorResponse)?.data,
+        code: (error as userType.ErrorResponse)?.status,
       });
     }
   };
   const updateUserByEmail = async (email: string, user: userType.User) => {
+    setUpdatedUserByEmailData((prev) => ({ ...prev, isLoading: true }));
     try {
-      setUpdatedUserByEmailData({
-        isLoading: true,
-        isError: false,
-        data: null,
-        errorResponse: null,
-      });
       const response = await users.updateByEmail(email, user);
-      if (response) {
-        setUpdatedUserByEmailData({
-          isLoading: false,
-          isError: false,
-          data: response as userType.User,
-          errorResponse: null,
-        });
-      }
-    } catch (error) {
+      setUpdatedUserByEmailData({
+        isLoading: false,
+        isError: false,
+        isSuccess: true,
+        data: response.data,
+        code: response.status,
+      });
+    } catch (error: unknown) {
       setUpdatedUserByEmailData({
         isLoading: false,
         isError: true,
-        data: null,
-        errorResponse: error,
+        isSuccess: false,
+        data: (error as userType.ErrorResponse)?.data,
+        code: (error as userType.ErrorResponse)?.status,
       });
     }
   };
   const updateMyself = async (user: userType.User) => {
+    setUpdatedMyselfData((prev) => ({ ...prev, isLoading: true }));
     try {
-      setUpdatedMyselfData({
-        isLoading: true,
-        isError: false,
-        data: null,
-        errorResponse: null,
-      });
       const response = await users.updateMyself(user);
-      if (!("message" in response)) {
-        setUpdatedMyselfData({
-          isLoading: false,
-          isError: false,
-          data: response as userType.User,
-          errorResponse: null,
-        });
-        getMyself();
-      } else {
-        setUpdatedMyselfData({
-          isLoading: false,
-          isError: false,
-          data: null,
-          errorResponse: response,
-          isConflict: true,
-        });
-      }
-    } catch (error) {
+      setUpdatedMyselfData({
+        isLoading: false,
+        isError: false,
+        isSuccess: true,
+        data: response.data,
+        code: response.status,
+      });
+      getMyself();
+    } catch (error: unknown) {
       setUpdatedMyselfData({
         isLoading: false,
         isError: true,
-        data: null,
-        errorResponse: error,
+        isSuccess: false,
+        data: (error as userType.ErrorResponse)?.data,
+        code: (error as userType.ErrorResponse)?.status,
       });
     }
   };
   const deleteUserById = async (id: string) => {
+    setDeletedUserByIdData((prev) => ({ ...prev, isLoading: true }));
     try {
-      setDeletedUserByIdData({
-        isLoading: true,
-        isError: false,
-        data: null,
-        errorResponse: null,
-      });
       const response = await users.deleteById(id);
-      if (response) {
-        setDeletedUserByIdData({
-          isLoading: false,
-          isError: false,
-          data: response as userType.Message,
-          errorResponse: null,
-        });
-      }
-    } catch (error) {
+      setDeletedUserByIdData({
+        isLoading: false,
+        isError: false,
+        isSuccess: true,
+        data: response.data,
+        code: response.status,
+      });
+    } catch (error: unknown) {
       setDeletedUserByIdData({
         isLoading: false,
         isError: true,
-        data: null,
-        errorResponse: error,
+        isSuccess: false,
+        data: (error as userType.ErrorResponse)?.data,
+        code: (error as userType.ErrorResponse)?.status,
       });
     }
   };
   const deleteUserByEmail = async (email: string) => {
+    setDeletedUserByEmailData((prev) => ({ ...prev, isLoading: true }));
     try {
-      setDeletedUserByEmailData({
-        isLoading: true,
-        isError: false,
-        data: null,
-        errorResponse: null,
-      });
       const response = await users.deleteByEmail(email);
-      if (response) {
-        setDeletedUserByEmailData({
-          isLoading: false,
-          isError: false,
-          data: response as userType.Message,
-          errorResponse: null,
-        });
-      }
-    } catch (error) {
+      setDeletedUserByEmailData({
+        isLoading: false,
+        isError: false,
+        isSuccess: true,
+        data: response.data,
+        code: response.status,
+      });
+    } catch (error: unknown) {
       setDeletedUserByEmailData({
         isLoading: false,
         isError: true,
-        data: null,
-        errorResponse: error,
+        isSuccess: false,
+        data: (error as userType.ErrorResponse)?.data,
+        code: (error as userType.ErrorResponse)?.status,
       });
     }
   };
   const deleteMyself = async () => {
+    setDeletedMyselfData((prev) => ({ ...prev, isLoading: true }));
     try {
-      setDeletedMyselfData({
-        isLoading: true,
-        isError: false,
-        data: null,
-        errorResponse: null,
-      });
       const response = await users.deleteMyself();
-      if (response) {
-        setDeletedMyselfData({
-          isLoading: false,
-          isError: false,
-          data: response as userType.Message,
-          errorResponse: null,
-        });
-      }
-    } catch (error) {
+      setDeletedMyselfData({
+        isLoading: false,
+        isError: false,
+        isSuccess: true,
+        data: response.data,
+        code: response.status,
+      });
+    } catch (error: unknown) {
       setDeletedMyselfData({
         isLoading: false,
         isError: true,
-        data: null,
-        errorResponse: error,
+        isSuccess: false,
+        data: (error as userType.ErrorResponse)?.data,
+        code: (error as userType.ErrorResponse)?.status,
       });
     }
   };
   const register = async (user: userType.UserRegister) => {
+    setRegisterData((prev) => ({ ...prev, isLoading: true }));
     try {
-      setRegisterData({
-        isLoading: true,
-        isError: false,
-        data: null,
-        errorResponse: null,
-      });
       const response = await users.register(user);
-
-      if (
-        "message" in response &&
-        response.message === "User registered successfully"
-      ) {
-        setRegisterData({
-          isLoading: false,
-          isError: false,
-          data: response as userType.Message,
-          errorResponse: null,
-        });
-        reload();
-      } else {
-        setRegisterData({
-          isLoading: false,
-          isError: true,
-          data: null,
-          errorResponse: response,
-        });
-      }
-    } catch (error) {
+      setRegisterData({
+        isLoading: false,
+        isError: false,
+        isSuccess: true,
+        data: response.data,
+        code: response.status,
+      });
+      reload();
+    } catch (error: unknown) {
       setRegisterData({
         isLoading: false,
         isError: true,
-        data: null,
-        errorResponse: error,
+        isSuccess: false,
+        data: (error as userType.ErrorResponse)?.data,
+        code: (error as userType.ErrorResponse)?.status,
       });
     }
   };
 
   const login = async (
     user: userType.UserLogin,
-    type: "email" | "google",
-    registerUser?: userType.UserRegister,
+    _type: "email" | "google",
+    _registerUser?: userType.UserRegister,
   ) => {
-    setLoginData({
-      isLoading: true,
-      isError: false,
-      data: null,
-      errorResponse: null,
-    });
+    setLoginData((prev) => ({ ...prev, isLoading: true }));
     try {
       const response = await users.login(user);
-
-      if ("message" in response && response.message === "Login successful") {
-        setLoginData({
-          isLoading: false,
-          isError: false,
-          data: response as userType.Message,
-          errorResponse: null,
-          isSuccess: true,
-        });
-        reload();
-      } else {
-        if (type == "google") {
-          setLoginData({
-            isLoading: false,
-            isError: true,
-            data: null,
-            errorResponse: "Invalid email or password",
-            isSuccess: false,
-            isIncorrect: false,
-          });
-          register(registerUser as userType.UserRegister);
-        } else {
-          setLoginData({
-            isLoading: false,
-            isError: true,
-            data: null,
-            errorResponse: "Invalid email or password",
-            isSuccess: false,
-            isIncorrect: true,
-          });
-        }
-      }
-    } catch (error) {
+      setLoginData({
+        isLoading: false,
+        isError: false,
+        isSuccess: true,
+        data: response.data,
+        code: response.status,
+      });
+      reload();
+    } catch (error: unknown) {
       setLoginData({
         isLoading: false,
         isError: true,
-        data: null,
-        errorResponse: error,
+        isSuccess: false,
+        data: (error as userType.ErrorResponse)?.data,
+        code: (error as userType.ErrorResponse)?.status,
       });
     }
   };
 
-  const logout = () => {
-    deleteDevice(deviceId()).then(() => {
-      users.logout().then(() => {
-        reload();
+  const logout = async () => {
+    setLogoutData((prev) => ({ ...prev, isLoading: true }));
+    try {
+      deleteDevice(deviceId());
+      const response = await users.logout();
+      setLogoutData({
+        isLoading: false,
+        isError: false,
+        isSuccess: true,
+        data: response.data,
+        code: response.status,
       });
-    });
+      reload();
+    } catch (error: unknown) {
+      setLogoutData({
+        isLoading: false,
+        isError: true,
+        isSuccess: false,
+        data: (error as userType.ErrorResponse)?.data,
+        code: (error as userType.ErrorResponse)?.status,
+      });
+    }
   };
 
   const signedInWithGoogle = (myselfData?.data as userType.User)?.profilePic
@@ -559,116 +439,88 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
     : false;
 
   const verify = async (token: string) => {
+    setVerifyData((prev) => ({ ...prev, isLoading: true }));
     try {
-      setVerifyData({
-        isLoading: true,
-        isError: false,
-        data: null,
-        errorResponse: null,
-      });
       const response = await users.verify(token);
-      if (response) {
-        setVerifyData({
-          isLoading: false,
-          isError: false,
-          data: response as userType.Message,
-          errorResponse: null,
-        });
-      }
-    } catch (error) {
+      setVerifyData({
+        isLoading: false,
+        isError: false,
+        isSuccess: true,
+        data: response.data,
+        code: response.status,
+      });
+    } catch (error: unknown) {
       setVerifyData({
         isLoading: false,
         isError: true,
-        data: null,
-        errorResponse: error,
+        isSuccess: false,
+        data: (error as userType.ErrorResponse)?.data,
+        code: (error as userType.ErrorResponse)?.status,
       });
     }
   };
 
   const resendTokenVerification = async () => {
+    setResendTokenVerificationData((prev) => ({ ...prev, isLoading: true }));
     try {
-      setResendTokenVerificationData({
-        isLoading: true,
-        isError: false,
-        data: null,
-        errorResponse: null,
-      });
       const response = await users.resendTokenVerification();
-      if (response) {
-        setResendTokenVerificationData({
-          isLoading: false,
-          isError: false,
-          data: response as userType.Message,
-          errorResponse: null,
-        });
-      }
-    } catch (error) {
+      setResendTokenVerificationData({
+        isLoading: false,
+        isError: false,
+        isSuccess: true,
+        data: response.data,
+        code: response.status,
+      });
+    } catch (error: unknown) {
       setResendTokenVerificationData({
         isLoading: false,
         isError: true,
-        data: null,
-        errorResponse: error,
+        isSuccess: false,
+        data: (error as userType.ErrorResponse)?.data,
+        code: (error as userType.ErrorResponse)?.status,
       });
     }
   };
   const forgotPassword = async (email: string) => {
+    setForgotPasswordData((prev) => ({ ...prev, isLoading: true }));
     try {
-      setForgotPasswordData({
-        isLoading: true,
-        isError: false,
-        data: null,
-        errorResponse: null,
-      });
       const response = await users.forgotPassword(email);
-      if ("message" in response && response.message == "Reset password link sent") {
-        setForgotPasswordData({
-          isLoading: false,
-          isError: false,
-          data: response as userType.Message,
-          errorResponse: null,
-        });
-      } else {
-        setForgotPasswordData({
-          isLoading: false,
-          isError: false,
-          data: null,
-          errorResponse: "Invalid user",
-          isIncorrect: true
-        })
-      }
-    } catch (error) {
+      setForgotPasswordData({
+        isLoading: false,
+        isError: false,
+        isSuccess: true,
+        data: response.data,
+        code: response.status,
+      });
+    } catch (error: unknown) {
       setForgotPasswordData({
         isLoading: false,
         isError: true,
-        data: null,
-        errorResponse: error,
+        isSuccess: false,
+        data: (error as userType.ErrorResponse)?.data,
+        code: (error as userType.ErrorResponse)?.status,
       });
     }
   };
 
   const resendForgotPasswordToken = async (email: string) => {
+    setResendForgotPasswordData((prev) => ({ ...prev, isLoading: true }));
     try {
-      setResendForgotPasswordData({
-        isLoading: true,
-        isError: false,
-        data: null,
-        errorResponse: null,
-      });
       const response = await users.resendForgotPasswordToken(email);
-      if (response) {
-        setResendForgotPasswordData({
-          isLoading: false,
-          isError: false,
-          data: response as userType.Message,
-          errorResponse: null,
-        });
-      }
-    } catch (error) {
+      setResendForgotPasswordData({
+        isLoading: false,
+        isError: false,
+        isSuccess: true,
+        data: response.data,
+        code: response.status,
+      });
+    } catch (error: unknown) {
       setResendForgotPasswordData({
         isLoading: false,
         isError: true,
-        data: null,
-        errorResponse: error,
+        isSuccess: false,
+        data: (error as userType.ErrorResponse)?.data,
+        code: (error as userType.ErrorResponse)?.status,
       });
     }
   };
@@ -678,37 +530,23 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
     token: string,
     password: string,
   ) => {
+    setResetPasswordData((prev) => ({ ...prev, isLoading: true }));
     try {
-      setResetPasswordData({
-        isLoading: true,
-        isError: false,
-        data: null,
-        errorResponse: null,
-      });
       const response = await users.resetPassword(email, token, password);
-      if ("message" in response && response.message == "User not found" || response.message == "Token not found") {
-        setResetPasswordData({
-          isLoading: false,
-          isError: false,
-          data: null,
-          errorResponse: null,
-          isIncorrect: true
-        });
-      } else if ("message" in response && response.message == "Password reset") {
-        setResetPasswordData({
-          isLoading: false,
-          isError: false,
-          data: response,
-          errorResponse: null,
-          isSuccess: true
-        });
-      }
-    } catch (error) {
+      setResetPasswordData({
+        isLoading: false,
+        isError: false,
+        isSuccess: true,
+        data: response.data,
+        code: response.status,
+      });
+    } catch (error: unknown) {
       setResetPasswordData({
         isLoading: false,
         isError: true,
-        data: null,
-        errorResponse: error,
+        isSuccess: false,
+        data: (error as userType.ErrorResponse)?.data,
+        code: (error as userType.ErrorResponse)?.status,
       });
     }
   };
@@ -723,13 +561,8 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
     season: number,
     episode: number,
   ) => {
+    setAddToWatchlistData((prev) => ({ ...prev, isLoading: true }));
     try {
-      setAddToWatchlistData({
-        isLoading: true,
-        isError: false,
-        data: null,
-        errorResponse: null,
-      });
       const response = await users.addToWatchlist(
         type,
         id,
@@ -740,49 +573,44 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
         season,
         episode,
       );
-      if (response) {
-        setAddToWatchlistData({
-          isLoading: false,
-          isError: false,
-          data: response as userType.Message,
-          errorResponse: null,
-        });
-        getMyself();
-      }
-    } catch (error) {
+      setAddToWatchlistData({
+        isLoading: false,
+        isError: false,
+        isSuccess: true,
+        data: response.data,
+        code: response.status,
+      });
+      getMyself();
+    } catch (error: unknown) {
       setAddToWatchlistData({
         isLoading: false,
         isError: true,
-        data: null,
-        errorResponse: error,
+        isSuccess: false,
+        data: (error as userType.ErrorResponse)?.data,
+        code: (error as userType.ErrorResponse)?.status,
       });
     }
   };
 
   const removeFromWatchlist = async (type: string, id: string) => {
+    setRemoveFromWatchlistData((prev) => ({ ...prev, isLoading: true }));
     try {
-      setRemoveFromWatchlistData({
-        isLoading: true,
-        isError: false,
-        data: null,
-        errorResponse: null,
-      });
       const response = await users.removeFromWatchlist(type, id);
-      if (response) {
-        setRemoveFromWatchlistData({
-          isLoading: false,
-          isError: false,
-          data: response as userType.Message,
-          errorResponse: null,
-        });
-        getMyself();
-      }
-    } catch (error) {
+      setRemoveFromWatchlistData({
+        isLoading: false,
+        isError: false,
+        isSuccess: true,
+        data: response.data,
+        code: response.status,
+      });
+      getMyself();
+    } catch (error: unknown) {
       setRemoveFromWatchlistData({
         isLoading: false,
         isError: true,
-        data: null,
-        errorResponse: error,
+        isSuccess: false,
+        data: (error as userType.ErrorResponse)?.data,
+        code: (error as userType.ErrorResponse)?.status,
       });
     }
   };
@@ -792,55 +620,115 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
     deviceType: string,
     deviceName: string,
   ) => {
+    setAddDeviceData((prev) => ({ ...prev, isLoading: true }));
     try {
-      setAddDeviceData({
-        isLoading: true,
-        isError: false,
-        data: null,
-        errorResponse: null,
-      });
       const response = await users.addDevice(deviceId, deviceType, deviceName);
-      if (response) {
-        setAddDeviceData({
-          isLoading: false,
-          isError: false,
-          data: response as userType.Message,
-          errorResponse: null,
-        });
-      }
-    } catch (error) {
+      setAddDeviceData({
+        isLoading: false,
+        isError: false,
+        isSuccess: true,
+        data: response.data,
+        code: response.status,
+      });
+    } catch (error: unknown) {
       setAddDeviceData({
         isLoading: false,
         isError: true,
-        data: null,
-        errorResponse: error,
+        isSuccess: false,
+        data: (error as userType.ErrorResponse)?.data,
+        code: (error as userType.ErrorResponse)?.status,
       });
     }
   };
 
   const deleteDevice = async (deviceId: string) => {
+    setDeleteDeviceData((prev) => ({ ...prev, isLoading: true }));
     try {
-      setDeleteDeviceData({
-        isLoading: true,
-        isError: false,
-        data: null,
-        errorResponse: null,
-      });
       const response = await users.deleteDevice(deviceId);
-      if (response) {
-        setDeleteDeviceData({
-          isLoading: false,
-          isError: false,
-          data: response as userType.Message,
-          errorResponse: null,
-        });
-      }
-    } catch (error) {
+      setDeleteDeviceData({
+        isLoading: false,
+        isError: false,
+        isSuccess: true,
+        data: response.data,
+        code: response.status,
+      });
+    } catch (error: unknown) {
       setDeleteDeviceData({
         isLoading: false,
         isError: true,
-        data: null,
-        errorResponse: error,
+        isSuccess: false,
+        data: (error as userType.ErrorResponse)?.data,
+        code: (error as userType.ErrorResponse)?.status,
+      });
+    }
+  };
+
+  const activateDevice = async (deviceId: string) => {
+    setActivateDeviceData((prev) => ({ ...prev, isLoading: true }));
+    try {
+      const response = await users.activateDevice(deviceId);
+      setActivateDeviceData({
+        isLoading: false,
+        isError: false,
+        isSuccess: true,
+        data: response.data,
+        code: response.status,
+      });
+    } catch (error) {
+      setActivateDeviceData({
+        isLoading: false,
+        isError: true,
+        isSuccess: false,
+        data: (error as userType.ErrorResponse)?.data,
+        code: (error as userType.ErrorResponse)?.status,
+      });
+    }
+  };
+
+  const requestActivateDevice = async (email: string, deviceId: string) => {
+    setRequestActivateDeviceData((prev) => ({ ...prev, isLoading: true }));
+    try {
+      const response = await users.requestActivateDevice(email, deviceId);
+      setRequestActivateDeviceData({
+        isLoading: false,
+        isError: false,
+        isSuccess: true,
+        data: response.data,
+        code: response.status,
+      });
+    } catch (error) {
+      setRequestActivateDeviceData({
+        isLoading: false,
+        isError: true,
+        isSuccess: false,
+        data: (error as userType.ErrorResponse)?.data,
+        code: (error as userType.ErrorResponse)?.status,
+      });
+    }
+  };
+
+  const verifyDevice = async (
+    email: string,
+    deviceId: string,
+    token: string,
+  ) => {
+    setVerifyDeviceData((prev) => ({ ...prev, isLoading: true }));
+    try {
+      const response = await users.verifyDevice(email, deviceId, token);
+      setVerifyDeviceData({
+        isLoading: false,
+        isError: false,
+        isSuccess: true,
+        data: response.data,
+        code: response.status,
+      });
+    } catch (error) {
+      setVerifyDeviceData({
+        isLoading: false,
+        isError: true,
+        isSuccess: false,
+        data: (error as userType.ErrorResponse)?.data,
+        code: (error as userType.ErrorResponse)?.status,
       });
     }
   };
@@ -849,29 +737,39 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
     getMyself();
   }, []);
   useEffect(() => {
-    if (isLoggedIn) {
-      if (
-        (myselfData?.data as userType.User)?.devices?.length === 0 ||
-        (myselfData?.data as userType.User)?.devices?.filter(
-          (device: userType.Device) => device?.deviceId === deviceId(),
-        ).length === 0
-      ) {
-        logout();
-      } else {
-        if ((myselfData?.data as userType.User)?.isVerified == false) {
-          setIsVerified(false);
-        } else {
-          setIsVerified(true);
-        }
-        setInterval(() => {
-          users?.lastLogin(deviceId());
-        }, 60000);
-      }
+  let intervalId: any;
+
+  if (isLoggedIn && myselfData) {
+    const user = myselfData.data as userType.User
+
+    const hasDevices = user?.devices?.length > 0;
+    const deviceExists = user?.devices?.some(d => d.deviceId === deviceId());
+
+    if (!hasDevices || !deviceExists) {
+      logout();
+    } else {
+      setIsVerified(!!user?.isVerified);
+
+      intervalId = setInterval(() => {
+        users?.lastLogin(deviceId());
+      }, 60000);
     }
-  }, [isLoggedIn, myselfData]);
+  }
+
+  return () => {
+    if (intervalId) clearInterval(intervalId);
+  };
+}, [isLoggedIn, myselfData]);
   return (
     <UsersContext.Provider
       value={{
+        activateDevice,
+        activateDeviceData,
+        requestActivateDevice,
+        requestActivateDeviceData,
+        verifyDevice,
+        verifyDeviceData,
+        logoutData,
         signedInWithGoogle,
         usersData,
         userByIdData,

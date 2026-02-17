@@ -101,12 +101,15 @@ export interface GoogleUserResponse {
   jti: string;
 }
 
+export interface ErrorResponse {
+  status: number,
+  data: Message
+}
+
 export interface ResponseType {
   isLoading: boolean;
-  isError: boolean;
-  data?: User | User[] | Message | TokenResponse | null;
-  errorResponse: any;
+  isError?: boolean;
+  data?: User | User[] | Message | null;
   isSuccess?: boolean;
-  isIncorrect?: boolean;
-  isConflict?: boolean;
+  code?: number
 }

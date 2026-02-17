@@ -86,16 +86,27 @@ function Watch() {
   }, [movieType, movieId, seasonId, episodeId, streamType]);
 
   useEffect(() => {
-    window.addEventListener("message", (event) => {
+    let lastUpdateTime = 0;
+
+    const handleMessage = (event: any) => {
       if (event.origin !== "https://vidsrc.cc") return;
 
-      if (event.data && event.data.type === "PLAYER_EVENT") {
+      if (event.data?.type === "PLAYER_EVENT") {
         const { event: eventType, currentTime, duration } = event.data.data;
-        if (isLoggedIn && movieId && movieType && eventType == "time") {
+
+        const now = Date.now();
+        if (
+          isLoggedIn &&
+          movieId &&
+          eventType === "time" &&
+          now - lastUpdateTime > 15000
+        ) {
+          lastUpdateTime = now;
+
           addToWatchlist(
-            movieType,
+            movieType!,
             movieId,
-            movieType == "tv"
+            movieType === "tv"
               ? tvSeriesDetailsDataArr?.poster_path
               : movieDetailsDataArr?.poster_path,
             "watching",
@@ -106,7 +117,12 @@ function Watch() {
           );
         }
       }
-    });
+    };
+
+    window.addEventListener("message", handleMessage);
+
+    // CLEANUP: Removes the listener so they don't stack up
+    return () => window.removeEventListener("message", handleMessage);
   }, [
     isLoggedIn,
     movieId,
@@ -116,6 +132,7 @@ function Watch() {
     tvSeriesDetailsDataArr,
     movieDetailsDataArr,
   ]);
+
 
   return isIncorrect ? (
     <NotFound />

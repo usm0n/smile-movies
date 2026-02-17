@@ -37,7 +37,7 @@ const SettingsMain = () => {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          height: "100vh",
+          marginTop: "100px",
           width: "100%",
         }}
       >

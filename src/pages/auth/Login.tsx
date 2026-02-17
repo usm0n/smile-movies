@@ -206,7 +206,7 @@ function Login() {
         >
           <FormLabel sx={{ fontSize: "20px" }}>Sign in</FormLabel>
           <Box gap={1} display={"flex"} flexDirection={"column"}>
-            <FormControl color={loginData?.isIncorrect ? "danger" : "neutral"}>
+            <FormControl>
               <FormLabel>Email</FormLabel>
               <Input
                 name="email"
@@ -216,11 +216,10 @@ function Login() {
                 startDecorator={<Mail />}
               />
               <FormHelperText>
-                {loginData?.isIncorrect && "Invalid credentials"}
               </FormHelperText>
             </FormControl>
 
-            <FormControl color={loginData?.isIncorrect ? "danger" : "neutral"}>
+            <FormControl>
               <FormLabel>Password</FormLabel>
               <Input
                 name="password"
@@ -238,7 +237,6 @@ function Login() {
                 startDecorator={<Lock />}
               />
               <FormHelperText>
-                {loginData?.isIncorrect && "Invalid credentials"}
               </FormHelperText>
             </FormControl>
           </Box>
@@ -281,14 +279,14 @@ function Login() {
               Sign in with Google
             </Button>
           </Box>
-          {registerData?.isConflict && (
+          {/* {registerData?.isConflict && (
             <FormControl sx={{ width: "300px" }} color="danger">
               <FormHelperText>
                 This email is already used by "Email & Password" method. Please
                 enter the password correctly or try another Google Account
               </FormHelperText>
             </FormControl>
-          )}
+          )} */}
           {loginData?.isSuccess && (
             <FormControl sx={{ width: "300px" }} color="success">
               <FormHelperText>

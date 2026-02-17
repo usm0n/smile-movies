@@ -9,6 +9,7 @@ import { CssVarsProvider } from "@mui/joy";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import OCProvider from "./context/OC.tsx";
 import { StreamProvider } from "./context/Stream.tsx";
+import { Toaster } from "react-hot-toast";
 
 createRoot(document.getElementById("root")!).render(
   <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
@@ -19,6 +20,7 @@ createRoot(document.getElementById("root")!).render(
             <UsersProvider>
               <TMDBProvider>
                 <StrictMode>
+                  <Toaster position="top-center" reverseOrder={false} />
                   <App />
                 </StrictMode>
               </TMDBProvider>
@@ -27,5 +29,5 @@ createRoot(document.getElementById("root")!).render(
         </StreamProvider>
       </BrowserRouter>
     </CssVarsProvider>
-  </GoogleOAuthProvider>
+  </GoogleOAuthProvider>,
 );
