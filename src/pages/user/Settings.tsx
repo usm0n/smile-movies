@@ -175,7 +175,7 @@ function Settings({
       <Divider />
 
       {/* ── Name ── */}
-      <Box sx={{ display: "flex", gap: 2 }}>
+      <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
         <FormControl sx={{ flex: 1 }}>
           <FormLabel>Firstname</FormLabel>
           <Input required name="firstname" placeholder="Your firstname" value={userValue?.firstname || ""} onChange={handleInput} />
@@ -356,11 +356,25 @@ function Settings({
         ))}
       </Box>
 
-      <Box sx={{ display: "flex", justifyContent: "flex-end", pt: 1 }}>
+      <Box sx={{ 
+        display: "flex",
+        pt: 1,
+        position: "sticky",
+        bottom: 0,
+        background: "inherit",
+        zIndex: 10,
+        borderTop: "1px solid",
+        borderColor: "divider",
+        mt: 2,
+        pb: 2
+      }}>
         <Button
+        sx={{
+          width: '90%',
+          margin: '0 auto',
+        }}
           type="submit"
           disabled={updatedMyselfData?.isLoading || !userValue?.firstname?.trim()}
-          sx={{ background: "rgb(255,200,0)", "&:hover": { background: "rgb(255,200,0)", opacity: 0.8 } }}
         >
           {updatedMyselfData?.isLoading ? "Saving..." : "Save Changes"}
         </Button>
