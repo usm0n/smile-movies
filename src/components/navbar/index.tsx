@@ -5,10 +5,9 @@ import {
   Search, Source, WarningRounded,
 } from "@mui/icons-material";
 import MenuIcon from "@mui/icons-material/Menu";
-import BarChartIcon from "@mui/icons-material/BarChart";
 import highLogo from "../../assets/images/logo-1000.png";
 import {
-  Autocomplete, Avatar, Box, Button, Chip,
+  Autocomplete, Avatar, Box, Button,
   DialogActions, DialogContent, DialogTitle, Divider,
   Drawer, Dropdown, IconButton, List, ListItemButton,
   Menu, MenuButton, MenuItem, Modal, ModalClose, ModalDialog,
