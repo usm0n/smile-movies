@@ -14,6 +14,7 @@ import Settings from "../pages/user";
 import Watch from "../pages/video/Watch";
 import Watchlist from "../pages/Watchlist";
 import AIAssistant from "../pages/ai/AIAssistant";
+import TVRatings from "../pages/tv/TVRatings";
 
 export const mainRoutes = [
   {
@@ -79,6 +80,10 @@ export const mainRoutes = [
   {
     path: "/ai",
     element: <AIAssistant />,
+  },
+  {
+    path: "/tv/:tvId/ratings",
+    element: <TVRatings />,
   },
   {
     path: "*",

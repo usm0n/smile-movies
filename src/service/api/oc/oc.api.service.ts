@@ -1,11 +1,9 @@
-import { Location } from "../../../user";
-import { ocAPI } from "../api";
-
+// Uses ipapi.co — IP-based location, no browser permission needed.
+// The OCProvider calls this automatically on mount.
 export const oc = {
-  getLocation: async (lat: number, long: number): Promise<Location> => {
-    const response = await ocAPI.get(
-      `?q=${lat}+${long}&key=${import.meta.env.VITE_OC_API_KEY}`
-    );
-    return response.data.results[0].components as Location;
+  getLocationByIP: async () => {
+    const response = await fetch("https://ipapi.co/json/");
+    if (!response.ok) throw new Error("Location fetch failed");
+    return response.json();
   },
 };

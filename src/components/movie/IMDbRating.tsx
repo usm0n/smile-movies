@@ -71,14 +71,6 @@ function IMDbRating({ mediaId, mediaType }: IMDbRatingProps) {
         size="sm"
       >
         {imdbRating}
-        <Typography
-          component="span"
-          level="body-xs"
-          textColor="neutral.400"
-          sx={{ ml: 0.3 }}
-        >
-          /10
-        </Typography>
       </Chip>
     </Tooltip>
   );

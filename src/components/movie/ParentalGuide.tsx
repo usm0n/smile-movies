@@ -65,8 +65,8 @@ function ParentalGuide({ movieTitle, movieYear, overview, certification, genres 
     <>
       <Button
         onClick={fetchGuide}
-        variant="outlined"
-        color="neutral"
+        variant="soft"
+        color="danger"
         startDecorator={<FamilyRestroomIcon />}
         size="sm"
         sx={{ borderRadius: 20 }}

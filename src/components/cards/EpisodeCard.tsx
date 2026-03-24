@@ -1,100 +1,59 @@
-import {
-  Card,
-  Dropdown,
-  Menu,
-  MenuButton,
-  MenuItem,
-  Typography,
-} from "@mui/joy";
+import { Box, Card, Dropdown, Menu, MenuButton, MenuItem, Typography } from "@mui/joy";
 import BlurImage from "../../utilities/blurImage";
 import { tvEpisodeDetails } from "../../tmdb-res";
 import { minuteToHour, shareLink, ymdToDmy } from "../../utilities/defaults";
 import { IosShare, MoreHoriz, PlayArrow } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
+import RatingBadge from "../movie/RatingBadge";
 
-function EpisodeCard({
-  episode,
-  tvId,
-}: {
-  episode: tvEpisodeDetails;
-  tvId: string | number;
-}) {
+function EpisodeCard({ episode, tvId }: { episode: tvEpisodeDetails; tvId: string | number }) {
   const navigate = useNavigate();
+
   return (
     <Card
-      onClick={() =>
-        navigate(
-          `/tv/${tvId}/${episode?.season_number}/${episode?.episode_number}/watch`,
-        )
-      }
+      onClick={() => navigate(`/tv/${tvId}/${episode?.season_number}/${episode?.episode_number}/watch`)}
       sx={{
-        gap: "5px",
-        border: "none",
-        cursor: "pointer",
+        gap: "5px", border: "none", cursor: "pointer",
         backgroundColor: "transparent",
-        ":hover": {
-          backgroundColor: "rgba(255, 255, 255, 0.1)",
-        },
-        ":active": {
-          backgroundColor: "rgba(255, 255, 255, 0.2)",
-        },
+        ":hover": { backgroundColor: "rgba(255,255,255,0.1)" },
+        ":active": { backgroundColor: "rgba(255,255,255,0.2)" },
+        position: "relative",
       }}
     >
       <Dropdown>
         <MenuButton
-          onClick={(e) => {
-            e.stopPropagation();
-          }}
-          sx={{
-            position: "absolute",
-            top: "165px",
-            right: "20px",
-            background: "transparent",
-            border: "none",
-            zIndex: 1,
-          }}
+          onClick={(e) => e.stopPropagation()}
+          sx={{ position: "absolute", top: "165px", right: "20px", background: "transparent", border: "none", zIndex: 1 }}
         >
           <MoreHoriz />
         </MenuButton>
         <Menu onClick={(e) => e.stopPropagation()}>
-          <MenuItem
-            onClick={() => {
-              navigate(
-                `/tv/${tvId}/${episode?.season_number}/${episode?.episode_number}/watch`,
-              );
-            }}
-          >
+          <MenuItem onClick={() => navigate(`/tv/${tvId}/${episode?.season_number}/${episode?.episode_number}/watch`)}>
             <PlayArrow /> Watch now
           </MenuItem>
-          <MenuItem
-            onClick={() =>
-              shareLink(
-                `https://smile-movies.uz/tv/${tvId}/${episode?.season_number}/${episode?.episode_number}/watch`,
-              )
-            }
-          >
+          <MenuItem onClick={() => shareLink(`https://smile-movies.uz/tv/${tvId}/${episode?.season_number}/${episode?.episode_number}/watch`)}>
             <IosShare /> Share this episode
           </MenuItem>
         </Menu>
       </Dropdown>
-      {BlurImage({
-        highQualitySrc: `https://image.tmdb.org/t/p/original${episode?.still_path}`,
-        lowQualitySrc: `https://image.tmdb.org/t/p/w200${episode?.still_path}`,
-        style: {
-          width: "auto",
-          height: "150px",
-          aspectRatio: "16/9",
-          borderRadius: "12px",
-        },
-      })}
-      <Typography level="body-xs">EPISODE {episode?.episode_number}</Typography>
-      <Typography level="body-lg">{episode?.name}</Typography>
-      <Typography level="body-sm">
-        {episode?.overview.length > 70 ? (
-          <>{episode?.overview.slice(0, 70)}...</>
-        ) : (
-          episode?.overview
+
+      <Box sx={{ position: "relative" }}>
+        {BlurImage({
+          highQualitySrc: `https://image.tmdb.org/t/p/original${episode?.still_path}`,
+          lowQualitySrc: `https://image.tmdb.org/t/p/w200${episode?.still_path}`,
+          style: { width: "auto", height: "150px", aspectRatio: "16/9", borderRadius: "12px" },
+        })}
+        {episode?.vote_average > 0 && (
+          <Box sx={{ position: "absolute", bottom: 6, left: 6 }}>
+            <RatingBadge rating={episode.vote_average} size="sm" />
+          </Box>
         )}
+      </Box>
+
+      <Typography level="body-xs">EPISODE {episode?.episode_number}</Typography>
+      <Typography level="body-lg" sx={{ lineHeight: 1.3 }}>{episode?.name}</Typography>
+      <Typography level="body-sm">
+        {episode?.overview?.length > 70 ? <>{episode.overview.slice(0, 70)}...</> : episode?.overview}
       </Typography>
       <Typography level="body-xs">
         {minuteToHour(episode?.runtime)} • {ymdToDmy(episode?.air_date)}

@@ -1,42 +1,18 @@
 "use client";
 
 import {
-  AutoAwesome,
-  DarkMode,
-  LightMode,
-  Logout,
-  Search,
-  Source,
-  WarningRounded,
+  AutoAwesome, DarkMode, LightMode, Logout,
+  Search, Source, WarningRounded,
 } from "@mui/icons-material";
 import MenuIcon from "@mui/icons-material/Menu";
+import BarChartIcon from "@mui/icons-material/BarChart";
 import highLogo from "../../assets/images/logo-1000.png";
-// import lowLogo from "../../assets/images/logo-100.png";
 import {
-  Autocomplete,
-  Avatar,
-  Box,
-  Button,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Divider,
-  Drawer,
-  Dropdown,
-  IconButton,
-  List,
-  ListItemButton,
-  Menu,
-  MenuButton,
-  MenuItem,
-  Modal,
-  ModalClose,
-  ModalDialog,
-  Skeleton,
-  Stack,
-  Tooltip,
-  Typography,
-  useColorScheme,
+  Autocomplete, Avatar, Box, Button, Chip,
+  DialogActions, DialogContent, DialogTitle, Divider,
+  Drawer, Dropdown, IconButton, List, ListItemButton,
+  Menu, MenuButton, MenuItem, Modal, ModalClose, ModalDialog,
+  Skeleton, Stack, Tooltip, Typography, useColorScheme,
 } from "@mui/joy";
 import { isLoggedIn } from "../../utilities/defaults";
 import React, { useState } from "react";
@@ -56,10 +32,9 @@ const Navbar: React.FC = () => {
   const [searchValue, setSearchValue] = useState("");
   const { searchMultiAC, searchMultiACData } = useTMDB();
   const navigate = useNavigate();
-  const navigateTo = (path: string) => {
-    navigate(path);
-    setDrawerOpen(false);
-  };
+
+  const navigateTo = (path: string) => { navigate(path); setDrawerOpen(false); };
+
   const handleSearchSubmit = () => {
     if (searchValue) {
       navigate(`/search/${searchValue}`);
@@ -67,48 +42,35 @@ const Navbar: React.FC = () => {
       setSearchVisibility(false);
     }
   };
-  const searchResults = (
-    searchMultiACData?.data as searchMulti
-  )?.results?.filter(
+
+  const searchResults = (searchMultiACData?.data as searchMulti)?.results?.filter(
     (result, index, self) =>
-      index ===
-      self.findIndex((r) => (r.name || r.title) === (result.name || result.title)),
+      index === self.findIndex((r) => (r.name || r.title) === (result.name || result.title))
   );
+
   const user = myselfData?.data as User;
 
   return (
     <Box
       sx={{
         backdropFilter: "blur(20px)",
-        boxShadow: "0 0 30px rgba(255, 255, 255, 0.1)",
-        padding: "15px",
-        paddingLeft: "20px",
-        paddingRight: "20px",
+        boxShadow: "0 0 30px rgba(255,255,255,0.1)",
+        padding: "15px 20px",
         color: "#f5f5f5",
         position: "fixed",
-        top: 0,
-        left: 0,
+        top: 0, left: 0,
         width: "100%",
         zIndex: 1000,
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
-
-        // "@media (max-width: 700px)": {
-        //   display: "none",
-        // },
       }}
     >
-      <Box display={"flex"}>
+      {/* ── Left: logo ─────────────────────────────────────────────────────── */}
+      <Box display="flex" alignItems="center" gap={1}>
         <IconButton
           onClick={() => setDrawerOpen(true)}
-          sx={{
-            color: "white",
-            display: "none",
-            "@media (max-width: 700px)": {
-              display: "flex",
-            },
-          }}
+          sx={{ color: "white", display: "none", "@media (max-width: 700px)": { display: "flex" } }}
         >
           <MenuIcon />
         </IconButton>
@@ -122,227 +84,125 @@ const Navbar: React.FC = () => {
             filter: "drop-shadow(0 0 10px rgba(0,0,0,1))",
             cursor: "pointer",
             transition: "200ms",
-            ":active": {
-              transform: "scale(0.95)",
-              filter: "drop-shadow(0 0 5px rgba(0,0,0,0))",
-            },
-            userSelect: "none"
+            ":active": { transform: "scale(0.95)" },
+            userSelect: "none",
           }}
         />
       </Box>
-      {/* <Box
-        sx={{
-          textShadow: "0 0 3px rgb(0, 0, 0, 0.7)",
-          "@media (max-width: 700px)": {
-            display: "none",
-          },
-        }}
-        display={"flex"}
-        gap={1}
-      >
-        <Link to="/">Home</Link>
-        <Link to="/about">About</Link>
-        <Link to="/contact">Contact</Link>
-        <Link to="/download">Download</Link>
-      </Box> */}
-      <Tooltip title="AI Assistant">
-        <IconButton
-          onClick={() => navigate("/ai")}
-          sx={{
-            color: "white",
-            background: "linear-gradient(135deg, rgba(255,216,77,0.15), rgba(255,160,0,0.1))",
-            border: "1px solid rgba(255,216,77,0.3)",
-            borderRadius: 8,
-            "&:hover": { background: "rgba(255,216,77,0.25)" },
-          }}
-        >
-          <AutoAwesome sx={{ fontSize: 20, color: "rgb(255,216,77)" }} />
-        </IconButton>
-      </Tooltip>
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          handleSearchSubmit();
-        }}
-      >
+
+      {/* ── Centre: search bar with AI button embedded ─────────────────────── */}
+      <form onSubmit={(e) => { e.preventDefault(); handleSearchSubmit(); }}>
         <Autocomplete
           size="lg"
           onInputChange={(_event, value) => {
-            setSearchValue("");
             searchMultiAC(value, 1);
             setSearchValue(value);
           }}
           sx={{
-            width: "400px",
+            width: "420px",
             "@media (max-width: 1000px)": {
               display: searchVisibility ? "flex" : "none",
               position: "absolute",
-              top: "90px",
+              top: "70px",
               left: "10px",
               right: "10px",
               width: "auto",
             },
           }}
-          options={searchResults ? searchResults : []}
+          options={searchResults ?? []}
           getOptionLabel={(option) => option?.title || option?.name || ""}
-          placeholder="Search"
+          placeholder="Search movies & TV shows..."
+          startDecorator={
+            // AI button sits flush inside the left of the search bar
+            <Tooltip title="Ask AI — describe a movie, get recommendations">
+              <Box
+                onClick={(e) => { e.stopPropagation(); navigate("/ai"); }}
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 0.4,
+                  px: 0.8,
+                  py: 0.4,
+                  borderRadius: 6,
+                  background: "linear-gradient(135deg, rgba(255,216,77,0.2), rgba(255,160,0,0.15))",
+                  border: "1px solid rgba(255,216,77,0.35)",
+                  cursor: "pointer",
+                  transition: "all 0.15s",
+                  userSelect: "none",
+                  "&:hover": { background: "rgba(255,216,77,0.3)" },
+                }}
+              >
+                <AutoAwesome sx={{ fontSize: 14, color: "rgb(255,216,77)" }} />
+                <Typography sx={{ fontSize: 11, fontWeight: 700, color: "rgb(255,216,77)", lineHeight: 1 }}>
+                  AI
+                </Typography>
+              </Box>
+            </Tooltip>
+          }
           endDecorator={
-            <IconButton onClick={handleSearchSubmit}>
+            <IconButton onClick={handleSearchSubmit} size="sm">
               <Search />
             </IconButton>
           }
         />
       </form>
-      <Box display={"flex"} gap={1} alignItems={"center"}>
+
+      {/* ── Right: search toggle (mobile), auth, theme ──────────────────────── */}
+      <Box display="flex" gap={1} alignItems="center">
+        {/* Mobile search toggle */}
         <IconButton
           onClick={() => setSearchVisibility(!searchVisibility)}
           sx={{
-            transition: "200ms",
             borderRadius: "50%",
-            ":hover": {
-              backgroundColor: "rgb(0, 0, 0, 0.2)",
-            },
-            "@media (min-width: 1000px)": {
-              display: "none",
-            },
+            ":hover": { backgroundColor: "rgb(0,0,0,0.2)" },
+            "@media (min-width: 1000px)": { display: "none" },
           }}
         >
-          <Search sx={{ color: colorScheme == "dark" ? "white" : "black" }} />
+          <Search sx={{ color: colorScheme === "dark" ? "white" : "black" }} />
         </IconButton>
-        <Box
-          sx={{
-            display: "flex",
-            "@media (max-width: 700px)": {
-              display: "none",
-            },
-          }}
-        >
+
+        {/* Auth area */}
+        <Box sx={{ display: "flex", "@media (max-width: 700px)": { display: "none" } }}>
           {!isLoggedIn ? (
             <Button
               onClick={() => navigate("/auth/login")}
-              sx={{
-                background: "rgb(255, 216, 77)",
-                color: "black",
-                ":hover": {
-                  background: "rgb(255, 216, 77)",
-                  color: "black",
-                  opacity: 0.8,
-                  transition: "200ms",
-                },
-              }}
+              sx={{ background: "rgb(255,216,77)", color: "black", ":hover": { background: "rgb(255,216,77)", opacity: 0.8 } }}
             >
               Sign In
             </Button>
           ) : myselfData?.isLoading ? (
             <Dropdown>
-              <MenuButton
-                sx={{
-                  border: "none",
-                  transition: "200ms",
-                  ":hover": {
-                    backgroundColor: "transparent",
-                  },
-                  ":active": {
-                    scale: 1.1,
-                  },
-                }}
-              >
-                <Avatar></Avatar>
+              <MenuButton sx={{ border: "none", ":hover": { backgroundColor: "transparent" } }}>
+                <Avatar />
               </MenuButton>
               <Menu>
                 <MenuItem>
-                  <Avatar></Avatar>
-                  <Tooltip title="View Profile">
-                    <Stack onClick={() => navigate("/user/settings")}>
-                      <Skeleton variant="text" sx={{ width: "120px" }} />
-                      <Skeleton
-                        variant="text"
-                        sx={{ width: "100px", height: "15px" }}
-                      />
-                    </Stack>
-                  </Tooltip>
-                  <Tooltip title="Logout">
-                    <IconButton
-                      disabled
-                      onClick={() => setLogoutModal(true)}
-                      color="danger"
-                    >
-                      <Logout />
-                    </IconButton>
-                  </Tooltip>
+                  <Avatar />
+                  <Stack onClick={() => navigate("/user/settings")}>
+                    <Skeleton variant="text" sx={{ width: "120px" }} />
+                    <Skeleton variant="text" sx={{ width: "100px", height: "15px" }} />
+                  </Stack>
                 </MenuItem>
               </Menu>
             </Dropdown>
           ) : (
             <Dropdown>
-              <MenuButton
-                sx={{
-                  border: "none",
-                  transition: "200ms",
-                  ":hover": {
-                    backgroundColor: "transparent",
-                  },
-                  ":active": {
-                    scale: 1.1,
-                  },
-                }}
-              >
-                <Avatar
-                  sx={{
-                    border: "1px solid gray",
-                  }}
-                >
-                  {!user?.profilePic ? (
-                    <>
-                      {user?.firstname?.slice(0, 1)}
-                      {user?.lastname?.slice(0, 1)}
-                    </>
-                  ) : (
-                    <img
-                      src={user?.profilePic}
-                      alt=""
-                      style={{
-                        width: "100%",
-                        height: "100%",
-                        objectFit: "cover",
-                      }}
-                    />
-                  )}
+              <MenuButton sx={{ border: "none", ":hover": { backgroundColor: "transparent" } }}>
+                <Avatar sx={{ border: "1px solid gray" }} src={user?.profilePic}>
+                  {!user?.profilePic && <>{user?.firstname?.slice(0, 1)}{user?.lastname?.slice(0, 1)}</>}
                 </Avatar>
               </MenuButton>
               <Menu>
                 <MenuItem>
-                  <Avatar>
-                    {!user?.profilePic ? (
-                      <>
-                        {user?.firstname?.slice(0, 1)}
-                        {user?.lastname?.slice(0, 1)}
-                      </>
-                    ) : (
-                      <img
-                        src={user?.profilePic}
-                        alt=""
-                        style={{
-                          width: "100%",
-                          height: "100%",
-                          objectFit: "cover",
-                        }}
-                      />
-                    )}
+                  <Avatar src={user?.profilePic}>
+                    {!user?.profilePic && <>{user?.firstname?.slice(0, 1)}{user?.lastname?.slice(0, 1)}</>}
                   </Avatar>
-                  <Tooltip title="View Profile">
-                    <Stack onClick={() => navigate("/user/settings")}>
-                      <Typography>
-                        {user?.firstname} {user?.lastname}
-                      </Typography>
-                      <Typography level="body-xs">{user?.email}</Typography>
-                    </Stack>
-                  </Tooltip>
+                  <Stack onClick={() => navigate("/user/settings")} sx={{ cursor: "pointer" }}>
+                    <Typography>{user?.firstname} {user?.lastname}</Typography>
+                    <Typography level="body-xs">{user?.email}</Typography>
+                  </Stack>
                   <Tooltip title="Logout">
-                    <IconButton
-                      onClick={() => setLogoutModal(true)}
-                      color="danger"
-                    >
+                    <IconButton onClick={() => setLogoutModal(true)} color="danger">
                       <Logout />
                     </IconButton>
                   </Tooltip>
@@ -351,153 +211,78 @@ const Navbar: React.FC = () => {
             </Dropdown>
           )}
         </Box>
+
+        {/* Theme toggle */}
         <Dropdown>
-          <MenuButton
-            sx={{
-              border: "none",
-              borderRadius: "50%",
-              width: "36px",
-              height: "36px",
-            }}
-          >
-            {colorScheme === "light" ? (
-              <LightMode sx={{ color: "rgb(255, 200, 0)" }} />
-            ) : (
-              <DarkMode sx={{ color: "white" }} />
-            )}
+          <MenuButton sx={{ border: "none", borderRadius: "50%", width: 36, height: 36 }}>
+            {colorScheme === "light"
+              ? <LightMode sx={{ color: "rgb(255,200,0)" }} />
+              : <DarkMode sx={{ color: "white" }} />}
           </MenuButton>
           <Menu>
-            <MenuItem onClick={() => setMode("system")}>
-              <Typography startDecorator={<Source />}>System Theme</Typography>
-            </MenuItem>
-            <MenuItem onClick={() => setMode("light")}>
-              <Typography startDecorator={<LightMode />}>
-                Light Theme
-              </Typography>
-            </MenuItem>
-            <MenuItem onClick={() => setMode("dark")}>
-              <Typography startDecorator={<DarkMode />}>Dark Theme</Typography>
-            </MenuItem>
+            <MenuItem onClick={() => setMode("system")}><Typography startDecorator={<Source />}>System</Typography></MenuItem>
+            <MenuItem onClick={() => setMode("light")}><Typography startDecorator={<LightMode />}>Light</Typography></MenuItem>
+            <MenuItem onClick={() => setMode("dark")}><Typography startDecorator={<DarkMode />}>Dark</Typography></MenuItem>
           </Menu>
         </Dropdown>
       </Box>
+
+      {/* ── Logout modal ──────────────────────────────────────────────────────── */}
       <Modal open={logoutModal} onClose={() => setLogoutModal(false)}>
         <ModalDialog minWidth={500} variant="outlined" role="alertdialog">
-          <DialogTitle>
-            <WarningRounded />
-            Confirmation
-          </DialogTitle>
+          <DialogTitle><WarningRounded /> Confirmation</DialogTitle>
           <Divider />
           <DialogContent>Are you sure you want to log out?</DialogContent>
           <DialogActions>
             <Button
               disabled={deleteDeviceData?.isLoading}
-              variant="solid"
-              color="danger"
-              onClick={() => {
-                logout();
-                googleLogout();
-              }}
+              variant="solid" color="danger"
+              onClick={() => { logout(); googleLogout(); }}
             >
               {deleteDeviceData?.isLoading ? "Loading..." : "Log out"}
             </Button>
-            <Button
-              variant="plain"
-              color="neutral"
-              onClick={() => setLogoutModal(false)}
-            >
-              Cancel
-            </Button>
+            <Button variant="plain" color="neutral" onClick={() => setLogoutModal(false)}>Cancel</Button>
           </DialogActions>
         </ModalDialog>
       </Modal>
+
+      {/* ── Mobile drawer ────────────────────────────────────────────────────── */}
       <Drawer open={drawerOpen} onClose={() => setDrawerOpen(false)}>
         <ModalClose />
         <Box padding={2} paddingTop={7}>
           <List>
             {isLoggedIn ? (
               myselfData?.isLoading ? (
-                <ListItemButton
-                  sx={{
-                    justifyContent: "space-between",
-                  }}
-                >
+                <ListItemButton sx={{ justifyContent: "space-between" }}>
                   <Skeleton variant="circular" width={50} height={40} />
-                  <Skeleton variant="text" width={"100%"} />
+                  <Skeleton variant="text" width="100%" />
                 </ListItemButton>
               ) : (
-                <ListItemButton
-                  sx={{
-                    justifyContent: "space-between",
-                  }}
-                >
-                  <Avatar>
-                    {!user?.profilePic ? (
-                      <>
-                        {user?.firstname?.slice(0, 1)}
-                        {user?.lastname?.slice(0, 1)}
-                      </>
-                    ) : (
-                      <img
-                        src={user?.profilePic}
-                        alt=""
-                        style={{
-                          width: "100%",
-                          height: "100%",
-                          objectFit: "cover",
-                        }}
-                      />
-                    )}
+                <ListItemButton sx={{ justifyContent: "space-between" }}>
+                  <Avatar src={user?.profilePic}>
+                    {!user?.profilePic && <>{user?.firstname?.slice(0, 1)}{user?.lastname?.slice(0, 1)}</>}
                   </Avatar>
-                  <Tooltip title="View Profile">
-                    <Stack onClick={() => navigateTo("/user/settings")}>
-                      <Typography>
-                        {user?.firstname} {user?.lastname}
-                      </Typography>
-                      <Typography level="body-xs">
-                        {user?.email.length > 15
-                          ? user?.email.slice(0, 15) + "..."
-                          : user?.email}
-                      </Typography>
-                    </Stack>
-                  </Tooltip>
-                  <Tooltip title="Logout">
-                    <IconButton
-                      onClick={() => setLogoutModal(true)}
-                      color="danger"
-                    >
-                      <Logout />
-                    </IconButton>
-                  </Tooltip>
+                  <Stack onClick={() => navigateTo("/user/settings")} sx={{ flex: 1, cursor: "pointer", ml: 1 }}>
+                    <Typography>{user?.firstname} {user?.lastname}</Typography>
+                    <Typography level="body-xs">
+                      {(user?.email?.length ?? 0) > 20 ? user?.email?.slice(0, 20) + "..." : user?.email}
+                    </Typography>
+                  </Stack>
+                  <IconButton onClick={() => setLogoutModal(true)} color="danger"><Logout /></IconButton>
                 </ListItemButton>
               )
             ) : (
               <Button onClick={() => navigateTo("/auth/login")}>Sign in</Button>
             )}
           </List>
-          <br />
           <Divider />
-          <List
-            size="lg"
-            component="nav"
-            sx={{
-              flex: "none",
-              fontSize: "xl",
-              "& > div": { justifyContent: "center" },
-            }}
-          >
-            <ListItemButton
-              onClick={() => navigateTo("/")}
-              sx={{ fontWeight: "lg" }}
-            >
-              Home
+          <List size="lg" component="nav" sx={{ "& > div": { justifyContent: "center" } }}>
+            <ListItemButton onClick={() => navigateTo("/")} sx={{ fontWeight: "lg" }}>Home</ListItemButton>
+            <ListItemButton onClick={() => navigateTo("/ai")} sx={{ gap: 1 }}>
+              <AutoAwesome sx={{ fontSize: 18, color: "rgb(255,216,77)" }} /> SmileAI
             </ListItemButton>
-            <ListItemButton onClick={() => navigateTo("/about")}>
-              About
-            </ListItemButton>
-            <ListItemButton onClick={() => navigateTo("/contact")}>
-              Contact
-            </ListItemButton>
+            <ListItemButton onClick={() => navigateTo("/discover")}>Discover</ListItemButton>
+            <ListItemButton onClick={() => navigateTo("/watchlist")}>Watchlist</ListItemButton>
           </List>
         </Box>
       </Drawer>

@@ -121,6 +121,7 @@ function Event({
               eventPoster={event.poster_path}
               eventId={event.id}
               eventType={event?.name ? "tv" : "movie"}
+              eventRating={(event as any)?.vote_average}
             />
           ))
         )}

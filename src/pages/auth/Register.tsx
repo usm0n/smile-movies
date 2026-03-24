@@ -91,7 +91,7 @@ function Register() {
   });
 
   const { login, loginData, registerData, register } = useUsers();
-  const { getLocation, locationData } = useOC();
+  const { locationData } = useOC();
   const { colorScheme } = useColorScheme();
   const navigate = useNavigate();
 
@@ -152,7 +152,6 @@ function Register() {
 
   useEffect(() => {
     if (isLoggedIn) navigate("/");
-    else getLocation();
   }, [isLoggedIn]);
 
   useEffect(() => {
@@ -170,9 +169,10 @@ function Register() {
   const steps = ["Account", "About You", "Preferences", "Welcome"];
 
   return (
-    <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100vh", py: 6, px: 2 }}>
+    <>
       {backdropLoading(loginData?.isLoading || registerData?.isLoading, colorScheme)}
-      <Card sx={{ padding: "40px", borderRadius: "16px", gap: "24px", width: "100%", maxWidth: 520 }}>
+    <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", marginTop: 6, py: 6, px: 2 }}>
+      <Card sx={{ padding: "30px", borderRadius: "16px", gap: "24px", width: { xs: "100%", sm: 580 } }}>
         {/* Stepper */}
         <Stepper sx={{ width: "100%" }}>
           {steps.map((label, i) => (
@@ -196,7 +196,7 @@ function Register() {
         {step === 0 && (
           <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
             <Typography level="h4" fontWeight={700}>Create your account</Typography>
-            <Box sx={{ display: "flex", gap: 1 }}>
+            <Box sx={{ display: "flex", gap: 1, flexDirection: { xs: "column", sm: "row" } }}>
               <FormControl required sx={{ flex: 1 }}>
                 <FormLabel>Firstname</FormLabel>
                 <Input name="firstname" value={userValue.firstname} onChange={handleInput} placeholder="John" startDecorator={<Person />} />
@@ -432,6 +432,7 @@ function Register() {
         )}
       </Card>
     </Box>
+    </>
   );
 }
 

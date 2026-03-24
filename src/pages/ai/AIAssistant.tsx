@@ -59,7 +59,7 @@ function AIAssistant() {
     );
   };
 
-  if (!isLoggedIn) return <NotLoggedIn type={"page"} />;
+  if (!isLoggedIn) return <NotLoggedIn type="page"/>;
 
   return (
     <Box
@@ -86,7 +86,7 @@ function AIAssistant() {
         <Box>
           <Typography level="h4" fontWeight={700}>SmileAI</Typography>
           <Typography level="body-xs" textColor="neutral.400">
-            Your personal movie and TV assistant · Powered by Groq
+            Your personal movie and TV assistant
           </Typography>
         </Box>
       </Box>

@@ -174,6 +174,7 @@ function Search() {
               eventTitle={"gender" in result ? result?.name : ""}
               eventId={result?.id}
               eventType={"gender" in result ? "person" : "name" in result ? "tv" : "movie"}
+              eventRating={"vote_average" in result ? (result as any).vote_average : undefined}
             />
           ))
         ) : (

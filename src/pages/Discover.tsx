@@ -207,6 +207,7 @@ function Discover() {
               eventPoster={result?.poster_path}
               eventId={result?.id}
               eventType={"name" in result ? "tv" : "movie"}
+              eventRating={(result as any)?.vote_average}
             />
           ))
         ) : (

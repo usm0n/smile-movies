@@ -47,7 +47,7 @@ function Settings({
   myselfData: ResponseType | null;
   updateMyself: (user: User) => void;
 }) {
-  const { changePassword } = useUsers() as any;
+  const { changePassword, changePasswordData } = useUsers() as any;
   const [emailModal, setEmailModal] = useState(false);
   const [passwordModal, setPasswordModal] = useState(false);
   const [passwordVisibility, setPasswordVisibility] = useState(false);
@@ -374,11 +374,11 @@ function Settings({
           <FormHelperText>You'll need to re-verify your new email address.</FormHelperText>
           <Divider />
           <DialogContent sx={{ gap: 2 }}>
-            <FormControl color={updatedMyselfData?.isError ? "danger" : "neutral"}>
+            <FormControl color={updatedMyselfData?.isConflict ? "danger" : "neutral"}>
               <FormLabel>New Email</FormLabel>
               <Input value={userValue?.email || ""} name="email" onChange={handleInput} required />
               <FormHelperText>
-                {updatedMyselfData?.isError && "Email is already taken"}
+                {updatedMyselfData?.isConflict && "Email is already taken"}
                 {!isValidEmail(userValue?.email || "") && "Invalid email"}
               </FormHelperText>
             </FormControl>

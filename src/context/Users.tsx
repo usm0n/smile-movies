@@ -388,28 +388,43 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
 
   const login = async (
     user: userType.UserLogin,
-    _type: "email" | "google",
-    _registerUser?: userType.UserRegister,
+    type: "email" | "google",
+    registerUser?: userType.UserRegister,
   ) => {
     setLoginData((prev) => ({ ...prev, isLoading: true }));
     try {
       const response = await users.login(user);
       setLoginData({
-        isLoading: false,
-        isError: false,
-        isSuccess: true,
-        data: response.data,
-        code: response.status,
+        isLoading: false, isError: false, isSuccess: true,
+        data: response.data, code: response.status,
       });
       reload();
     } catch (error: unknown) {
-      setLoginData({
-        isLoading: false,
-        isError: true,
-        isSuccess: false,
-        data: (error as userType.ErrorResponse)?.data,
-        code: (error as userType.ErrorResponse)?.status,
-      });
+      const errStatus = (error as userType.ErrorResponse)?.status;
+      // Google sign-in: if user not found (404), auto-register then log in
+      if (type === "google" && errStatus === 404 && registerUser) {
+        try {
+          await users.register(registerUser);
+          const loginResponse = await users.login(user);
+          setLoginData({
+            isLoading: false, isError: false, isSuccess: true,
+            data: loginResponse.data, code: loginResponse.status,
+          });
+          reload();
+        } catch (regError: unknown) {
+          setLoginData({
+            isLoading: false, isError: true, isSuccess: false,
+            data: (regError as userType.ErrorResponse)?.data,
+            code: (regError as userType.ErrorResponse)?.status,
+          });
+        }
+      } else {
+        setLoginData({
+          isLoading: false, isError: true, isSuccess: false,
+          data: (error as userType.ErrorResponse)?.data,
+          code: (error as userType.ErrorResponse)?.status,
+        });
+      }
     }
   };
 
