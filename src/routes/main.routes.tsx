@@ -13,6 +13,7 @@ import TVSeries from "../pages/tv/TVSeries";
 import Settings from "../pages/user";
 import Watch from "../pages/video/Watch";
 import Watchlist from "../pages/Watchlist";
+import AIAssistant from "../pages/ai/AIAssistant";
 
 export const mainRoutes = [
   {
@@ -74,6 +75,10 @@ export const mainRoutes = [
   {
     path: "/reset-password/:email/:token",
     element: <ResetPassword />
+  },
+  {
+    path: "/ai",
+    element: <AIAssistant />,
   },
   {
     path: "*",

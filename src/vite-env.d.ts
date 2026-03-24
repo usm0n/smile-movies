@@ -11,6 +11,7 @@ interface ImportMetaEnv {
   readonly VITE_OC_API_URL: string;
   readonly VITE_NUVIO_API_URL: string;
   readonly VITE_COOKIE_SECRET: string;
+  readonly VITE_OMDB_API_KEY: string;
 }
 
 interface ImportMeta {

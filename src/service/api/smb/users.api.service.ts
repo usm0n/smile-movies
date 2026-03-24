@@ -26,7 +26,7 @@ export const users = {
     const response = await smbAPI.put(`/users/email/${email}`, user);
     return response;
   },
-  updateMyself: async (user: User) => {
+  updateMyself: async (user: Partial<User>) => {
     const response = await smbAPI.put("/users/myself", user);
     return response;
   },
@@ -67,16 +67,15 @@ export const users = {
     return response;
   },
   resendForgotPasswordToken: async (email: string) => {
-    const response = await smbAPI.post("/users/resendForgotPasswordToken", {
-      email,
-    });
+    const response = await smbAPI.post("/users/resendForgotPasswordToken", { email });
     return response;
   },
   resetPassword: async (email: string, token: string, password: string) => {
-    const response = await smbAPI.post(
-      "/users/resetPassword/" + email + "/" + token,
-      { password },
-    );
+    const response = await smbAPI.post("/users/resetPassword/" + email + "/" + token, { password });
+    return response;
+  },
+  changePassword: async (oldPassword: string, newPassword: string) => {
+    const response = await smbAPI.post("/users/changePassword", { oldPassword, newPassword });
     return response;
   },
   addToWatchlist: async (
@@ -90,37 +89,20 @@ export const users = {
     episode: number,
   ) => {
     const response = await smbAPI.post(`/users/watchlist/`, {
-      typeMovie,
-      movieId,
-      poster,
-      status,
-      duration,
-      currentTime,
-      season,
-      episode,
+      typeMovie, movieId, poster, status, duration, currentTime, season, episode,
     });
     return response;
   },
   removeFromWatchlist: async (typeMovie: string, movieId: string) => {
-    const response = await smbAPI.delete(
-      `/users/watchlist/${typeMovie}/${movieId}`,
-    );
+    const response = await smbAPI.delete(`/users/watchlist/${typeMovie}/${movieId}`);
     return response;
   },
   lastLogin: async (deviceId: string) => {
     const response = await smbAPI.post(`/users/lastLogin/`, { deviceId });
     return response;
   },
-  addDevice: async (
-    deviceId: string,
-    deviceType: string,
-    deviceName: string,
-  ) => {
-    const response = await smbAPI.post(`/users/addDevice`, {
-      deviceId,
-      deviceType,
-      deviceName,
-    });
+  addDevice: async (deviceId: string, deviceType: string, deviceName: string) => {
+    const response = await smbAPI.post(`/users/addDevice`, { deviceId, deviceType, deviceName });
     return response;
   },
   deleteDevice: async (deviceId: string) => {
@@ -132,15 +114,11 @@ export const users = {
     return response;
   },
   requestActivateDevice: async (email: string, deviceId: string) => {
-    const response = await smbAPI.post(
-      `/users/requestActivateDevice/${email}/${deviceId}`,
-    );
+    const response = await smbAPI.post(`/users/requestActivateDevice/${email}/${deviceId}`);
     return response;
   },
   verifyDevice: async (email: string, deviceId: string, token: string) => {
-    const response = await smbAPI.post(
-      `/users/verifyDevice/${email}/${deviceId}/${token}`,
-    );
+    const response = await smbAPI.post(`/users/verifyDevice/${email}/${deviceId}/${token}`);
     return response;
   },
 };

@@ -63,6 +63,8 @@ const UsersContext = createContext({
     _token: string,
     _password: string,
   ) => {},
+  changePassword: async (_oldPassword: string, _newPassword: string) => {},
+  changePasswordData: null as userType.ResponseType | null,
   addToWatchlist: async (
     _type: string,
     _id: string,
@@ -115,6 +117,7 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
   const [loginData, setLoginData] = useState<userType.ResponseType | null>(
     null,
   );
+  const [changePasswordData, setChangePasswordData] = useState<userType.ResponseType | null>(null);
   const [logoutData, setLogoutData] = useState<userType.ResponseType | null>(
     null,
   );
@@ -733,6 +736,16 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  const changePassword = async (oldPassword: string, newPassword: string) => {
+    setChangePasswordData({ isLoading: true });
+    try {
+      const response = await users.changePassword(oldPassword, newPassword);
+      setChangePasswordData({ isLoading: false, isError: false, isSuccess: true, data: response.data, code: response.status });
+    } catch (error: unknown) {
+      setChangePasswordData({ isLoading: false, isError: true, isSuccess: false, data: (error as userType.ErrorResponse)?.data, code: (error as userType.ErrorResponse)?.status });
+    }
+  };
+
   useEffect(() => {
     getMyself();
   }, []);
@@ -816,6 +829,8 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
         deleteDeviceData,
         setIsVerified,
         isVerified,
+        changePassword,
+        changePasswordData,
       }}
     >
       {children}

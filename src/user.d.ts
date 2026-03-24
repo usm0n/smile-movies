@@ -1,3 +1,22 @@
+export interface FavoriteMedia {
+  id: string;
+  title: string;
+  type: "movie" | "tv";
+  poster?: string;
+}
+
+export interface NotificationPreferences {
+  emailNotifications: boolean;
+  newReleases: boolean;
+  recommendations: boolean;
+  watchlistUpdates: boolean;
+}
+
+export interface PrivacySettings {
+  showWatchlist: boolean;
+  showFavorites: boolean;
+}
+
 export interface User {
   profilePic?: string;
   id: string;
@@ -15,6 +34,11 @@ export interface User {
   lastLogin: string;
   devices: Device[];
   loginType: string;
+  age?: number;
+  gender?: "male" | "female" | "other" | "prefer_not_to_say";
+  favoriteMovies?: FavoriteMedia[];
+  notifications?: NotificationPreferences;
+  privacy?: PrivacySettings;
 }
 
 export interface Watchlist {
@@ -24,8 +48,8 @@ export interface Watchlist {
   duration?: number;
   currentTime?: number;
   id: string;
-  season?: number,
-  episode?: number
+  season?: number;
+  episode?: number;
 }
 
 export interface Location {
@@ -61,7 +85,13 @@ export interface UserRegister {
   deviceId: string;
   loginType: string;
   deviceLocation: Location;
+  age?: number;
+  gender?: "male" | "female" | "other" | "prefer_not_to_say";
+  favoriteMovies?: FavoriteMedia[];
+  notifications?: NotificationPreferences;
+  privacy?: PrivacySettings;
 }
+
 export interface UserLogin {
   email: string;
   password: string;
@@ -102,8 +132,8 @@ export interface GoogleUserResponse {
 }
 
 export interface ErrorResponse {
-  status: number,
-  data: Message
+  status: number;
+  data: Message;
 }
 
 export interface ResponseType {
@@ -111,5 +141,5 @@ export interface ResponseType {
   isError?: boolean;
   data?: User | User[] | Message | null;
   isSuccess?: boolean;
-  code?: number
+  code?: number;
 }

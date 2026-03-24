@@ -16,6 +16,9 @@ import BlurImage from "../../utilities/blurImage";
 import { useNavigate } from "react-router-dom";
 import { useUsers } from "../../context/Users";
 import { User } from "../../user";
+import IMDbRating from "./IMDbRating";
+import ParentalGuide from "./ParentalGuide";
+import MatchScore from "./MatchScore";
 
 function Header({
   movieImages,
@@ -313,6 +316,21 @@ function Header({
                   )
                   : ""}
               </Typography>
+              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, alignItems: "center", mt: 1 }}>
+                <IMDbRating mediaId={movieId} mediaType={movieType} />
+                <MatchScore
+                  movieTitle={movieDetails?.title || movieDetails?.name || ""}
+                  movieYear={(movieDetails?.release_date || movieDetails?.first_air_date || "").slice(0, 4)}
+                  overview={movieDetails?.overview}
+                  genres={movieDetails?.genres?.map((g: any) => g.name)}
+                />
+                <ParentalGuide
+                  movieTitle={movieDetails?.title || movieDetails?.name || ""}
+                  movieYear={(movieDetails?.release_date || movieDetails?.first_air_date || "").slice(0, 4)}
+                  overview={movieDetails?.overview}
+                  genres={movieDetails?.genres?.map((g: any) => g.name)}
+                />
+              </Box>
             </Box>
           </Box>
         </Box>

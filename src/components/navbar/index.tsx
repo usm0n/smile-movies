@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  AutoAwesome,
   DarkMode,
   LightMode,
   Logout,
@@ -144,6 +145,20 @@ const Navbar: React.FC = () => {
         <Link to="/contact">Contact</Link>
         <Link to="/download">Download</Link>
       </Box> */}
+      <Tooltip title="AI Assistant">
+        <IconButton
+          onClick={() => navigate("/ai")}
+          sx={{
+            color: "white",
+            background: "linear-gradient(135deg, rgba(255,216,77,0.15), rgba(255,160,0,0.1))",
+            border: "1px solid rgba(255,216,77,0.3)",
+            borderRadius: 8,
+            "&:hover": { background: "rgba(255,216,77,0.25)" },
+          }}
+        >
+          <AutoAwesome sx={{ fontSize: 20, color: "rgb(255,216,77)" }} />
+        </IconButton>
+      </Tooltip>
       <form
         onSubmit={(e) => {
           e.preventDefault();
