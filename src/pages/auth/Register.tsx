@@ -1,5 +1,4 @@
 import {
-  AutoAwesome,
   Lock,
   Mail,
   Person,
@@ -11,7 +10,6 @@ import {
   Search,
 } from "@mui/icons-material";
 import {
-  Autocomplete,
   Avatar,
   Box,
   Button,
@@ -29,8 +27,6 @@ import {
   Step,
   StepIndicator,
   Stepper,
-  Textarea,
-  Tooltip,
   Typography,
   useColorScheme,
 } from "@mui/joy";

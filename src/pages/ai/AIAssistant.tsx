@@ -59,7 +59,7 @@ function AIAssistant() {
     );
   };
 
-  if (!isLoggedIn) return <NotLoggedIn />;
+  if (!isLoggedIn) return <NotLoggedIn type={"page"} />;
 
   return (
     <Box

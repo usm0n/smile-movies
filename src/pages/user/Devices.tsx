@@ -12,13 +12,12 @@ import {
   Modal,
   ModalClose,
   ModalDialog,
-  Stack,
   Tooltip,
   Typography,
 } from "@mui/joy";
 import { ResponseType, User } from "../../user";
 import { deviceId, formatTimeAgo, smartText } from "../../utilities/defaults";
-import { Check, Close, Delete, DevicesOther, Help, Lock, LockOpen } from "@mui/icons-material";
+import { Check, Delete, DevicesOther, Help, Lock, LockOpen } from "@mui/icons-material";
 import { useState } from "react";
 import DeviceCard from "../../components/cards/DeviceCard";
 import { useUsers } from "../../context/Users";
@@ -27,8 +26,8 @@ function Devices({ myselfData }: { myselfData: ResponseType | null }) {
   const {
     deleteDevice,
     deleteDeviceData,
-    activateDevice,
-    activateDeviceData,
+    // activateDevice,
+    // activateDeviceData,
     requestActivateDevice,
     requestActivateDeviceData,
     verifyDevice,
