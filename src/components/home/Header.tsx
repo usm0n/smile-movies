@@ -253,10 +253,6 @@ const Header = React.memo(
                 {details?.media_type === "movie" ? "Movie" : "TV Series"}
                 {" • "}
                 {ymdToDmy(details?.release_date || details?.first_air_date)}
-                {" • "}
-                {details?.vote_average
-                  ? `${details?.vote_average.toFixed(1)} / 10`
-                  : "N/A"}
               </Typography>
               <Button
                 onClick={(e) => {

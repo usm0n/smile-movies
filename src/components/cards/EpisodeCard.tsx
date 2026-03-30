@@ -4,7 +4,6 @@ import { tvEpisodeDetails } from "../../tmdb-res";
 import { minuteToHour, shareLink, ymdToDmy } from "../../utilities/defaults";
 import { IosShare, MoreHoriz, PlayArrow } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
-import RatingBadge from "../movie/RatingBadge";
 
 function EpisodeCard({ episode, tvId }: { episode: tvEpisodeDetails; tvId: string | number }) {
   const navigate = useNavigate();
@@ -43,11 +42,7 @@ function EpisodeCard({ episode, tvId }: { episode: tvEpisodeDetails; tvId: strin
           lowQualitySrc: `https://image.tmdb.org/t/p/w200${episode?.still_path}`,
           style: { width: "auto", height: "150px", aspectRatio: "16/9", borderRadius: "12px" },
         })}
-        {episode?.vote_average > 0 && (
-          <Box sx={{ position: "absolute", bottom: 6, left: 6 }}>
-            <RatingBadge rating={episode.vote_average} size="sm" />
-          </Box>
-        )}
+        
       </Box>
 
       <Typography level="body-xs">EPISODE {episode?.episode_number}</Typography>

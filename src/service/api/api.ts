@@ -69,6 +69,11 @@ export const omdbAPI = axios.create({
   params: { apikey: import.meta.env.VITE_OMDB_API_KEY },
 });
 
+export const imdbAPI = axios.create({
+  baseURL: "https://api.imdbapi.dev",
+  headers: { "x-api-key": import.meta.env.VITE_IMDB_API_KEY },
+});
+
 export const ocAPI = axios.create({
   baseURL: import.meta.env.VITE_OC_API_URL,
 });

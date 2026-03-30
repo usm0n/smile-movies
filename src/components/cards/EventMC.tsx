@@ -8,12 +8,11 @@ import { Add, Check, DeleteOutline, IosShare, MoreVert, Movie, Person, PlayArrow
 import { isLoggedIn, shareLink } from "../../utilities/defaults";
 import { useUsers } from "../../context/Users";
 import { User } from "../../user";
-import RatingBadge from "../movie/RatingBadge";
 
 function EventMC({
   eventPoster, eventId, eventType, eventDelete,
   eventDuration, eventCurrentTime, eventStatus,
-  eventSeason, eventEpisode, eventTitle, eventRating,
+  eventSeason, eventEpisode, eventTitle,
 }: {
   eventPoster: string;
   eventId: number | string;
@@ -25,7 +24,6 @@ function EventMC({
   eventSeason?: number;
   eventEpisode?: number;
   eventTitle?: string;
-  eventRating?: number;
 }) {
   const navigate = useNavigate();
   const { addToWatchlist, removeFromWatchlist, addToWatchlistData, removeFromWatchlistData, myselfData } = useUsers();
@@ -59,13 +57,6 @@ function EventMC({
             {eventTitle}
           </Typography>
         </CardContent>
-
-        {/* Rating badge — top left */}
-        {eventRating && eventRating > 0 && (
-          <Box sx={{ position: "absolute", top: 8, left: 8, zIndex: 2 }}>
-            <RatingBadge rating={eventRating} size="sm" />
-          </Box>
-        )}
 
         {/* Menu — top right */}
         <Box sx={{ position: "absolute", top: 0, right: 0, zIndex: 3, padding: 1 }}>

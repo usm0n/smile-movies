@@ -24,7 +24,7 @@ function Discover() {
         ? "movie"
         : "all",
   );
-  const [sortBy, setSortBy] = useState<"popularity" | "rating" | "release">(
+  const [sortBy, setSortBy] = useState<"popularity" | "release">(
     "popularity",
   );
 
@@ -50,9 +50,7 @@ function Discover() {
           ];
 
   results = [...results].sort((a, b) => {
-    if (sortBy === "rating") {
-      return (b.vote_average || 0) - (a.vote_average || 0);
-    } else if (sortBy === "release") {
+    if (sortBy === "release") {
       return (
         new Date(
           "release_date" in b ? b.release_date : b.first_air_date || "",
@@ -189,7 +187,7 @@ function Discover() {
 
         <Select value={sortBy} onChange={(_, value) => setSortBy(value as any)}>
           <Option value="popularity">Popular</Option>
-          <Option value="rating">Highest Rated</Option>
+
           <Option value="release">Newest</Option>
         </Select>
       </Box>
@@ -207,7 +205,7 @@ function Discover() {
               eventPoster={result?.poster_path}
               eventId={result?.id}
               eventType={"name" in result ? "tv" : "movie"}
-              eventRating={(result as any)?.vote_average}
+
             />
           ))
         ) : (

@@ -1,7 +1,7 @@
 import { Box, Chip, CircularProgress, Tooltip, Typography } from "@mui/joy";
 import { useEffect, useState } from "react";
-import { omdbAPI, tmdbAPI } from "../../service/api/api";
 import StarIcon from "@mui/icons-material/Star";
+import { resolveImdbId, fetchImdbTitle } from "../../service/api/imdb/imdb.api.service";
 
 interface IMDbRatingProps {
   mediaId: string | number;
@@ -17,23 +17,17 @@ function IMDbRating({ mediaId, mediaType }: IMDbRatingProps) {
     const fetchRating = async () => {
       try {
         setLoading(true);
-        // Step 1: Get IMDb ID from TMDB external_ids
-        const externalRes = await tmdbAPI.get(
-          `/${mediaType}/${mediaId}/external_ids`
-        );
-        const imdbId = externalRes.data?.imdb_id;
-        if (!imdbId) {
-          setLoading(false);
-          return;
+        const imdbId = await resolveImdbId(mediaId, mediaType);
+        if (!imdbId) return;
+        const title = await fetchImdbTitle(imdbId);
+        if (title?.rating?.aggregateRating) {
+          setImdbRating(String(title.rating.aggregateRating.toFixed(1)));
+          if (title.rating.voteCount) {
+            setImdbVotes(title.rating.voteCount.toLocaleString());
+          }
         }
-        // Step 2: Fetch IMDb rating from OMDB
-        const omdbRes = await omdbAPI.get("/", { params: { i: imdbId } });
-        if (omdbRes.data?.imdbRating && omdbRes.data.imdbRating !== "N/A") {
-          setImdbRating(omdbRes.data.imdbRating);
-          setImdbVotes(omdbRes.data.imdbVotes);
-        }
-      } catch (_) {
-        // silently fail — OMDB is optional
+      } catch {
+        // silently fail
       } finally {
         setLoading(false);
       }
