@@ -325,10 +325,10 @@ function Header({
                   genres={movieDetails?.genres?.map((g: any) => g.name)}
                 />
                 <ParentalGuide
-                  movieTitle={movieDetails?.title || movieDetails?.name || ""}
-                  movieYear={(movieDetails?.release_date || movieDetails?.first_air_date || "").slice(0, 4)}
-                  overview={movieDetails?.overview}
-                  genres={movieDetails?.genres?.map((g: any) => g.name)}
+                  mediaId={movieId}
+                  mediaType={movieType}
+                  title={movieDetails?.title || movieDetails?.name || ""}
+                  year={(movieDetails?.release_date || movieDetails?.first_air_date || "").slice(0, 4)}
                 />
               </Box>
             </Box>
