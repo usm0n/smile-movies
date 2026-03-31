@@ -164,11 +164,11 @@ const Navbar: React.FC = () => {
                   navigate(`/${option.media_type}/${option.id}`);
                 }}
               >
-                {option.poster_path ? (
+                {option.poster_path || option.profile_path ? (
                   <img
                     loading="lazy"
                     width="40"
-                    src={`https://image.tmdb.org/t/p/w92${option.poster_path}`}
+                    src={`https://image.tmdb.org/t/p/w92${(option.profile_path || option.poster_path)}`}
                     alt=""
                   />
                 ) : (
