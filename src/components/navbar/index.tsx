@@ -1,17 +1,44 @@
 "use client";
 
 import {
-  AutoAwesome, DarkMode, LightMode, Logout,
-  Search, Source, WarningRounded,
+  AutoAwesome,
+  DarkMode,
+  LightMode,
+  Logout,
+  Search,
+  Source,
+  WarningRounded,
 } from "@mui/icons-material";
 import MenuIcon from "@mui/icons-material/Menu";
 import highLogo from "../../assets/images/logo-1000.png";
 import {
-  Autocomplete, Avatar, Box, Button,
-  DialogActions, DialogContent, DialogTitle, Divider,
-  Drawer, Dropdown, IconButton, List, ListItemButton,
-  Menu, MenuButton, MenuItem, Modal, ModalClose, ModalDialog,
-  Skeleton, Stack, Tooltip, Typography, useColorScheme,
+  Autocomplete,
+  AutocompleteOption,
+  Avatar,
+  Box,
+  Button,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Divider,
+  Drawer,
+  Dropdown,
+  IconButton,
+  List,
+  ListItemButton,
+  ListItemContent,
+  ListItemDecorator,
+  Menu,
+  MenuButton,
+  MenuItem,
+  Modal,
+  ModalClose,
+  ModalDialog,
+  Skeleton,
+  Stack,
+  Tooltip,
+  Typography,
+  useColorScheme,
 } from "@mui/joy";
 import { isLoggedIn } from "../../utilities/defaults";
 import React, { useState } from "react";
@@ -32,7 +59,10 @@ const Navbar: React.FC = () => {
   const { searchMultiAC, searchMultiACData } = useTMDB();
   const navigate = useNavigate();
 
-  const navigateTo = (path: string) => { navigate(path); setDrawerOpen(false); };
+  const navigateTo = (path: string) => {
+    navigate(path);
+    setDrawerOpen(false);
+  };
 
   const handleSearchSubmit = () => {
     if (searchValue) {
@@ -42,9 +72,14 @@ const Navbar: React.FC = () => {
     }
   };
 
-  const searchResults = (searchMultiACData?.data as searchMulti)?.results?.filter(
+  const searchResults = (
+    searchMultiACData?.data as searchMulti
+  )?.results?.filter(
     (result, index, self) =>
-      index === self.findIndex((r) => (r.name || r.title) === (result.name || result.title))
+      index ===
+      self.findIndex(
+        (r) => (r.name || r.title) === (result.name || result.title),
+      ),
   );
 
   const user = myselfData?.data as User;
@@ -57,7 +92,8 @@ const Navbar: React.FC = () => {
         padding: "15px 20px",
         color: "#f5f5f5",
         position: "fixed",
-        top: 0, left: 0,
+        top: 0,
+        left: 0,
         width: "100%",
         zIndex: 1000,
         display: "flex",
@@ -69,7 +105,11 @@ const Navbar: React.FC = () => {
       <Box display="flex" alignItems="center" gap={1}>
         <IconButton
           onClick={() => setDrawerOpen(true)}
-          sx={{ color: "white", display: "none", "@media (max-width: 700px)": { display: "flex" } }}
+          sx={{
+            color: "white",
+            display: "none",
+            "@media (max-width: 700px)": { display: "flex" },
+          }}
         >
           <MenuIcon />
         </IconButton>
@@ -90,12 +130,17 @@ const Navbar: React.FC = () => {
       </Box>
 
       {/* ── Centre: search bar with AI button embedded ─────────────────────── */}
-      <form onSubmit={(e) => { e.preventDefault(); handleSearchSubmit(); }}>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          handleSearchSubmit();
+        }}
+      >
         <Autocomplete
           size="lg"
           onInputChange={(_event, value) => {
-            searchMultiAC(value, 1);
             setSearchValue(value);
+            searchMultiAC(value, 1);
           }}
           sx={{
             width: "420px",
@@ -110,12 +155,63 @@ const Navbar: React.FC = () => {
           }}
           options={searchResults ?? []}
           getOptionLabel={(option) => option?.title || option?.name || ""}
+          renderOption={(props, option) => (
+            <AutocompleteOption {...props}>
+              <ListItemDecorator
+                onClick={() => {
+                  setSearchValue("");
+                  setSearchVisibility(false);
+                  navigate(`/${option.media_type}/${option.id}`);
+                }}
+              >
+                {option.poster_path ? (
+                  <img
+                    loading="lazy"
+                    width="40"
+                    src={`https://image.tmdb.org/t/p/w92${option.poster_path}`}
+                    alt=""
+                  />
+                ) : (
+                  <Box
+                    sx={{
+                      width: 40,
+                      height: 60,
+                      backgroundColor: "rgba(255,255,255,0.1)",
+                      borderRadius: 1,
+                    }}
+                  />
+                )}
+              </ListItemDecorator>
+              <ListItemContent
+                onClick={() => {
+                  setSearchValue("");
+                  setSearchVisibility(false);
+                  navigate(`/${option.media_type}/${option.id}`);
+                }}
+                sx={{ fontSize: "md" }}
+              >
+                {option.title || option.name}
+                <Typography level="body-xs" textColor="text.tertiary">
+                  {option.media_type === "movie"
+                    ? "Movie"
+                    : option.media_type === "tv"
+                      ? "TV Show"
+                      : option.media_type === "person"
+                        ? "Person"
+                        : ""}
+                </Typography>
+              </ListItemContent>
+            </AutocompleteOption>
+          )}
           placeholder="Search movies & TV shows..."
           startDecorator={
             // AI button sits flush inside the left of the search bar
             <Tooltip title="Ask AI — describe a movie, get recommendations">
               <Box
-                onClick={(e) => { e.stopPropagation(); navigate("/ai"); }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigate("/ai");
+                }}
                 sx={{
                   display: "flex",
                   alignItems: "center",
@@ -123,7 +219,8 @@ const Navbar: React.FC = () => {
                   px: 0.8,
                   py: 0.4,
                   borderRadius: 6,
-                  background: "linear-gradient(135deg, rgba(255,216,77,0.2), rgba(255,160,0,0.15))",
+                  background:
+                    "linear-gradient(135deg, rgba(255,216,77,0.2), rgba(255,160,0,0.15))",
                   border: "1px solid rgba(255,216,77,0.35)",
                   cursor: "pointer",
                   transition: "all 0.15s",
@@ -132,7 +229,14 @@ const Navbar: React.FC = () => {
                 }}
               >
                 <AutoAwesome sx={{ fontSize: 14, color: "rgb(255,216,77)" }} />
-                <Typography sx={{ fontSize: 11, fontWeight: 700, color: "rgb(255,216,77)", lineHeight: 1 }}>
+                <Typography
+                  sx={{
+                    fontSize: 11,
+                    fontWeight: 700,
+                    color: "rgb(255,216,77)",
+                    lineHeight: 1,
+                  }}
+                >
                   AI
                 </Typography>
               </Box>
@@ -161,17 +265,31 @@ const Navbar: React.FC = () => {
         </IconButton>
 
         {/* Auth area */}
-        <Box sx={{ display: "flex", "@media (max-width: 700px)": { display: "none" } }}>
+        <Box
+          sx={{
+            display: "flex",
+            "@media (max-width: 700px)": { display: "none" },
+          }}
+        >
           {!isLoggedIn ? (
             <Button
               onClick={() => navigate("/auth/login")}
-              sx={{ background: "rgb(255,216,77)", color: "black", ":hover": { background: "rgb(255,216,77)", opacity: 0.8 } }}
+              sx={{
+                background: "rgb(255,216,77)",
+                color: "black",
+                ":hover": { background: "rgb(255,216,77)", opacity: 0.8 },
+              }}
             >
               Sign In
             </Button>
           ) : myselfData?.isLoading ? (
             <Dropdown>
-              <MenuButton sx={{ border: "none", ":hover": { backgroundColor: "transparent" } }}>
+              <MenuButton
+                sx={{
+                  border: "none",
+                  ":hover": { backgroundColor: "transparent" },
+                }}
+              >
                 <Avatar />
               </MenuButton>
               <Menu>
@@ -179,29 +297,58 @@ const Navbar: React.FC = () => {
                   <Avatar />
                   <Stack onClick={() => navigate("/user/settings")}>
                     <Skeleton variant="text" sx={{ width: "120px" }} />
-                    <Skeleton variant="text" sx={{ width: "100px", height: "15px" }} />
+                    <Skeleton
+                      variant="text"
+                      sx={{ width: "100px", height: "15px" }}
+                    />
                   </Stack>
                 </MenuItem>
               </Menu>
             </Dropdown>
           ) : (
             <Dropdown>
-              <MenuButton sx={{ border: "none", ":hover": { backgroundColor: "transparent" } }}>
-                <Avatar sx={{ border: "1px solid gray" }} src={user?.profilePic}>
-                  {!user?.profilePic && <>{user?.firstname?.slice(0, 1)}{user?.lastname?.slice(0, 1)}</>}
+              <MenuButton
+                sx={{
+                  border: "none",
+                  ":hover": { backgroundColor: "transparent" },
+                }}
+              >
+                <Avatar
+                  sx={{ border: "1px solid gray" }}
+                  src={user?.profilePic}
+                >
+                  {!user?.profilePic && (
+                    <>
+                      {user?.firstname?.slice(0, 1)}
+                      {user?.lastname?.slice(0, 1)}
+                    </>
+                  )}
                 </Avatar>
               </MenuButton>
               <Menu>
                 <MenuItem>
                   <Avatar src={user?.profilePic}>
-                    {!user?.profilePic && <>{user?.firstname?.slice(0, 1)}{user?.lastname?.slice(0, 1)}</>}
+                    {!user?.profilePic && (
+                      <>
+                        {user?.firstname?.slice(0, 1)}
+                        {user?.lastname?.slice(0, 1)}
+                      </>
+                    )}
                   </Avatar>
-                  <Stack onClick={() => navigate("/user/settings")} sx={{ cursor: "pointer" }}>
-                    <Typography>{user?.firstname} {user?.lastname}</Typography>
+                  <Stack
+                    onClick={() => navigate("/user/settings")}
+                    sx={{ cursor: "pointer" }}
+                  >
+                    <Typography>
+                      {user?.firstname} {user?.lastname}
+                    </Typography>
                     <Typography level="body-xs">{user?.email}</Typography>
                   </Stack>
                   <Tooltip title="Logout">
-                    <IconButton onClick={() => setLogoutModal(true)} color="danger">
+                    <IconButton
+                      onClick={() => setLogoutModal(true)}
+                      color="danger"
+                    >
                       <Logout />
                     </IconButton>
                   </Tooltip>
@@ -213,15 +360,25 @@ const Navbar: React.FC = () => {
 
         {/* Theme toggle */}
         <Dropdown>
-          <MenuButton sx={{ border: "none", borderRadius: "50%", width: 36, height: 36 }}>
-            {colorScheme === "light"
-              ? <LightMode sx={{ color: "rgb(255,200,0)" }} />
-              : <DarkMode sx={{ color: "white" }} />}
+          <MenuButton
+            sx={{ border: "none", borderRadius: "50%", width: 36, height: 36 }}
+          >
+            {colorScheme === "light" ? (
+              <LightMode sx={{ color: "rgb(255,200,0)" }} />
+            ) : (
+              <DarkMode sx={{ color: "white" }} />
+            )}
           </MenuButton>
           <Menu>
-            <MenuItem onClick={() => setMode("system")}><Typography startDecorator={<Source />}>System</Typography></MenuItem>
-            <MenuItem onClick={() => setMode("light")}><Typography startDecorator={<LightMode />}>Light</Typography></MenuItem>
-            <MenuItem onClick={() => setMode("dark")}><Typography startDecorator={<DarkMode />}>Dark</Typography></MenuItem>
+            <MenuItem onClick={() => setMode("system")}>
+              <Typography startDecorator={<Source />}>System</Typography>
+            </MenuItem>
+            <MenuItem onClick={() => setMode("light")}>
+              <Typography startDecorator={<LightMode />}>Light</Typography>
+            </MenuItem>
+            <MenuItem onClick={() => setMode("dark")}>
+              <Typography startDecorator={<DarkMode />}>Dark</Typography>
+            </MenuItem>
           </Menu>
         </Dropdown>
       </Box>
@@ -229,18 +386,30 @@ const Navbar: React.FC = () => {
       {/* ── Logout modal ──────────────────────────────────────────────────────── */}
       <Modal open={logoutModal} onClose={() => setLogoutModal(false)}>
         <ModalDialog minWidth={500} variant="outlined" role="alertdialog">
-          <DialogTitle><WarningRounded /> Confirmation</DialogTitle>
+          <DialogTitle>
+            <WarningRounded /> Confirmation
+          </DialogTitle>
           <Divider />
           <DialogContent>Are you sure you want to log out?</DialogContent>
           <DialogActions>
             <Button
               disabled={deleteDeviceData?.isLoading}
-              variant="solid" color="danger"
-              onClick={() => { logout(); googleLogout(); }}
+              variant="solid"
+              color="danger"
+              onClick={() => {
+                logout();
+                googleLogout();
+              }}
             >
               {deleteDeviceData?.isLoading ? "Loading..." : "Log out"}
             </Button>
-            <Button variant="plain" color="neutral" onClick={() => setLogoutModal(false)}>Cancel</Button>
+            <Button
+              variant="plain"
+              color="neutral"
+              onClick={() => setLogoutModal(false)}
+            >
+              Cancel
+            </Button>
           </DialogActions>
         </ModalDialog>
       </Modal>
@@ -259,15 +428,32 @@ const Navbar: React.FC = () => {
               ) : (
                 <ListItemButton sx={{ justifyContent: "space-between" }}>
                   <Avatar src={user?.profilePic}>
-                    {!user?.profilePic && <>{user?.firstname?.slice(0, 1)}{user?.lastname?.slice(0, 1)}</>}
+                    {!user?.profilePic && (
+                      <>
+                        {user?.firstname?.slice(0, 1)}
+                        {user?.lastname?.slice(0, 1)}
+                      </>
+                    )}
                   </Avatar>
-                  <Stack onClick={() => navigateTo("/user/settings")} sx={{ flex: 1, cursor: "pointer", ml: 1 }}>
-                    <Typography>{user?.firstname} {user?.lastname}</Typography>
+                  <Stack
+                    onClick={() => navigateTo("/user/settings")}
+                    sx={{ flex: 1, cursor: "pointer", ml: 1 }}
+                  >
+                    <Typography>
+                      {user?.firstname} {user?.lastname}
+                    </Typography>
                     <Typography level="body-xs">
-                      {(user?.email?.length ?? 0) > 20 ? user?.email?.slice(0, 20) + "..." : user?.email}
+                      {(user?.email?.length ?? 0) > 20
+                        ? user?.email?.slice(0, 20) + "..."
+                        : user?.email}
                     </Typography>
                   </Stack>
-                  <IconButton onClick={() => setLogoutModal(true)} color="danger"><Logout /></IconButton>
+                  <IconButton
+                    onClick={() => setLogoutModal(true)}
+                    color="danger"
+                  >
+                    <Logout />
+                  </IconButton>
                 </ListItemButton>
               )
             ) : (
@@ -275,13 +461,27 @@ const Navbar: React.FC = () => {
             )}
           </List>
           <Divider />
-          <List size="lg" component="nav" sx={{ "& > div": { justifyContent: "center" } }}>
-            <ListItemButton onClick={() => navigateTo("/")} sx={{ fontWeight: "lg" }}>Home</ListItemButton>
-            <ListItemButton onClick={() => navigateTo("/ai")} sx={{ gap: 1 }}>
-              <AutoAwesome sx={{ fontSize: 18, color: "rgb(255,216,77)" }} /> SmileAI
+          <List
+            size="lg"
+            component="nav"
+            sx={{ "& > div": { justifyContent: "center" } }}
+          >
+            <ListItemButton
+              onClick={() => navigateTo("/")}
+              sx={{ fontWeight: "lg" }}
+            >
+              Home
             </ListItemButton>
-            <ListItemButton onClick={() => navigateTo("/discover")}>Discover</ListItemButton>
-            <ListItemButton onClick={() => navigateTo("/watchlist")}>Watchlist</ListItemButton>
+            <ListItemButton onClick={() => navigateTo("/ai")} sx={{ gap: 1 }}>
+              <AutoAwesome sx={{ fontSize: 18, color: "rgb(255,216,77)" }} />{" "}
+              SmileAI
+            </ListItemButton>
+            <ListItemButton onClick={() => navigateTo("/discover")}>
+              Discover
+            </ListItemButton>
+            <ListItemButton onClick={() => navigateTo("/watchlist")}>
+              Watchlist
+            </ListItemButton>
           </List>
         </Box>
       </Drawer>
