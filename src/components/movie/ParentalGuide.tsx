@@ -1,6 +1,6 @@
 import {
   Box, Button, Chip, CircularProgress, Divider,
-  Modal, ModalClose, ModalDialog, Typography,
+  IconButton, Modal, ModalClose, ModalDialog, Typography,
 } from "@mui/joy";
 import { useState } from "react";
 import FamilyRestroomIcon from "@mui/icons-material/FamilyRestroom";
@@ -14,14 +14,13 @@ import {
 
 // ── Category display config ───────────────────────────────────────────────────
 const CATEGORY_META: Record<string, { label: string; emoji: string }> = {
-  SEXUAL_CONTENT:           { label: "Sex & Nudity",              emoji: "🔞" },
-  VIOLENCE:                 { label: "Violence & Gore",            emoji: "🩸" },
-  PROFANITY:                { label: "Profanity",                  emoji: "🤬" },
-  ALCOHOL_DRUGS:            { label: "Alcohol, Drugs & Smoking",   emoji: "🍷" },
-  FRIGHTENING_INTENSE_SCENES: { label: "Frightening & Intense",   emoji: "😱" },
+  SEXUAL_CONTENT:               { label: "Sex & Nudity",            emoji: "🔞" },
+  VIOLENCE:                     { label: "Violence & Gore",          emoji: "🩸" },
+  PROFANITY:                    { label: "Profanity",                emoji: "🤬" },
+  ALCOHOL_DRUGS:                { label: "Alcohol, Drugs & Smoking", emoji: "🍷" },
+  FRIGHTENING_INTENSE_SCENES:   { label: "Frightening & Intense",   emoji: "😱" },
 };
 
-// Ordered display
 const CATEGORY_ORDER = [
   "SEXUAL_CONTENT",
   "VIOLENCE",
@@ -30,26 +29,28 @@ const CATEGORY_ORDER = [
   "FRIGHTENING_INTENSE_SCENES",
 ];
 
-// Severity levels in order + their colours
 const SEVERITY_CONFIG: Record<string, { color: string; label: string }> = {
-  NONE:   { color: "#21d07a", label: "None"   },
-  MILD:   { color: "#d2d531", label: "Mild"   },
+  NONE:     { color: "#21d07a", label: "None"     },
+  MILD:     { color: "#d2d531", label: "Mild"     },
   MODERATE: { color: "#e67e22", label: "Moderate" },
-  SEVERE: { color: "#e74c3c", label: "Severe" },
+  SEVERE:   { color: "#e74c3c", label: "Severe"   },
 };
 const SEVERITY_ORDER = ["NONE", "MILD", "MODERATE", "SEVERE"];
 
-/** Pick the "dominant" severity for a category based on highest vote count */
 function dominantSeverity(entry: ImdbParentsGuideEntry): string {
-  if (!entry.severityBreakdowns?.length) return "NONE";
-  const sorted = [...entry.severityBreakdowns].sort((a, b) => b.voteCount - a.voteCount);
-  return sorted[0].severityLevel?.toUpperCase() ?? "NONE";
+  // if (!entry.severityBreakdowns?.length) return "NONE";
+  // return [...entry.severityBreakdowns].sort((a, b) => b.voteCount - a.voteCount)[0]
+  //   ?.severityLevel?.toUpperCase() ?? "NONE";
+
+const breakdowns = entry.severityBreakdowns?.filter(b => (b.voteCount ?? 0) > 0) ?? [];
+if (!breakdowns.length) return "NONE";
+  return [...breakdowns].sort((a, b) => b.voteCount - a.voteCount)[0]
+    ?.severityLevel?.toUpperCase() ?? "NONE";
 }
 
 function severityChipColor(sev: string): "success" | "warning" | "danger" | "neutral" {
   if (sev === "NONE") return "success";
-  if (sev === "MILD") return "warning";
-  if (sev === "MODERATE") return "warning";
+  if (sev === "MILD" || sev === "MODERATE") return "warning";
   if (sev === "SEVERE") return "danger";
   return "neutral";
 }
@@ -61,7 +62,8 @@ function SeverityBar({ entry }: { entry: ImdbParentsGuideEntry }) {
 
   const byLevel: Record<string, number> = {};
   entry.severityBreakdowns?.forEach((s) => {
-    byLevel[s.severityLevel?.toUpperCase()] = s.voteCount ?? 0;
+    const key = s.severityLevel?.toUpperCase() ?? "NONE";
+    byLevel[key] = (byLevel[key] ?? 0) + (s.voteCount ?? 0);
   });
 
   return (
@@ -76,14 +78,7 @@ function SeverityBar({ entry }: { entry: ImdbParentsGuideEntry }) {
               {cfg.label}
             </Typography>
             <Box sx={{ flex: 1, height: 5, borderRadius: 3, background: "rgba(255,255,255,0.08)", overflow: "hidden" }}>
-              <Box
-                sx={{
-                  height: "100%", borderRadius: 3,
-                  width: `${pct}%`,
-                  background: cfg.color,
-                  transition: "width 0.4s ease",
-                }}
-              />
+              <Box sx={{ height: "100%", borderRadius: 3, width: `${pct}%`, background: cfg.color, transition: "width 0.4s ease" }} />
             </Box>
             <Typography sx={{ fontSize: 10, color: "neutral.500", width: 22, textAlign: "right", flexShrink: 0 }}>
               {count}
@@ -95,7 +90,7 @@ function SeverityBar({ entry }: { entry: ImdbParentsGuideEntry }) {
   );
 }
 
-// ── Single category block ─────────────────────────────────────────────────────
+// ── Category block ────────────────────────────────────────────────────────────
 function CategoryBlock({ entry }: { entry: ImdbParentsGuideEntry }) {
   const [showAllReviews, setShowAllReviews] = useState(false);
   const [revealedSpoilers, setRevealedSpoilers] = useState<Set<number>>(new Set());
@@ -115,7 +110,6 @@ function CategoryBlock({ entry }: { entry: ImdbParentsGuideEntry }) {
 
   return (
     <Box>
-      {/* Category header */}
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 0.5 }}>
         <Typography level="title-sm" sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
           <span>{meta.emoji}</span> {meta.label}
@@ -125,10 +119,8 @@ function CategoryBlock({ entry }: { entry: ImdbParentsGuideEntry }) {
         </Chip>
       </Box>
 
-      {/* Severity breakdown bars */}
       <SeverityBar entry={entry} />
 
-      {/* Reviews */}
       {reviews.length > 0 && (
         <Box sx={{ mt: 1, display: "flex", flexDirection: "column", gap: 0.75 }}>
           {visibleReviews.map((review, idx) => {
@@ -137,32 +129,19 @@ function CategoryBlock({ entry }: { entry: ImdbParentsGuideEntry }) {
               <Box
                 key={idx}
                 sx={{
-                  p: "8px 10px",
-                  borderRadius: "7px",
+                  p: "8px 10px", borderRadius: "7px",
                   background: "rgba(255,255,255,0.04)",
                   border: "1px solid rgba(255,255,255,0.07)",
-                  position: "relative",
-                  overflow: "hidden",
+                  position: "relative", overflow: "hidden",
                 }}
               >
                 {review.isSpoiler && !revealed ? (
                   <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 1 }}>
-                    <Box
-                      sx={{
-                        flex: 1,
-                        filter: "blur(4px)",
-                        userSelect: "none",
-                        pointerEvents: "none",
-                        color: "neutral.300",
-                        fontSize: 12,
-                      }}
-                    >
-                      <Typography level="body-xs">{review.text}</Typography>
+                    <Box sx={{ flex: 1, filter: "blur(4px)", userSelect: "none", pointerEvents: "none" }}>
+                      <Typography level="body-xs" textColor="neutral.300">{review.text}</Typography>
                     </Box>
                     <Button
-                      size="sm"
-                      variant="soft"
-                      color="warning"
+                      size="sm" variant="soft" color="warning"
                       startDecorator={<VisibilityIcon sx={{ fontSize: 13 }} />}
                       onClick={() => toggleSpoiler(idx)}
                       sx={{ flexShrink: 0, fontSize: 11, py: 0.3, px: 1, borderRadius: 20 }}
@@ -175,9 +154,7 @@ function CategoryBlock({ entry }: { entry: ImdbParentsGuideEntry }) {
                     <Typography level="body-xs" textColor="neutral.300">{review.text}</Typography>
                     {review.isSpoiler && (
                       <Button
-                        size="sm"
-                        variant="plain"
-                        color="neutral"
+                        size="sm" variant="plain" color="neutral"
                         startDecorator={<VisibilityOffIcon sx={{ fontSize: 12 }} />}
                         onClick={() => toggleSpoiler(idx)}
                         sx={{ mt: 0.5, fontSize: 10, py: 0, px: 0.5, minHeight: 0 }}
@@ -193,9 +170,7 @@ function CategoryBlock({ entry }: { entry: ImdbParentsGuideEntry }) {
 
           {reviews.length > 3 && (
             <Button
-              variant="plain"
-              color="neutral"
-              size="sm"
+              variant="plain" color="neutral" size="sm"
               onClick={() => setShowAllReviews((v) => !v)}
               sx={{ alignSelf: "flex-start", fontSize: 11, py: 0.2 }}
             >
@@ -210,28 +185,35 @@ function CategoryBlock({ entry }: { entry: ImdbParentsGuideEntry }) {
 
 // ── Main component ────────────────────────────────────────────────────────────
 interface ParentalGuideProps {
-  mediaId: string | number;
-  mediaType: "movie" | "tv";
+  // For movies/shows: pass mediaId + mediaType, and the component resolves the IMDb ID
+  mediaId?: string | number;
+  mediaType?: "movie" | "tv";
+  // For episodes: pass the IMDb episode tt-ID directly (already resolved upstream)
+  imdbId?: string;
+  // Display
   title?: string;
   year?: string;
+  // Visual variant: "button" (default, full pill) | "icon" (compact icon-only for cards)
+  variant?: "button" | "icon";
 }
 
-function ParentalGuide({ mediaId, mediaType, title, year }: ParentalGuideProps) {
+function ParentalGuide({ mediaId, mediaType, imdbId, title, year, variant = "button" }: ParentalGuideProps) {
   const [open, setOpen] = useState(false);
   const [guide, setGuide] = useState<ImdbParentsGuideEntry[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchGuide = async () => {
+  const fetchGuide = async (e: React.MouseEvent) => {
+    e.stopPropagation(); // don't trigger card navigation
     setOpen(true);
-    if (guide) return; // already loaded
+    if (guide) return;
     setLoading(true);
     setError(null);
     try {
-      const imdbId = await resolveImdbId(mediaId, mediaType);
-      if (!imdbId) { setError("IMDb ID not found for this title."); return; }
-      const entries = await fetchImdbParentalGuide(imdbId);
-      // Sort by our preferred order
+      // Use directly-provided IMDb ID if available, otherwise resolve from TMDB
+      const resolvedId = imdbId ?? (mediaId && mediaType ? await resolveImdbId(mediaId, mediaType) : null);
+      if (!resolvedId) { setError("IMDb ID not found for this title."); return; }
+      const entries = await fetchImdbParentalGuide(resolvedId);
       const sorted = [...entries].sort(
         (a, b) => CATEGORY_ORDER.indexOf(a.category) - CATEGORY_ORDER.indexOf(b.category)
       );
@@ -243,8 +225,19 @@ function ParentalGuide({ mediaId, mediaType, title, year }: ParentalGuideProps) 
     }
   };
 
-  return (
-    <>
+  const trigger =
+    variant === "icon" ? (
+      <IconButton
+        onClick={fetchGuide}
+        size="sm"
+        variant="soft"
+        color="danger"
+        sx={{ borderRadius: "50%", width: 28, height: 28, minWidth: 28, minHeight: 28 }}
+        title="Parental Guide"
+      >
+        <FamilyRestroomIcon sx={{ fontSize: 15 }} />
+      </IconButton>
+    ) : (
       <Button
         onClick={fetchGuide}
         variant="soft"
@@ -255,8 +248,13 @@ function ParentalGuide({ mediaId, mediaType, title, year }: ParentalGuideProps) 
       >
         Parental Guide
       </Button>
+    );
 
-      <Modal open={open} onClose={() => setOpen(false)}>
+  return (
+    <>
+      {trigger}
+
+      <Modal onClick={(e) => e.stopPropagation()} open={open} onClose={() => setOpen(false)}>
         <ModalDialog
           sx={{
             maxWidth: 520, width: "95vw",

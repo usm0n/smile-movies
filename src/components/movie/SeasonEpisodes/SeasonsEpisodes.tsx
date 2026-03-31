@@ -23,28 +23,37 @@ function SeasonsEpisodes({
   const navigate = useNavigate();
   const [imdbEpisodes, setImdbEpisodes] = useState<Map<number, ImdbEpisode>>(new Map());
   const imdbIdRef = useRef<string | null>(null);
+  const resolvedRef = useRef(false);
 
-  // Resolve IMDb ID once for this show
+  // Resolve the show's IMDb ID once
   useEffect(() => {
-    if (!tvData?.id) return;
-    resolveImdbId(tvData.id, "tv").then((id) => { imdbIdRef.current = id; });
+    if (!tvData?.id || resolvedRef.current) return;
+    resolvedRef.current = true;
+    resolveImdbId(tvData.id, "tv").then((id) => {
+      imdbIdRef.current = id;
+      // Kick off initial season fetch after resolving
+      if (id && currentSeason) loadSeason(id, currentSeason);
+    });
   }, [tvData?.id]);
 
-  // Fetch IMDb episode ratings whenever season changes
+  // Re-fetch when season changes (after IMDb ID is resolved)
   useEffect(() => {
     if (!imdbIdRef.current || !currentSeason) return;
+    loadSeason(imdbIdRef.current, currentSeason);
+  }, [currentSeason]);
+
+  function loadSeason(imdbId: string, season: number) {
     let cancelled = false;
-
-    const imdbId = imdbIdRef.current;
-    fetchImdbEpisodesBySeason(imdbId, currentSeason).then((eps) => {
-      if (cancelled) return;
-      const map = new Map<number, ImdbEpisode>();
-      eps.forEach((e) => map.set(e.episodeNumber, e));
-      setImdbEpisodes(map);
-    }).catch(() => {/* silently ignore */});
-
+    fetchImdbEpisodesBySeason(imdbId, season)
+      .then((eps) => {
+        if (cancelled) return;
+        const map = new Map<number, ImdbEpisode>();
+        eps.forEach((e) => map.set(e.episodeNumber, e));
+        setImdbEpisodes(map);
+      })
+      .catch(() => {/* silently ignore */});
     return () => { cancelled = true; };
-  }, [currentSeason, imdbIdRef.current]);
+  }
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 2, border: "none" }}>
@@ -85,14 +94,18 @@ function SeasonsEpisodes({
         {isLoading ? (
           Array(6).fill(null).map((_, i) => <EpisodeCardSkeleton key={i} />)
         ) : (
-          tvSeasonData?.episodes?.map((episode: any) => (
-            <EpisodeCard
-              tvId={tvData?.id}
-              episode={episode}
-              key={episode.id}
-              imdbRating={imdbEpisodes.get(episode.episode_number)?.rating?.aggregateRating}
-            />
-          ))
+          tvSeasonData?.episodes?.map((episode: any) => {
+            const imdbEp = imdbEpisodes.get(episode.episode_number);
+            return (
+              <EpisodeCard
+                key={episode.id}
+                tvId={tvData?.id}
+                episode={episode}
+                imdbRating={imdbEp?.rating?.aggregateRating}
+                imdbEpisodeId={imdbEp?.id}
+              />
+            );
+          })
         )}
       </Box>
     </Box>
