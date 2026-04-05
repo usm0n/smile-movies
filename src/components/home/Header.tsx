@@ -63,6 +63,7 @@ const Header = React.memo(
       );
     }, [trendingAllData?.data]);
     const [activeIndex, setActiveIndex] = useState(0);
+    const [useLiteMode, setUseLiteMode] = useState(false);
 
     const trailerData = useMemo(() => {
       const current = trendingResults?.[activeIndex];
@@ -115,6 +116,22 @@ const Header = React.memo(
     }, []);
 
     useEffect(() => {
+      if (typeof window === "undefined" || !window.matchMedia) return;
+
+      const mediaQuery = window.matchMedia(
+        "(max-width: 700px), (prefers-reduced-motion: reduce)",
+      );
+      const updateLiteMode = () => setUseLiteMode(mediaQuery.matches);
+
+      updateLiteMode();
+      mediaQuery.addEventListener?.("change", updateLiteMode);
+
+      return () => {
+        mediaQuery.removeEventListener?.("change", updateLiteMode);
+      };
+    }, []);
+
+    useEffect(() => {
       const current = trendingResults[activeIndex];
       if (!current) return;
       if (current.media_type === "movie") {
@@ -152,27 +169,32 @@ const Header = React.memo(
             width: "100%",
             height: "100vh",
             border: "none",
+            overflow: "hidden",
             "@media (max-width: 700px)": {
-              height: "70vh",
+              height: "auto",
+              minHeight: "calc(100svh + 180px)",
             },
             cursor: "pointer",
           }}
         >
           <CardCover>
             <img
-              src={`https://image.tmdb.org/t/p/original${details?.backdrop_path}`}
+              src={`https://image.tmdb.org/t/p/w1280${details?.backdrop_path}`}
+              loading="eager"
+              decoding="async"
               style={{
                 display: isVideoLoaded ? "none" : "block",
               }}
             />
-            {isActive && (
+            {isActive && !useLiteMode && (
               <iframe
                 referrerPolicy="strict-origin-when-cross-origin"
+                loading="lazy"
                 onLoad={() => {
                   if (isTrailerAvailable) {
                     setTimeout(() => {
                       setIsVideoLoaded(true);
-                    }, 2000);
+                    }, 1200);
                   }
                 }}
                 style={{
@@ -191,7 +213,13 @@ const Header = React.memo(
                 "linear-gradient(to top, rgba(0,0,0,0.4), rgba(0,0,0,0) 200px), linear-gradient(to top, rgba(0,0,0,0.8), rgba(0,0,0,0) 150px)",
             }}
           />
-          <CardContent sx={{ justifyContent: "flex-end" }}>
+          <CardContent
+            sx={{
+              justifyContent: { xs: "flex-start", sm: "flex-end" },
+              pt: { xs: "88px", sm: 0 },
+              pb: { xs: "24px", sm: 0 },
+            }}
+          >
             <Box
               sx={{
                 gap: 2,
@@ -200,7 +228,7 @@ const Header = React.memo(
                 alignItems: "flex-start",
                 padding: "70px",
                 "@media (max-width: 700px)": {
-                  padding: "20px",
+                  padding: "20px 20px 28px",
                   gap: 2,
                   alignItems: "center",
                 },

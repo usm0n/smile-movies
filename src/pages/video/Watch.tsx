@@ -31,9 +31,10 @@ import StorageIcon from "@mui/icons-material/Storage";
 import LiveTvIcon from "@mui/icons-material/LiveTv";
 import { User } from "../../user";
 
-const AUTO_SAVE_INTERVAL_MS = 30000;
-const MIN_PROGRESS_DELTA_MINUTES = 0.5;
+const AUTO_SAVE_INTERVAL_MS = 60000;
+const MIN_PROGRESS_DELTA_MINUTES = 1;
 const MIN_PROGRESS_TO_SAVE_MINUTES = 0.25;
+const SESSION_PROGRESS_PREFIX = "watch-progress:";
 
 const normalizePlayerMinutes = (currentTime?: number, duration?: number) => {
   const current = Number(currentTime) || 0;
@@ -99,6 +100,10 @@ function Watch() {
   const activeEpisodeData = tvSeasonsDetailsArr?.episodes?.find(
     (episode) => episode?.episode_number === Number(episodeId),
   );
+  const sessionProgressKey =
+    movieId && movieType
+      ? `${SESSION_PROGRESS_PREFIX}${movieType}:${movieId}:${seasonId || 0}:${episodeId || 0}`
+      : "";
   const mediaTitle =
     movieType === "tv"
       ? tvSeriesDetailsDataArr?.name || ""
@@ -118,19 +123,62 @@ function Watch() {
 
     return Number(movieDetailsDataArr?.runtime) || 0;
   }, [activeEpisodeData?.runtime, movieDetailsDataArr?.runtime, movieType, tvSeriesDetailsDataArr?.episode_run_time]);
-  const initialProgressMinutes = useMemo(() => {
-    const startAtMinutes = Number(startAt) || 0;
-    if (startAtMinutes > 0) return startAtMinutes;
+  const [sessionBaseProgress, setSessionBaseProgress] = useState(0);
+  const [sessionBaseReady, setSessionBaseReady] = useState(false);
 
-    if (!watchlistItem) return 0;
-    if (movieType === "movie") return Number(watchlistItem.currentTime) || 0;
+  useEffect(() => {
+    setSessionBaseProgress(0);
+    setSessionBaseReady(false);
+  }, [sessionProgressKey, streamType]);
 
-    const sameEpisode =
-      Number(watchlistItem.season) === Number(seasonId || 0) &&
-      Number(watchlistItem.episode) === Number(episodeId || 0);
+  useEffect(() => {
+    if (sessionBaseReady || !movieId || !movieType) return;
 
-    return sameEpisode ? Number(watchlistItem.currentTime) || 0 : 0;
-  }, [episodeId, movieType, seasonId, startAt, watchlistItem]);
+    const routeProgress = Number(startAt) || 0;
+    if (routeProgress > 0) {
+      setSessionBaseProgress(routeProgress);
+      setSessionBaseReady(true);
+      return;
+    }
+
+    if (myselfData?.isLoading) return;
+
+    let persistedSessionProgress = 0;
+    if (typeof window !== "undefined" && sessionProgressKey) {
+      persistedSessionProgress =
+        Number(sessionStorage.getItem(sessionProgressKey) || 0) || 0;
+    }
+
+    let watchlistProgress = 0;
+    if (watchlistItem) {
+      if (movieType === "movie") {
+        watchlistProgress = Number(watchlistItem.currentTime) || 0;
+      } else {
+        const sameEpisode =
+          Number(watchlistItem.season) === Number(seasonId || 0) &&
+          Number(watchlistItem.episode) === Number(episodeId || 0);
+
+        watchlistProgress = sameEpisode
+          ? Number(watchlistItem.currentTime) || 0
+          : 0;
+      }
+    }
+
+    setSessionBaseProgress(
+      Math.max(routeProgress, watchlistProgress, persistedSessionProgress, 0),
+    );
+    setSessionBaseReady(true);
+  }, [
+    episodeId,
+    movieId,
+    movieType,
+    myselfData?.isLoading,
+    seasonId,
+    sessionBaseReady,
+    sessionProgressKey,
+    startAt,
+    watchlistItem,
+  ]);
 
   const syncIframeElapsed = () => {
     if (!progressRef.current.isIframeActive || !progressRef.current.iframeSessionStartAt) {
@@ -144,7 +192,13 @@ function Watch() {
     if (elapsedMinutes > 0) {
       progressRef.current.accumulatedMinutes += elapsedMinutes;
       progressRef.current.lastKnownProgressMinutes =
-        initialProgressMinutes + progressRef.current.accumulatedMinutes;
+        sessionBaseProgress + progressRef.current.accumulatedMinutes;
+      if (typeof window !== "undefined" && sessionProgressKey) {
+        sessionStorage.setItem(
+          sessionProgressKey,
+          String(progressRef.current.lastKnownProgressMinutes),
+        );
+      }
     }
 
     progressRef.current.iframeSessionStartAt = now;
@@ -181,10 +235,10 @@ function Watch() {
       const now = Date.now();
       const liveMinutes =
         (now - progressRef.current.iframeSessionStartAt) / 60000;
-      return initialProgressMinutes + progressRef.current.accumulatedMinutes + Math.max(0, liveMinutes);
+      return sessionBaseProgress + progressRef.current.accumulatedMinutes + Math.max(0, liveMinutes);
     }
 
-    return initialProgressMinutes + progressRef.current.accumulatedMinutes;
+    return sessionBaseProgress + progressRef.current.accumulatedMinutes;
   };
 
   const persistProgress = async (
@@ -193,6 +247,16 @@ function Watch() {
     forceStatus?: "watching" | "watched",
   ) => {
     if (!isLoggedIn || !movieId || !movieType) return;
+
+    if (!sessionBaseReady) {
+      if (typeof window !== "undefined" && sessionProgressKey) {
+        sessionStorage.setItem(
+          sessionProgressKey,
+          String(Math.max(0, rawProgressMinutes || 0)),
+        );
+      }
+      return;
+    }
 
     const durationMinutes = Math.max(
       rawDurationMinutes || fallbackDurationMinutes || 0,
@@ -239,6 +303,9 @@ function Watch() {
     progressRef.current.lastSavedAt = now;
     progressRef.current.lastSavedProgressMinutes = nextProgressMinutes;
     progressRef.current.lastKnownProgressMinutes = nextProgressMinutes;
+    if (typeof window !== "undefined" && sessionProgressKey) {
+      sessionStorage.setItem(sessionProgressKey, String(nextProgressMinutes));
+    }
 
     await addToWatchlist(
       movieType,
@@ -283,18 +350,20 @@ function Watch() {
   }, [movieType, movieId, seasonId, episodeId, streamType]);
 
   useEffect(() => {
+    if (!sessionBaseReady) return;
     progressRef.current = {
       iframeSessionStartAt: 0,
       accumulatedMinutes: 0,
       lastSavedAt: 0,
-      lastSavedProgressMinutes: initialProgressMinutes,
-      lastKnownProgressMinutes: initialProgressMinutes,
+      lastSavedProgressMinutes: sessionBaseProgress,
+      lastKnownProgressMinutes: sessionBaseProgress,
       playerEventsSeen: false,
       isIframeActive: false,
     };
-  }, [initialProgressMinutes, movieId, movieType, seasonId, episodeId, streamType]);
+  }, [sessionBaseProgress, sessionBaseReady, sessionProgressKey, streamType]);
 
   useEffect(() => {
+    if (!sessionBaseReady) return;
     let lastUpdateTime = 0;
 
     const handleMessage = (event: any) => {
@@ -354,10 +423,12 @@ function Watch() {
     episodeId,
     mediaPoster,
     mediaTitle,
-    initialProgressMinutes,
+    sessionBaseReady,
+    sessionBaseProgress,
   ]);
 
   useEffect(() => {
+    if (!sessionBaseReady) return;
     if (streamType !== "WADS") {
       setIframeTrackingActive(false);
       return;
@@ -400,12 +471,28 @@ function Watch() {
       document.removeEventListener("visibilitychange", syncVisibility);
       setIframeTrackingActive(false);
     };
-  }, [fallbackDurationMinutes, initialProgressMinutes, streamType]);
+  }, [fallbackDurationMinutes, sessionBaseProgress, sessionBaseReady, streamType]);
+
+  useEffect(() => {
+    if (
+      streamType !== "WOADS" ||
+      !videoRef.current ||
+      !sessionBaseReady ||
+      sessionBaseProgress <= 0
+    ) {
+      return;
+    }
+
+    const targetSeconds = sessionBaseProgress * 60;
+    if (Math.abs(videoRef.current.currentTime - targetSeconds) > 5) {
+      videoRef.current.currentTime = targetSeconds;
+    }
+  }, [sessionBaseProgress, sessionBaseReady, streamType]);
 
   const handleNativeLoadedMetadata = () => {
     if (!videoRef.current) return;
 
-    const startAtMinutes = Math.max(0, initialProgressMinutes);
+    const startAtMinutes = Math.max(0, sessionBaseProgress);
     if (startAtMinutes > 0) {
       videoRef.current.currentTime = startAtMinutes * 60;
     }
@@ -418,6 +505,9 @@ function Watch() {
       ? videoRef.current.duration / 60
       : fallbackDurationMinutes;
     progressRef.current.lastKnownProgressMinutes = progressMinutes;
+    if (typeof window !== "undefined" && sessionProgressKey) {
+      sessionStorage.setItem(sessionProgressKey, String(progressMinutes));
+    }
     void persistProgress(progressMinutes, durationMinutes);
   };
 

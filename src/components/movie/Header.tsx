@@ -11,7 +11,7 @@ import {
   Typography,
 } from "@mui/joy";
 import { images, movieDetails, tvDetails, videos } from "../../tmdb-res";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   PlayArrow,
   Star,
@@ -48,6 +48,7 @@ function Header({
     removeFromFavoritesData,
   } = useUsers();
   const [isVideoLoaded, setIsVideoLoaded] = useState(false);
+  const [useLiteMode, setUseLiteMode] = useState(false);
   const navigate = useNavigate();
   const trailerKey = movieVideos?.results?.filter(
     (video) => video?.type == "Trailer"
@@ -58,6 +59,22 @@ function Header({
   const movieLogo = movieImages?.logos?.filter(
     (logo) => logo.iso_639_1 === "en"
   )[0]?.file_path;
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.matchMedia) return;
+
+    const mediaQuery = window.matchMedia(
+      "(max-width: 700px), (prefers-reduced-motion: reduce)",
+    );
+    const updateLiteMode = () => setUseLiteMode(mediaQuery.matches);
+
+    updateLiteMode();
+    mediaQuery.addEventListener?.("change", updateLiteMode);
+
+    return () => {
+      mediaQuery.removeEventListener?.("change", updateLiteMode);
+    };
+  }, []);
 
   const watchlistItem = (myselfData?.data as unknown as User)?.watchlist?.find(
     (item) => item.id == movieId && item.type === movieType
@@ -112,37 +129,40 @@ function Header({
         height: "100vh",
         minHeight: "100vh",
         border: "none",
+        overflow: "hidden",
         "@media (max-width: 700px)": {
           height: "auto",
-          minHeight: "100svh",
+          minHeight: "calc(100svh + 320px)",
         },
       }}
     >
       <CardCover>
         {BlurImage({
-          highQualitySrc: `https://image.tmdb.org/t/p/original${movieDetails?.backdrop_path}`,
-          lowQualitySrc: `https://image.tmdb.org/t/p/original${movieDetails?.backdrop_path}`,
+          highQualitySrc: `https://image.tmdb.org/t/p/w1280${movieDetails?.backdrop_path}`,
+          lowQualitySrc: `https://image.tmdb.org/t/p/w780${movieDetails?.backdrop_path}`,
           style: {
             display: isVideoLoaded ? "none" : "block",
           },
+          eager: true,
         })}
-        <iframe
-          referrerPolicy="strict-origin-when-cross-origin"
-          onLoad={() => {
-            if (isTrailerAvailable) {
+        {!useLiteMode && isTrailerAvailable ? (
+          <iframe
+            referrerPolicy="strict-origin-when-cross-origin"
+            loading="lazy"
+            onLoad={() => {
               setTimeout(() => {
                 setIsVideoLoaded(true);
-              }, 2000);
-            }
-          }}
-          style={{
-            display: isVideoLoaded ? "block" : "none",
-            border: "none",
-          }}
-          width={"100%"}
-          height={"100%"}
-          src={`https://www.youtube.com/embed/${trailerKey}?autoplay=1&controls=0&mute=1&loop=1`}
-        />
+              }, 1200);
+            }}
+            style={{
+              display: isVideoLoaded ? "block" : "none",
+              border: "none",
+            }}
+            width={"100%"}
+            height={"100%"}
+            src={`https://www.youtube.com/embed/${trailerKey}?autoplay=1&controls=0&mute=1&loop=1`}
+          />
+        ) : null}
       </CardCover>
       <CardCover
         sx={{
@@ -150,7 +170,13 @@ function Header({
             "linear-gradient(to top, rgba(0,0,0,0.4), rgba(0,0,0,0) 200px), linear-gradient(to top, rgba(0,0,0,0.8), rgba(0,0,0,0) 150px)",
         }}
       />
-      <CardContent sx={{ justifyContent: "flex-end" }}>
+      <CardContent
+        sx={{
+          justifyContent: { xs: "flex-start", sm: "flex-end" },
+          pt: { xs: "88px", sm: 0 },
+          pb: { xs: "24px", sm: 0 },
+        }}
+      >
         <Box
           sx={{
             gap: 5,
@@ -159,7 +185,7 @@ function Header({
             alignItems: "flex-start",
             padding: "70px",
             "@media (max-width: 700px)": {
-              padding: "20px",
+              padding: "20px 20px 28px",
               gap: 2,
               alignItems: "center",
             },

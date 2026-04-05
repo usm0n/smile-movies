@@ -1,5 +1,5 @@
 import {
-  Box, Button, ButtonGroup, Card, CardContent, CardCover, Chip,
+  Box, Button, ButtonGroup, Card, CardCover, Chip,
   Dropdown, LinearProgress, Menu, MenuButton, MenuItem, Typography,
   IconButton,
 } from "@mui/joy";
@@ -78,8 +78,8 @@ function EventMC({
         <CardCover>
           {eventPoster ? (
             BlurImage({
-              highQualitySrc: `https://image.tmdb.org/t/p/original${eventPoster}`,
-              lowQualitySrc: `https://image.tmdb.org/t/p/w200${eventPoster}`,
+              highQualitySrc: `https://image.tmdb.org/t/p/w500${eventPoster}`,
+              lowQualitySrc: `https://image.tmdb.org/t/p/w185${eventPoster}`,
             })
           ) : eventType === "movie" || eventType === "tv" ? (
             <Movie />
@@ -87,11 +87,6 @@ function EventMC({
             <Person />
           )}
         </CardCover>
-        <CardContent sx={{ display: "flex", justifyContent: "end" }}>
-          <Typography level="h2" sx={{ fontWeight: "bold", textShadow: "0 0 5px rgba(0,0,0,0.5)" }}>
-            {eventTitle}
-          </Typography>
-        </CardContent>
 
         {eventType !== "person" && (
           <Box sx={{ position: "absolute", top: 0, left: 0, zIndex: 3, padding: 1 }}>
