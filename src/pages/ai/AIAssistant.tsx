@@ -55,7 +55,7 @@ const extractBoldTitles = (content: string) =>
     ),
   ).slice(0, 6);
 
-const pickBestMediaMatch = (title: string, results: searchMulti["results"] = []) => {
+const pickBestMediaMatch = (title: string, results: searchMulti["results"]) => {
   const candidates = results.filter(
     (result) => result.media_type === "movie" || result.media_type === "tv",
   );

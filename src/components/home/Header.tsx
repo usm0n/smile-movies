@@ -314,12 +314,11 @@ const Header = React.memo(
                         details.media_type,
                         details.id.toString(),
                         details.poster_path,
-                        details.name || details.title || "",
                         "planned",
                         0,
                         0,
                         details.media_type == "tv" ? 1 : 0,
-                        details.media_type == "tv" ? 1 : 0
+                        details.media_type == "tv" ? 1 : 0,
                       );
                 }}
                 startDecorator={

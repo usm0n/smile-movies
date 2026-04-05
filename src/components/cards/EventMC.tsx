@@ -1,6 +1,6 @@
 import {
-  Box, Button, ButtonGroup, Card, CardContent, CardCover, Chip,
-  Dropdown, LinearProgress, Menu, MenuButton, MenuItem, Typography,
+  Box, Button, ButtonGroup, Card, CardCover, Chip,
+  Dropdown, LinearProgress, Menu, MenuButton, MenuItem,
   IconButton,
 } from "@mui/joy";
 import { useNavigate } from "react-router-dom";
