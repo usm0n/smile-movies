@@ -77,6 +77,7 @@ const UsersContext = createContext({
     _currentTime: number,
     _season: number,
     _episode: number,
+    _preference?: userType.SavedMediaPreference,
   ) => {},
   removeFromWatchlist: async (_type: string, _id: string) => {},
   addToFavorites: async (
@@ -89,6 +90,7 @@ const UsersContext = createContext({
     _currentTime?: number,
     _season?: number,
     _episode?: number,
+    _preference?: userType.SavedMediaPreference,
   ) => {},
   removeFromFavorites: async (_type: string, _id: string) => {},
   addDevice: async (
@@ -598,6 +600,7 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
     currentTime: number,
     season: number,
     episode: number,
+    preference?: userType.SavedMediaPreference,
   ) => {
     setAddToWatchlistData((prev) => ({ ...prev, isLoading: true }));
     try {
@@ -611,6 +614,7 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
         currentTime,
         season,
         episode,
+        preference,
       );
       setAddToWatchlistData({
         isLoading: false,
@@ -664,6 +668,7 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
     currentTime = 0,
     season = 0,
     episode = 0,
+    preference?: userType.SavedMediaPreference,
   ) => {
     setAddToFavoritesData((prev) => ({ ...prev, isLoading: true }));
     try {
@@ -677,6 +682,7 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
         currentTime,
         season,
         episode,
+        preference,
       );
       setAddToFavoritesData({
         isLoading: false,

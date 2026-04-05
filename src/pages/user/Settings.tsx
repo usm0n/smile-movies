@@ -3,7 +3,6 @@ import {
   Box,
   Button,
   Card,
-  Chip,
   DialogContent,
   DialogTitle,
   Divider,
@@ -19,12 +18,12 @@ import {
   Select,
   Typography,
 } from "@mui/joy";
-import { FavoriteMedia, NotificationPreferences, PrivacySettings, ResponseType, User } from "../../user";
-import { Edit, Lock, Search, Visibility, VisibilityOff } from "@mui/icons-material";
+import { NotificationPreferences, PrivacySettings, ResponseType, User } from "../../user";
+import { Edit, Lock, Visibility, VisibilityOff } from "@mui/icons-material";
 import { isValidEmail } from "../../utilities/defaults";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useState } from "react";
 import toast from "react-hot-toast";
-import { smbAPI, tmdbAPI } from "../../service/api/api";
+import { smbAPI } from "../../service/api/api";
 import { useUsers } from "../../context/Users";
 
 const GENDER_OPTIONS = [
@@ -51,10 +50,6 @@ function Settings({
   const [emailModal, setEmailModal] = useState(false);
   const [passwordModal, setPasswordModal] = useState(false);
   const [passwordVisibility, setPasswordVisibility] = useState(false);
-  const [mediaSearch, setMediaSearch] = useState("");
-  const [mediaResults, setMediaResults] = useState<FavoriteMedia[]>([]);
-  const [mediaSearchLoading, setMediaSearchLoading] = useState(false);
-  const searchTimeout = useRef<any>(null);
 
   const [passwords, setPasswords] = useState({ oldPassword: "", newPassword: "", newPasswordConfirm: "" });
 
@@ -92,39 +87,6 @@ function Settings({
       }
     };
     reader.readAsDataURL(file);
-  };
-
-  // TMDB search for favorites
-  useEffect(() => {
-    if (!mediaSearch.trim()) { setMediaResults([]); return; }
-    clearTimeout(searchTimeout.current);
-    searchTimeout.current = setTimeout(async () => {
-      setMediaSearchLoading(true);
-      try {
-        const res = await tmdbAPI.get(`/search/multi?query=${encodeURIComponent(mediaSearch)}&page=1`);
-        const results: FavoriteMedia[] = (res.data?.results || [])
-          .filter((r: any) => (r.media_type === "movie" || r.media_type === "tv") && (r.title || r.name))
-          .slice(0, 8)
-          .map((r: any) => ({
-            id: String(r.id), title: r.title || r.name,
-            type: r.media_type as "movie" | "tv",
-            poster: r.poster_path ? `https://image.tmdb.org/t/p/w92${r.poster_path}` : undefined,
-          }));
-        setMediaResults(results);
-      } catch (_) {}
-      setMediaSearchLoading(false);
-    }, 350);
-  }, [mediaSearch]);
-
-  const addFavorite = (media: FavoriteMedia) => {
-    if ((userValue.favoriteMovies || []).length >= 3) return;
-    if ((userValue.favoriteMovies || []).find((m) => m.id === media.id)) return;
-    setUserValue((prev) => ({ ...prev, favoriteMovies: [...(prev.favoriteMovies || []), media] }));
-    setMediaSearch(""); setMediaResults([]);
-  };
-
-  const removeFavorite = (id: string) => {
-    setUserValue((prev) => ({ ...prev, favoriteMovies: (prev.favoriteMovies || []).filter((m) => m.id !== id) }));
   };
 
   return (
@@ -237,64 +199,6 @@ function Settings({
           </IconButton>
         </Box>
       )}
-
-      <Divider />
-
-      {/* ── Favorite Movies ── */}
-      <Box>
-        <FormLabel>Favorite Movies & TV Shows</FormLabel>
-        <Typography level="body-xs" textColor="neutral.400" sx={{ mb: 1 }}>
-          Up to 3 — used by SmileAI for recommendations
-        </Typography>
-
-        {(userValue?.favoriteMovies || []).length < 3 && (
-          <Box sx={{ position: "relative" }}>
-            <Input
-              value={mediaSearch}
-              onChange={(e) => setMediaSearch(e.target.value)}
-              placeholder="Search a movie or show..."
-              startDecorator={<Search />}
-              disabled={mediaSearchLoading}
-            />
-            {mediaResults.length > 0 && (
-              <Card sx={{ position: "absolute", top: "100%", left: 0, right: 0, zIndex: 100, maxHeight: 260, overflowY: "auto", mt: 0.5, p: 0.5, boxShadow: "0 8px 32px rgba(0,0,0,0.5)" }}>
-                {mediaResults.map((media) => (
-                  <Box key={media.id} onClick={() => addFavorite(media)}
-                    sx={{ display: "flex", alignItems: "center", gap: 1.5, p: 1, borderRadius: 8, cursor: "pointer", "&:hover": { background: "rgba(255,216,77,0.1)" } }}
-                  >
-                    {media.poster
-                      ? <Box component="img" src={media.poster} sx={{ width: 32, height: 48, borderRadius: 4, objectFit: "cover" }} />
-                      : <Box sx={{ width: 32, height: 48, borderRadius: 4, background: "rgba(255,255,255,0.1)" }} />
-                    }
-                    <Box>
-                      <Typography level="body-sm" fontWeight={600}>{media.title}</Typography>
-                      <Chip size="sm" variant="soft" color={media.type === "movie" ? "primary" : "success"} sx={{ fontSize: 10 }}>
-                        {media.type === "movie" ? "Movie" : "TV"}
-                      </Chip>
-                    </Box>
-                  </Box>
-                ))}
-              </Card>
-            )}
-          </Box>
-        )}
-
-        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mt: 1.5 }}>
-          {(userValue?.favoriteMovies || []).map((media) => (
-            <Chip
-              key={media.id}
-              startDecorator={media.poster ? <Avatar src={media.poster} size="sm" /> : undefined}
-              endDecorator={<IconButton size="sm" onClick={() => removeFavorite(media.id)}>✕</IconButton>}
-              variant="soft" color="primary"
-            >
-              {media.title}
-            </Chip>
-          ))}
-          {(userValue?.favoriteMovies || []).length === 0 && (
-            <Typography level="body-xs" textColor="neutral.400">No favorites set</Typography>
-          )}
-        </Box>
-      </Box>
 
       <Divider />
 

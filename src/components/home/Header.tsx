@@ -22,15 +22,14 @@ import {
   Typography,
 } from "@mui/joy";
 import { useNavigate } from "react-router-dom";
-import { isLoggedIn, ymdToDmy } from "../../utilities/defaults";
+import { ymdToDmy } from "../../utilities/defaults";
 import {
-  Add,
   ArrowBackIos,
   ArrowForwardIos,
-  Check,
   PlayArrow,
 } from "@mui/icons-material";
 import { User } from "../../user";
+import StatusActions from "../watchlist/StatusActions";
 
 const Header = React.memo(
   ({
@@ -44,10 +43,6 @@ const Header = React.memo(
     movieImagesData,
     tvImages,
     tvImagesData,
-    addToWatchlist,
-    removeFromWatchlist,
-    addToWatchlistData,
-    removeFromWatchlistData,
     myselfData,
   }: {
     trendingAll: Function;
@@ -60,10 +55,6 @@ const Header = React.memo(
     movieImagesData: ResponseType;
     tvImages: Function;
     tvImagesData: ResponseType;
-    addToWatchlist: (type: "movie" | "tv", id: string, poster: string, status: string, duration: number, currentTime: number, season: number, episode: number) => void;
-    removeFromWatchlist: (type: "movie" | "tv", id: string) => void;
-    addToWatchlistData: ResponseType | null;
-    removeFromWatchlistData: ResponseType | null;
     myselfData: ResponseType | null;
   }) => {
     const trendingResults = useMemo(() => {
@@ -149,8 +140,8 @@ const Header = React.memo(
       const [isVideoLoaded, setIsVideoLoaded] = useState(false);
 
       const watchlistItem = (myselfData?.data as unknown as User)?.watchlist?.find(
-        (item) => item.id == details?.id
-      )
+        (item) => item.id == details?.id && item.type === details?.media_type
+      );
 
       return (
         <Card
@@ -293,71 +284,19 @@ const Header = React.memo(
                   watchlistItem ? (watchlistItem.status == "watching" && `Continue S${watchlistItem.season}:E${watchlistItem.episode}` || (watchlistItem.status == "new" || watchlistItem.status == "planned") && "Start Watching") : "Play Now"
                 )}
               </Button>
-              <Button
-                disabled={
-                  myselfData?.isLoading ||
-                  addToWatchlistData?.isLoading ||
-                  removeFromWatchlistData?.isLoading
-                }
-                onClick={(e) => {
-                  e.stopPropagation();
-                  !isLoggedIn
-                    ? navigate("/auth/login")
-                    : (myselfData?.data as unknown as User)?.watchlist?.find(
-                      (item) => item.id == details.id
-                    )
-                      ? removeFromWatchlist(
-                        details.media_type,
-                        details.id.toString()
-                      )
-                      : addToWatchlist(
-                        details.media_type,
-                        details.id.toString(),
-                        details.poster_path,
-                        "planned",
-                        0,
-                        0,
-                        details.media_type == "tv" ? 1 : 0,
-                        details.media_type == "tv" ? 1 : 0,
-                      );
-                }}
-                startDecorator={
-                  (myselfData?.data as unknown as User)?.watchlist?.find(
-                    (item) => item.id == details.id
-                  ) ? (
-                    <Check />
-                  ) : (
-                    <Add />
-                  )
-                }
-                sx={{
-                  padding: "15px 0px",
-                  width: "300px",
-                  color: "black",
-                  transition: "all 0.1s ease-in-out",
-                  backgroundColor: "white",
-                  "&:hover": {
-                    backgroundColor: "rgb(255, 255, 255, 0.9)",
-                  },
-                  "&:active": {
-                    backgroundColor: "rgb(255, 255, 255, 0.8)",
-                  },
-                  "@media (max-width: 700px)": {
-                    width: "220px",
-                    padding: "10px 0px",
-                  },
-                }}
-              >
-                {(myselfData?.data as unknown as User)?.watchlist?.find(
-                  (item) => item.id == details.id
-                )
-                  ? removeFromWatchlistData?.isLoading
-                    ? "Removing from Watchlist..."
-                    : "In Watchlist"
-                  : addToWatchlistData?.isLoading
-                    ? "Adding to Watchlist..."
-                    : "Add to Watchlist"}
-              </Button>
+              <StatusActions
+                mediaId={details.id}
+                mediaType={details.media_type}
+                poster={details.poster_path}
+                title={details.name || details.title || ""}
+                duration={watchlistItem?.duration || 0}
+                currentTime={watchlistItem?.currentTime || 0}
+                season={watchlistItem?.season || (details.media_type == "tv" ? 1 : 0)}
+                episode={watchlistItem?.episode || (details.media_type == "tv" ? 1 : 0)}
+                currentStatus={watchlistItem?.status}
+                width="300px"
+                mobileWidth="220px"
+              />
             </Box>
           </CardContent>
         </Card>

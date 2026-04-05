@@ -2,6 +2,7 @@
 
 import {
   AutoAwesome,
+  FavoriteBorder,
   DarkMode,
   LightMode,
   Logout,
@@ -326,9 +327,9 @@ const Navbar: React.FC = () => {
                 </Avatar>
               </MenuButton>
               <Menu>
-                <MenuItem>
-                  <Avatar src={user?.profilePic}>
-                    {!user?.profilePic && (
+              <MenuItem>
+                <Avatar src={user?.profilePic}>
+                  {!user?.profilePic && (
                       <>
                         {user?.firstname?.slice(0, 1)}
                         {user?.lastname?.slice(0, 1)}
@@ -352,6 +353,13 @@ const Navbar: React.FC = () => {
                       <Logout />
                     </IconButton>
                   </Tooltip>
+                </MenuItem>
+                <MenuItem onClick={() => navigate("/watchlist")}>
+                  <ListItemContent>Watchlist</ListItemContent>
+                </MenuItem>
+                <MenuItem onClick={() => navigate("/favorites")}>
+                  <FavoriteBorder sx={{ fontSize: 18 }} />
+                  <ListItemContent>Favorites</ListItemContent>
                 </MenuItem>
               </Menu>
             </Dropdown>
@@ -481,6 +489,9 @@ const Navbar: React.FC = () => {
             </ListItemButton>
             <ListItemButton onClick={() => navigateTo("/watchlist")}>
               Watchlist
+            </ListItemButton>
+            <ListItemButton onClick={() => navigateTo("/favorites")}>
+              Favorites
             </ListItemButton>
           </List>
         </Box>

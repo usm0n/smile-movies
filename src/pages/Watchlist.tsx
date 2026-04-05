@@ -1,6 +1,11 @@
 import {
   ArrowBackIos,
   BookmarkAdd,
+  Favorite,
+  FavoriteBorder,
+  History,
+  MoodBad,
+  ThumbUp,
 } from "@mui/icons-material";
 import {
   Box,
@@ -8,16 +13,30 @@ import {
   ButtonGroup,
   Chip,
   Divider,
+  Input,
   Link,
+  Option,
+  Select,
   Typography,
 } from "@mui/joy";
 import EventMC from "../components/cards/EventMC";
 import EventMCS from "../components/cards/skeleton/EventMC";
+import StatusActions from "../components/watchlist/StatusActions";
 import NotLoggedIn from "../components/utils/NotLoggedIn";
 import { isLoggedIn } from "../utilities/defaults";
 import { useUsers } from "../context/Users";
-import { User, Watchlist as SavedItem } from "../user";
+import { User } from "../user";
 import { useNavigate } from "react-router-dom";
+import {
+  filterSavedItems,
+  SavedMediaPreferenceFilter,
+  normalizeSavedStatus,
+  SavedMediaSort,
+  SavedMediaStatusFilter,
+  SavedMediaTypeFilter,
+  sortSavedItems,
+} from "../utilities/savedMedia";
+import { useDeferredValue, useState } from "react";
 
 const SKELETON_COUNT = 10;
 const CONTAINER_SX = {
@@ -36,34 +55,23 @@ const STATUS_SECTIONS = [
   { key: "watched", label: "I already watched", accent: "rgb(120, 255, 178)" },
 ] as const;
 
-const normalizeStatus = (status?: string) => {
-  if (!status || status === "new" || status === "will_watch") return "planned";
-  return status;
-};
-
-const parseSavedDate = (value?: string) => {
-  if (!value) return 0;
-  const match = value.match(/(\d{2})\.(\d{2})\.(\d{4}) (\d{2}):(\d{2})/);
-  if (!match) return 0;
-  return new Date(`${match[3]}-${match[2]}-${match[1]}T${match[4]}:${match[5]}:00`).getTime();
-};
-
-const sortSavedItems = (items: SavedItem[]) =>
-  [...items].sort(
-    (a, b) =>
-      parseSavedDate(b.updatedAt || b.addedAt) -
-      parseSavedDate(a.updatedAt || a.addedAt),
-  );
-
 function Watchlist() {
   const navigate = useNavigate();
   const {
     myselfData,
     removeFromWatchlist,
     removeFromWatchlistData,
-    addToWatchlist,
     addToWatchlistData,
   } = useUsers();
+  const [statusFilter, setStatusFilter] =
+    useState<SavedMediaStatusFilter>("all");
+  const [mediaFilter, setMediaFilter] =
+    useState<SavedMediaTypeFilter>("all");
+  const [preferenceFilter, setPreferenceFilter] =
+    useState<SavedMediaPreferenceFilter>("all");
+  const [sortBy, setSortBy] = useState<SavedMediaSort>("recent");
+  const [searchQuery, setSearchQuery] = useState("");
+  const deferredSearchQuery = useDeferredValue(searchQuery);
 
   const isLoading =
     myselfData?.isLoading ||
@@ -71,27 +79,31 @@ function Watchlist() {
     addToWatchlistData?.isLoading;
 
   const user = (myselfData?.data as User) || ({} as User);
-  const watchlist = sortSavedItems(user.watchlist || []);
-  const favorites = sortSavedItems(user.favorites || []);
-  const hasItems = watchlist.length > 0;
+  const watchlist = sortSavedItems(user.watchlist || [], sortBy);
+  const favorites = sortSavedItems(user.favorites || [], "recent");
+  const filteredWatchlist = filterSavedItems(
+    watchlist,
+    statusFilter,
+    mediaFilter,
+    preferenceFilter,
+  ).filter(
+    (item) =>
+      !deferredSearchQuery.trim() ||
+      `${item.title || ""} ${item.type}`.toLowerCase().includes(deferredSearchQuery.toLowerCase()),
+  );
+  const hasItems = filteredWatchlist.length > 0;
 
   const groupedItems = STATUS_SECTIONS.map((section) => ({
     ...section,
-    items: watchlist.filter((item) => normalizeStatus(item.status) === section.key),
+    items: filteredWatchlist.filter(
+      (item) => normalizeSavedStatus(item.status) === section.key,
+    ),
   }));
 
-  const updateStatus = (item: SavedItem, nextStatus: string) =>
-    addToWatchlist(
-      item.type,
-      item.id,
-      item.poster,
-      item.title || "",
-      nextStatus,
-      item.duration || 0,
-      item.currentTime || 0,
-      item.season || (item.type === "tv" ? 1 : 0),
-      item.episode || (item.type === "tv" ? 1 : 0),
-    );
+  const recentActivity = sortSavedItems(
+    [...(user.recentlyWatched || []), ...(user.watchlist || []), ...(user.favorites || [])],
+    "recent",
+  ).slice(0, 6);
 
   if (!isLoggedIn) {
     return (
@@ -103,35 +115,46 @@ function Watchlist() {
 
   return (
     <Box sx={CONTAINER_SX}>
-      <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
-        <Typography
-          startDecorator={
-            <ArrowBackIos
-              sx={{ cursor: "pointer" }}
-              onClick={() => navigate("/")}
-            />
-          }
-          level="h1"
+      <Box sx={{ display: "flex", justifyContent: "space-between", gap: 2, flexWrap: "wrap" }}>
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
+          <Typography
+            startDecorator={
+              <ArrowBackIos
+                sx={{ cursor: "pointer" }}
+                onClick={() => navigate("/")}
+              />
+            }
+            level="h1"
+            sx={{
+              "@media (max-width: 800px)": {
+                fontSize: "25px",
+              },
+            }}
+          >
+            Your Watchlist
+          </Typography>
+          <Typography textColor="neutral.300">
+            Organize what to start next, what you are in the middle of, and what you already finished.
+          </Typography>
+        </Box>
+        <Button
+          onClick={() => navigate("/favorites")}
+          startDecorator={<FavoriteBorder />}
           sx={{
-            "@media (max-width: 800px)": {
-              fontSize: "25px",
+            alignSelf: "flex-start",
+            background: "rgba(96, 183, 255, 0.12)",
+            border: "1px solid rgba(96, 183, 255, 0.24)",
+            color: "rgb(96, 183, 255)",
+            "&:hover": {
+              background: "rgba(96, 183, 255, 0.18)",
             },
           }}
         >
-          Your Watchlist
-        </Typography>
-        <Typography textColor="neutral.300">
-          Organize what you want to watch, what you are currently watching, and what you already finished.
-        </Typography>
+          Open Favorites
+        </Button>
       </Box>
 
-      <Box
-        sx={{
-          display: "flex",
-          flexWrap: "wrap",
-          gap: 1.5,
-        }}
-      >
+      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1.5 }}>
         {STATUS_SECTIONS.map((section) => (
           <Chip
             key={section.key}
@@ -144,7 +167,10 @@ function Watchlist() {
               color: section.accent,
             }}
           >
-            {section.label}: {groupedItems.find((item) => item.key === section.key)?.items.length || 0}
+            {section.label}:{" "}
+            {(user.watchlist || []).filter(
+              (item) => normalizeSavedStatus(item.status) === section.key,
+            ).length}
           </Chip>
         ))}
         <Chip
@@ -159,6 +185,175 @@ function Watchlist() {
         >
           Favorites: {favorites.length}
         </Chip>
+        <Chip
+          sx={{
+            px: 1.2,
+            py: 0.7,
+            borderRadius: "999px",
+            background: "rgba(255, 115, 167, 0.08)",
+            border: "1px solid rgba(255, 115, 167, 0.24)",
+            color: "rgb(255, 139, 184)",
+          }}
+        >
+          Loved: {(user.watchlist || []).filter((item) => item.preference === "love").length}
+        </Chip>
+        <Chip
+          sx={{
+            px: 1.2,
+            py: 0.7,
+            borderRadius: "999px",
+            background: "rgba(96, 183, 255, 0.08)",
+            border: "1px solid rgba(96, 183, 255, 0.24)",
+            color: "rgb(124, 214, 255)",
+          }}
+        >
+          Liked: {(user.watchlist || []).filter((item) => item.preference === "like").length}
+        </Chip>
+        <Chip
+          sx={{
+            px: 1.2,
+            py: 0.7,
+            borderRadius: "999px",
+            background: "rgba(255, 166, 120, 0.08)",
+            border: "1px solid rgba(255, 166, 120, 0.24)",
+            color: "rgb(255, 166, 120)",
+          }}
+        >
+          Not for me: {(user.watchlist || []).filter((item) => item.preference === "dislike").length}
+        </Chip>
+      </Box>
+
+      <Box
+        sx={{
+          display: "flex",
+          flexWrap: "wrap",
+          gap: 1.2,
+          alignItems: "center",
+          justifyContent: "space-between",
+          background: "rgba(255,255,255,0.03)",
+          border: "1px solid rgba(255,255,255,0.08)",
+          borderRadius: "18px",
+          px: 2,
+          py: 1.5,
+        }}
+      >
+        <ButtonGroup size="sm">
+          <Button
+            variant={statusFilter === "all" ? "solid" : "soft"}
+            onClick={() => setStatusFilter("all")}
+          >
+            All statuses
+          </Button>
+          <Button
+            variant={statusFilter === "watching" ? "solid" : "soft"}
+            onClick={() => setStatusFilter("watching")}
+          >
+            Watching
+          </Button>
+          <Button
+            variant={statusFilter === "planned" ? "solid" : "soft"}
+            onClick={() => setStatusFilter("planned")}
+          >
+            Will watch
+          </Button>
+          <Button
+            variant={statusFilter === "watched" ? "solid" : "soft"}
+            onClick={() => setStatusFilter("watched")}
+          >
+            Watched
+          </Button>
+        </ButtonGroup>
+
+        <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
+          <Input
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search saved titles..."
+            size="sm"
+          />
+          <Select
+            value={mediaFilter}
+            onChange={(_, value) => setMediaFilter((value || "all") as SavedMediaTypeFilter)}
+            size="sm"
+          >
+            <Option value="all">All types</Option>
+            <Option value="movie">Movies</Option>
+            <Option value="tv">TV shows</Option>
+          </Select>
+          <Select
+            value={preferenceFilter}
+            onChange={(_, value) => setPreferenceFilter((value || "all") as SavedMediaPreferenceFilter)}
+            size="sm"
+          >
+            <Option value="all">All taste signals</Option>
+            <Option value="love">Loved</Option>
+            <Option value="like">Liked</Option>
+            <Option value="dislike">Not for me</Option>
+            <Option value="none">No reaction</Option>
+          </Select>
+          <Select
+            value={sortBy}
+            onChange={(_, value) => setSortBy((value || "recent") as SavedMediaSort)}
+            size="sm"
+          >
+            <Option value="recent">Sort: Recent activity</Option>
+            <Option value="added">Sort: Recently added</Option>
+            <Option value="title">Sort: Title</Option>
+            <Option value="status">Sort: Status</Option>
+          </Select>
+        </Box>
+      </Box>
+
+      <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
+        <Typography level="h3" startDecorator={<History />}>
+          Recent activity
+        </Typography>
+        {recentActivity.length ? (
+          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1.2 }}>
+            {recentActivity.map((item) => (
+              <Box
+                key={`activity-${item.type}-${item.id}-${item.updatedAt || item.addedAt}`}
+                onClick={() => navigate(`/${item.type}/${item.id}`)}
+                sx={{
+                  minWidth: "220px",
+                  flex: "1 1 240px",
+                  background: "rgba(11, 18, 36, 0.72)",
+                  border: "1px solid rgba(255,255,255,0.08)",
+                  borderRadius: "16px",
+                  px: 1.6,
+                  py: 1.3,
+                  cursor: "pointer",
+                  transition: "all 0.16s ease",
+                  "&:hover": {
+                    borderColor: "rgba(96, 183, 255, 0.3)",
+                    transform: "translateY(-2px)",
+                  },
+                }}
+              >
+                <Typography level="title-sm">{item.title || `Untitled ${item.type}`}</Typography>
+                <Typography level="body-xs" textColor="neutral.400">
+                  {item.type === "tv" ? "TV show" : "Movie"} • {normalizeSavedStatus(item.status)}
+                </Typography>
+                {item.preference ? (
+                  <Typography level="body-xs" textColor="neutral.300" sx={{ mt: 0.4 }}>
+                    {item.preference === "love"
+                      ? "Loved"
+                      : item.preference === "like"
+                        ? "Liked"
+                        : "Marked as not for me"}
+                  </Typography>
+                ) : null}
+                <Typography level="body-xs" textColor="neutral.500" sx={{ mt: 0.6 }}>
+                  {item.updatedAt ? `Updated ${item.updatedAt}` : item.addedAt ? `Added ${item.addedAt}` : ""}
+                </Typography>
+              </Box>
+            ))}
+          </Box>
+        ) : (
+          <Typography textColor="neutral.400">
+            Once you start saving titles, your recent watchlist and favorite activity will show here.
+          </Typography>
+        )}
       </Box>
 
       {isLoading ? (
@@ -225,35 +420,27 @@ function Watchlist() {
                         eventSeason={item.season}
                         eventEpisode={item.episode}
                       />
-                      <ButtonGroup
-                        size="sm"
-                        sx={{
-                          display: "grid",
-                          gridTemplateColumns: "1fr 1fr 1fr",
-                          "--ButtonGroup-separatorSize": "0px",
-                        }}
-                      >
-                        {STATUS_SECTIONS.map((status) => (
-                          <Button
-                            key={status.key}
-                            variant={
-                              normalizeStatus(item.status) === status.key ? "solid" : "soft"
-                            }
-                            color={
-                              normalizeStatus(item.status) === status.key ? "primary" : "neutral"
-                            }
-                            onClick={() => updateStatus(item, status.key)}
-                            sx={{ fontSize: "11px", px: 0.8 }}
-                          >
-                            {status.key === "watching"
-                              ? "Watching"
-                              : status.key === "watched"
-                                ? "Watched"
-                                : "Will watch"}
-                          </Button>
-                        ))}
-                      </ButtonGroup>
+                      <StatusActions
+                        mediaId={item.id}
+                        mediaType={item.type as "movie" | "tv"}
+                        poster={item.poster}
+                        title={item.title || ""}
+                        duration={item.duration || 0}
+                        currentTime={item.currentTime || 0}
+                        season={item.season || (item.type === "tv" ? 1 : 0)}
+                        episode={item.episode || (item.type === "tv" ? 1 : 0)}
+                        currentStatus={item.status}
+                      />
                       <Box sx={{ display: "flex", flexDirection: "column", gap: 0.3 }}>
+                        {item.preference && (
+                          <Typography level="body-xs" textColor="neutral.300">
+                            Taste: {item.preference === "love"
+                              ? "Loved"
+                              : item.preference === "like"
+                                ? "Liked"
+                                : "Not for me"}
+                          </Typography>
+                        )}
                         {item.addedAt && (
                           <Typography level="body-xs" textColor="neutral.400">
                             Added: {item.addedAt}
@@ -285,11 +472,22 @@ function Watchlist() {
         >
           <BookmarkAdd sx={{ fontSize: "50px" }} />
           <Typography level="h2">
-            There&apos;s no shows or movies in your watchlist
+            No watchlist items match this filter
           </Typography>
           <Typography level="body-md">
-            Add shows and movies to keep track of what you want to watch
+            Try another filter or search term, or discover something new to save.
           </Typography>
+          <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", justifyContent: "center" }}>
+            <Chip startDecorator={<Favorite />} variant="soft" color="danger">
+              Love titles you never want to lose
+            </Chip>
+            <Chip startDecorator={<ThumbUp />} variant="soft" color="primary">
+              Like titles worth using for AI taste
+            </Chip>
+            <Chip startDecorator={<MoodBad />} variant="soft" color="warning">
+              Mark misses so recommendations improve
+            </Chip>
+          </Box>
           <Link
             onClick={() => navigate("/discover")}
             underline="none"
@@ -303,10 +501,18 @@ function Watchlist() {
       <Divider />
 
       <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-        <Typography level="h2">Favorites</Typography>
+        <Box sx={{ display: "flex", justifyContent: "space-between", gap: 2, flexWrap: "wrap" }}>
+          <Typography level="h2">Favorites Snapshot</Typography>
+          <Link
+            onClick={() => navigate("/favorites")}
+            sx={{ cursor: "pointer", color: "rgb(96, 183, 255)" }}
+          >
+            View all favorites
+          </Link>
+        </Box>
         {favorites.length ? (
           <Box display="flex" flexWrap="wrap" justifyContent="center" gap="10px">
-            {favorites.map((item) => (
+            {favorites.slice(0, 6).map((item) => (
               <EventMC
                 key={`favorite-${item.type}-${item.id}`}
                 eventId={item.id}

@@ -19,7 +19,7 @@ import {
 } from "@mui/joy";
 import { useNavigate, useParams } from "react-router-dom";
 import { useTMDB } from "../../context/TMDB";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { backdropLoading, isLoggedIn } from "../../utilities/defaults";
 import NotFound from "../../components/utils/NotFound";
 import { movieDetails, tvDetails, tvSeasonsDetails } from "../../tmdb-res";
@@ -29,6 +29,32 @@ import { StreamServer } from "../../stream-res";
 import { useUsers } from "../../context/Users";
 import StorageIcon from "@mui/icons-material/Storage";
 import LiveTvIcon from "@mui/icons-material/LiveTv";
+import { User } from "../../user";
+
+const AUTO_SAVE_INTERVAL_MS = 30000;
+const MIN_PROGRESS_DELTA_MINUTES = 0.5;
+const MIN_PROGRESS_TO_SAVE_MINUTES = 0.25;
+
+const normalizePlayerMinutes = (currentTime?: number, duration?: number) => {
+  const current = Number(currentTime) || 0;
+  const total = Number(duration) || 0;
+
+  if (!current && !total) {
+    return { currentMinutes: 0, durationMinutes: 0 };
+  }
+
+  if (total > 360 || current > 360) {
+    return {
+      currentMinutes: current / 60,
+      durationMinutes: total / 60,
+    };
+  }
+
+  return {
+    currentMinutes: current,
+    durationMinutes: total,
+  };
+};
 
 function Watch() {
   const {
@@ -39,13 +65,23 @@ function Watch() {
     tvSeasonsDetails,
     tvSeasonsDetailsData,
   } = useTMDB();
-  const { movieId, movieType, seasonId, episodeId } = useParams();
+  const { movieId, movieType, seasonId, episodeId, startAt } = useParams();
   const { colorScheme } = useColorScheme();
   const { getStreamData, getStream } = useStream();
-  const { addToWatchlist } = useUsers();
+  const { addToWatchlist, myselfData } = useUsers();
   const navigate = useNavigate();
   const [streamServer, setStreamServer] = useState<StreamServer | null>(null);
   const [streamType, setStreamType] = useState<"WADS" | "WOADS">("WADS");
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const progressRef = useRef({
+    iframeSessionStartAt: 0,
+    accumulatedMinutes: 0,
+    lastSavedAt: 0,
+    lastSavedProgressMinutes: 0,
+    lastKnownProgressMinutes: 0,
+    playerEventsSeen: false,
+    isIframeActive: false,
+  });
 
   const isTvSE = seasonId && episodeId;
   const isFetching =
@@ -57,8 +93,169 @@ function Watch() {
   const tvSeriesDetailsDataArr = tvSeriesDetailsData?.data as tvDetails;
   const movieDetailsDataArr = movieDetailsData?.data as movieDetails;
   const tvSeasonsDetailsArr = tvSeasonsDetailsData?.data as tvSeasonsDetails;
+  const watchlistItem = (myselfData?.data as User)?.watchlist?.find(
+    (item) => item.id === movieId && item.type === movieType,
+  );
+  const activeEpisodeData = tvSeasonsDetailsArr?.episodes?.find(
+    (episode) => episode?.episode_number === Number(episodeId),
+  );
+  const mediaTitle =
+    movieType === "tv"
+      ? tvSeriesDetailsDataArr?.name || ""
+      : movieDetailsDataArr?.title || "";
+  const mediaPoster =
+    movieType === "tv"
+      ? tvSeriesDetailsDataArr?.poster_path
+      : movieDetailsDataArr?.poster_path;
+  const fallbackDurationMinutes = useMemo(() => {
+    if (movieType === "tv") {
+      return (
+        Number(activeEpisodeData?.runtime) ||
+        Number(tvSeriesDetailsDataArr?.episode_run_time?.[0]) ||
+        0
+      );
+    }
+
+    return Number(movieDetailsDataArr?.runtime) || 0;
+  }, [activeEpisodeData?.runtime, movieDetailsDataArr?.runtime, movieType, tvSeriesDetailsDataArr?.episode_run_time]);
+  const initialProgressMinutes = useMemo(() => {
+    const startAtMinutes = Number(startAt) || 0;
+    if (startAtMinutes > 0) return startAtMinutes;
+
+    if (!watchlistItem) return 0;
+    if (movieType === "movie") return Number(watchlistItem.currentTime) || 0;
+
+    const sameEpisode =
+      Number(watchlistItem.season) === Number(seasonId || 0) &&
+      Number(watchlistItem.episode) === Number(episodeId || 0);
+
+    return sameEpisode ? Number(watchlistItem.currentTime) || 0 : 0;
+  }, [episodeId, movieType, seasonId, startAt, watchlistItem]);
+
+  const syncIframeElapsed = () => {
+    if (!progressRef.current.isIframeActive || !progressRef.current.iframeSessionStartAt) {
+      return;
+    }
+
+    const now = Date.now();
+    const elapsedMinutes =
+      (now - progressRef.current.iframeSessionStartAt) / 60000;
+
+    if (elapsedMinutes > 0) {
+      progressRef.current.accumulatedMinutes += elapsedMinutes;
+      progressRef.current.lastKnownProgressMinutes =
+        initialProgressMinutes + progressRef.current.accumulatedMinutes;
+    }
+
+    progressRef.current.iframeSessionStartAt = now;
+  };
+
+  const setIframeTrackingActive = (isActive: boolean) => {
+    if (streamType !== "WADS") return;
+
+    if (isActive) {
+      if (!progressRef.current.isIframeActive) {
+        progressRef.current.isIframeActive = true;
+        progressRef.current.iframeSessionStartAt = Date.now();
+      }
+      return;
+    }
+
+    if (progressRef.current.isIframeActive) {
+      syncIframeElapsed();
+      progressRef.current.isIframeActive = false;
+      progressRef.current.iframeSessionStartAt = 0;
+    }
+  };
+
+  const getCurrentProgressMinutes = () => {
+    if (streamType === "WOADS" && videoRef.current) {
+      return Math.max(0, videoRef.current.currentTime / 60);
+    }
+
+    if (progressRef.current.playerEventsSeen) {
+      return progressRef.current.lastKnownProgressMinutes;
+    }
+
+    if (progressRef.current.isIframeActive) {
+      const now = Date.now();
+      const liveMinutes =
+        (now - progressRef.current.iframeSessionStartAt) / 60000;
+      return initialProgressMinutes + progressRef.current.accumulatedMinutes + Math.max(0, liveMinutes);
+    }
+
+    return initialProgressMinutes + progressRef.current.accumulatedMinutes;
+  };
+
+  const persistProgress = async (
+    rawProgressMinutes: number,
+    rawDurationMinutes?: number,
+    forceStatus?: "watching" | "watched",
+  ) => {
+    if (!isLoggedIn || !movieId || !movieType) return;
+
+    const durationMinutes = Math.max(
+      rawDurationMinutes || fallbackDurationMinutes || 0,
+      rawProgressMinutes,
+      fallbackDurationMinutes ? 0 : rawProgressMinutes,
+    );
+    const boundedProgressMinutes = Math.max(
+      0,
+      durationMinutes > 0
+        ? Math.min(rawProgressMinutes, durationMinutes)
+        : rawProgressMinutes,
+    );
+    const progressRatio =
+      durationMinutes > 0 ? boundedProgressMinutes / durationMinutes : 0;
+    const resolvedStatus = forceStatus
+      ? forceStatus
+      : progressRatio >= 0.9
+        ? "watched"
+        : "watching";
+    const nextProgressMinutes =
+      resolvedStatus === "watched" && durationMinutes > 0
+        ? durationMinutes
+        : boundedProgressMinutes;
+
+    if (
+      resolvedStatus !== "watched" &&
+      nextProgressMinutes < MIN_PROGRESS_TO_SAVE_MINUTES
+    ) {
+      return;
+    }
+
+    const now = Date.now();
+    const progressDelta = Math.abs(
+      nextProgressMinutes - progressRef.current.lastSavedProgressMinutes,
+    );
+    if (
+      !forceStatus &&
+      now - progressRef.current.lastSavedAt < AUTO_SAVE_INTERVAL_MS &&
+      progressDelta < MIN_PROGRESS_DELTA_MINUTES
+    ) {
+      return;
+    }
+
+    progressRef.current.lastSavedAt = now;
+    progressRef.current.lastSavedProgressMinutes = nextProgressMinutes;
+    progressRef.current.lastKnownProgressMinutes = nextProgressMinutes;
+
+    await addToWatchlist(
+      movieType,
+      movieId,
+      mediaPoster || "",
+      mediaTitle,
+      resolvedStatus,
+      durationMinutes,
+      nextProgressMinutes,
+      seasonId ? parseInt(seasonId) : 0,
+      episodeId ? parseInt(episodeId) : 0,
+    );
+  };
 
   const episodeChange = (n: string) => {
+    void persistProgress(getCurrentProgressMinutes(), fallbackDurationMinutes);
+    setIframeTrackingActive(false);
     setStreamServer(null);
     navigate(n);
   };
@@ -86,37 +283,59 @@ function Watch() {
   }, [movieType, movieId, seasonId, episodeId, streamType]);
 
   useEffect(() => {
+    progressRef.current = {
+      iframeSessionStartAt: 0,
+      accumulatedMinutes: 0,
+      lastSavedAt: 0,
+      lastSavedProgressMinutes: initialProgressMinutes,
+      lastKnownProgressMinutes: initialProgressMinutes,
+      playerEventsSeen: false,
+      isIframeActive: false,
+    };
+  }, [initialProgressMinutes, movieId, movieType, seasonId, episodeId, streamType]);
+
+  useEffect(() => {
     let lastUpdateTime = 0;
 
     const handleMessage = (event: any) => {
-      if (event.origin !== "https://vidsrc.cc") return;
+      if (
+        event.origin !== "https://vidsrc.cc" &&
+        event.origin !== "https://www.vidsrc.cc"
+      ) {
+        return;
+      }
 
       if (event.data?.type === "PLAYER_EVENT") {
         const { event: eventType, currentTime, duration } = event.data.data;
+        const { currentMinutes, durationMinutes } = normalizePlayerMinutes(
+          currentTime,
+          duration,
+        );
+        const progress =
+          durationMinutes && Number(durationMinutes) > 0
+            ? Number(currentMinutes) / Number(durationMinutes)
+            : 0;
+        const resolvedStatus =
+          eventType === "ended" || progress >= 0.9 ? "watched" : "watching";
+        progressRef.current.playerEventsSeen = true;
+        progressRef.current.lastKnownProgressMinutes =
+          resolvedStatus === "watched" && durationMinutes > 0
+            ? durationMinutes
+            : currentMinutes;
 
         const now = Date.now();
         if (
           isLoggedIn &&
           movieId &&
-          eventType === "time" &&
-          now - lastUpdateTime > 15000
+          (eventType === "time" || eventType === "ended") &&
+          (eventType === "ended" || now - lastUpdateTime > 15000)
         ) {
           lastUpdateTime = now;
 
-          addToWatchlist(
-            movieType!,
-            movieId,
-            movieType === "tv"
-              ? tvSeriesDetailsDataArr?.poster_path
-              : movieDetailsDataArr?.poster_path,
-            movieType === "tv"
-              ? tvSeriesDetailsDataArr?.name || ""
-              : movieDetailsDataArr?.title || "",
-            "watching",
-            duration,
-            currentTime,
-            seasonId ? parseInt(seasonId) : 0,
-            episodeId ? parseInt(episodeId) : 0,
+          void persistProgress(
+            currentMinutes,
+            durationMinutes,
+            resolvedStatus,
           );
         }
       }
@@ -127,14 +346,88 @@ function Watch() {
     // CLEANUP: Removes the listener so they don't stack up
     return () => window.removeEventListener("message", handleMessage);
   }, [
+    fallbackDurationMinutes,
     isLoggedIn,
     movieId,
     movieType,
     seasonId,
     episodeId,
-    tvSeriesDetailsDataArr,
-    movieDetailsDataArr,
+    mediaPoster,
+    mediaTitle,
+    initialProgressMinutes,
   ]);
+
+  useEffect(() => {
+    if (streamType !== "WADS") {
+      setIframeTrackingActive(false);
+      return;
+    }
+
+    const flushProgress = () => {
+      syncIframeElapsed();
+      void persistProgress(getCurrentProgressMinutes(), fallbackDurationMinutes);
+    };
+
+    const syncVisibility = () => {
+      const isVisible = document.visibilityState === "visible";
+      if (isVisible) {
+        setIframeTrackingActive(true);
+      } else {
+        setIframeTrackingActive(false);
+        flushProgress();
+      }
+    };
+
+    syncVisibility();
+    const interval = window.setInterval(() => {
+      if (!progressRef.current.playerEventsSeen) {
+        syncIframeElapsed();
+        void persistProgress(getCurrentProgressMinutes(), fallbackDurationMinutes);
+      }
+    }, AUTO_SAVE_INTERVAL_MS);
+
+    window.addEventListener("focus", syncVisibility);
+    window.addEventListener("blur", flushProgress);
+    window.addEventListener("pagehide", flushProgress);
+    document.addEventListener("visibilitychange", syncVisibility);
+
+    return () => {
+      window.clearInterval(interval);
+      flushProgress();
+      window.removeEventListener("focus", syncVisibility);
+      window.removeEventListener("blur", flushProgress);
+      window.removeEventListener("pagehide", flushProgress);
+      document.removeEventListener("visibilitychange", syncVisibility);
+      setIframeTrackingActive(false);
+    };
+  }, [fallbackDurationMinutes, initialProgressMinutes, streamType]);
+
+  const handleNativeLoadedMetadata = () => {
+    if (!videoRef.current) return;
+
+    const startAtMinutes = Math.max(0, initialProgressMinutes);
+    if (startAtMinutes > 0) {
+      videoRef.current.currentTime = startAtMinutes * 60;
+    }
+  };
+
+  const handleNativeTimeUpdate = () => {
+    if (!videoRef.current) return;
+    const progressMinutes = videoRef.current.currentTime / 60;
+    const durationMinutes = videoRef.current.duration
+      ? videoRef.current.duration / 60
+      : fallbackDurationMinutes;
+    progressRef.current.lastKnownProgressMinutes = progressMinutes;
+    void persistProgress(progressMinutes, durationMinutes);
+  };
+
+  const handleNativeEnded = () => {
+    if (!videoRef.current) return;
+    const durationMinutes = videoRef.current.duration
+      ? videoRef.current.duration / 60
+      : fallbackDurationMinutes;
+    void persistProgress(durationMinutes, durationMinutes, "watched");
+  };
 
 
   return isIncorrect ? (
@@ -491,7 +784,12 @@ function Watch() {
         ></iframe>
       ) : (
         <video
+          ref={videoRef}
           controls
+          onLoadedMetadata={handleNativeLoadedMetadata}
+          onTimeUpdate={handleNativeTimeUpdate}
+          onPause={handleNativeTimeUpdate}
+          onEnded={handleNativeEnded}
           style={{
             width: "100%",
             height: "100%",

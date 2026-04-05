@@ -1,4 +1,4 @@
-import { Box, ButtonGroup, IconButton, Typography } from "@mui/joy";
+import { Box, ButtonGroup, Chip, IconButton, Option, Select, Typography } from "@mui/joy";
 import { useTMDB } from "../../context/TMDB";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
@@ -8,9 +8,48 @@ import EventMCS from "../../components/cards/skeleton/EventMC";
 import AutoGraphIcon from "@mui/icons-material/AutoGraph";
 import Pagination from "../../components/navigation/Pagination";
 
+type SearchSort = "popularity" | "rating" | "release" | "title";
+type SearchYearFilter = "all" | "2020s" | "2010s" | "2000s" | "classic";
+type SearchRatingFilter = "all" | "6" | "7" | "8";
+
+const decodeRouteQuery = (value?: string) => {
+  if (!value) return "";
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
+};
+
+const getResultTitle = (result: any) =>
+  ("gender" in result ? result?.name : "name" in result ? result?.name : result?.title) || "";
+
+const getResultType = (result: any) =>
+  ("gender" in result ? "person" : "name" in result ? "tv" : "movie");
+
+const getResultYear = (result: any) => {
+  if ("gender" in result) return null;
+  const year = Number(
+    String("release_date" in result ? result.release_date : result.first_air_date || "").slice(0, 4),
+  );
+  return Number.isFinite(year) && year > 1800 ? year : null;
+};
+
+const matchesYearFilter = (year: number | null, filter: SearchYearFilter) => {
+  if (filter === "all") return true;
+  if (!year) return false;
+  if (filter === "2020s") return year >= 2020;
+  if (filter === "2010s") return year >= 2010 && year <= 2019;
+  if (filter === "2000s") return year >= 2000 && year <= 2009;
+  return year < 2000;
+};
+
 function Search() {
   const { query, page } = useParams();
   const [type, setType] = useState<"tv" | "movie" | "all" | "person">("all");
+  const [sortBy, setSortBy] = useState<SearchSort>("popularity");
+  const [yearFilter, setYearFilter] = useState<SearchYearFilter>("all");
+  const [ratingFilter, setRatingFilter] = useState<SearchRatingFilter>("all");
   const {
     searchMovie,
     searchMovieData,
@@ -32,6 +71,9 @@ function Search() {
     (searchPersonData?.data as searchPerson)?.results?.sort(
       (a, b) => b.popularity - a.popularity,
     ) || [];
+  const decodedQuery = decodeRouteQuery(query);
+  const mediaFiltersActive = yearFilter !== "all" || ratingFilter !== "all";
+
   const searchResults =
     type === "movie"
       ? movieResults
@@ -39,9 +81,42 @@ function Search() {
         ? tvResults
         : type === "person"
           ? personResults
-          : [...tvResults, ...movieResults, ...personResults]?.sort(
-              (a, b) => b.popularity - a.popularity,
-            );
+          : [...tvResults, ...movieResults, ...personResults];
+
+  const filteredResults = [...searchResults]
+    .filter((result) => {
+      const resultType = getResultType(result);
+      if (resultType === "person") {
+        return type === "person" || !mediaFiltersActive;
+      }
+
+      const year = getResultYear(result);
+      const rating =
+        typeof result.vote_average === "number" ? result.vote_average : 0;
+      const ratingMatch =
+        ratingFilter === "all" || rating >= Number(ratingFilter);
+
+      return matchesYearFilter(year, yearFilter) && ratingMatch;
+    })
+    .sort((a, b) => {
+      if (sortBy === "release") {
+        const releaseDelta = (getResultYear(b) || 0) - (getResultYear(a) || 0);
+        if (releaseDelta !== 0) return releaseDelta;
+        return (b.popularity || 0) - (a.popularity || 0);
+      }
+
+      if (sortBy === "rating") {
+        const ratingDelta = (b.vote_average || 0) - (a.vote_average || 0);
+        if (ratingDelta !== 0) return ratingDelta;
+        return (b.popularity || 0) - (a.popularity || 0);
+      }
+
+      if (sortBy === "title") {
+        return getResultTitle(a).localeCompare(getResultTitle(b));
+      }
+
+      return (b.popularity || 0) - (a.popularity || 0);
+    });
 
   const totalPages =
     type === "movie"
@@ -66,6 +141,9 @@ function Search() {
           ? (searchTvData?.data as searchTV)?.total_results
           : (searchPersonData?.data as searchPerson)?.total_results || 0;
   const currentPage = page ? +page : 1;
+  const movieCount = filteredResults.filter((result) => getResultType(result) === "movie").length;
+  const tvCount = filteredResults.filter((result) => getResultType(result) === "tv").length;
+  const peopleCount = filteredResults.filter((result) => getResultType(result) === "person").length;
 
   const isLoading =
     searchMovieData?.isLoading ||
@@ -98,11 +176,12 @@ function Search() {
       >
         Search Results for:{" "}
         <Typography fontWeight={400} textColor={"neutral.300"}>
-          {query}
+          {decodedQuery}
         </Typography>
       </Typography>
 
-      <ButtonGroup>
+      <Box sx={{ display: "flex", gap: 1.5, flexWrap: "wrap", alignItems: "center" }}>
+        <ButtonGroup>
         <IconButton
           onClick={() => setType("all")}
           color={type === "all" ? "primary" : "neutral"}
@@ -135,16 +214,95 @@ function Search() {
         >
           People
         </IconButton>
-      </ButtonGroup>
+        </ButtonGroup>
+        <Select
+          value={sortBy}
+          onChange={(_, value) => setSortBy((value || "popularity") as SearchSort)}
+          size="sm"
+        >
+          <Option value="popularity">Sort: Popularity</Option>
+          <Option value="rating">Sort: Rating</Option>
+          <Option value="release">Sort: Newest</Option>
+          <Option value="title">Sort: Title</Option>
+        </Select>
+        {type !== "person" && (
+          <>
+            <Select
+              value={yearFilter}
+              onChange={(_, value) => setYearFilter((value || "all") as SearchYearFilter)}
+              size="sm"
+            >
+              <Option value="all">All years</Option>
+              <Option value="2020s">2020s</Option>
+              <Option value="2010s">2010s</Option>
+              <Option value="2000s">2000s</Option>
+              <Option value="classic">Before 2000</Option>
+            </Select>
+            <Select
+              value={ratingFilter}
+              onChange={(_, value) => setRatingFilter((value || "all") as SearchRatingFilter)}
+              size="sm"
+            >
+              <Option value="all">Any rating</Option>
+              <Option value="6">6.0+</Option>
+              <Option value="7">7.0+</Option>
+              <Option value="8">8.0+</Option>
+            </Select>
+          </>
+        )}
+      </Box>
 
-      {!isLoading && searchResults.length > 0 && (
+      {!isLoading && filteredResults.length > 0 && (
+        <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
+          <Chip
+            sx={{
+              background: "rgba(96, 183, 255, 0.1)",
+              border: "1px solid rgba(96, 183, 255, 0.24)",
+              color: "rgb(96, 183, 255)",
+            }}
+          >
+            Showing {filteredResults.length} of {totalResults} results
+          </Chip>
+          <Chip
+            sx={{
+              background: "rgba(255,255,255,0.04)",
+              border: "1px solid rgba(255,255,255,0.08)",
+            }}
+          >
+            Movies: {movieCount}
+          </Chip>
+          <Chip
+            sx={{
+              background: "rgba(255,255,255,0.04)",
+              border: "1px solid rgba(255,255,255,0.08)",
+            }}
+          >
+            TV shows: {tvCount}
+          </Chip>
+          <Chip
+            sx={{
+              background: "rgba(255,255,255,0.04)",
+              border: "1px solid rgba(255,255,255,0.08)",
+            }}
+          >
+            People: {peopleCount}
+          </Chip>
+        </Box>
+      )}
+      {!isLoading && filteredResults.length > 0 && (
         <Typography>{totalResults} results found</Typography>
       )}
-      {!isLoading && searchResults.length > 0 && (
+      {!isLoading && filteredResults.length > 0 && (
         <Typography
           startDecorator={<AutoGraphIcon sx={{ color: "neutral.300" }} />}
         >
-          Sorted by popularity
+          {sortBy === "popularity"
+            ? "Sorted by popularity"
+            : sortBy === "rating"
+              ? "Sorted by rating"
+              : sortBy === "release"
+                ? "Sorted by newest release"
+                : "Sorted alphabetically"}
         </Typography>
       )}
 
@@ -154,14 +312,14 @@ function Search() {
         justifyContent={"center"}
         gap={"10px"}
       >
-        {!searchResults.length && !isLoading && (
+        {!filteredResults.length && !isLoading && (
           <Typography textColor={"neutral.300"} level="h2" fontWeight={700}>
             No Results Found
           </Typography>
         )}
 
         {!isLoading ? (
-          searchResults.map((result) => (
+          filteredResults.map((result) => (
             <EventMC
               key={result?.id}
               eventPoster={
@@ -171,9 +329,9 @@ function Search() {
                     ? result?.profile_path
                     : ""
               }
-              eventTitle={"gender" in result ? result?.name : "name" in result ? result?.name : result?.title}
+              eventTitle={getResultTitle(result)}
               eventId={result?.id}
-              eventType={"gender" in result ? "person" : "name" in result ? "tv" : "movie"}
+              eventType={getResultType(result)}
             />
           ))
         ) : (
@@ -186,7 +344,7 @@ function Search() {
           </>
         )}
 
-        {searchResults.length > 0 && (
+        {filteredResults.length > 0 && (
           <Pagination
             currentPage={currentPage}
             totalPages={totalPages}

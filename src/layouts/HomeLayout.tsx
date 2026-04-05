@@ -43,13 +43,7 @@ function HomeLayout() {
     tvImagesData,
   } = useTMDB();
 
-  const {
-    addToWatchlist,
-    addToWatchlistData,
-    removeFromWatchlist,
-    removeFromWatchlistData,
-    myselfData,
-  } = useUsers();
+  const { myselfData } = useUsers();
 
   useEffect(() => {
     switch (eventCategoryMovie) {
@@ -101,10 +95,6 @@ function HomeLayout() {
         movieImagesData={movieImagesData as ResponseType}
         tvImages={tvImages}
         tvImagesData={tvImagesData as ResponseType}
-        addToWatchlist={addToWatchlist}
-        addToWatchlistData={addToWatchlistData as ResponseType}
-        removeFromWatchlist={removeFromWatchlist}
-        removeFromWatchlistData={removeFromWatchlistData as ResponseType}
         myselfData={myselfData as ResponseType}
       />
 

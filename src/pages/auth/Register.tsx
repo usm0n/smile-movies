@@ -7,14 +7,11 @@ import {
   ArrowBack,
   ArrowForward,
   CheckCircle,
-  Search,
 } from "@mui/icons-material";
 import {
-  Avatar,
   Box,
   Button,
   Card,
-  Chip,
   Divider,
   FormControl,
   FormHelperText,
@@ -30,8 +27,8 @@ import {
   Typography,
   useColorScheme,
 } from "@mui/joy";
-import { useEffect, useRef, useState } from "react";
-import { FavoriteMedia, GoogleUserResponse, UserRegister } from "../../user";
+import { useEffect, useState } from "react";
+import { GoogleUserResponse, UserRegister } from "../../user";
 import {
   backdropLoading,
   deviceId,
@@ -46,7 +43,6 @@ import { useUsers } from "../../context/Users";
 import { useOC } from "../../context/OC";
 import React from "react";
 import axios from "axios";
-import { tmdbAPI } from "../../service/api/api";
 
 const GoogleIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 48 48">
@@ -68,10 +64,6 @@ function Register() {
   const [step, setStep] = useState(0);
   const [passwordVisibility, setPasswordVisibility] = useState(false);
   const [cpassword, setCpassword] = useState("");
-  const [mediaSearch, setMediaSearch] = useState("");
-  const [mediaResults, setMediaResults] = useState<FavoriteMedia[]>([]);
-  const [mediaSearchLoading, setMediaSearchLoading] = useState(false);
-  const searchTimeout = useRef<any>(null);
 
   const [userValue, setUserValue] = useState<UserRegister>({
     email: "",
@@ -85,7 +77,6 @@ function Register() {
     deviceLocation: { latitude: 0, longitude: 0, continent: "", country: "", county: "", state: "", road: "" },
     age: undefined,
     gender: undefined,
-    favoriteMovies: [],
     notifications: { emailNotifications: true, newReleases: true, recommendations: true, watchlistUpdates: true },
     privacy: { showWatchlist: true, showFavorites: true },
   });
@@ -98,41 +89,6 @@ function Register() {
   const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setUserValue((prev) => ({ ...prev, [name]: name === "email" ? value.toLowerCase() : value }));
-  };
-
-  // TMDB autocomplete for favorite movies/shows
-  useEffect(() => {
-    if (!mediaSearch.trim()) { setMediaResults([]); return; }
-    clearTimeout(searchTimeout.current);
-    searchTimeout.current = setTimeout(async () => {
-      setMediaSearchLoading(true);
-      try {
-        const res = await tmdbAPI.get(`/search/multi?query=${encodeURIComponent(mediaSearch)}&page=1`);
-        const results: FavoriteMedia[] = (res.data?.results || [])
-          .filter((r: any) => (r.media_type === "movie" || r.media_type === "tv") && (r.title || r.name))
-          .slice(0, 8)
-          .map((r: any) => ({
-            id: String(r.id),
-            title: r.title || r.name,
-            type: r.media_type as "movie" | "tv",
-            poster: r.poster_path ? `https://image.tmdb.org/t/p/w92${r.poster_path}` : undefined,
-          }));
-        setMediaResults(results);
-      } catch (_) {}
-      setMediaSearchLoading(false);
-    }, 350);
-  }, [mediaSearch]);
-
-  const addFavorite = (media: FavoriteMedia) => {
-    if ((userValue.favoriteMovies || []).length >= 3) return;
-    if ((userValue.favoriteMovies || []).find((m) => m.id === media.id)) return;
-    setUserValue((prev) => ({ ...prev, favoriteMovies: [...(prev.favoriteMovies || []), media] }));
-    setMediaSearch("");
-    setMediaResults([]);
-  };
-
-  const removeFavorite = (id: string) => {
-    setUserValue((prev) => ({ ...prev, favoriteMovies: (prev.favoriteMovies || []).filter((m) => m.id !== id) }));
   };
 
   const googleLogin = useGoogleLogin({
@@ -164,7 +120,7 @@ function Register() {
     userValue.password.trim().length >= 8 &&
     cpassword === userValue.password;
 
-  const step2Valid = !!userValue.age && !!userValue.gender && (userValue.favoriteMovies || []).length === 3;
+  const step2Valid = !!userValue.age && !!userValue.gender;
 
   const steps = ["Account", "About You", "Preferences", "Welcome"];
 
@@ -280,79 +236,6 @@ function Register() {
                 {GENDER_OPTIONS.map((o) => <Option key={o.value} value={o.value}>{o.label}</Option>)}
               </Select>
             </FormControl>
-
-            <Box>
-              <FormLabel>3 Favorite Movies or TV Shows</FormLabel>
-              <Typography level="body-xs" textColor="neutral.400" sx={{ mb: 1 }}>
-                Search and pick exactly 3. SmileAI uses these for recommendations.
-              </Typography>
-
-              {(userValue.favoriteMovies || []).length < 3 && (
-                <Box sx={{ position: "relative" }}>
-                  <Input
-                    value={mediaSearch}
-                    onChange={(e) => setMediaSearch(e.target.value)}
-                    placeholder="Search a movie or TV show..."
-                    startDecorator={<Search />}
-                    disabled={mediaSearchLoading}
-                  />
-                  {mediaResults.length > 0 && (
-                    <Card
-                      sx={{
-                        position: "absolute", top: "100%", left: 0, right: 0, zIndex: 100,
-                        maxHeight: 280, overflowY: "auto", mt: 0.5, p: 0.5,
-                        boxShadow: "0 8px 32px rgba(0,0,0,0.5)",
-                      }}
-                    >
-                      {mediaResults.map((media) => (
-                        <Box
-                          key={media.id}
-                          onClick={() => addFavorite(media)}
-                          sx={{
-                            display: "flex", alignItems: "center", gap: 1.5, p: 1,
-                            borderRadius: 8, cursor: "pointer",
-                            "&:hover": { background: "rgba(255,216,77,0.1)" },
-                          }}
-                        >
-                          {media.poster ? (
-                            <Box component="img" src={media.poster} sx={{ width: 32, height: 48, borderRadius: 4, objectFit: "cover" }} />
-                          ) : (
-                            <Box sx={{ width: 32, height: 48, borderRadius: 4, background: "rgba(255,255,255,0.1)" }} />
-                          )}
-                          <Box>
-                            <Typography level="body-sm" fontWeight={600}>{media.title}</Typography>
-                            <Chip size="sm" variant="soft" color={media.type === "movie" ? "primary" : "success"} sx={{ fontSize: 10 }}>
-                              {media.type === "movie" ? "Movie" : "TV"}
-                            </Chip>
-                          </Box>
-                        </Box>
-                      ))}
-                    </Card>
-                  )}
-                </Box>
-              )}
-
-              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mt: 1.5 }}>
-                {(userValue.favoriteMovies || []).map((media) => (
-                  <Chip
-                    key={media.id}
-                    startDecorator={media.poster ? <Avatar src={media.poster} size="sm" /> : undefined}
-                    endDecorator={
-                      <IconButton size="sm" onClick={() => removeFavorite(media.id)}>✕</IconButton>
-                    }
-                    variant="soft"
-                    color="primary"
-                  >
-                    {media.title}
-                  </Chip>
-                ))}
-                {(userValue.favoriteMovies || []).length < 3 && (
-                  <Typography level="body-xs" textColor="neutral.400" sx={{ alignSelf: "center" }}>
-                    {3 - (userValue.favoriteMovies || []).length} more needed
-                  </Typography>
-                )}
-              </Box>
-            </Box>
 
             <Box sx={{ display: "flex", gap: 1 }}>
               <Button variant="outlined" color="neutral" startDecorator={<ArrowBack />} onClick={() => setStep(0)} sx={{ flex: 1 }}>Back</Button>

@@ -17,6 +17,17 @@ export interface PrivacySettings {
   showFavorites: boolean;
 }
 
+export type SavedMediaStatus =
+  | "planned"
+  | "watching"
+  | "watched"
+  | "favorite";
+
+export type SavedMediaPreference =
+  | "love"
+  | "like"
+  | "dislike";
+
 export interface User {
   profilePic?: string;
   id: string;
@@ -41,10 +52,11 @@ export interface User {
   privacy?: PrivacySettings;
 }
 
-export interface Watchlist {
+export interface SavedMediaItem {
   poster: string;
   type: string;
-  status: string;
+  status: SavedMediaStatus | string;
+  preference?: SavedMediaPreference;
   title?: string;
   duration?: number;
   currentTime?: number;
@@ -54,6 +66,8 @@ export interface Watchlist {
   addedAt?: string;
   updatedAt?: string;
 }
+
+export type Watchlist = SavedMediaItem;
 
 export interface Location {
   latitude: number;

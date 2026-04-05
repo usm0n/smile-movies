@@ -1,13 +1,11 @@
 import {
-  Box, Button, ButtonGroup, Card, CardCover, Chip,
-  Dropdown, LinearProgress, Menu, MenuButton, MenuItem,
+  Box, Button, ButtonGroup, Card, CardContent, CardCover, Chip,
+  Dropdown, LinearProgress, Menu, MenuButton, MenuItem, Typography,
   IconButton,
 } from "@mui/joy";
 import { useNavigate } from "react-router-dom";
 import BlurImage from "../../utilities/blurImage";
 import {
-  Add,
-  Check,
   DeleteOutline,
   IosShare,
   MoreVert,
@@ -20,6 +18,7 @@ import {
 import { isLoggedIn, shareLink } from "../../utilities/defaults";
 import { useUsers } from "../../context/Users";
 import { User } from "../../user";
+import StatusActions from "../watchlist/StatusActions";
 
 function EventMC({
   eventPoster, eventId, eventType, eventDelete,
@@ -41,19 +40,18 @@ function EventMC({
   const {
     addToFavorites,
     addToFavoritesData,
-    addToWatchlist,
     removeFromFavorites,
     removeFromFavoritesData,
-    removeFromWatchlist,
-    addToWatchlistData,
-    removeFromWatchlistData,
     myselfData,
   } = useUsers();
 
-  const isInWatchlist = (myselfData?.data as User)?.watchlist?.find(
+  const watchlistItem = (myselfData?.data as User)?.watchlist?.find(
     (item) => item.id == String(eventId) && item.type === eventType,
   );
-  const isFavorite = (myselfData?.data as User)?.favorites?.find((item) => item.id == String(eventId) && item.type === eventType);
+  const favoriteItem = (myselfData?.data as User)?.favorites?.find((item) => item.id == String(eventId) && item.type === eventType);
+  const isFavorite = favoriteItem;
+  const currentPreference = favoriteItem?.preference || watchlistItem?.preference;
+  const favoritePreference = currentPreference === "dislike" ? "like" : currentPreference || "like";
   const normalizedStatus =
     eventStatus === "new" || eventStatus === "will_watch" ? "planned" : eventStatus;
   const statusLabel =
@@ -89,11 +87,11 @@ function EventMC({
             <Person />
           )}
         </CardCover>
-        {/* <CardContent sx={{ display: "flex", justifyContent: "end" }}>
+        <CardContent sx={{ display: "flex", justifyContent: "end" }}>
           <Typography level="h2" sx={{ fontWeight: "bold", textShadow: "0 0 5px rgba(0,0,0,0.5)" }}>
             {eventTitle}
           </Typography>
-        </CardContent> */}
+        </CardContent>
 
         {eventType !== "person" && (
           <Box sx={{ position: "absolute", top: 0, left: 0, zIndex: 3, padding: 1 }}>
@@ -117,6 +115,7 @@ function EventMC({
                     eventCurrentTime || 0,
                     eventSeason || (eventType === "tv" ? 1 : 0),
                     eventEpisode || (eventType === "tv" ? 1 : 0),
+                    favoritePreference,
                   );
               }}
               disabled={
@@ -162,31 +161,18 @@ function EventMC({
                   <MenuItem onClick={() => navigate(`/${eventType}/${eventId}${eventType === "tv" ? "/1/1" : ""}/watch`)}>
                     <PlayArrow /> {eventType === "movie" ? "Watch Now" : "Play S1:E1"}
                   </MenuItem>
-                  <MenuItem
-                    disabled={myselfData?.isLoading || addToWatchlistData?.isLoading || removeFromWatchlistData?.isLoading}
-                    onClick={() => {
-                      if (!isLoggedIn) { navigate("/auth/login"); return; }
-                      isInWatchlist
-                        ? removeFromWatchlist(eventType, String(eventId))
-                        : addToWatchlist(
-                          eventType,
-                          String(eventId),
-                          eventPoster,
-                          eventTitle || "",
-                          "planned",
-                          0,
-                          0,
-                          eventType === "tv" ? 1 : 0,
-                          eventType === "tv" ? 1 : 0,
-                        );
-                    }}
-                  >
-                    {myselfData?.isLoading ? "Loading..." : isInWatchlist ? (
-                      removeFromWatchlistData?.isLoading ? "Removing..." : <><Check /> In watchlist</>
-                    ) : addToWatchlistData?.isLoading ? "Adding..." : (
-                      <><Add /> Add to watchlist</>
-                    )}
-                  </MenuItem>
+                  <StatusActions
+                    mediaId={eventId}
+                    mediaType={eventType as "movie" | "tv"}
+                    poster={eventPoster}
+                    title={eventTitle || ""}
+                    duration={eventDuration || 0}
+                    currentTime={eventCurrentTime || 0}
+                    season={eventSeason || (eventType === "tv" ? 1 : 0)}
+                    episode={eventEpisode || (eventType === "tv" ? 1 : 0)}
+                    currentStatus={watchlistItem ? watchlistItem.status || normalizedStatus : undefined}
+                    mode="menu"
+                  />
                   {eventDelete && (
                     <MenuItem color="danger" onClick={() => eventDelete(eventId)}>
                       <DeleteOutline /> Delete
@@ -222,28 +208,49 @@ function EventMC({
           />
         )}
 
-        {/* {eventType === "tv" && eventSeason && eventEpisode ? (
+        {eventType === "tv" && eventSeason && eventEpisode ? (
           <Chip sx={{ padding: "0px 15px", position: "absolute", zIndex: 3, top: 8, right: 8, backgroundColor: "rgba(0,0,0,0.6)", color: "white" }}>
             <Typography level="body-sm">S{eventSeason}-E{eventEpisode}</Typography>
           </Chip>
-        ) : null} */}
+        ) : null}
 
         {statusLabel ? (
-          <Chip
-            sx={{
-              margin: "0 auto", position: "absolute", zIndex: 3, top: 10, left: 0, right: 0,
-              color:
-                normalizedStatus === "watched"
-                  ? "rgb(120, 255, 178)"
-                  : normalizedStatus === "watching"
-                    ? "rgb(255, 220, 92)"
-                    : "rgb(150, 188, 255)",
-              backgroundColor: "rgba(5, 10, 22, 0.7)",
-              border: "1px solid rgba(255,255,255,0.08)",
-            }}
-          >
-            {statusLabel}
-          </Chip>
+          <Box sx={{ display: "flex", gap: 0.8, flexWrap: "wrap" }}>
+            <Chip
+              sx={{
+                color:
+                  normalizedStatus === "watched"
+                    ? "rgb(120, 255, 178)"
+                    : normalizedStatus === "watching"
+                      ? "rgb(255, 220, 92)"
+                      : "rgb(150, 188, 255)",
+                backgroundColor: "rgba(5, 10, 22, 0.7)",
+                border: "1px solid rgba(255,255,255,0.08)",
+              }}
+            >
+              {statusLabel}
+            </Chip>
+            {currentPreference ? (
+              <Chip
+                sx={{
+                  color:
+                    currentPreference === "love"
+                      ? "rgb(255, 139, 184)"
+                      : currentPreference === "like"
+                        ? "rgb(124, 214, 255)"
+                        : "rgb(255, 166, 120)",
+                  backgroundColor: "rgba(5, 10, 22, 0.7)",
+                  border: "1px solid rgba(255,255,255,0.08)",
+                }}
+              >
+                {currentPreference === "love"
+                  ? "Loved"
+                  : currentPreference === "like"
+                    ? "Liked"
+                    : "Disliked"}
+              </Chip>
+            ) : null}
+          </Box>
         ) : null}
       </Card>
     </Box>

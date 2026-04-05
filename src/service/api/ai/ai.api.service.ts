@@ -3,12 +3,19 @@ import { smbAPI } from "../api";
 export interface ChatMessage {
   role: "user" | "assistant";
   content: string;
-  relatedMedia?: Array<{
-    id: number | string;
-    mediaType: "movie" | "tv";
-    title: string;
-    posterPath: string;
-  }>;
+}
+
+export interface AIRecommendation {
+  title: string;
+  mediaType: "movie" | "tv" | "unknown";
+  year: number | null;
+  reason: string;
+}
+
+export interface AIChatResponse {
+  reply: string;
+  recommendations: AIRecommendation[];
+  searchQueries: string[];
 }
 
 export interface ParentalGuideResult {
@@ -31,7 +38,7 @@ export interface MatchScoreResult {
 export const aiService = {
   chat: async (messages: ChatMessage[]) => {
     const response = await smbAPI.post("/ai/chat", { messages });
-    return response.data as { message: string };
+    return response.data as AIChatResponse;
   },
 
   parentalGuide: async (params: {

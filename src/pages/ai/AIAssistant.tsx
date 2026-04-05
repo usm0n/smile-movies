@@ -7,7 +7,11 @@ import {
   Typography,
 } from "@mui/joy";
 import { useEffect, useRef, useState } from "react";
-import { aiService, ChatMessage } from "../../service/api/ai/ai.api.service";
+import {
+  AIRecommendation,
+  aiService,
+  ChatMessage,
+} from "../../service/api/ai/ai.api.service";
 import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import SendIcon from "@mui/icons-material/Send";
@@ -16,7 +20,6 @@ import { isLoggedIn } from "../../utilities/defaults";
 import NotLoggedIn from "../../components/utils/NotLoggedIn";
 import { useNavigate } from "react-router-dom";
 import { tmdb } from "../../service/api/tmdb/tmdb.api.service";
-import { searchMulti } from "../../tmdb-res";
 import EventMC from "../../components/cards/EventMC";
 
 const SUGGESTIONS = [
@@ -32,6 +35,7 @@ type ResolvedMedia = {
   mediaType: "movie" | "tv";
   title: string;
   posterPath: string;
+  reason?: string;
 };
 
 type UIChatMessage = ChatMessage & {
@@ -46,7 +50,7 @@ const makeMessageId = () =>
 const normalizeTitle = (value: string) =>
   value.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
 
-const extractBoldTitles = (content: string) =>
+const extractBoldTitles = (content: string): string[] =>
   Array.from(
     new Set(
       [...content.matchAll(/\*\*(.+?)\*\*/g)]
@@ -55,22 +59,52 @@ const extractBoldTitles = (content: string) =>
     ),
   ).slice(0, 6);
 
-const pickBestMediaMatch = (title: string, results: searchMulti["results"]) => {
+const pickBestMediaMatch = (
+  title: string,
+  results: Array<any> = [],
+  preferredMediaType?: "movie" | "tv" | "unknown",
+  preferredYear?: number | null,
+) => {
   const candidates = results.filter(
-    (result) => result.media_type === "movie" || result.media_type === "tv",
+    (result) =>
+      result &&
+      (result.media_type === "movie" ||
+        result.media_type === "tv" ||
+        preferredMediaType === "movie" ||
+        preferredMediaType === "tv"),
   );
   if (!candidates.length) return null;
 
+  const mediaFiltered =
+    preferredMediaType && preferredMediaType !== "unknown"
+      ? candidates.filter((result) => {
+          const inferredType =
+            result.media_type ||
+            ("name" in result ? "tv" : "movie");
+          return inferredType === preferredMediaType;
+        })
+      : candidates;
+  const pool = mediaFiltered.length ? mediaFiltered : candidates;
   const normalizedTitle = normalizeTitle(title);
-  const exactMatch = candidates.find(
+  const exactMatch = pool.find(
     (result) => normalizeTitle(result.title || result.name || "") === normalizedTitle,
   );
   if (exactMatch) return exactMatch;
 
-  const containsMatch = candidates.find((result) =>
+  if (preferredYear) {
+    const yearMatch = pool.find((result) => {
+      const resultYear = Number(
+        String(result.release_date || result.first_air_date || "").slice(0, 4),
+      );
+      return resultYear === preferredYear;
+    });
+    if (yearMatch) return yearMatch;
+  }
+
+  const containsMatch = pool.find((result) =>
     normalizeTitle(result.title || result.name || "").includes(normalizedTitle),
   );
-  return containsMatch || candidates[0];
+  return containsMatch || pool[0];
 };
 
 function AIAssistant() {
@@ -86,10 +120,23 @@ function AIAssistant() {
 
   const goToSearch = (title: string) => navigate(`/search/${encodeURIComponent(title)}`);
 
-  const resolveAssistantMedia = async (messageId: string, content: string) => {
-    const boldTitles = extractBoldTitles(content);
+  const resolveAssistantMedia = async (
+    messageId: string,
+    recommendations: AIRecommendation[],
+    fallbackContent: string,
+  ) => {
+    const fallbackTitles = extractBoldTitles(fallbackContent);
+    const recommendationInputs =
+      recommendations.length > 0
+        ? recommendations
+        : fallbackTitles.map((title) => ({
+            title,
+            mediaType: "unknown" as const,
+            year: null,
+            reason: "Mentioned directly in the assistant reply.",
+          }));
 
-    if (!boldTitles.length) {
+    if (!recommendationInputs.length) {
       setMessages((prev) =>
         prev.map((message) =>
           message.id === messageId
@@ -103,17 +150,35 @@ function AIAssistant() {
     try {
       const resolvedMedia = (
         await Promise.all(
-          boldTitles.map(async (title) => {
-            const response = await tmdb.searchMulti(encodeURIComponent(title), 1);
-            const bestMatch = pickBestMediaMatch(title, (response as searchMulti)?.results);
+          recommendationInputs.map(async (recommendation) => {
+            const query = encodeURIComponent(recommendation.title);
+            let response: any = null;
+
+            if (recommendation.mediaType === "movie") {
+              response = await tmdb.searchMovie(query, 1);
+            } else if (recommendation.mediaType === "tv") {
+              response = await tmdb.searchTv(query, 1);
+            } else {
+              response = await tmdb.searchMulti(query, 1);
+            }
+
+            const rawResults = Array.isArray(response?.results) ? response.results : [];
+            const bestMatch = pickBestMediaMatch(
+              recommendation.title,
+              rawResults,
+              recommendation.mediaType,
+              recommendation.year,
+            );
             if (!bestMatch) return null;
 
             return {
               id: bestMatch.id,
-              mediaType: bestMatch.media_type as "movie" | "tv",
-              title: bestMatch.title || bestMatch.name || title,
+              mediaType: (bestMatch.media_type ||
+                ("name" in bestMatch ? "tv" : "movie")) as "movie" | "tv",
+              title: bestMatch.title || bestMatch.name || recommendation.title,
               posterPath: bestMatch.poster_path,
-            } satisfies ResolvedMedia;
+              reason: recommendation.reason,
+            } as ResolvedMedia;
           }),
         )
       ).filter(Boolean) as ResolvedMedia[];
@@ -159,13 +224,13 @@ function AIAssistant() {
       const assistantMessage: UIChatMessage = {
         id: assistantId,
         role: "assistant",
-        content: res.message,
+        content: res.reply,
         resolvingMedia: true,
         relatedMedia: [],
       };
 
       setMessages([...newMessages, assistantMessage]);
-      resolveAssistantMedia(assistantId, res.message);
+      resolveAssistantMedia(assistantId, res.recommendations || [], res.reply);
     } catch (_) {
       setMessages([
         ...newMessages,
@@ -407,13 +472,34 @@ function AIAssistant() {
                     }}
                   >
                     {msg.relatedMedia.map((media) => (
-                      <EventMC
+                      <Box
                         key={`${msg.id}-${media.mediaType}-${media.id}`}
-                        eventId={media.id}
-                        eventPoster={media.posterPath}
-                        eventTitle={media.title}
-                        eventType={media.mediaType}
-                      />
+                        sx={{
+                          width: "250px",
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: 0.8,
+                          "@media (max-width: 800px)": {
+                            width: "200px",
+                          },
+                        }}
+                      >
+                        <EventMC
+                          eventId={media.id}
+                          eventPoster={media.posterPath}
+                          eventTitle={media.title}
+                          eventType={media.mediaType}
+                        />
+                        {media.reason ? (
+                          <Typography
+                            level="body-xs"
+                            textColor="neutral.400"
+                            sx={{ px: 0.4, lineHeight: 1.5 }}
+                          >
+                            {media.reason}
+                          </Typography>
+                        ) : null}
+                      </Box>
                     ))}
                   </Box>
                 </Box>

@@ -1,4 +1,9 @@
-import { User, UserLogin, UserRegister } from "../../../user";
+import {
+  SavedMediaPreference,
+  User,
+  UserLogin,
+  UserRegister,
+} from "../../../user";
 import { smbAPI } from "../api";
 
 export const users = {
@@ -88,9 +93,10 @@ export const users = {
     currentTime: number,
     season: number,
     episode: number,
+    preference?: SavedMediaPreference,
   ) => {
     const response = await smbAPI.post(`/users/watchlist/`, {
-      typeMovie, movieId, poster, title, status, duration, currentTime, season, episode,
+      typeMovie, movieId, poster, title, status, duration, currentTime, season, episode, preference,
     });
     return response;
   },
@@ -108,9 +114,10 @@ export const users = {
     currentTime = 0,
     season = 0,
     episode = 0,
+    preference?: SavedMediaPreference,
   ) => {
     const response = await smbAPI.post(`/users/favorites/`, {
-      typeMovie, movieId, poster, title, status, duration, currentTime, season, episode,
+      typeMovie, movieId, poster, title, status, duration, currentTime, season, episode, preference,
     });
     return response;
   },

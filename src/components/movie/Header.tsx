@@ -6,13 +6,18 @@ import {
   Card,
   CardContent,
   CardCover,
+  Chip,
   IconButton,
   Typography,
 } from "@mui/joy";
 import { images, movieDetails, tvDetails, videos } from "../../tmdb-res";
 import { useState } from "react";
-import { Add, Check, PlayArrow, Star, StarBorder } from "@mui/icons-material";
-import { isLoggedIn, minuteToHour, ymdToDmy } from "../../utilities/defaults";
+import {
+  PlayArrow,
+  Star,
+  StarBorder,
+} from "@mui/icons-material";
+import { formatTimeAgo, isLoggedIn, minuteToHour, ymdToDmy } from "../../utilities/defaults";
 import BlurImage from "../../utilities/blurImage";
 import { useNavigate } from "react-router-dom";
 import { useUsers } from "../../context/Users";
@@ -20,6 +25,7 @@ import { User } from "../../user";
 import IMDbRating from "./IMDbRating";
 import ParentalGuide from "./ParentalGuide";
 import MatchScore from "./MatchScore";
+import StatusActions from "../watchlist/StatusActions";
 
 function Header({
   movieImages,
@@ -38,12 +44,8 @@ function Header({
     addToFavorites,
     addToFavoritesData,
     myselfData,
-    addToWatchlistData,
     removeFromFavorites,
     removeFromFavoritesData,
-    removeFromWatchlistData,
-    addToWatchlist,
-    removeFromWatchlist,
   } = useUsers();
   const [isVideoLoaded, setIsVideoLoaded] = useState(false);
   const navigate = useNavigate();
@@ -58,19 +60,61 @@ function Header({
   )[0]?.file_path;
 
   const watchlistItem = (myselfData?.data as unknown as User)?.watchlist?.find(
-    (item) => item.id == movieId
+    (item) => item.id == movieId && item.type === movieType
   );
   const favoriteItem = (myselfData?.data as unknown as User)?.favorites?.find(
     (item) => item.id == movieId && item.type === movieType
   );
+  const currentPreference = favoriteItem?.preference || watchlistItem?.preference;
+  const favoritePreference = currentPreference === "dislike" ? "like" : currentPreference || "like";
+  const progressPercent =
+    watchlistItem?.duration && watchlistItem?.currentTime
+      ? Math.min(
+        100,
+        Math.max(0, Math.round((watchlistItem.currentTime / watchlistItem.duration) * 100)),
+      )
+      : 0;
+  const playLabel = movieType === "movie"
+    ? watchlistItem
+      ? watchlistItem.status == "watching"
+        ? "Continue Watching"
+        : watchlistItem.status == "watched"
+          ? "Watch Again"
+          : "Start Watching"
+      : "Watch Now"
+    : watchlistItem
+      ? watchlistItem.status == "watching"
+        ? `Continue S${watchlistItem.season}:E${watchlistItem.episode}`
+        : watchlistItem.status == "watched"
+          ? "Watch Again"
+          : "Start Watching"
+      : "Play Now";
+  const progressNote = watchlistItem?.status == "watching"
+    ? movieType === "movie"
+      ? `${progressPercent}% done${watchlistItem.currentTime ? ` • Resume at ${minuteToHour(watchlistItem.currentTime)}` : ""}`
+      : `${progressPercent}% done${watchlistItem.season && watchlistItem.episode ? ` • Last on S${watchlistItem.season}:E${watchlistItem.episode}` : ""}`
+    : watchlistItem?.status == "watched"
+      ? `Finished${watchlistItem.updatedAt ? ` • ${formatTimeAgo(watchlistItem.updatedAt)}` : ""}`
+      : watchlistItem?.status == "planned"
+        ? `Saved for later${watchlistItem.addedAt ? ` • Added ${formatTimeAgo(watchlistItem.addedAt)}` : ""}`
+        : "";
+  const tasteLabel = currentPreference === "love"
+    ? "Loved"
+    : currentPreference === "like"
+      ? "Liked"
+      : currentPreference === "dislike"
+        ? "Not for me"
+        : "";
   return (
     <Card
       sx={{
         width: "100%",
         height: "100vh",
+        minHeight: "100vh",
         border: "none",
         "@media (max-width: 700px)": {
-          height: "70vh",
+          height: "auto",
+          minHeight: "100svh",
         },
       }}
     >
@@ -203,11 +247,7 @@ function Header({
                   },
                 }}
               >
-                {movieType === "movie" ? (
-                  watchlistItem ? (watchlistItem.status == "watching" && "Continue Watching" || (watchlistItem.status == "new" || watchlistItem.status == "planned") && "Start Watching") : "Watch Now"
-                ) : (
-                  watchlistItem ? (watchlistItem.status == "watching" && `Continue S${watchlistItem.season}:E${watchlistItem.episode}` || (watchlistItem.status == "new" || watchlistItem.status == "planned") && "Start Watching") : "Play Now"
-                )}
+                {playLabel}
               </Button>
               <Typography level="body-sm">
                 {new Date(
@@ -218,66 +258,28 @@ function Header({
                   ? movieDetails?.status
                   : ""}
               </Typography>
-              <Button
-                disabled={
-                  myselfData?.isLoading ||
-                  addToWatchlistData?.isLoading ||
-                  removeFromWatchlistData?.isLoading
-                }
-                onClick={(e) => {
-                  e.stopPropagation();
-                  !isLoggedIn
-                    ? navigate("/auth/login")
-                    : (myselfData?.data as unknown as User)?.watchlist?.find(
-                      (item) => item.id == movieId
-                    )
-                      ? removeFromWatchlist(movieType, movieId.toString())
-                      : addToWatchlist(
-                        movieType,
-                        movieId.toString(),
-                        movieDetails.poster_path,
-                        movieDetails?.title || movieDetails?.name || "",
-                        "planned",
-                        0, 0, movieType == "tv" ? 1 : 0, movieType == "tv" ? 1 : 0
-                      );
-                }}
-                startDecorator={
-                  (myselfData?.data as unknown as User)?.watchlist?.find(
-                    (item) => item.id == movieId
-                  ) ? (
-                    <Check />
-                  ) : (
-                    <Add />
-                  )
-                }
-                sx={{
-                  padding: "15px 0px",
-                  width: "300px",
-                  color: "black",
-                  transition: "all 0.1s ease-in-out",
-                  backgroundColor: "white",
-                  "&:hover": {
-                    backgroundColor: "rgb(255, 255, 255, 0.9)",
-                  },
-                  "&:active": {
-                    backgroundColor: "rgb(255, 255, 255, 0.8)",
-                  },
-                  "@media (max-width: 700px)": {
-                    width: "220px",
-                    padding: "10px 0px",
-                  },
-                }}
-              >
-                {(myselfData?.data as unknown as User)?.watchlist?.find(
-                  (item) => item.id == movieId
-                )
-                  ? removeFromWatchlistData?.isLoading
-                    ? "Removing from Watchlist..."
-                    : "In Watchlist"
-                  : addToWatchlistData?.isLoading
-                    ? "Adding to Watchlist..."
-                    : "Add to Watchlist"}
-              </Button>
+              {progressNote ? (
+                <Typography
+                  level="body-xs"
+                  textColor="neutral.300"
+                  sx={{ width: { xs: "220px", md: "300px" }, textAlign: "center" }}
+                >
+                  {progressNote}
+                </Typography>
+              ) : null}
+              <StatusActions
+                mediaId={movieId}
+                mediaType={movieType}
+                poster={movieDetails?.poster_path}
+                title={movieDetails?.title || movieDetails?.name || ""}
+                duration={watchlistItem?.duration || 0}
+                currentTime={watchlistItem?.currentTime || 0}
+                season={watchlistItem?.season || (movieType == "tv" ? 1 : 0)}
+                episode={watchlistItem?.episode || (movieType == "tv" ? 1 : 0)}
+                currentStatus={watchlistItem?.status}
+                width="300px"
+                mobileWidth="220px"
+              />
               <IconButton
                 disabled={
                   myselfData?.isLoading ||
@@ -303,6 +305,7 @@ function Header({
                       watchlistItem?.currentTime || 0,
                       watchlistItem?.season || (movieType == "tv" ? 1 : 0),
                       watchlistItem?.episode || (movieType == "tv" ? 1 : 0),
+                      favoritePreference,
                     );
                 }}
                 sx={{
@@ -322,7 +325,7 @@ function Header({
                       : "rgba(255,255,255,0.1)",
                   },
                   "@media (max-width: 700px)": {
-                    width: "220px",
+                  width: "220px",
                   },
                 }}
               >
@@ -331,6 +334,86 @@ function Header({
                   {favoriteItem ? "In Favorites" : "Add to Favorites"}
                 </Typography>
               </IconButton>
+              {(watchlistItem || currentPreference) && (
+                <Box
+                  sx={{
+                    width: { xs: "220px", md: "300px" },
+                    borderRadius: "18px",
+                    px: 1.4,
+                    py: 1.2,
+                    background: "rgba(7, 14, 28, 0.72)",
+                    border: "1px solid rgba(255,255,255,0.12)",
+                    backdropFilter: "blur(14px)",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 0.8,
+                  }}
+                >
+                  <Typography level="title-sm">Your progress</Typography>
+                  <Box sx={{ display: "flex", gap: 0.8, flexWrap: "wrap" }}>
+                    {watchlistItem?.status ? (
+                      <Chip
+                        sx={{
+                          background: "rgba(255,255,255,0.06)",
+                          border: "1px solid rgba(255,255,255,0.08)",
+                          color:
+                            watchlistItem.status === "watched"
+                              ? "rgb(120, 255, 178)"
+                              : watchlistItem.status === "watching"
+                                ? "rgb(255, 220, 92)"
+                                : "rgb(150, 188, 255)",
+                        }}
+                      >
+                        {watchlistItem.status === "watched"
+                          ? "Watched"
+                          : watchlistItem.status === "watching"
+                            ? "Watching"
+                            : "Will watch"}
+                      </Chip>
+                    ) : null}
+                    {tasteLabel ? (
+                      <Chip
+                        sx={{
+                          background: "rgba(255,255,255,0.06)",
+                          border: "1px solid rgba(255,255,255,0.08)",
+                          color:
+                            currentPreference === "love"
+                              ? "rgb(255, 139, 184)"
+                              : currentPreference === "like"
+                                ? "rgb(124, 214, 255)"
+                                : "rgb(255, 166, 120)",
+                        }}
+                      >
+                        {tasteLabel}
+                      </Chip>
+                    ) : null}
+                    {watchlistItem?.status === "watching" && progressPercent > 0 ? (
+                      <Chip
+                        sx={{
+                          background: "rgba(255,255,255,0.06)",
+                          border: "1px solid rgba(255,255,255,0.08)",
+                        }}
+                      >
+                        {progressPercent}% complete
+                      </Chip>
+                    ) : null}
+                  </Box>
+                  <Typography level="body-xs" textColor="neutral.300">
+                    {watchlistItem?.status === "watching"
+                      ? "This title is active in your library, so you can jump back in without searching for it."
+                      : watchlistItem?.status === "watched"
+                        ? "Finished titles stay here so AI can use them as stronger recommendation signals."
+                        : "Saved titles stay in your will watch list until you start them."}
+                  </Typography>
+                  {watchlistItem?.updatedAt || watchlistItem?.addedAt ? (
+                    <Typography level="body-xs" textColor="neutral.500">
+                      {watchlistItem?.updatedAt
+                        ? `Last activity ${formatTimeAgo(watchlistItem.updatedAt)}`
+                        : `Added ${formatTimeAgo(watchlistItem.addedAt || "")}`}
+                    </Typography>
+                  ) : null}
+                </Box>
+              )}
             </Box>
             <Box
               sx={{
