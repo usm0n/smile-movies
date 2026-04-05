@@ -2,7 +2,7 @@ import { Box, ButtonGroup, Chip, IconButton, Option, Select, Typography } from "
 import { useTMDB } from "../../context/TMDB";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import type { searchMovie, searchPerson, searchTV } from "../../tmdb-res";
+import type { Movie, searchMovie, searchPerson, searchTV } from "../../tmdb-res";
 import EventMC from "../../components/cards/EventMC";
 import EventMCS from "../../components/cards/skeleton/EventMC";
 import AutoGraphIcon from "@mui/icons-material/AutoGraph";
@@ -92,7 +92,7 @@ function Search() {
 
       const year = getResultYear(result);
       const rating =
-        typeof result.vote_average === "number" ? result.vote_average : 0;
+        typeof (result as Movie).vote_average === "number" ? (result as Movie).vote_average : 0;
       const ratingMatch =
         ratingFilter === "all" || rating >= Number(ratingFilter);
 
@@ -106,7 +106,7 @@ function Search() {
       }
 
       if (sortBy === "rating") {
-        const ratingDelta = (b.vote_average || 0) - (a.vote_average || 0);
+        const ratingDelta = ((b as Movie).vote_average || 0) - ((a as Movie).vote_average || 0);
         if (ratingDelta !== 0) return ratingDelta;
         return (b.popularity || 0) - (a.popularity || 0);
       }
