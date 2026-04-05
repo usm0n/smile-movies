@@ -288,9 +288,9 @@ const Header = React.memo(
                 }}
               >
                 {details?.media_type === "movie" ? (
-                  watchlistItem ? (watchlistItem.status == "watching" && "Continue Watching" || watchlistItem.status == "new" && "Start Watching") : "Watch Now"
+                  watchlistItem ? (watchlistItem.status == "watching" && "Continue Watching" || (watchlistItem.status == "new" || watchlistItem.status == "planned") && "Start Watching") : "Watch Now"
                 ) : (
-                  watchlistItem ? (watchlistItem.status == "watching" && `Continue S${watchlistItem.season}:E${watchlistItem.episode}` || watchlistItem.status == "new" && "Start Watching") : "Play Now"
+                  watchlistItem ? (watchlistItem.status == "watching" && `Continue S${watchlistItem.season}:E${watchlistItem.episode}` || (watchlistItem.status == "new" || watchlistItem.status == "planned") && "Start Watching") : "Play Now"
                 )}
               </Button>
               <Button
@@ -314,7 +314,8 @@ const Header = React.memo(
                         details.media_type,
                         details.id.toString(),
                         details.poster_path,
-                        "new",
+                        details.name || details.title || "",
+                        "planned",
                         0,
                         0,
                         details.media_type == "tv" ? 1 : 0,

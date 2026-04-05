@@ -3,6 +3,12 @@ import { smbAPI } from "../api";
 export interface ChatMessage {
   role: "user" | "assistant";
   content: string;
+  relatedMedia?: Array<{
+    id: number | string;
+    mediaType: "movie" | "tv";
+    title: string;
+    posterPath: string;
+  }>;
 }
 
 export interface ParentalGuideResult {

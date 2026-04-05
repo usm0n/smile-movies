@@ -91,6 +91,7 @@ function Watchlist() {
                   eventId={item.id}
                   eventPoster={item.poster}
                   eventType={item.type}
+                  eventTitle={item.title}
                   eventDelete={() => removeFromWatchlist(item.type, item.id)}
                   eventStatus={item.status}
                   eventDuration={item.duration}

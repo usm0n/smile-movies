@@ -109,6 +109,9 @@ function Watch() {
             movieType === "tv"
               ? tvSeriesDetailsDataArr?.poster_path
               : movieDetailsDataArr?.poster_path,
+            movieType === "tv"
+              ? tvSeriesDetailsDataArr?.name || ""
+              : movieDetailsDataArr?.title || "",
             "watching",
             duration,
             currentTime,

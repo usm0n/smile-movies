@@ -28,6 +28,8 @@ const UsersContext = createContext({
   resetPasswordData: null as userType.ResponseType | null,
   addToWatchlistData: null as userType.ResponseType | null,
   removeFromWatchlistData: null as userType.ResponseType | null,
+  addToFavoritesData: null as userType.ResponseType | null,
+  removeFromFavoritesData: null as userType.ResponseType | null,
   addDeviceData: null as userType.ResponseType | null,
   deleteDeviceData: null as userType.ResponseType | null,
   signedInWithGoogle: null as boolean | null,
@@ -69,6 +71,7 @@ const UsersContext = createContext({
     _type: string,
     _id: string,
     _poster: string,
+    _title: string,
     _status: string,
     _duration: number,
     _currentTime: number,
@@ -76,6 +79,18 @@ const UsersContext = createContext({
     _episode: number,
   ) => {},
   removeFromWatchlist: async (_type: string, _id: string) => {},
+  addToFavorites: async (
+    _type: string,
+    _id: string,
+    _poster: string,
+    _title: string,
+    _status?: string,
+    _duration?: number,
+    _currentTime?: number,
+    _season?: number,
+    _episode?: number,
+  ) => {},
+  removeFromFavorites: async (_type: string, _id: string) => {},
   addDevice: async (
     _deviceId: string,
     _deviceName: string,
@@ -135,6 +150,10 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
   const [addToWatchlistData, setAddToWatchlistData] =
     useState<userType.ResponseType | null>(null);
   const [removeFromWatchlistData, setRemoveFromWatchlistData] =
+    useState<userType.ResponseType | null>(null);
+  const [addToFavoritesData, setAddToFavoritesData] =
+    useState<userType.ResponseType | null>(null);
+  const [removeFromFavoritesData, setRemoveFromFavoritesData] =
     useState<userType.ResponseType | null>(null);
   const [addDeviceData, setAddDeviceData] =
     useState<userType.ResponseType | null>(null);
@@ -573,6 +592,7 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
     type: string,
     id: string,
     poster: string,
+    title: string,
     status: string,
     duration: number,
     currentTime: number,
@@ -585,6 +605,7 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
         type,
         id,
         poster,
+        title,
         status,
         duration,
         currentTime,
@@ -624,6 +645,72 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
       getMyself();
     } catch (error: unknown) {
       setRemoveFromWatchlistData({
+        isLoading: false,
+        isError: true,
+        isSuccess: false,
+        data: (error as userType.ErrorResponse)?.data,
+        code: (error as userType.ErrorResponse)?.status,
+      });
+    }
+  };
+
+  const addToFavorites = async (
+    type: string,
+    id: string,
+    poster: string,
+    title: string,
+    status = "favorite",
+    duration = 0,
+    currentTime = 0,
+    season = 0,
+    episode = 0,
+  ) => {
+    setAddToFavoritesData((prev) => ({ ...prev, isLoading: true }));
+    try {
+      const response = await users.addToFavorites(
+        type,
+        id,
+        poster,
+        title,
+        status,
+        duration,
+        currentTime,
+        season,
+        episode,
+      );
+      setAddToFavoritesData({
+        isLoading: false,
+        isError: false,
+        isSuccess: true,
+        data: response.data,
+        code: response.status,
+      });
+      getMyself();
+    } catch (error: unknown) {
+      setAddToFavoritesData({
+        isLoading: false,
+        isError: true,
+        isSuccess: false,
+        data: (error as userType.ErrorResponse)?.data,
+        code: (error as userType.ErrorResponse)?.status,
+      });
+    }
+  };
+
+  const removeFromFavorites = async (type: string, id: string) => {
+    setRemoveFromFavoritesData((prev) => ({ ...prev, isLoading: true }));
+    try {
+      const response = await users.removeFromFavorites(type, id);
+      setRemoveFromFavoritesData({
+        isLoading: false,
+        isError: false,
+        isSuccess: true,
+        data: response.data,
+        code: response.status,
+      });
+      getMyself();
+    } catch (error: unknown) {
+      setRemoveFromFavoritesData({
         isLoading: false,
         isError: true,
         isSuccess: false,
@@ -838,6 +925,10 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
         addToWatchlistData,
         removeFromWatchlist,
         removeFromWatchlistData,
+        addToFavorites,
+        addToFavoritesData,
+        removeFromFavorites,
+        removeFromFavoritesData,
         addDevice,
         addDeviceData,
         deleteDevice,

@@ -82,6 +82,7 @@ export const users = {
     typeMovie: string,
     movieId: string,
     poster: string,
+    title: string,
     status: string,
     duration: number,
     currentTime: number,
@@ -89,12 +90,32 @@ export const users = {
     episode: number,
   ) => {
     const response = await smbAPI.post(`/users/watchlist/`, {
-      typeMovie, movieId, poster, status, duration, currentTime, season, episode,
+      typeMovie, movieId, poster, title, status, duration, currentTime, season, episode,
     });
     return response;
   },
   removeFromWatchlist: async (typeMovie: string, movieId: string) => {
     const response = await smbAPI.delete(`/users/watchlist/${typeMovie}/${movieId}`);
+    return response;
+  },
+  addToFavorites: async (
+    typeMovie: string,
+    movieId: string,
+    poster: string,
+    title: string,
+    status = "favorite",
+    duration = 0,
+    currentTime = 0,
+    season = 0,
+    episode = 0,
+  ) => {
+    const response = await smbAPI.post(`/users/favorites/`, {
+      typeMovie, movieId, poster, title, status, duration, currentTime, season, episode,
+    });
+    return response;
+  },
+  removeFromFavorites: async (typeMovie: string, movieId: string) => {
+    const response = await smbAPI.delete(`/users/favorites/${typeMovie}/${movieId}`);
     return response;
   },
   lastLogin: async (deviceId: string) => {

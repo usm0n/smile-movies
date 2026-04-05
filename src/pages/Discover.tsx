@@ -203,6 +203,7 @@ function Discover() {
             <EventMC
               key={result?.id}
               eventPoster={result?.poster_path}
+              eventTitle={"name" in result ? result?.name : result?.title}
               eventId={result?.id}
               eventType={"name" in result ? "tv" : "movie"}
 

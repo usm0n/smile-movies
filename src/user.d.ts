@@ -45,11 +45,14 @@ export interface Watchlist {
   poster: string;
   type: string;
   status: string;
+  title?: string;
   duration?: number;
   currentTime?: number;
   id: string;
   season?: number;
   episode?: number;
+  addedAt?: string;
+  updatedAt?: string;
 }
 
 export interface Location {

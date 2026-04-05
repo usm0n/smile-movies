@@ -119,6 +119,7 @@ function Event({
             <EventMC
               key={event.id}
               eventPoster={event.poster_path}
+              eventTitle={event?.name || event?.title}
               eventId={event.id}
               eventType={event?.name ? "tv" : "movie"}
             />

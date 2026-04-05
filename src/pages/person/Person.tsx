@@ -278,6 +278,7 @@ function Person() {
                   eventId={credit.id}
                   key={credit.id}
                   eventPoster={credit.poster_path}
+                  eventTitle={credit.name || credit.title}
                   eventType={credit.media_type}
                 />
               ))}

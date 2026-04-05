@@ -6,11 +6,12 @@ import {
   Card,
   CardContent,
   CardCover,
+  IconButton,
   Typography,
 } from "@mui/joy";
 import { images, movieDetails, tvDetails, videos } from "../../tmdb-res";
 import { useState } from "react";
-import { Add, Check, PlayArrow } from "@mui/icons-material";
+import { Add, Check, PlayArrow, Star, StarBorder } from "@mui/icons-material";
 import { isLoggedIn, minuteToHour, ymdToDmy } from "../../utilities/defaults";
 import BlurImage from "../../utilities/blurImage";
 import { useNavigate } from "react-router-dom";
@@ -34,8 +35,12 @@ function Header({
   movieVideos: videos;
 }) {
   const {
+    addToFavorites,
+    addToFavoritesData,
     myselfData,
     addToWatchlistData,
+    removeFromFavorites,
+    removeFromFavoritesData,
     removeFromWatchlistData,
     addToWatchlist,
     removeFromWatchlist,
@@ -54,6 +59,9 @@ function Header({
 
   const watchlistItem = (myselfData?.data as unknown as User)?.watchlist?.find(
     (item) => item.id == movieId
+  );
+  const favoriteItem = (myselfData?.data as unknown as User)?.favorites?.find(
+    (item) => item.id == movieId && item.type === movieType
   );
   return (
     <Card
@@ -196,9 +204,9 @@ function Header({
                 }}
               >
                 {movieType === "movie" ? (
-                  watchlistItem ? (watchlistItem.status == "watching" && "Continue Watching" || watchlistItem.status == "new" && "Start Watching") : "Watch Now"
+                  watchlistItem ? (watchlistItem.status == "watching" && "Continue Watching" || (watchlistItem.status == "new" || watchlistItem.status == "planned") && "Start Watching") : "Watch Now"
                 ) : (
-                  watchlistItem ? (watchlistItem.status == "watching" && `Continue S${watchlistItem.season}:E${watchlistItem.episode}` || watchlistItem.status == "new" && "Start Watching") : "Play Now"
+                  watchlistItem ? (watchlistItem.status == "watching" && `Continue S${watchlistItem.season}:E${watchlistItem.episode}` || (watchlistItem.status == "new" || watchlistItem.status == "planned") && "Start Watching") : "Play Now"
                 )}
               </Button>
               <Typography level="body-sm">
@@ -228,7 +236,8 @@ function Header({
                         movieType,
                         movieId.toString(),
                         movieDetails.poster_path,
-                        "new",
+                        movieDetails?.title || movieDetails?.name || "",
+                        "planned",
                         0, 0, movieType == "tv" ? 1 : 0, movieType == "tv" ? 1 : 0
                       );
                 }}
@@ -269,6 +278,59 @@ function Header({
                     ? "Adding to Watchlist..."
                     : "Add to Watchlist"}
               </Button>
+              <IconButton
+                disabled={
+                  myselfData?.isLoading ||
+                  addToFavoritesData?.isLoading ||
+                  removeFromFavoritesData?.isLoading
+                }
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (!isLoggedIn) {
+                    navigate("/auth/login");
+                    return;
+                  }
+
+                  favoriteItem
+                    ? removeFromFavorites(movieType, movieId.toString())
+                    : addToFavorites(
+                      movieType,
+                      movieId.toString(),
+                      movieDetails.poster_path,
+                      movieDetails?.title || movieDetails?.name || "",
+                      watchlistItem?.status || "favorite",
+                      watchlistItem?.duration || 0,
+                      watchlistItem?.currentTime || 0,
+                      watchlistItem?.season || (movieType == "tv" ? 1 : 0),
+                      watchlistItem?.episode || (movieType == "tv" ? 1 : 0),
+                    );
+                }}
+                sx={{
+                  width: "300px",
+                  borderRadius: "16px",
+                  color: favoriteItem ? "rgb(96, 183, 255)" : "white",
+                  border: "1px solid",
+                  borderColor: favoriteItem ? "rgba(96, 183, 255, 0.65)" : "rgba(255,255,255,0.16)",
+                  background: favoriteItem
+                    ? "rgba(78, 168, 255, 0.14)"
+                    : "rgba(255,255,255,0.06)",
+                  boxShadow: favoriteItem ? "0 0 28px rgba(64, 156, 255, 0.24)" : "none",
+                  gap: 1,
+                  "&:hover": {
+                    background: favoriteItem
+                      ? "rgba(78, 168, 255, 0.2)"
+                      : "rgba(255,255,255,0.1)",
+                  },
+                  "@media (max-width: 700px)": {
+                    width: "220px",
+                  },
+                }}
+              >
+                {favoriteItem ? <Star /> : <StarBorder />}
+                <Typography level="body-sm" sx={{ fontWeight: 700 }}>
+                  {favoriteItem ? "In Favorites" : "Add to Favorites"}
+                </Typography>
+              </IconButton>
             </Box>
             <Box
               sx={{

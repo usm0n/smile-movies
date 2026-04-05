@@ -171,7 +171,7 @@ function Search() {
                     ? result?.profile_path
                     : ""
               }
-              eventTitle={"gender" in result ? result?.name : ""}
+              eventTitle={"gender" in result ? result?.name : "name" in result ? result?.name : result?.title}
               eventId={result?.id}
               eventType={"gender" in result ? "person" : "name" in result ? "tv" : "movie"}
             />
