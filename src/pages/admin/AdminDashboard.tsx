@@ -1,6 +1,7 @@
 import {
   AdminPanelSettingsRounded,
   ArrowForwardRounded,
+  ContentCopyRounded,
   KeyRounded,
   MarkEmailReadRounded,
   ShieldRounded,
@@ -489,9 +490,83 @@ function AdminDashboard() {
                   <Typography level="body-xs" textColor="neutral.500" sx={{ mt: 0.75 }}>
                     Last job run: {notifications.queue.lastRunAt || "No recorded runs yet"}
                   </Typography>
-                  <Typography level="body-xs" textColor="neutral.500" sx={{ mt: 1 }}>
-                    This is the admin-facing foundation for the notification engine. Delivery queues and provider telemetry can plug into this surface next.
+                  <Typography level="body-xs" textColor="neutral.500" sx={{ mt: 0.5 }}>
+                    Delivery mode: {notifications.queue.deliveryMode === "log" ? "log only (development)" : "smtp"}
                   </Typography>
+                  <Typography level="body-xs" textColor="neutral.500" sx={{ mt: 1 }}>
+                    This is the operational surface for release notifications: sync events, queue matches, send instant mail, and process due digests.
+                  </Typography>
+                  <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", mt: 1.25 }}>
+                    <Chip size="sm" color={notifications.queue.readiness.tmdbConfigured ? "success" : "warning"}>
+                      TMDB {notifications.queue.readiness.tmdbConfigured ? "ready" : "missing"}
+                    </Chip>
+                    <Chip size="sm" color={notifications.queue.readiness.mailConfigured ? "success" : "warning"}>
+                      Mail {notifications.queue.readiness.mailConfigured ? "ready" : "missing"}
+                    </Chip>
+                    <Chip size="sm" color={notifications.queue.readiness.schedulerConfigured ? "success" : "warning"}>
+                      Scheduler {notifications.queue.readiness.schedulerConfigured ? "ready" : "missing"}
+                    </Chip>
+                    <Chip size="sm" color={notifications.queue.readiness.clientUrlConfigured ? "success" : "warning"}>
+                      Client URL {notifications.queue.readiness.clientUrlConfigured ? "ready" : "missing"}
+                    </Chip>
+                  </Stack>
+                  <Stack spacing={0.4} sx={{ mt: 1.25 }}>
+                    <Typography level="body-xs" textColor="neutral.500">
+                      TMDB sync schedule: {notifications.queue.schedules.tmdbSync}
+                    </Typography>
+                    <Typography level="body-xs" textColor="neutral.500">
+                      Instant delivery schedule: {notifications.queue.schedules.instantDelivery}
+                    </Typography>
+                    <Typography level="body-xs" textColor="neutral.500">
+                      Digest delivery schedule: {notifications.queue.schedules.digestDelivery}
+                    </Typography>
+                    <Typography level="body-xs" textColor="neutral.500">
+                      Full cycle schedule: {notifications.queue.schedules.scheduledCycle}
+                    </Typography>
+                    <Typography level="body-xs" textColor="neutral.500">
+                      Scheduler endpoint: {notifications.queue.schedules.systemEndpoint}
+                    </Typography>
+                  </Stack>
+                  <Card sx={{ mt: 2, p: 1.75, borderRadius: 18, background: "rgba(255,255,255,0.02)" }}>
+                    <Typography level="title-sm" sx={{ mb: 0.75 }}>
+                      How to use it
+                    </Typography>
+                    <Stack spacing={0.75}>
+                      <Typography level="body-xs" textColor="neutral.400">
+                        1. Users enable release alerts and set interests in Settings → Notifications.
+                      </Typography>
+                      <Typography level="body-xs" textColor="neutral.400">
+                        2. Use “Sync TMDB release events” to pull upcoming movies, episodes, seasons, and returning shows.
+                      </Typography>
+                      <Typography level="body-xs" textColor="neutral.400">
+                        3. Use “Run scheduled cycle” to sync, queue matches, send instant emails, and process due digests in one pass.
+                      </Typography>
+                      <Typography level="body-xs" textColor="neutral.400">
+                        4. For automation, call {notifications.queue.schedules.systemEndpoint} with both `X-API-Key` and either `Authorization: Bearer &lt;SCHEDULER_SECRET&gt;` or `X-Scheduler-Secret`.
+                      </Typography>
+                      <Typography level="body-xs" textColor="neutral.400">
+                        5. If delivery mode is `log`, notifications are written to the backend logs instead of being sent by email.
+                      </Typography>
+                    </Stack>
+                    <Stack direction={{ xs: "column", sm: "row" }} spacing={1} sx={{ mt: 1.5 }}>
+                      <Button
+                        size="sm"
+                        variant="soft"
+                        startDecorator={<ContentCopyRounded />}
+                        onClick={async () => {
+                          try {
+                            await navigator.clipboard.writeText(notifications.queue.schedules.systemEndpoint);
+                            toast.success("Scheduler endpoint path copied.");
+                          } catch (error) {
+                            console.error(error);
+                            toast.error("Failed to copy scheduler endpoint.");
+                          }
+                        }}
+                      >
+                        Copy scheduler path
+                      </Button>
+                    </Stack>
+                  </Card>
                   <Stack direction={{ xs: "column", sm: "row" }} spacing={1.25} sx={{ mt: 2 }}>
                     <Button
                       color="success"

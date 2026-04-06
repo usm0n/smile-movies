@@ -42,6 +42,21 @@ export interface AdminNotificationOverview {
     sentDeliveries: number;
     releaseEvents: number;
     lastRunAt?: string;
+    deliveryMode: "smtp" | "log";
+    readiness: {
+      tmdbConfigured: boolean;
+      mailConfigured: boolean;
+      schedulerConfigured: boolean;
+      clientUrlConfigured: boolean;
+    };
+    schedules: {
+      tmdbSync: string;
+      instantDelivery: string;
+      digestDelivery: string;
+      scheduledCycle: string;
+      endpointEnabled: boolean;
+      systemEndpoint: string;
+    };
   };
   jobRuns: Array<{
     id?: string;
