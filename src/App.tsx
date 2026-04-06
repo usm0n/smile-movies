@@ -1,4 +1,5 @@
 "use client";
+import { Suspense } from "react";
 import { Route, Routes } from "react-router-dom";
 import "./App.css";
 import { mainRoutes } from "./routes/main.routes";
@@ -6,6 +7,7 @@ import Navbar from "./components/navbar";
 import AppFooter from "./components/layout/AppFooter";
 import {
   Box,
+  CircularProgress,
   useColorScheme,
 } from "@mui/joy";
 import NotVerified from "./components/utils/NotVerified";
@@ -29,11 +31,26 @@ function App() {
       >
         <NotVerified type="snackbar" />
         <Navbar />
-        <Routes>
-          {mainRoutes?.map((route, index) => (
-            <Route key={index} path={route.path} element={route.element} />
-          ))}
-        </Routes>
+        <Suspense
+          fallback={
+            <Box
+              sx={{
+                minHeight: "60vh",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <CircularProgress />
+            </Box>
+          }
+        >
+          <Routes>
+            {mainRoutes?.map((route, index) => (
+              <Route key={index} path={route.path} element={route.element} />
+            ))}
+          </Routes>
+        </Suspense>
         {!hideFooter && <AppFooter />}
         {/* <Navigation /> */}
       </Box>

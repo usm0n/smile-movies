@@ -1,17 +1,12 @@
-import { ArrowBackIos, Warning } from "@mui/icons-material";
+import { ArrowBackIos } from "@mui/icons-material";
 import {
   Box,
   Button,
-  ButtonGroup,
   DialogActions,
-  Divider,
   IconButton,
   LinearProgress,
-  Link,
   Modal,
-  ModalClose,
   ModalDialog,
-  ModalOverflow,
   Option,
   Select,
   Typography,
@@ -20,7 +15,11 @@ import {
 import { useNavigate, useParams } from "react-router-dom";
 import { useTMDB } from "../../context/TMDB";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { backdropLoading, isLoggedIn } from "../../utilities/defaults";
+import {
+  backdropLoading,
+  copyToClipboard,
+  isLoggedIn,
+} from "../../utilities/defaults";
 import NotFound from "../../components/utils/NotFound";
 import { movieDetails, tvDetails, tvSeasonsDetails } from "../../tmdb-res";
 import { Helmet } from "react-helmet";
@@ -29,7 +28,17 @@ import { StreamServer } from "../../stream-res";
 import { useUsers } from "../../context/Users";
 import StorageIcon from "@mui/icons-material/Storage";
 import LiveTvIcon from "@mui/icons-material/LiveTv";
+import DownloadRoundedIcon from "@mui/icons-material/DownloadRounded";
 import { User } from "../../user";
+import PlaybackSurface from "../../components/player/PlaybackSurface";
+import {
+  isLikelyDownloadSource,
+  isWebReadyInternalServer,
+  resolvePlaybackMode,
+  selectRecommendedInternalServer,
+} from "../../player/resolvePlayback";
+import { PlaybackMode } from "../../player/types";
+import { playbackAPI } from "../../service/api/smb/playback.api.service";
 
 const AUTO_SAVE_INTERVAL_MS = 60000;
 const MIN_PROGRESS_DELTA_MINUTES = 1;
@@ -66,13 +75,14 @@ function Watch() {
     tvSeasonsDetails,
     tvSeasonsDetailsData,
   } = useTMDB();
-  const { movieId, movieType, seasonId, episodeId, startAt } = useParams();
   const { colorScheme } = useColorScheme();
+  const { movieId, movieType, seasonId, episodeId, startAt } = useParams();
   const { getStreamData, getStream } = useStream();
   const { addToWatchlist, myselfData } = useUsers();
   const navigate = useNavigate();
+  const [preferredMode, setPreferredMode] = useState<PlaybackMode>("internal");
   const [streamServer, setStreamServer] = useState<StreamServer | null>(null);
-  const [streamType, setStreamType] = useState<"WADS" | "WOADS">("WADS");
+  const [downloadSourcesOpen, setDownloadSourcesOpen] = useState(false);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const progressRef = useRef({
     iframeSessionStartAt: 0,
@@ -82,6 +92,12 @@ function Watch() {
     lastKnownProgressMinutes: 0,
     playerEventsSeen: false,
     isIframeActive: false,
+  });
+  const playbackSessionRef = useRef({
+    id: "",
+    signature: "",
+    requestedSignature: "",
+    isCompleted: false,
   });
 
   const isTvSE = seasonId && episodeId;
@@ -125,11 +141,57 @@ function Watch() {
   }, [activeEpisodeData?.runtime, movieDetailsDataArr?.runtime, movieType, tvSeriesDetailsDataArr?.episode_run_time]);
   const [sessionBaseProgress, setSessionBaseProgress] = useState(0);
   const [sessionBaseReady, setSessionBaseReady] = useState(false);
+  const availableStreams = getStreamData.data?.streams || [];
+  const webReadyStreams = useMemo(
+    () => availableStreams.filter((server) => isWebReadyInternalServer(server)),
+    [availableStreams],
+  );
+  const downloadSources = useMemo(
+    () => availableStreams.filter((server) => isLikelyDownloadSource(server)),
+    [availableStreams],
+  );
+  const recommendedStreamServer = useMemo(
+    () => selectRecommendedInternalServer(availableStreams),
+    [availableStreams],
+  );
+  const selectedStreamServer = useMemo(() => {
+    if (
+      streamServer &&
+      webReadyStreams.some((server) => server.url === streamServer.url)
+    ) {
+      return streamServer;
+    }
+
+    return recommendedStreamServer;
+  }, [recommendedStreamServer, streamServer, webReadyStreams]);
+  const resolvedPlayback = useMemo(
+    () =>
+      resolvePlaybackMode({
+        preferredMode,
+        recommendedServer: selectedStreamServer,
+        streams: availableStreams,
+      }),
+    [availableStreams, preferredMode, selectedStreamServer],
+  );
+  const playbackMode = resolvedPlayback.mode;
+  const playbackFallbackReason = resolvedPlayback.fallbackReason;
+  const usingInternalPlayback = playbackMode === "internal";
+  const usingExternalPlayback = playbackMode === "external";
+  const isPreparingInternalPlayback =
+    preferredMode === "internal" && getStreamData.isLoading;
 
   useEffect(() => {
+    setPreferredMode("internal");
+    setStreamServer(null);
     setSessionBaseProgress(0);
     setSessionBaseReady(false);
-  }, [sessionProgressKey, streamType]);
+    playbackSessionRef.current = {
+      id: "",
+      signature: "",
+      requestedSignature: "",
+      isCompleted: false,
+    };
+  }, [sessionProgressKey]);
 
   useEffect(() => {
     if (sessionBaseReady || !movieId || !movieType) return;
@@ -205,7 +267,7 @@ function Watch() {
   };
 
   const setIframeTrackingActive = (isActive: boolean) => {
-    if (streamType !== "WADS") return;
+    if (!usingExternalPlayback) return;
 
     if (isActive) {
       if (!progressRef.current.isIframeActive) {
@@ -223,7 +285,7 @@ function Watch() {
   };
 
   const getCurrentProgressMinutes = () => {
-    if (streamType === "WOADS" && videoRef.current) {
+    if (usingInternalPlayback && videoRef.current) {
       return Math.max(0, videoRef.current.currentTime / 60);
     }
 
@@ -239,6 +301,55 @@ function Watch() {
     }
 
     return sessionBaseProgress + progressRef.current.accumulatedMinutes;
+  };
+
+  const getPlaybackSessionPayload = (
+    progressMinutes: number,
+    durationMinutes?: number,
+  ) => {
+    const resolvedDuration = Math.max(
+      Number(durationMinutes) || fallbackDurationMinutes || 0,
+      progressMinutes,
+    );
+    const completionRatio =
+      resolvedDuration > 0 ? Math.min(1, progressMinutes / resolvedDuration) : 0;
+
+    return {
+      mediaId: movieId,
+      mediaType: movieType === "tv" ? "tv" : "movie",
+      season: seasonId ? parseInt(seasonId) : 0,
+      episode: episodeId ? parseInt(episodeId) : 0,
+      title: mediaTitle,
+      playerKind: usingInternalPlayback ? "internal_native" : "external_iframe",
+      sourceType: usingInternalPlayback ? "internal_stream" : "external_embed",
+      fallbackReason: playbackFallbackReason,
+      lastPosition: progressMinutes,
+      duration: resolvedDuration,
+      completionRatio,
+    };
+  };
+
+  const syncPlaybackTelemetry = async (
+    progressMinutes: number,
+    durationMinutes?: number,
+    options?: { complete?: boolean },
+  ) => {
+    if (!isLoggedIn || !playbackSessionRef.current.id) return;
+
+    const payload = getPlaybackSessionPayload(progressMinutes, durationMinutes);
+
+    try {
+      if (options?.complete) {
+        if (playbackSessionRef.current.isCompleted) return;
+        await playbackAPI.complete(playbackSessionRef.current.id, payload);
+        playbackSessionRef.current.isCompleted = true;
+        return;
+      }
+
+      await playbackAPI.heartbeat(playbackSessionRef.current.id, payload);
+    } catch (_error) {
+      // Playback telemetry is best-effort and should not interrupt viewing.
+    }
   };
 
   const persistProgress = async (
@@ -318,6 +429,12 @@ function Watch() {
       seasonId ? parseInt(seasonId) : 0,
       episodeId ? parseInt(episodeId) : 0,
     );
+
+    await syncPlaybackTelemetry(
+      nextProgressMinutes,
+      durationMinutes,
+      forceStatus === "watched" ? { complete: true } : undefined,
+    );
   };
 
   const episodeChange = (n: string) => {
@@ -327,13 +444,30 @@ function Watch() {
     navigate(n);
   };
 
+  const handleModeChange = (nextMode: PlaybackMode) => {
+    const currentProgress = getCurrentProgressMinutes();
+    void persistProgress(currentProgress, fallbackDurationMinutes);
+    setIframeTrackingActive(false);
+    progressRef.current.lastKnownProgressMinutes = currentProgress;
+    if (typeof window !== "undefined" && sessionProgressKey) {
+      sessionStorage.setItem(sessionProgressKey, String(currentProgress));
+    }
+    setSessionBaseProgress(currentProgress);
+    setPreferredMode(nextMode);
+  };
+
+  const getDownloadSourceMeta = (server: StreamServer) => {
+    const [, secondaryLine = ""] = String(server.title || "").split("\n");
+    const sizeMatch = secondaryLine.match(/\b\d+(\.\d+)?\s?(GB|MB)\b/i);
+    return {
+      label: secondaryLine || server.title || server.name,
+      size: sizeMatch?.[0] || "",
+    };
+  };
+
   useEffect(() => {
     if (!movieId || !movieType) return;
     const fetchStream = (type: "movie" | "tv") => {
-      if (streamType === "WADS") {
-        setStreamServer(null);
-        return;
-      }
       getStream(type, movieId, seasonId, episodeId);
     };
 
@@ -347,7 +481,7 @@ function Watch() {
         tvSeasonsDetails(movieId, parseInt(seasonId));
       }
     }
-  }, [movieType, movieId, seasonId, episodeId, streamType]);
+  }, [movieType, movieId, seasonId, episodeId]);
 
   useEffect(() => {
     if (!sessionBaseReady) return;
@@ -360,10 +494,90 @@ function Watch() {
       playerEventsSeen: false,
       isIframeActive: false,
     };
-  }, [sessionBaseProgress, sessionBaseReady, sessionProgressKey, streamType]);
+  }, [playbackMode, sessionBaseProgress, sessionBaseReady, sessionProgressKey]);
+
+  useEffect(() => {
+    if (
+      !isLoggedIn ||
+      !movieId ||
+      !movieType ||
+      !sessionBaseReady ||
+      isPreparingInternalPlayback
+    ) {
+      return;
+    }
+
+    const sessionSignature = [
+      movieType,
+      movieId,
+      seasonId || 0,
+      episodeId || 0,
+      playbackMode,
+      selectedStreamServer?.url || "external",
+      playbackFallbackReason || "none",
+    ].join(":");
+
+    if (
+      playbackSessionRef.current.signature === sessionSignature ||
+      playbackSessionRef.current.requestedSignature === sessionSignature
+    ) {
+      return;
+    }
+
+    playbackSessionRef.current = {
+      id: "",
+      signature: "",
+      requestedSignature: sessionSignature,
+      isCompleted: false,
+    };
+
+    let cancelled = false;
+
+    void playbackAPI
+      .createSession(
+        getPlaybackSessionPayload(sessionBaseProgress, fallbackDurationMinutes),
+      )
+      .then((response) => {
+        if (cancelled) return;
+        playbackSessionRef.current = {
+          id: String(response.data?.id || ""),
+          signature: sessionSignature,
+          requestedSignature: sessionSignature,
+          isCompleted: false,
+        };
+      })
+      .catch(() => {
+        if (cancelled) return;
+        playbackSessionRef.current = {
+          id: "",
+          signature: "",
+          requestedSignature: sessionSignature,
+          isCompleted: false,
+        };
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    episodeId,
+    fallbackDurationMinutes,
+    isLoggedIn,
+    isPreparingInternalPlayback,
+    mediaTitle,
+    movieId,
+    movieType,
+    playbackFallbackReason,
+    playbackMode,
+    seasonId,
+    selectedStreamServer?.url,
+    sessionBaseProgress,
+    sessionBaseReady,
+  ]);
 
   useEffect(() => {
     if (!sessionBaseReady) return;
+    if (!usingExternalPlayback) return;
     let lastUpdateTime = 0;
 
     const handleMessage = (event: any) => {
@@ -423,13 +637,15 @@ function Watch() {
     episodeId,
     mediaPoster,
     mediaTitle,
+    playbackMode,
     sessionBaseReady,
     sessionBaseProgress,
+    usingExternalPlayback,
   ]);
 
   useEffect(() => {
     if (!sessionBaseReady) return;
-    if (streamType !== "WADS") {
+    if (!usingExternalPlayback) {
       setIframeTrackingActive(false);
       return;
     }
@@ -471,11 +687,11 @@ function Watch() {
       document.removeEventListener("visibilitychange", syncVisibility);
       setIframeTrackingActive(false);
     };
-  }, [fallbackDurationMinutes, sessionBaseProgress, sessionBaseReady, streamType]);
+  }, [fallbackDurationMinutes, sessionBaseProgress, sessionBaseReady, usingExternalPlayback]);
 
   useEffect(() => {
     if (
-      streamType !== "WOADS" ||
+      !usingInternalPlayback ||
       !videoRef.current ||
       !sessionBaseReady ||
       sessionBaseProgress <= 0
@@ -487,7 +703,7 @@ function Watch() {
     if (Math.abs(videoRef.current.currentTime - targetSeconds) > 5) {
       videoRef.current.currentTime = targetSeconds;
     }
-  }, [sessionBaseProgress, sessionBaseReady, streamType]);
+  }, [sessionBaseProgress, sessionBaseReady, usingInternalPlayback]);
 
   const handleNativeLoadedMetadata = () => {
     if (!videoRef.current) return;
@@ -526,7 +742,7 @@ function Watch() {
     <Box width={"100%"} height={"100vh"}>
       {backdropLoading(true, colorScheme)}
     </Box>
-  ) : getStreamData.isLoading && streamType == "WOADS" ? (
+  ) : isPreparingInternalPlayback ? (
     <Box width={"100%"} height={"100vh"}>
       <Modal open={true} sx={{ zIndex: 1002 }}>
         <ModalDialog>
@@ -544,135 +760,17 @@ function Watch() {
             >
               Go Back
             </Button>
+            <Button
+              color="primary"
+              variant="soft"
+              onClick={() => handleModeChange("external")}
+            >
+              Use External Fallback
+            </Button>
           </DialogActions>
-          <Divider>or</Divider>
-          <Link
-            onClick={() => setStreamType("WADS")}
-            sx={{
-              margin: "0 auto",
-            }}
-          >
-            Continue with ADS(recommended)
-          </Link>
         </ModalDialog>
       </Modal>
     </Box>
-  ) : !getStreamData.isAvailable &&
-    !getStreamData.isLoading &&
-    streamType == "WOADS" ? (
-    <Modal open={true} sx={{ zIndex: 1002 }}>
-      <ModalDialog color="danger" variant="outlined">
-        <ModalClose onClick={() => navigate(`/${movieType}/${movieId}`)} />
-        <Typography color="danger" level="h4" startDecorator={<Warning />}>
-          Stream Unavailable
-        </Typography>
-        <Typography sx={{ mt: 2 }}>
-          We're sorry, but the stream for this{" "}
-          {movieType === "movie" ? "movie" : "TV series episode"} is currently
-          unavailable. This could be due to licensing restrictions or temporary
-          server issues.
-        </Typography>
-        <DialogActions>
-          <Button
-            variant="soft"
-            color="neutral"
-            onClick={() => navigate(`/${movieType}/${movieId}`)}
-          >
-            Go Back
-          </Button>
-          <Button
-            onClick={() =>
-              getStream(
-                movieType == "tv" ? "tv" : "movie",
-                movieId!,
-                seasonId,
-                episodeId,
-              )
-            }
-            variant="soft"
-            color="danger"
-          >
-            Try Again
-          </Button>
-        </DialogActions>
-        <Divider>or</Divider>
-        <Link
-          onClick={() => setStreamType("WADS")}
-          sx={{
-            margin: "0 auto",
-          }}
-        >
-          Try with ADS(recommended)
-        </Link>
-      </ModalDialog>
-    </Modal>
-  ) : !streamServer && getStreamData.isAvailable && streamType == "WOADS" ? (
-    <Modal open={true} sx={{ zIndex: 1002 }}>
-      <ModalOverflow>
-        <ModalDialog layout="center">
-          <Typography level="h4" sx={{ mb: 2 }}>
-            Select Stream Server
-          </Typography>
-          <Typography sx={{ mb: 2 }}>
-            Please choose a stream server from the options below to start <br />{" "}
-            PS: <Typography color="primary">Vixsrc</Typography> is recommended
-            for the best experience.
-          </Typography>
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-            {getStreamData.data?.streams.map((server, index) => (
-              <ButtonGroup
-                key={index}
-                variant="outlined"
-                color="neutral"
-                sx={{ display: "flex", justifyContent: "space-between" }}
-              >
-                <Button
-                  sx={{
-                    width: "80%",
-                  }}
-                  key={index}
-                  variant="outlined"
-                  color={server.name.includes("Vixsrc") ? "primary" : "neutral"}
-                  onClick={() => setStreamServer(server)}
-                >
-                  {server.name}
-                </Button>
-                <Button
-                  sx={{
-                    width: "20%",
-                  }}
-                  disabled
-                  variant="outlined"
-                  color="primary"
-                >
-                  {!server.title.split("\n")[1]?.trim?.()
-                    ? "N/A"
-                    : server.title.split("\n")[1]}
-                </Button>
-              </ButtonGroup>
-            ))}
-          </Box>
-          <DialogActions>
-            <Button
-              variant="soft"
-              color="neutral"
-              onClick={() => navigate(`/${movieType}/${movieId}`)}
-            >
-              Go Back
-            </Button>
-          </DialogActions>
-          <Divider>or</Divider>
-          <Link
-            onClick={() => setStreamType("WADS")}
-            sx={{
-              margin: "0 auto",
-            }}
-          >
-            Continue with ADS(recommended)
-          </Link>
-        </ModalDialog>
-      </ModalOverflow>
-    </Modal>
   ) : (
     <Box
       sx={{
@@ -799,16 +897,96 @@ function Watch() {
             ? movieDetailsDataArr?.title
             : tvSeriesDetailsDataArr?.name}
         </Typography>
-        <IconButton
-          onClick={() => {
-            streamType === "WADS"
-              ? setStreamType("WOADS")
-              : setStreamType("WADS");
+        <Box sx={{ display: "flex", gap: 1 }}>
+          {downloadSources.length ? (
+            <IconButton onClick={() => setDownloadSourcesOpen(true)}>
+              <DownloadRoundedIcon />
+            </IconButton>
+          ) : null}
+          <IconButton
+            onClick={() => {
+              handleModeChange(
+                preferredMode === "internal" ? "external" : "internal",
+              );
+            }}
+          >
+            {preferredMode === "internal" ? <LiveTvIcon /> : <StorageIcon />}
+          </IconButton>
+        </Box>
+      </Box>
+      <Modal
+        open={downloadSourcesOpen}
+        onClose={() => setDownloadSourcesOpen(false)}
+        sx={{ zIndex: 1003 }}
+      >
+        <ModalDialog
+          layout="center"
+          sx={{
+            width: "min(720px, calc(100% - 24px))",
+            maxHeight: "80vh",
+            overflow: "auto",
           }}
         >
-          {streamType === "WOADS" ? <LiveTvIcon /> : <StorageIcon />}
-        </IconButton>
-      </Box>
+          <Typography level="h4">Download Sources</Typography>
+          <Typography level="body-sm" sx={{ mb: 1.5 }}>
+            These links are treated as file-host/download sources, not in-app
+            streaming sources. `Vixsrc` stays in the player flow for playback.
+          </Typography>
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
+            {downloadSources.map((server) => {
+              const meta = getDownloadSourceMeta(server);
+              return (
+                <Box
+                  key={`${server.name}-${server.url}`}
+                  sx={{
+                    border: "1px solid rgba(255, 255, 255, 0.08)",
+                    borderRadius: "12px",
+                    p: 1.5,
+                    background: "rgba(255, 255, 255, 0.02)",
+                  }}
+                >
+                  <Typography level="title-md">{server.name}</Typography>
+                  <Typography level="body-sm" sx={{ opacity: 0.8, mt: 0.5 }}>
+                    {meta.label}
+                  </Typography>
+                  {meta.size ? (
+                    <Typography level="body-xs" sx={{ opacity: 0.7, mt: 0.5 }}>
+                      Approx. size: {meta.size}
+                    </Typography>
+                  ) : null}
+                  <Box sx={{ display: "flex", gap: 1, mt: 1.25, flexWrap: "wrap" }}>
+                    <Button
+                      size="sm"
+                      onClick={() =>
+                        window.open(server.url, "_blank", "noopener,noreferrer")
+                      }
+                    >
+                      Open Link
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="soft"
+                      color="neutral"
+                      onClick={() => copyToClipboard(server.url)}
+                    >
+                      Copy URL
+                    </Button>
+                  </Box>
+                </Box>
+              );
+            })}
+          </Box>
+          <DialogActions>
+            <Button
+              color="neutral"
+              variant="soft"
+              onClick={() => setDownloadSourcesOpen(false)}
+            >
+              Close
+            </Button>
+          </DialogActions>
+        </ModalDialog>
+      </Modal>
       <Box
         sx={{
           position: "relative",
@@ -854,42 +1032,76 @@ function Watch() {
           ""
         )}
       </Box>
-      {streamType == "WADS" ? (
-        <iframe
-          referrerPolicy="no-referrer-when-downgrade"
-          sandbox="allow-forms allow-modals allow-orientation-lock allow-pointer-lock allow-presentation allow-same-origin allow-scripts"
-          src={`https://vidsrc.cc/v2/embed/${movieType}/${movieId}${
-            isTvSE ? `/${seasonId}` : ""
-          }${isTvSE ? `/${episodeId}` : ""}`}
-          allowFullScreen
-          style={{
-            width: "100%",
-            height: "100%",
-            border: "none",
-            borderRadius: "5px",
+      {preferredMode === "internal" &&
+      usingExternalPlayback &&
+      !isPreparingInternalPlayback ? (
+        <Box
+          sx={{
             position: "absolute",
-            top: 0,
-            zIndex: 1000,
+            top: movieType === "tv" ? "105px" : "55px",
+            left: "10px",
+            zIndex: 1001,
+            background: "rgba(0, 0, 0, 0.55)",
+            border: "1px solid rgba(255, 255, 255, 0.08)",
+            borderRadius: "10px",
+            px: 1.5,
+            py: 0.75,
+            maxWidth: "min(420px, calc(100% - 20px))",
           }}
-        ></iframe>
-      ) : (
-        <video
-          ref={videoRef}
-          controls
-          onLoadedMetadata={handleNativeLoadedMetadata}
-          onTimeUpdate={handleNativeTimeUpdate}
-          onPause={handleNativeTimeUpdate}
-          onEnded={handleNativeEnded}
-          style={{
-            width: "100%",
-            height: "100%",
+        >
+          <Typography level="body-sm">
+            Internal playback is not available for this title right now, so
+            Smile Movies switched to the external fallback.
+          </Typography>
+        </Box>
+      ) : null}
+      {preferredMode === "internal" &&
+      usingInternalPlayback &&
+      webReadyStreams.length > 1 ? (
+        <Box
+          sx={{
             position: "absolute",
-            top: 0,
-            zIndex: 1000,
+            top: movieType === "tv" ? "105px" : "55px",
+            right: "10px",
+            zIndex: 1001,
+            minWidth: "220px",
           }}
-          src={streamServer?.url}
-        ></video>
-      )}
+        >
+          <Select
+            value={selectedStreamServer?.url || null}
+            placeholder="Select stream server"
+            onChange={(_event, value) => {
+              const nextServer =
+                webReadyStreams.find((server) => server.url === value) || null;
+              if (!nextServer) return;
+              const currentProgress = getCurrentProgressMinutes();
+              void persistProgress(currentProgress, fallbackDurationMinutes);
+              setSessionBaseProgress(currentProgress);
+              setStreamServer(nextServer);
+            }}
+          >
+            {webReadyStreams.map((server) => (
+              <Option key={server.url} value={server.url}>
+                {server.name}
+              </Option>
+            ))}
+          </Select>
+        </Box>
+      ) : null}
+      <PlaybackSurface
+        mode={playbackMode}
+        movieType={movieType || "movie"}
+        movieId={movieId || ""}
+        seasonId={seasonId}
+        episodeId={episodeId}
+        isTvSE={isTvSE}
+        videoRef={videoRef}
+        streamServer={selectedStreamServer}
+        onLoadedMetadata={handleNativeLoadedMetadata}
+        onTimeUpdate={handleNativeTimeUpdate}
+        onPause={handleNativeTimeUpdate}
+        onEnded={handleNativeEnded}
+      />
     </Box>
   );
 }

@@ -4,13 +4,15 @@ export interface StreamServer {
     url: string;
     type: string;
     availability: number;
-    behaviorHints: { notWebReady: boolean }
+    behaviorHints?: {
+        notWebReady?: boolean;
+        bingeGroup?: string;
+        [key: string]: unknown;
+    }
 }
 
 export interface StreamResponse {
-    streams: [
-        StreamServer
-    ]
+    streams: StreamServer[]
 }
 
 export interface StreamEmptyResponse {
