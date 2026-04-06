@@ -20,6 +20,7 @@ import Trailers from "../../components/movie/Trailers";
 import Event from "../../components/home/Event";
 import Cast from "../../components/movie/Cast";
 import About from "../../components/movie/About";
+import ReviewsSection from "../../components/reviews/ReviewsSection";
 
 function Movie() {
   const { movieId } = useParams();
@@ -122,6 +123,12 @@ function Movie() {
         <Cast movieCredits={movieCreditsDataArr} />
         <Divider />
         <About movieDetails={movieData} />
+        <Divider />
+        <ReviewsSection
+          mediaId={movieId!}
+          mediaType="movie"
+          title={movieData?.title || "Untitled movie"}
+        />
       </Container>
     </Box>
   );

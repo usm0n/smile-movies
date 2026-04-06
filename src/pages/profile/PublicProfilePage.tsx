@@ -17,6 +17,7 @@ import PublicPageShell from "../../components/public/PublicPageShell";
 import EventMC from "../../components/cards/EventMC";
 import { profilesAPI } from "../../service/api/smb/profiles.api.service";
 import { PublicProfileResponse } from "../../types/profiles";
+import { ReviewRecord } from "../../types/reviews";
 import { Watchlist } from "../../user";
 
 const profileTabs = ["", "/favorites", "/watchlist", "/reviews"];
@@ -63,7 +64,7 @@ function PublicProfilePage() {
   const [profile, setProfile] = useState<PublicProfileResponse | null>(null);
   const [favorites, setFavorites] = useState<Watchlist[]>([]);
   const [watchlist, setWatchlist] = useState<Watchlist[]>([]);
-  const [reviews, setReviews] = useState<any[]>([]);
+  const [reviews, setReviews] = useState<ReviewRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [sectionLoading, setSectionLoading] = useState(false);
   const currentSuffix = location.pathname.replace(`/u/${handle}`, "") || "";
@@ -260,10 +261,25 @@ function PublicProfilePage() {
                 {sectionLoading ? (
                   <CircularProgress />
                 ) : reviews.length ? (
-                  <Typography>Reviews will appear here.</Typography>
+                  <Stack spacing={1.25}>
+                    {reviews.map((review) => (
+                      <Card key={review.id} sx={{ p: 2, borderRadius: 18, background: "rgba(255,255,255,0.02)" }}>
+                        <Stack direction="row" spacing={1} sx={{ justifyContent: "space-between", mb: 1 }}>
+                          <Typography level="title-sm">{review.title}</Typography>
+                          <Chip size="sm">Rating {review.rating}/10</Chip>
+                        </Stack>
+                        <Typography level="body-sm" textColor="neutral.300">
+                          {review.body}
+                        </Typography>
+                        <Typography level="body-xs" textColor="neutral.500" sx={{ mt: 1 }}>
+                          {review.updatedAt}
+                        </Typography>
+                      </Card>
+                    ))}
+                  </Stack>
                 ) : (
                   <Typography level="body-sm" textColor="neutral.400">
-                    Reviews have not launched yet. This tab is reserved so the profile URL structure stays stable.
+                    No public reviews yet.
                   </Typography>
                 )}
               </Card>

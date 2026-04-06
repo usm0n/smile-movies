@@ -84,6 +84,10 @@ export const mainRoutes = [
     element: <AdminDashboard />,
   },
   {
+    path: "/admin/moderation",
+    element: <AdminDashboard />,
+  },
+  {
     path: "/admin/releases",
     element: <AdminDashboard />,
   },

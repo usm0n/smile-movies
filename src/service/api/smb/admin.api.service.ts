@@ -34,4 +34,12 @@ export const adminAPI = {
     const response = await smbV1API.get("/admin/audit-logs");
     return response;
   },
+  getModerationQueue: async () => {
+    const response = await smbV1API.get("/admin/moderation");
+    return response;
+  },
+  moderateReview: async (id: string, status: "visible" | "hidden" | "removed" | "pending") => {
+    const response = await smbV1API.patch(`/admin/moderation/${id}`, { status });
+    return response;
+  },
 };

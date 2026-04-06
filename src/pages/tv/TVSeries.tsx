@@ -19,6 +19,7 @@ import Trailers from "../../components/movie/Trailers";
 import Event from "../../components/home/Event";
 import Cast from "../../components/movie/Cast";
 import About from "../../components/movie/About";
+import ReviewsSection from "../../components/reviews/ReviewsSection";
 
 function TVSeries() {
   const { tvId } = useParams();
@@ -138,6 +139,12 @@ function TVSeries() {
         <Cast movieCredits={tvSeriesCreditsDataArr} />
         <Divider/>
         <About movieDetails={tvSeriesData} />
+        <Divider/>
+        <ReviewsSection
+          mediaId={tvId!}
+          mediaType="tv"
+          title={tvSeriesData?.name || "Untitled series"}
+        />
       </Container>
     </Box>
   );

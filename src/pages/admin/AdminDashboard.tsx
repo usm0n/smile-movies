@@ -28,11 +28,11 @@ import PublicPageShell from "../../components/public/PublicPageShell";
 import { useUsers } from "../../context/Users";
 import { adminAPI } from "../../service/api/smb/admin.api.service";
 import { notificationsAPI } from "../../service/api/smb/notifications.api.service";
-import { AdminAuditLog, AdminBootstrapStatus, AdminNotificationOverview, AdminRole, AdminUserSummary } from "../../types/admin";
+import { AdminAuditLog, AdminBootstrapStatus, AdminModerationItem, AdminNotificationOverview, AdminRole, AdminUserSummary } from "../../types/admin";
 import { ReleaseResponse } from "../../types/public";
 import { User } from "../../user";
 
-const adminTabs = ["/admin", "/admin/users", "/admin/notifications", "/admin/releases"];
+const adminTabs = ["/admin", "/admin/users", "/admin/moderation", "/admin/notifications", "/admin/releases"];
 
 function AdminDashboard() {
   const navigate = useNavigate();
@@ -45,6 +45,7 @@ function AdminDashboard() {
   const [notifications, setNotifications] = useState<AdminNotificationOverview | null>(null);
   const [releases, setReleases] = useState<ReleaseResponse[]>([]);
   const [auditLogs, setAuditLogs] = useState<AdminAuditLog[]>([]);
+  const [moderationItems, setModerationItems] = useState<AdminModerationItem[]>([]);
   const [bootstrapStatus, setBootstrapStatus] = useState<AdminBootstrapStatus | null>(null);
   const [search, setSearch] = useState("");
   const [busyKey, setBusyKey] = useState("");
@@ -52,13 +53,21 @@ function AdminDashboard() {
   const loadAdminData = async () => {
     setLoading(true);
     try {
-      const [usersResponse, notificationsResponse, releasesResponse, auditResponse] = await Promise.all([
+      const [
+        usersResponse,
+        moderationResponse,
+        notificationsResponse,
+        releasesResponse,
+        auditResponse,
+      ] = await Promise.all([
         adminAPI.getUsers(),
+        adminAPI.getModerationQueue(),
         adminAPI.getNotifications(),
         adminAPI.getReleases(),
         adminAPI.getAuditLogs(),
       ]);
       setUsers(usersResponse.data);
+      setModerationItems(moderationResponse.data);
       setNotifications(notificationsResponse.data);
       setReleases(releasesResponse.data);
       setAuditLogs(auditResponse.data);
@@ -221,6 +230,7 @@ function AdminDashboard() {
         <TabList sx={{ mb: 3 }}>
           <Tab>Overview</Tab>
           <Tab>Users</Tab>
+          <Tab>Moderation</Tab>
           <Tab>Notifications</Tab>
           <Tab>Releases</Tab>
         </TabList>
@@ -399,6 +409,59 @@ function AdminDashboard() {
         <TabPanel value={2} sx={{ px: 0 }}>
           <Card sx={{ p: 2.5, borderRadius: 24 }}>
             <Typography level="title-lg" sx={{ mb: 2 }}>
+              Review Moderation
+            </Typography>
+            <Stack spacing={1.5}>
+              {moderationItems.length ? moderationItems.map((item) => (
+                <Card key={item.id} sx={{ p: 2, borderRadius: 20, background: "rgba(255,255,255,0.02)" }}>
+                  <Stack direction={{ xs: "column", md: "row" }} spacing={2} sx={{ justifyContent: "space-between" }}>
+                    <Box>
+                      <Typography level="title-sm">{item.title}</Typography>
+                      <Typography level="body-xs" textColor="neutral.500">
+                        @{item.authorHandle} · reports {item.reportCount} · {item.moderationStatus}
+                      </Typography>
+                      <Typography level="body-sm" textColor="neutral.300" sx={{ mt: 1 }}>
+                        {item.body}
+                      </Typography>
+                    </Box>
+                    <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap" }}>
+                      {(["visible", "pending", "hidden", "removed"] as const).map((status) => (
+                        <Button
+                          key={status}
+                          size="sm"
+                          variant={item.moderationStatus === status ? "solid" : "outlined"}
+                          onClick={async () => {
+                            setBusyKey(`moderate:${item.id}:${status}`);
+                            try {
+                              await adminAPI.moderateReview(item.id, status);
+                              await loadAdminData();
+                            } catch (error) {
+                              console.error(error);
+                              toast.error("Failed to moderate review.");
+                            } finally {
+                              setBusyKey("");
+                            }
+                          }}
+                          loading={busyKey === `moderate:${item.id}:${status}`}
+                        >
+                          {status}
+                        </Button>
+                      ))}
+                    </Stack>
+                  </Stack>
+                </Card>
+              )) : (
+                <Typography level="body-sm" textColor="neutral.400">
+                  No reviews currently need moderation.
+                </Typography>
+              )}
+            </Stack>
+          </Card>
+        </TabPanel>
+
+        <TabPanel value={3} sx={{ px: 0 }}>
+          <Card sx={{ p: 2.5, borderRadius: 24 }}>
+            <Typography level="title-lg" sx={{ mb: 2 }}>
               Notification Monitoring
             </Typography>
             {!notifications ? (
@@ -480,7 +543,7 @@ function AdminDashboard() {
           </Card>
         </TabPanel>
 
-        <TabPanel value={3} sx={{ px: 0 }}>
+        <TabPanel value={4} sx={{ px: 0 }}>
           <Card sx={{ p: 2.5, borderRadius: 24 }}>
             <Typography level="title-lg" sx={{ mb: 2 }}>
               Release Management

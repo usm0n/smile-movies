@@ -1,4 +1,5 @@
 import { ReleaseResponse } from "./public";
+import { ReviewRecord } from "./reviews";
 
 export type AdminRole = "user" | "admin" | "moderator" | "support" | "content_manager";
 
@@ -60,3 +61,5 @@ export interface AdminAuditLog {
 }
 
 export type AdminReleaseList = ReleaseResponse[];
+
+export type AdminModerationItem = ReviewRecord;
