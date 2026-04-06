@@ -45,6 +45,7 @@ function PrivacySettings({
       {[
         { key: "showWatchlist", label: "Show my watchlist to others" },
         { key: "showFavorites", label: "Show my favorites to others" },
+        { key: "showRecentlyWatched", label: "Show my recently watched titles" },
       ].map(({ key, label }) => (
         <Box
           key={key}
@@ -85,7 +86,7 @@ function PrivacySettings({
       <Box display={"flex"} gap={"10px"} alignItems={"center"}>
         <Typography level="title-md">Signed in with:</Typography>
         <Typography>
-          {userValue.loginType == "google" ? "Google" : "Email & Password"}
+          {userValue?.loginType == "google" ? "Google" : "Email & Password"}
         </Typography>
       </Box>
       <Button

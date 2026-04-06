@@ -16,6 +16,7 @@ import {
   ModalDialog,
   Option,
   Select,
+  Textarea,
   Typography,
 } from "@mui/joy";
 import { ResponseType, User } from "../../user";
@@ -199,6 +200,44 @@ function Settings({
           </IconButton>
         </Box>
       )}
+
+      <Divider />
+
+      <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+        <Typography level="title-md">Public Profile</Typography>
+        <FormControl>
+          <FormLabel>Handle</FormLabel>
+          <Input
+            name="handle"
+            placeholder="yourname"
+            value={userValue?.handle || ""}
+            onChange={handleInput}
+            startDecorator="@"
+          />
+          <FormHelperText>
+            Public profiles live at `/u/{userValue?.handle || "yourname"}` and require a unique handle.
+          </FormHelperText>
+        </FormControl>
+        <FormControl>
+          <FormLabel>Bio</FormLabel>
+          <Textarea
+            name="bio"
+            minRows={3}
+            placeholder="Tell people what you love to watch."
+            value={userValue?.bio || ""}
+            onChange={(e) => setUserValue((prev) => ({ ...prev, bio: e.target.value }))}
+          />
+        </FormControl>
+        {!!userValue?.handle && (
+          <Button
+            variant="outlined"
+            color="neutral"
+            onClick={() => window.open(`/u/${userValue.handle}`, "_blank")}
+          >
+            Open Public Profile
+          </Button>
+        )}
+      </Box>
 
       <Divider />
 

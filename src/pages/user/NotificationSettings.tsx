@@ -117,8 +117,8 @@ function NotificationSettings({
           sx={{ minWidth: 170 }}
         >
           {notificationDigestOptions.map((option) => (
-            <Option key={option.value} value={option.value}>
-              {option.label}
+            <Option key={option.value} value={option?.value}>
+              {option?.label}
             </Option>
           ))}
         </Select>

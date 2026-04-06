@@ -15,6 +15,7 @@ import UnsubscribePage from "../pages/public/UnsubscribePage";
 import Discover from "../pages/Discover";
 import Movie from "../pages/movie/Movie";
 import Person from "../pages/person/Person";
+import PublicProfilePage from "../pages/profile/PublicProfilePage";
 import Search from "../pages/search/Search";
 import TVSeries from "../pages/tv/TVSeries";
 import Settings from "../pages/user";
@@ -117,6 +118,22 @@ export const mainRoutes = [
   {
     path: "/person/:personId",
     element: <Person />,
+  },
+  {
+    path: "/u/:handle",
+    element: <PublicProfilePage />,
+  },
+  {
+    path: "/u/:handle/favorites",
+    element: <PublicProfilePage />,
+  },
+  {
+    path: "/u/:handle/watchlist",
+    element: <PublicProfilePage />,
+  },
+  {
+    path: "/u/:handle/reviews",
+    element: <PublicProfilePage />,
   },
   {
     path: "/search/:query",

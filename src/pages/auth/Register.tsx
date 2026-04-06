@@ -82,7 +82,7 @@ function Register() {
     age: undefined,
     gender: undefined,
     notifications: defaultNotificationPreferences,
-    privacy: { showWatchlist: true, showFavorites: true },
+    privacy: { showWatchlist: true, showFavorites: true, showRecentlyWatched: false },
   });
 
   const { login, loginData, registerData, register, myselfData } = useUsers();
@@ -307,6 +307,7 @@ function Register() {
             {[
               { key: "showWatchlist", label: "Show my watchlist to others" },
               { key: "showFavorites", label: "Show my favorites to others" },
+              { key: "showRecentlyWatched", label: "Show my recently watched titles" },
             ].map(({ key, label }) => (
               <Box key={key} sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <Typography level="body-sm">{label}</Typography>

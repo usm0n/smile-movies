@@ -20,6 +20,7 @@ export interface NotificationPreferences {
 export interface PrivacySettings {
   showWatchlist: boolean;
   showFavorites: boolean;
+  showRecentlyWatched?: boolean;
 }
 
 export type SavedMediaStatus =
@@ -34,6 +35,8 @@ export type SavedMediaPreference =
   | "dislike";
 
 export interface User {
+  handle?: string;
+  bio?: string;
   profilePic?: string;
   id: string;
   firstname: string;
@@ -97,6 +100,8 @@ export interface Device {
 }
 
 export interface UserRegister {
+  handle?: string;
+  bio?: string;
   firstname: string;
   lastname?: string;
   email: string;

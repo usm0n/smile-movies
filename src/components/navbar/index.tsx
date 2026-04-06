@@ -358,6 +358,11 @@ const Navbar: React.FC = () => {
                 <MenuItem onClick={() => navigate("/watchlist")}>
                   <ListItemContent>Watchlist</ListItemContent>
                 </MenuItem>
+                {user?.handle && (
+                  <MenuItem onClick={() => navigate(`/u/${user.handle}`)}>
+                    <ListItemContent>Public Profile</ListItemContent>
+                  </MenuItem>
+                )}
                 <MenuItem onClick={() => navigate("/favorites")}>
                   <FavoriteBorder sx={{ fontSize: 18 }} />
                   <ListItemContent>Favorites</ListItemContent>
@@ -506,6 +511,11 @@ const Navbar: React.FC = () => {
             <ListItemButton onClick={() => navigateTo("/watchlist")}>
               Watchlist
             </ListItemButton>
+            {user?.handle && (
+              <ListItemButton onClick={() => navigateTo(`/u/${user.handle}`)}>
+                Public Profile
+              </ListItemButton>
+            )}
             <ListItemButton onClick={() => navigateTo("/favorites")}>
               Favorites
             </ListItemButton>
