@@ -1,10 +1,14 @@
-import { Box, Button, Card, Divider, Option, Select, Typography } from "@mui/joy";
+import { Box, Button, Card, Chip, CircularProgress, Divider, Option, Select, Stack, Typography } from "@mui/joy";
 import { NotificationPreferences, User } from "../../user";
 import {
   defaultNotificationPreferences,
   notificationDigestOptions,
   notificationToggleOptions,
 } from "../../utilities/notificationPreferences";
+import { useEffect, useState } from "react";
+import { notificationsAPI } from "../../service/api/smb/notifications.api.service";
+import { NotificationHistoryItem } from "../../types/notifications";
+import toast from "react-hot-toast";
 
 function NotificationSettings({
   userValue,
@@ -17,6 +21,24 @@ function NotificationSettings({
     ...defaultNotificationPreferences,
     ...(userValue?.notifications || {}),
   };
+  const [history, setHistory] = useState<NotificationHistoryItem[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    const loadHistory = async () => {
+      try {
+        const response = await notificationsAPI.getHistory();
+        setHistory(response.data);
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setHistoryLoading(false);
+      }
+    };
+
+    void loadHistory();
+  }, []);
 
   return (
     <Card
@@ -103,8 +125,73 @@ function NotificationSettings({
       </Box>
 
       <Typography level="body-xs" textColor="neutral.500">
-        Digest mode is groundwork for the upcoming notification engine. Delivery remains email-first in the current release.
+        Delivery is email-first in the current release, with queueing and unsubscribe groundwork now live on the backend.
       </Typography>
+
+      <Button
+        onClick={async () => {
+          setSaving(true);
+          try {
+            await notificationsAPI.updatePreferences(currentPreferences);
+            toast.success("Notification settings saved.");
+          } catch (error) {
+            console.error(error);
+            toast.error("Failed to save notification settings.");
+          } finally {
+            setSaving(false);
+          }
+        }}
+        loading={saving}
+      >
+        Save Notification Settings
+      </Button>
+
+      <Divider />
+
+      <Box>
+        <Typography level="title-md" sx={{ mb: 1 }}>
+          Notification History
+        </Typography>
+        <Typography level="body-xs" textColor="neutral.400" sx={{ mb: 2 }}>
+          Recent email delivery attempts and unsubscribe-safe events will appear here.
+        </Typography>
+
+        {historyLoading ? (
+          <CircularProgress size="sm" />
+        ) : history.length === 0 ? (
+          <Typography level="body-sm" textColor="neutral.500">
+            No notification deliveries yet. Once release events are queued, you will see history here.
+          </Typography>
+        ) : (
+          <Stack spacing={1.25}>
+            {history.map((item) => (
+              <Card key={item.id} sx={{ p: 1.5, borderRadius: 18, background: "rgba(255,255,255,0.02)" }}>
+                <Stack direction="row" spacing={1} sx={{ justifyContent: "space-between", alignItems: "center", mb: 0.75 }}>
+                  <Typography level="title-sm">{item.subject}</Typography>
+                  <Chip
+                    size="sm"
+                    color={
+                      item.status === "sent"
+                        ? "success"
+                        : item.status === "failed"
+                          ? "danger"
+                          : "neutral"
+                    }
+                  >
+                    {item.status}
+                  </Chip>
+                </Stack>
+                <Typography level="body-sm" textColor="neutral.300">
+                  {item.title} · {item.bodyPreview}
+                </Typography>
+                <Typography level="body-xs" textColor="neutral.500" sx={{ mt: 0.75 }}>
+                  {item.createdAt} · {item.eventType}
+                </Typography>
+              </Card>
+            ))}
+          </Stack>
+        )}
+      </Box>
     </Card>
   );
 }

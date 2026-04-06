@@ -75,13 +75,21 @@ const SettingsMain = ({ initialTab = 0 }: { initialTab?: number }) => {
             />
           </TabPanel>
           <TabPanel value={1}>
-            <NotificationSettings userValue={userValue} setUserValue={setUserValue} />
+            <NotificationSettings
+              userValue={userValue}
+              setUserValue={setUserValue}
+            />
           </TabPanel>
           <TabPanel value={2}>
             <Devices myselfData={myselfData} />
           </TabPanel>
           <TabPanel value={3}>
-            <PrivacySettings userValue={userValue} setUserValue={setUserValue} />
+            <PrivacySettings
+              userValue={userValue}
+              setUserValue={setUserValue}
+              updateMyself={updateMyself}
+              updatedMyselfData={updatedMyselfData}
+            />
           </TabPanel>
         </Tabs>
       </Box>

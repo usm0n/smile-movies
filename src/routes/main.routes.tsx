@@ -5,11 +5,13 @@ import Login from "../pages/auth/Login";
 import Register from "../pages/auth/Register";
 import ResetPassword from "../pages/auth/ResetPassword";
 import VerifyEmail from "../pages/auth/VerifyEmail";
+import AdminDashboard from "../pages/admin/AdminDashboard";
 import AboutPage from "../pages/public/AboutPage";
 import ContactPage from "../pages/public/ContactPage";
 import DownloadPage from "../pages/public/DownloadPage";
 import LandingPage from "../pages/public/LandingPage";
 import LegalDocumentPage from "../pages/public/LegalDocumentPage";
+import UnsubscribePage from "../pages/public/UnsubscribePage";
 import Discover from "../pages/Discover";
 import Movie from "../pages/movie/Movie";
 import Person from "../pages/person/Person";
@@ -61,8 +63,28 @@ export const mainRoutes = [
     element: <LegalDocumentPage forcedSlug="cookies" />,
   },
   {
+    path: "/unsubscribe/:token",
+    element: <UnsubscribePage />,
+  },
+  {
     path: "/auth/login",
     element: <Login />,
+  },
+  {
+    path: "/admin",
+    element: <AdminDashboard />,
+  },
+  {
+    path: "/admin/users",
+    element: <AdminDashboard />,
+  },
+  {
+    path: "/admin/notifications",
+    element: <AdminDashboard />,
+  },
+  {
+    path: "/admin/releases",
+    element: <AdminDashboard />,
   },
   {
     path: "/auth/register",

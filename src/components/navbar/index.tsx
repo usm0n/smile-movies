@@ -366,6 +366,11 @@ const Navbar: React.FC = () => {
                   <Tune sx={{ fontSize: 18 }} />
                   <ListItemContent>Taste Profile</ListItemContent>
                 </MenuItem>
+                {user?.isAdmin && (
+                  <MenuItem onClick={() => navigate("/admin")}>
+                    <ListItemContent>Admin</ListItemContent>
+                  </MenuItem>
+                )}
               </Menu>
             </Dropdown>
           )}
@@ -507,6 +512,11 @@ const Navbar: React.FC = () => {
             <ListItemButton onClick={() => navigateTo("/taste-profile")}>
               Taste Profile
             </ListItemButton>
+            {user?.isAdmin && (
+              <ListItemButton onClick={() => navigateTo("/admin")}>
+                Admin
+              </ListItemButton>
+            )}
           </List>
         </Box>
       </Drawer>

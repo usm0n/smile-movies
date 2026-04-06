@@ -50,6 +50,7 @@ export interface User {
   lastLogin: string;
   devices: Device[];
   loginType: string;
+  roles?: string[];
   age?: number;
   gender?: "male" | "female" | "other" | "prefer_not_to_say";
   favoriteMovies?: FavoriteMedia[];
@@ -106,6 +107,7 @@ export interface UserRegister {
   deviceType: string;
   deviceId: string;
   loginType: string;
+  roles?: string[];
   deviceLocation: Location;
   age?: number;
   gender?: "male" | "female" | "other" | "prefer_not_to_say";

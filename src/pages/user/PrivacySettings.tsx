@@ -17,9 +17,13 @@ import { useState } from "react";
 function PrivacySettings({
   userValue,
   setUserValue,
+  updateMyself,
+  updatedMyselfData,
 }: {
   userValue: User;
   setUserValue: React.Dispatch<React.SetStateAction<User>>;
+  updateMyself: (user: User) => void;
+  updatedMyselfData: { isLoading: boolean } | null;
 }) {
   const [deleteModal, setDeleteModal] = useState(false);
 
@@ -66,6 +70,13 @@ function PrivacySettings({
           </Button>
         </Box>
       ))}
+      <Divider />
+      <Button
+        onClick={() => updateMyself(userValue)}
+        loading={updatedMyselfData?.isLoading}
+      >
+        Save Privacy Settings
+      </Button>
       <Divider />
       <Box display={"flex"} gap={"10px"} alignItems={"center"}>
         <Typography level="title-md">Created at:</Typography>

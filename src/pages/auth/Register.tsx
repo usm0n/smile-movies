@@ -34,7 +34,6 @@ import {
   deviceId,
   deviceName,
   deviceType,
-  isLoggedIn,
   isValidEmail,
 } from "../../utilities/defaults";
 import { useNavigate } from "react-router-dom";
@@ -86,7 +85,7 @@ function Register() {
     privacy: { showWatchlist: true, showFavorites: true },
   });
 
-  const { login, loginData, registerData, register } = useUsers();
+  const { login, loginData, registerData, register, myselfData } = useUsers();
   const { locationData } = useOC();
   const { colorScheme } = useColorScheme();
   const navigate = useNavigate();
@@ -112,8 +111,8 @@ function Register() {
   });
 
   useEffect(() => {
-    if (isLoggedIn) navigate("/");
-  }, [isLoggedIn]);
+    if (myselfData?.isSuccess) navigate("/");
+  }, [myselfData?.isSuccess, navigate]);
 
   useEffect(() => {
     setUserValue((prev) => ({ ...prev, deviceLocation: locationData.data }));

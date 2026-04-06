@@ -7,7 +7,7 @@ import React, { useEffect, useState } from "react";
 import { GoogleUserResponse, Location, UserLogin } from "../../user";
 import {
   backdropLoading, deviceId, deviceName, deviceType,
-  isLoggedIn, isValidEmail,
+  isValidEmail,
 } from "../../utilities/defaults";
 import { useNavigate } from "react-router-dom";
 import { useGoogleLogin } from "@react-oauth/google";
@@ -33,6 +33,7 @@ function Login() {
   });
 
   const { login, loginData, registerData } = useUsers();
+  const { myselfData } = useUsers();
   const { locationData } = useOC(); // location is auto-fetched by OCProvider
   const { colorScheme } = useColorScheme();
   const navigate = useNavigate();
@@ -48,8 +49,8 @@ function Login() {
   }, [locationData.data]);
 
   useEffect(() => {
-    if (isLoggedIn) navigate("/");
-  }, [isLoggedIn]);
+    if (myselfData?.isSuccess) navigate("/");
+  }, [myselfData?.isSuccess, navigate]);
 
   const googleLogin = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
