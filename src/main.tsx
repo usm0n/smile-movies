@@ -10,6 +10,9 @@ import { GoogleOAuthProvider } from "@react-oauth/google";
 import OCProvider from "./context/OC.tsx";
 import { StreamProvider } from "./context/Stream.tsx";
 import { Toaster } from "react-hot-toast";
+import { registerServiceWorker } from "./pwa/registerServiceWorker.ts";
+
+registerServiceWorker();
 
 createRoot(document.getElementById("root")!).render(
   <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>

@@ -18,7 +18,7 @@ import {
   Select,
   Typography,
 } from "@mui/joy";
-import { NotificationPreferences, PrivacySettings, ResponseType, User } from "../../user";
+import { ResponseType, User } from "../../user";
 import { Edit, Lock, Visibility, VisibilityOff } from "@mui/icons-material";
 import { isValidEmail } from "../../utilities/defaults";
 import React, { useState } from "react";
@@ -202,65 +202,7 @@ function Settings({
 
       <Divider />
 
-      {/* ── Notifications ── */}
-      <Box>
-        <Typography level="title-md" sx={{ mb: 1.5 }}>Notifications</Typography>
-        {[
-          { key: "emailNotifications", label: "Email notifications" },
-          { key: "newReleases", label: "New release alerts" },
-          { key: "recommendations", label: "Personalized recommendations" },
-          { key: "watchlistUpdates", label: "Watchlist updates" },
-        ].map(({ key, label }) => (
-          <Box key={key} sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1 }}>
-            <Typography level="body-sm">{label}</Typography>
-            <Button
-              size="sm"
-              variant={(userValue?.notifications as any)?.[key] ? "solid" : "outlined"}
-              color={(userValue?.notifications as any)?.[key] ? "success" : "neutral"}
-              onClick={() =>
-                setUserValue((prev) => ({
-                  ...prev,
-                  notifications: { ...(prev.notifications as NotificationPreferences), [key]: !(prev.notifications as any)?.[key] },
-                }))
-              }
-              sx={{ minWidth: 56 }}
-            >
-              {(userValue?.notifications as any)?.[key] ? "On" : "Off"}
-            </Button>
-          </Box>
-        ))}
-      </Box>
-
-      <Divider />
-
-      {/* ── Privacy ── */}
-      <Box>
-        <Typography level="title-md" sx={{ mb: 1.5 }}>Privacy</Typography>
-        {[
-          { key: "showWatchlist", label: "Show my watchlist to others" },
-          { key: "showFavorites", label: "Show my favorites to others" },
-        ].map(({ key, label }) => (
-          <Box key={key} sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1 }}>
-            <Typography level="body-sm">{label}</Typography>
-            <Button
-              size="sm"
-              variant={(userValue?.privacy as any)?.[key] ? "solid" : "outlined"}
-              color={(userValue?.privacy as any)?.[key] ? "primary" : "neutral"}
-              onClick={() =>
-                setUserValue((prev) => ({
-                  ...prev,
-                  privacy: { ...(prev.privacy as PrivacySettings), [key]: !(prev.privacy as any)?.[key] },
-                }))
-              }
-              sx={{ minWidth: 56 }}
-            >
-              {(userValue?.privacy as any)?.[key] ? "On" : "Off"}
-            </Button>
-          </Box>
-        ))}
-      </Box>
-
-      <Box sx={{ 
+      <Box sx={{
         display: "flex",
         pt: 1,
         position: "sticky",

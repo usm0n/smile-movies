@@ -483,11 +483,17 @@ const Navbar: React.FC = () => {
               onClick={() => navigateTo("/")}
               sx={{ fontWeight: "lg" }}
             >
-              Home
+              Landing
+            </ListItemButton>
+            <ListItemButton onClick={() => navigateTo("/browse")}>
+              Browse
             </ListItemButton>
             <ListItemButton onClick={() => navigateTo("/ai")} sx={{ gap: 1 }}>
               <AutoAwesome sx={{ fontSize: 18, color: "rgb(255,216,77)" }} />{" "}
               SmileAI
+            </ListItemButton>
+            <ListItemButton onClick={() => navigateTo("/download")}>
+              Download
             </ListItemButton>
             <ListItemButton onClick={() => navigateTo("/discover")}>
               Discover

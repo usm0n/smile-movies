@@ -5,6 +5,11 @@ import Login from "../pages/auth/Login";
 import Register from "../pages/auth/Register";
 import ResetPassword from "../pages/auth/ResetPassword";
 import VerifyEmail from "../pages/auth/VerifyEmail";
+import AboutPage from "../pages/public/AboutPage";
+import ContactPage from "../pages/public/ContactPage";
+import DownloadPage from "../pages/public/DownloadPage";
+import LandingPage from "../pages/public/LandingPage";
+import LegalDocumentPage from "../pages/public/LegalDocumentPage";
 import Discover from "../pages/Discover";
 import Movie from "../pages/movie/Movie";
 import Person from "../pages/person/Person";
@@ -21,7 +26,39 @@ import TasteProfile from "../pages/TasteProfile";
 export const mainRoutes = [
   {
     path: "/",
+    element: <LandingPage />,
+  },
+  {
+    path: "/browse",
     element: <HomeLayout />,
+  },
+  {
+    path: "/download",
+    element: <DownloadPage />,
+  },
+  {
+    path: "/about",
+    element: <AboutPage />,
+  },
+  {
+    path: "/contact",
+    element: <ContactPage />,
+  },
+  {
+    path: "/privacy",
+    element: <LegalDocumentPage forcedSlug="privacy" />,
+  },
+  {
+    path: "/terms",
+    element: <LegalDocumentPage forcedSlug="terms" />,
+  },
+  {
+    path: "/dmca",
+    element: <LegalDocumentPage forcedSlug="dmca" />,
+  },
+  {
+    path: "/cookies",
+    element: <LegalDocumentPage forcedSlug="cookies" />,
   },
   {
     path: "/auth/login",
@@ -33,7 +70,19 @@ export const mainRoutes = [
   },
   {
     path: "/user/settings",
-    element: <Settings />,
+    element: <Settings initialTab={0} />,
+  },
+  {
+    path: "/user/notifications",
+    element: <Settings initialTab={1} />,
+  },
+  {
+    path: "/user/devices",
+    element: <Settings initialTab={2} />,
+  },
+  {
+    path: "/user/privacy",
+    element: <Settings initialTab={3} />,
   },
   {
     path: "/movie/:movieId",

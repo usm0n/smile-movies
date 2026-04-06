@@ -7,9 +7,14 @@ export interface FavoriteMedia {
 
 export interface NotificationPreferences {
   emailNotifications: boolean;
-  newReleases: boolean;
+  productAnnouncements: boolean;
+  newMovieReleases: boolean;
+  newEpisodeReleases: boolean;
+  newSeasonReleases: boolean;
+  returningShows: boolean;
   recommendations: boolean;
   watchlistUpdates: boolean;
+  digestMode: "instant" | "daily" | "weekly";
 }
 
 export interface PrivacySettings {

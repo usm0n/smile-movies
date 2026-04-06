@@ -4,17 +4,27 @@ import { useUsers } from "../../context/Users";
 import { User } from "../../user";
 import { useEffect, useState } from "react";
 import { backdropLoading, isLoggedIn } from "../../utilities/defaults";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import Settings from "./Settings";
 import Devices from "./Devices";
 import PrivacySettings from "./PrivacySettings";
+import NotificationSettings from "./NotificationSettings";
 
-const SettingsMain = () => {
+const tabPaths = [
+  "/user/settings",
+  "/user/notifications",
+  "/user/devices",
+  "/user/privacy",
+];
+
+const SettingsMain = ({ initialTab = 0 }: { initialTab?: number }) => {
   const { myselfData, updateMyself, updatedMyselfData } = useUsers();
   const [userValue, setUserValue] = useState<User>(myselfData?.data as User);
 
   const { colorScheme } = useColorScheme();
   const navigate = useNavigate();
+  const location = useLocation();
+  const activeTab = Math.max(0, tabPaths.indexOf(location.pathname));
 
   useEffect(() => {
     if (myselfData) {
@@ -42,13 +52,16 @@ const SettingsMain = () => {
         }}
       >
         <Tabs
+          value={activeTab === -1 ? initialTab : activeTab}
+          onChange={(_, value) => navigate(tabPaths[(value as number) || 0])}
           sx={{
             background: "transparent",
             width: "90%",
           }}
         >
           <TabList>
-            <Tab>Settings</Tab>
+            <Tab>Account</Tab>
+            <Tab>Notifications</Tab>
             <Tab>Devices</Tab>
             <Tab>Privacy Settings</Tab>
           </TabList>
@@ -62,10 +75,13 @@ const SettingsMain = () => {
             />
           </TabPanel>
           <TabPanel value={1}>
-            <Devices myselfData={myselfData} />
+            <NotificationSettings userValue={userValue} setUserValue={setUserValue} />
           </TabPanel>
           <TabPanel value={2}>
-            <PrivacySettings userValue={userValue} />
+            <Devices myselfData={myselfData} />
+          </TabPanel>
+          <TabPanel value={3}>
+            <PrivacySettings userValue={userValue} setUserValue={setUserValue} />
           </TabPanel>
         </Tabs>
       </Box>

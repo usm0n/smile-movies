@@ -1,0 +1,28 @@
+{
+  "name": "Smile Movies",
+  "short_name": "Smile Movies",
+  "description": "Web-first movie and TV discovery with SmileAI, watch tracking, and installable PWA support.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#050913",
+  "theme_color": "#050913",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icons/logo-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/logo-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/logo-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

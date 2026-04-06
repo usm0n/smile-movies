@@ -43,6 +43,11 @@ import { useUsers } from "../../context/Users";
 import { useOC } from "../../context/OC";
 import React from "react";
 import axios from "axios";
+import {
+  defaultNotificationPreferences,
+  notificationDigestOptions,
+  notificationToggleOptions,
+} from "../../utilities/notificationPreferences";
 
 const GoogleIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 48 48">
@@ -77,7 +82,7 @@ function Register() {
     deviceLocation: { latitude: 0, longitude: 0, continent: "", country: "", county: "", state: "", road: "" },
     age: undefined,
     gender: undefined,
-    notifications: { emailNotifications: true, newReleases: true, recommendations: true, watchlistUpdates: true },
+    notifications: defaultNotificationPreferences,
     privacy: { showWatchlist: true, showFavorites: true },
   });
 
@@ -260,25 +265,43 @@ function Register() {
             </Box>
 
             <Typography level="title-sm">Notifications</Typography>
-            {[
-              { key: "emailNotifications", label: "Email notifications" },
-              { key: "newReleases", label: "New release alerts" },
-              { key: "recommendations", label: "Personalized recommendations" },
-              { key: "watchlistUpdates", label: "Watchlist updates" },
-            ].map(({ key, label }) => (
+            {notificationToggleOptions.map(({ key, label }) => (
               <Box key={key} sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <Typography level="body-sm">{label}</Typography>
                 <Button
                   size="sm"
                   variant={(userValue.notifications as any)?.[key] ? "solid" : "outlined"}
                   color={(userValue.notifications as any)?.[key] ? "success" : "neutral"}
-                  onClick={() => setUserValue((prev) => ({ ...prev, notifications: { ...prev.notifications!, [key]: !(prev.notifications as any)[key] } }))}
+                  onClick={() => setUserValue((prev) => ({ ...prev, notifications: { ...defaultNotificationPreferences, ...prev.notifications!, [key]: !(prev.notifications as any)[key] } }))}
                   sx={{ minWidth: 60 }}
                 >
                   {(userValue.notifications as any)?.[key] ? "On" : "Off"}
                 </Button>
               </Box>
             ))}
+
+            <FormControl>
+              <FormLabel>Email cadence</FormLabel>
+              <Select
+                value={userValue.notifications?.digestMode || "instant"}
+                onChange={(_, value) =>
+                  setUserValue((prev) => ({
+                    ...prev,
+                    notifications: {
+                      ...defaultNotificationPreferences,
+                      ...prev.notifications!,
+                      digestMode: (value || "instant") as any,
+                    },
+                  }))
+                }
+              >
+                {notificationDigestOptions.map((option) => (
+                  <Option key={option.value} value={option.value}>
+                    {option.label}
+                  </Option>
+                ))}
+              </Select>
+            </FormControl>
 
             <Divider />
             <Typography level="title-sm">Privacy</Typography>

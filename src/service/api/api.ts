@@ -8,8 +8,24 @@ export const smbAPI = axios.create({
   headers: { "X-API-Key": import.meta.env.VITE_API_KEY },
 });
 
+const v1BaseUrl = String(import.meta.env.VITE_API_URL || "").replace(
+  /\/api\/v3\/?$/,
+  "/api/v1",
+);
+
+export const smbV1API = axios.create({
+  baseURL: v1BaseUrl,
+  withCredentials: true,
+  headers: { "X-API-Key": import.meta.env.VITE_API_KEY },
+});
+
 // Attach the current device fingerprint to every request
 smbAPI.interceptors.request.use((config) => {
+  config.headers["X-Device-Id"] = deviceId();
+  return config;
+});
+
+smbV1API.interceptors.request.use((config) => {
   config.headers["X-Device-Id"] = deviceId();
   return config;
 });
