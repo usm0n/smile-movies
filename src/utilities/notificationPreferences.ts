@@ -1,4 +1,4 @@
-import { NotificationPreferences } from "../user";
+import { NotificationInterests, NotificationPreferences } from "../user";
 
 export const defaultNotificationPreferences: NotificationPreferences = {
   emailNotifications: true,
@@ -10,6 +10,14 @@ export const defaultNotificationPreferences: NotificationPreferences = {
   recommendations: true,
   watchlistUpdates: true,
   digestMode: "instant",
+};
+
+export const defaultNotificationInterests: NotificationInterests = {
+  followedShows: [],
+  followedGenres: [],
+  followedActors: [],
+  followedDirectors: [],
+  tasteKeywords: [],
 };
 
 export const notificationToggleOptions: Array<{

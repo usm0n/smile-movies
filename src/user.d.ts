@@ -17,6 +17,14 @@ export interface NotificationPreferences {
   digestMode: "instant" | "daily" | "weekly";
 }
 
+export interface NotificationInterests {
+  followedShows: string[];
+  followedGenres: string[];
+  followedActors: string[];
+  followedDirectors: string[];
+  tasteKeywords: string[];
+}
+
 export interface PrivacySettings {
   showWatchlist: boolean;
   showFavorites: boolean;
@@ -58,6 +66,7 @@ export interface User {
   gender?: "male" | "female" | "other" | "prefer_not_to_say";
   favoriteMovies?: FavoriteMedia[];
   notifications?: NotificationPreferences;
+  notificationInterests?: NotificationInterests;
   privacy?: PrivacySettings;
 }
 
@@ -118,6 +127,7 @@ export interface UserRegister {
   gender?: "male" | "female" | "other" | "prefer_not_to_say";
   favoriteMovies?: FavoriteMedia[];
   notifications?: NotificationPreferences;
+  notificationInterests?: NotificationInterests;
   privacy?: PrivacySettings;
 }
 

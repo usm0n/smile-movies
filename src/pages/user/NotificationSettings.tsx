@@ -1,6 +1,7 @@
-import { Box, Button, Card, Chip, CircularProgress, Divider, Option, Select, Stack, Typography } from "@mui/joy";
-import { NotificationPreferences, User } from "../../user";
+import { Box, Button, Card, Chip, CircularProgress, Divider, Input, Option, Select, Stack, Typography } from "@mui/joy";
+import { NotificationInterests, NotificationPreferences, User } from "../../user";
 import {
+  defaultNotificationInterests,
   defaultNotificationPreferences,
   notificationDigestOptions,
   notificationToggleOptions,
@@ -21,9 +22,30 @@ function NotificationSettings({
     ...defaultNotificationPreferences,
     ...(userValue?.notifications || {}),
   };
+  const currentInterests = {
+    ...defaultNotificationInterests,
+    ...(userValue?.notificationInterests || {}),
+  };
   const [history, setHistory] = useState<NotificationHistoryItem[]>([]);
   const [historyLoading, setHistoryLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [interestDraft, setInterestDraft] = useState({
+    followedShows: "",
+    followedGenres: "",
+    followedActors: "",
+    followedDirectors: "",
+    tasteKeywords: "",
+  });
+
+  const parseList = (value: string) =>
+    Array.from(
+      new Set(
+        value
+          .split(",")
+          .map((item) => item.trim())
+          .filter(Boolean),
+      ),
+    );
 
   useEffect(() => {
     const loadHistory = async () => {
@@ -39,6 +61,22 @@ function NotificationSettings({
 
     void loadHistory();
   }, []);
+
+  useEffect(() => {
+    setInterestDraft({
+      followedShows: currentInterests.followedShows.join(", "),
+      followedGenres: currentInterests.followedGenres.join(", "),
+      followedActors: currentInterests.followedActors.join(", "),
+      followedDirectors: currentInterests.followedDirectors.join(", "),
+      tasteKeywords: currentInterests.tasteKeywords.join(", "),
+    });
+  }, [
+    currentInterests.followedActors,
+    currentInterests.followedDirectors,
+    currentInterests.followedGenres,
+    currentInterests.followedShows,
+    currentInterests.tasteKeywords,
+  ]);
 
   return (
     <Card
@@ -128,11 +166,60 @@ function NotificationSettings({
         Delivery is email-first in the current release, with queueing and unsubscribe groundwork now live on the backend.
       </Typography>
 
+      <Divider />
+
+      <Box>
+        <Typography level="title-md" sx={{ mb: 1 }}>
+          Release Matching Interests
+        </Typography>
+        <Typography level="body-xs" textColor="neutral.400" sx={{ mb: 2 }}>
+          Follow entities that should trigger release alerts even when a title is not already in your watchlist.
+        </Typography>
+        <Stack spacing={1.5}>
+          {[
+            ["followedShows", "Followed shows", "Examples: Game of Thrones, Severance"],
+            ["followedGenres", "Followed genres", "Examples: Sci-Fi, Thriller, Animation"],
+            ["followedActors", "Followed actors", "Examples: Cillian Murphy, Zendaya"],
+            ["followedDirectors", "Followed directors", "Examples: Denis Villeneuve, Greta Gerwig"],
+            ["tasteKeywords", "Taste keywords", "Examples: time travel, courtroom, heist"],
+          ].map(([key, label, placeholder]) => (
+            <Box key={key}>
+              <Typography level="title-sm">{label}</Typography>
+              <Typography level="body-xs" textColor="neutral.400" sx={{ mb: 0.75 }}>
+                Comma-separated values.
+              </Typography>
+              <Input
+                value={interestDraft[key as keyof typeof interestDraft]}
+                placeholder={placeholder}
+                onChange={(event) =>
+                  setInterestDraft((prev) => ({
+                    ...prev,
+                    [key]: event.target.value,
+                  }))
+                }
+              />
+            </Box>
+          ))}
+        </Stack>
+      </Box>
+
       <Button
         onClick={async () => {
           setSaving(true);
           try {
             await notificationsAPI.updatePreferences(currentPreferences);
+            const nextInterests: NotificationInterests = {
+              followedShows: parseList(interestDraft.followedShows),
+              followedGenres: parseList(interestDraft.followedGenres),
+              followedActors: parseList(interestDraft.followedActors),
+              followedDirectors: parseList(interestDraft.followedDirectors),
+              tasteKeywords: parseList(interestDraft.tasteKeywords),
+            };
+            await notificationsAPI.updateInterests(nextInterests);
+            setUserValue((prev) => ({
+              ...prev,
+              notificationInterests: nextInterests,
+            }));
             toast.success("Notification settings saved.");
           } catch (error) {
             console.error(error);

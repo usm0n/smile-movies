@@ -486,10 +486,34 @@ function AdminDashboard() {
                   <Typography level="body-sm" textColor="neutral.300" sx={{ mt: 1 }}>
                     Status: {notifications.queue.status} · Candidates {notifications.queue.queuedCandidates} · Pending digests {notifications.queue.pendingDigests} · Delivery failures {notifications.queue.deliveryFailures} · Sent {notifications.queue.sentDeliveries} · Release events {notifications.queue.releaseEvents}
                   </Typography>
+                  <Typography level="body-xs" textColor="neutral.500" sx={{ mt: 0.75 }}>
+                    Last job run: {notifications.queue.lastRunAt || "No recorded runs yet"}
+                  </Typography>
                   <Typography level="body-xs" textColor="neutral.500" sx={{ mt: 1 }}>
                     This is the admin-facing foundation for the notification engine. Delivery queues and provider telemetry can plug into this surface next.
                   </Typography>
                   <Stack direction={{ xs: "column", sm: "row" }} spacing={1.25} sx={{ mt: 2 }}>
+                    <Button
+                      color="success"
+                      loading={busyKey === "run-scheduled"}
+                      onClick={async () => {
+                        setBusyKey("run-scheduled");
+                        try {
+                          const response = await notificationsAPI.adminRunScheduled();
+                          toast.success(
+                            `Scheduled cycle complete: ${response.data.sync?.releaseEvents || 0} events synced, ${response.data.sync?.queued || 0} queued.`,
+                          );
+                          await loadAdminData();
+                        } catch (error) {
+                          console.error(error);
+                          toast.error("Failed to run scheduled notification cycle.");
+                        } finally {
+                          setBusyKey("");
+                        }
+                      }}
+                    >
+                      Run scheduled cycle
+                    </Button>
                     <Button
                       variant="soft"
                       loading={busyKey === "sync-tmdb"}
@@ -557,6 +581,43 @@ function AdminDashboard() {
                     >
                       Process pending emails
                     </Button>
+                  </Stack>
+                  <Divider sx={{ my: 2 }} />
+                  <Typography level="title-sm" sx={{ mb: 1 }}>
+                    Recent job runs
+                  </Typography>
+                  <Stack spacing={1}>
+                    {notifications.jobRuns.length ? notifications.jobRuns.map((job) => (
+                      <Card key={`${job.jobType}-${job.startedAt}`} sx={{ p: 1.5, borderRadius: 18, background: "rgba(255,255,255,0.02)" }}>
+                        <Stack direction="row" spacing={1} sx={{ justifyContent: "space-between", alignItems: "center", mb: 0.5 }}>
+                          <Typography level="title-sm">{job.jobType}</Typography>
+                          <Chip
+                            size="sm"
+                            color={
+                              job.status === "completed"
+                                ? "success"
+                                : job.status === "failed"
+                                  ? "danger"
+                                  : "neutral"
+                            }
+                          >
+                            {job.status}
+                          </Chip>
+                        </Stack>
+                        <Typography level="body-xs" textColor="neutral.400">
+                          {job.trigger} · started {job.startedAt}{job.finishedAt ? ` · finished ${job.finishedAt}` : ""}
+                        </Typography>
+                        {job.error ? (
+                          <Typography level="body-xs" color="danger" sx={{ mt: 0.5 }}>
+                            {job.error}
+                          </Typography>
+                        ) : null}
+                      </Card>
+                    )) : (
+                      <Typography level="body-sm" textColor="neutral.500">
+                        No notification jobs have run yet.
+                      </Typography>
+                    )}
                   </Stack>
                 </Card>
               </Stack>

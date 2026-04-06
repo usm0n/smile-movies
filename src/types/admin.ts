@@ -41,7 +41,18 @@ export interface AdminNotificationOverview {
     deliveryFailures: number;
     sentDeliveries: number;
     releaseEvents: number;
+    lastRunAt?: string;
   };
+  jobRuns: Array<{
+    id?: string;
+    jobType: "tmdb_sync" | "instant_delivery" | "digest_delivery" | "scheduled_cycle";
+    status: "running" | "completed" | "failed";
+    trigger: "admin" | "worker" | "system";
+    startedAt: string;
+    finishedAt?: string;
+    error?: string;
+    summary?: Record<string, unknown>;
+  }>;
 }
 
 export interface AdminBootstrapStatus {

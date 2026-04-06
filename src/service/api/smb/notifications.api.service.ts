@@ -1,5 +1,5 @@
 import { smbV1API } from "../api";
-import { NotificationPreferences } from "../../../user";
+import { NotificationInterests, NotificationPreferences } from "../../../user";
 
 export const notificationsAPI = {
   getHistory: async () => {
@@ -8,6 +8,14 @@ export const notificationsAPI = {
   },
   updatePreferences: async (preferences: Partial<NotificationPreferences>) => {
     const response = await smbV1API.patch("/me/notification-preferences", preferences);
+    return response;
+  },
+  getInterests: async () => {
+    const response = await smbV1API.get("/me/notification-interests");
+    return response;
+  },
+  updateInterests: async (interests: Partial<NotificationInterests>) => {
+    const response = await smbV1API.patch("/me/notification-interests", interests);
     return response;
   },
   unsubscribe: async (token: string) => {
@@ -24,6 +32,10 @@ export const notificationsAPI = {
   },
   adminSyncTmdb: async () => {
     const response = await smbV1API.post("/notifications/admin/sync-tmdb");
+    return response;
+  },
+  adminRunScheduled: async () => {
+    const response = await smbV1API.post("/notifications/admin/run-scheduled");
     return response;
   },
 };
