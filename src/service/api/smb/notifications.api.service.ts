@@ -22,4 +22,8 @@ export const notificationsAPI = {
     const response = await smbV1API.post("/notifications/admin/process");
     return response;
   },
+  adminSyncTmdb: async () => {
+    const response = await smbV1API.post("/notifications/admin/sync-tmdb");
+    return response;
+  },
 };

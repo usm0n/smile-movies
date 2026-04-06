@@ -491,6 +491,27 @@ function AdminDashboard() {
                   </Typography>
                   <Stack direction={{ xs: "column", sm: "row" }} spacing={1.25} sx={{ mt: 2 }}>
                     <Button
+                      variant="soft"
+                      loading={busyKey === "sync-tmdb"}
+                      onClick={async () => {
+                        setBusyKey("sync-tmdb");
+                        try {
+                          const response = await notificationsAPI.adminSyncTmdb();
+                          toast.success(
+                            `TMDB sync complete: ${response.data.movieReleases} movies, ${response.data.episodeReleases} episodes, ${response.data.seasonReleases} seasons, ${response.data.returningShows} returning shows.`,
+                          );
+                          await loadAdminData();
+                        } catch (error) {
+                          console.error(error);
+                          toast.error("Failed to sync TMDB release events.");
+                        } finally {
+                          setBusyKey("");
+                        }
+                      }}
+                    >
+                      Sync TMDB release events
+                    </Button>
+                    <Button
                       loading={busyKey === "seed-release-event"}
                       onClick={async () => {
                         setBusyKey("seed-release-event");
