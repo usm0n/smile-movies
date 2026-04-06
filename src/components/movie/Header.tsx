@@ -132,7 +132,7 @@ function Header({
         overflow: "hidden",
         "@media (max-width: 700px)": {
           height: "auto",
-          minHeight: "calc(100svh + 320px)",
+          minHeight: "100svh",
         },
       }}
     >

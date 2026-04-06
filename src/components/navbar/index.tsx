@@ -8,6 +8,7 @@ import {
   Logout,
   Search,
   Source,
+  Tune,
   WarningRounded,
 } from "@mui/icons-material";
 import MenuIcon from "@mui/icons-material/Menu";
@@ -361,6 +362,10 @@ const Navbar: React.FC = () => {
                   <FavoriteBorder sx={{ fontSize: 18 }} />
                   <ListItemContent>Favorites</ListItemContent>
                 </MenuItem>
+                <MenuItem onClick={() => navigate("/taste-profile")}>
+                  <Tune sx={{ fontSize: 18 }} />
+                  <ListItemContent>Taste Profile</ListItemContent>
+                </MenuItem>
               </Menu>
             </Dropdown>
           )}
@@ -492,6 +497,9 @@ const Navbar: React.FC = () => {
             </ListItemButton>
             <ListItemButton onClick={() => navigateTo("/favorites")}>
               Favorites
+            </ListItemButton>
+            <ListItemButton onClick={() => navigateTo("/taste-profile")}>
+              Taste Profile
             </ListItemButton>
           </List>
         </Box>

@@ -2,6 +2,7 @@ import {
   ArrowBackIos,
   Favorite,
   ThumbUp,
+  Tune,
 } from "@mui/icons-material";
 import {
   Box,
@@ -97,12 +98,20 @@ function Favorites() {
             These are your strongest positive taste signals. SmileAI uses them to recommend better titles.
           </Typography>
         </Box>
-        <Link
-          onClick={() => navigate("/watchlist")}
-          sx={{ cursor: "pointer", color: "rgb(96, 183, 255)" }}
-        >
-          Back to watchlist
-        </Link>
+        <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
+          <Link
+            onClick={() => navigate("/watchlist")}
+            sx={{ cursor: "pointer", color: "rgb(96, 183, 255)" }}
+          >
+            Back to watchlist
+          </Link>
+          <Link
+            onClick={() => navigate("/taste-profile")}
+            sx={{ cursor: "pointer", color: "rgb(124, 214, 255)" }}
+          >
+            Open taste profile
+          </Link>
+        </Box>
       </Box>
 
       <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1.2 }}>
@@ -266,6 +275,9 @@ function Favorites() {
             </Chip>
             <Chip startDecorator={<ThumbUp />} variant="soft" color="primary">
               Like for solid recommendations
+            </Chip>
+            <Chip startDecorator={<Tune />} variant="soft" color="neutral">
+              Review everything in Taste Profile
             </Chip>
           </Box>
           <Link

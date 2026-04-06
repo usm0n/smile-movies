@@ -6,6 +6,7 @@ import {
   History,
   MoodBad,
   ThumbUp,
+  Tune,
 } from "@mui/icons-material";
 import {
   Box,
@@ -137,21 +138,30 @@ function Watchlist() {
             Organize what to start next, what you are in the middle of, and what you already finished.
           </Typography>
         </Box>
-        <Button
-          onClick={() => navigate("/favorites")}
-          startDecorator={<FavoriteBorder />}
-          sx={{
-            alignSelf: "flex-start",
-            background: "rgba(96, 183, 255, 0.12)",
-            border: "1px solid rgba(96, 183, 255, 0.24)",
-            color: "rgb(96, 183, 255)",
-            "&:hover": {
-              background: "rgba(96, 183, 255, 0.18)",
-            },
-          }}
-        >
-          Open Favorites
-        </Button>
+        <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
+          <Button
+            onClick={() => navigate("/favorites")}
+            startDecorator={<FavoriteBorder />}
+            sx={{
+              alignSelf: "flex-start",
+              background: "rgba(96, 183, 255, 0.12)",
+              border: "1px solid rgba(96, 183, 255, 0.24)",
+              color: "rgb(96, 183, 255)",
+              "&:hover": {
+                background: "rgba(96, 183, 255, 0.18)",
+              },
+            }}
+          >
+            Open Favorites
+          </Button>
+          <Button
+            onClick={() => navigate("/taste-profile")}
+            startDecorator={<Tune />}
+            variant="soft"
+          >
+            Taste Profile
+          </Button>
+        </Box>
       </Box>
 
       <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1.5 }}>
@@ -503,12 +513,20 @@ function Watchlist() {
       <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
         <Box sx={{ display: "flex", justifyContent: "space-between", gap: 2, flexWrap: "wrap" }}>
           <Typography level="h2">Favorites Snapshot</Typography>
-          <Link
-            onClick={() => navigate("/favorites")}
-            sx={{ cursor: "pointer", color: "rgb(96, 183, 255)" }}
-          >
-            View all favorites
-          </Link>
+          <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
+            <Link
+              onClick={() => navigate("/favorites")}
+              sx={{ cursor: "pointer", color: "rgb(96, 183, 255)" }}
+            >
+              View all favorites
+            </Link>
+            <Link
+              onClick={() => navigate("/taste-profile")}
+              sx={{ cursor: "pointer", color: "rgb(124, 214, 255)" }}
+            >
+              Open taste profile
+            </Link>
+          </Box>
         </Box>
         {favorites.length ? (
           <Box display="flex" flexWrap="wrap" justifyContent="center" gap="10px">

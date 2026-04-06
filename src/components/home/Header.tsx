@@ -172,7 +172,7 @@ const Header = React.memo(
             overflow: "hidden",
             "@media (max-width: 700px)": {
               height: "auto",
-              minHeight: "calc(100svh + 180px)",
+              minHeight: "100svh",
             },
             cursor: "pointer",
           }}
@@ -215,7 +215,7 @@ const Header = React.memo(
           />
           <CardContent
             sx={{
-              justifyContent: { xs: "flex-start", sm: "flex-end" },
+              justifyContent: "flex-end",
               pt: { xs: "88px", sm: 0 },
               pb: { xs: "24px", sm: 0 },
             }}
