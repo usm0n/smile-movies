@@ -1,4 +1,4 @@
-import { ArrowBackIos } from "@mui/icons-material";
+import { ArrowBackIos, Warning } from "@mui/icons-material";
 import {
   Box,
   Button,
@@ -6,6 +6,7 @@ import {
   IconButton,
   LinearProgress,
   Modal,
+  ModalClose,
   ModalDialog,
   Option,
   Select,
@@ -80,9 +81,10 @@ function Watch() {
   const { getStreamData, getStream } = useStream();
   const { addToWatchlist, myselfData } = useUsers();
   const navigate = useNavigate();
-  const [preferredMode, setPreferredMode] = useState<PlaybackMode>("internal");
+  const [preferredMode, setPreferredMode] = useState<PlaybackMode>("external");
   const [streamServer, setStreamServer] = useState<StreamServer | null>(null);
   const [downloadSourcesOpen, setDownloadSourcesOpen] = useState(false);
+  const [adsWarning, setAdsWarning] = useState(true);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const progressRef = useRef({
     iframeSessionStartAt: 0,
@@ -181,7 +183,7 @@ function Watch() {
     preferredMode === "internal" && getStreamData.isLoading;
 
   useEffect(() => {
-    setPreferredMode("internal");
+    setPreferredMode("external");
     setStreamServer(null);
     setSessionBaseProgress(0);
     setSessionBaseReady(false);
@@ -582,8 +584,8 @@ function Watch() {
 
     const handleMessage = (event: any) => {
       if (
-        event.origin !== "https://vidsrc.cc" &&
-        event.origin !== "https://www.vidsrc.cc"
+        event.origin !== "https://vixsrc.to" &&
+        event.origin !== "https://www.vixsrc.to"
       ) {
         return;
       }
@@ -817,7 +819,7 @@ function Watch() {
           </DialogActions>
         </ModalDialog>
       </Modal> */}
-      {/* <Modal open={adsWarning} onClose={() => setAdsWarning(false)} sx={{ zIndex: 1003 }}>
+      <Modal open={adsWarning} onClose={() => setAdsWarning(false)} sx={{ zIndex: 1003 }}>
         <ModalDialog color="warning" variant="outlined">
           <ModalClose onClick={() => setAdsWarning(false)} />
           <Typography color="warning" level="h4" startDecorator={<Warning />}>
@@ -854,7 +856,7 @@ function Watch() {
             </Button>
           </DialogActions>
         </ModalDialog>
-      </Modal> */}
+      </Modal>
       <Helmet>
         <title>
           {`${

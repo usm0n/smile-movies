@@ -76,8 +76,7 @@ function PlaybackSurface({
     return (
       <iframe
         referrerPolicy="no-referrer-when-downgrade"
-        sandbox="allow-forms allow-modals allow-orientation-lock allow-pointer-lock allow-presentation allow-same-origin allow-scripts"
-        src={`https://vidsrc.cc/v2/embed/${movieType}/${movieId}${
+        src={`https://vixsrc.to/${movieType}/${movieId}${
           isTvSE ? `/${seasonId}` : ""
         }${isTvSE ? `/${episodeId}` : ""}`}
         allowFullScreen
