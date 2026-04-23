@@ -58,6 +58,22 @@ function PlaybackSurface({
         position: "absolute",
         inset: 0,
         background: "black",
+        display: "flex",
+        alignItems: { xs: "center", md: "stretch" },
+        justifyContent: { xs: "center", md: "stretch" },
+        pt: { xs: "56px", md: 0 },
+        pb: { xs: "16px", md: 0 },
+        "& media-player": {
+          width: "100%",
+          height: "100%",
+          backgroundColor: "black",
+        },
+        "@media (max-width: 700px)": {
+          "& media-player": {
+            height: "auto",
+            maxHeight: "calc(100svh - 96px)",
+          },
+        },
       }}
     >
       <MediaPlayer
@@ -77,9 +93,6 @@ function PlaybackSurface({
         playsinline
         preferNativeHLS={false}
         style={{
-          width: "100%",
-          height: "100%",
-          backgroundColor: "black",
           "--video-border-radius": "0px",
           "--video-border": "none",
           "--video-font-family":

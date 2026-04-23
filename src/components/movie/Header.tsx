@@ -88,7 +88,7 @@ function Header({
   const favoritePreference = currentPreference === "dislike" ? "like" : currentPreference || "like";
   const [availabilityState, setAvailabilityState] = useState({
     isLoading: true,
-    available: false,
+    available: null as boolean | null,
   });
   const progressPercent =
     watchlistItem?.duration && watchlistItem?.currentTime
@@ -149,7 +149,7 @@ function Header({
 
     setAvailabilityState({
       isLoading: true,
-      available: false,
+      available: null,
     });
 
     void providersAPI
@@ -170,7 +170,7 @@ function Header({
         if (cancelled) return;
         setAvailabilityState({
           isLoading: false,
-          available: false,
+          available: null,
         });
       });
 
@@ -181,9 +181,9 @@ function Header({
 
   const playButtonNote = isReleaseBlocked
     ? movieDetails?.status || ""
-    : availabilityState.isLoading
+    : availabilityState.isLoading && availabilityState.available === null
       ? "Checking video availability..."
-      : !availabilityState.available
+      : availabilityState.available === false
         ? "Sorry, we don't have it."
         : "";
   return (
@@ -310,8 +310,7 @@ function Header({
                 disabled={
                   isReleaseBlocked ||
                   myselfData?.isLoading ||
-                  availabilityState.isLoading ||
-                  !availabilityState.available
+                  availabilityState.available === false
                 }
                 startDecorator={<PlayArrow />}
                 sx={{
@@ -338,7 +337,10 @@ function Header({
                 level="body-sm"
                 sx={{
                   minHeight: "20px",
-                  color: !availabilityState.available && !availabilityState.isLoading && !isReleaseBlocked
+                  color:
+                    availabilityState.available === false &&
+                    !availabilityState.isLoading &&
+                    !isReleaseBlocked
                     ? "rgb(255, 166, 120)"
                     : undefined,
                 }}

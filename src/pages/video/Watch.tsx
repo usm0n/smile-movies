@@ -1,4 +1,7 @@
-import { ArrowBackIos, SubtitlesRounded } from "@mui/icons-material";
+import {
+  ArrowBackIos,
+  SubtitlesRounded,
+} from "@mui/icons-material";
 import {
   Box,
   Button,
@@ -18,7 +21,7 @@ import { useTMDB } from "../../context/TMDB";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { backdropLoading, isLoggedIn } from "../../utilities/defaults";
 import NotFound from "../../components/utils/NotFound";
-import { movieDetails, tvDetails, tvSeasonsDetails } from "../../tmdb-res";
+import { images, movieDetails, tvDetails, tvSeasonsDetails } from "../../tmdb-res";
 import { Helmet } from "react-helmet";
 import { useStream } from "../../context/Stream";
 import { useUsers } from "../../context/Users";
@@ -37,8 +40,12 @@ function Watch() {
     tvSeries,
     movieDetailsData,
     movie,
+    movieImagesData,
+    movieImages,
     tvSeasonsDetails,
     tvSeasonsDetailsData,
+    tvImagesData,
+    tvImages,
   } = useTMDB();
   const { colorScheme } = useColorScheme();
   const { movieId, movieType, seasonId, episodeId, startAt } = useParams();
@@ -67,6 +74,8 @@ function Watch() {
   const tvSeriesDetailsDataArr = tvSeriesDetailsData?.data as tvDetails;
   const movieDetailsDataArr = movieDetailsData?.data as movieDetails;
   const tvSeasonsDetailsArr = tvSeasonsDetailsData?.data as tvSeasonsDetails;
+  const movieImagesDataArr = movieImagesData?.data as images;
+  const tvImagesDataArr = tvImagesData?.data as images;
   const watchlistItem = (myselfData?.data as User)?.watchlist?.find(
     (item) => item.id === movieId && item.type === movieType,
   );
@@ -87,6 +96,11 @@ function Watch() {
       : movieDetailsDataArr?.poster_path;
   const backdropPoster =
     mediaPoster ? `https://image.tmdb.org/t/p/original${mediaPoster}` : "";
+  const mediaImages = movieType === "movie" ? movieImagesDataArr : tvImagesDataArr;
+  const mediaLogo =
+    mediaImages?.logos?.find((logo) => logo?.iso_639_1 === "en")?.file_path ||
+    mediaImages?.logos?.[0]?.file_path ||
+    "";
   const fallbackDurationMinutes = useMemo(() => {
     if (movieType === "tv") {
       return (
@@ -107,8 +121,8 @@ function Watch() {
   const [sessionBaseReady, setSessionBaseReady] = useState(false);
 
   const availableStream = getStreamData.data?.stream || null;
+  const playbackStream = sessionBaseReady ? availableStream : null;
   const subtitleTrackCount = availableStream?.subtitleTracks?.length || 0;
-  const sourceCount = availableStream?.sources?.length || 0;
   const isPreparingPlayback = getStreamData.isLoading;
   const isPlaybackUnavailable =
     !isPreparingPlayback && sessionBaseReady && !getStreamData.isAvailable;
@@ -272,9 +286,10 @@ function Watch() {
     );
     const progressRatio =
       durationMinutes > 0 ? boundedProgressMinutes / durationMinutes : 0;
+    const shouldAutoComplete = movieType === "movie" && progressRatio >= 0.9;
     const resolvedStatus = forceStatus
       ? forceStatus
-      : progressRatio >= 0.9
+      : shouldAutoComplete
         ? "watched"
         : "watching";
     const nextProgressMinutes =
@@ -337,11 +352,13 @@ function Watch() {
 
     if (movieType === "movie") {
       movie(movieId);
+      movieImages(movieId);
       getStream("movie", movieId);
       return;
     }
 
     tvSeries(movieId);
+    tvImages(movieId);
     if (seasonId) {
       tvSeasonsDetails(movieId, parseInt(seasonId));
     }
@@ -365,7 +382,7 @@ function Watch() {
       !movieId ||
       !movieType ||
       !sessionBaseReady ||
-      !availableStream?.masterPlaylistUrl
+      !playbackStream?.masterPlaylistUrl
     ) {
       return;
     }
@@ -375,7 +392,7 @@ function Watch() {
       movieId,
       seasonId || 0,
       episodeId || 0,
-      availableStream.masterPlaylistUrl,
+      playbackStream.masterPlaylistUrl,
     ].join(":");
 
     if (
@@ -421,7 +438,7 @@ function Watch() {
       cancelled = true;
     };
   }, [
-    availableStream?.masterPlaylistUrl,
+    playbackStream?.masterPlaylistUrl,
     episodeId,
     fallbackDurationMinutes,
     isLoggedIn,
@@ -433,7 +450,7 @@ function Watch() {
   ]);
 
   useEffect(() => {
-    if (!sessionBaseReady || !availableStream?.masterPlaylistUrl) return;
+    if (!sessionBaseReady || !playbackStream?.masterPlaylistUrl) return;
 
     const flushProgress = () => {
       void persistProgress(getCurrentProgressMinutes(), getPlayerDurationMinutes());
@@ -458,7 +475,7 @@ function Watch() {
       window.removeEventListener("beforeunload", flushProgress);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [availableStream?.masterPlaylistUrl, fallbackDurationMinutes, sessionBaseReady]);
+  }, [fallbackDurationMinutes, playbackStream?.masterPlaylistUrl, sessionBaseReady]);
 
   const handlePlayerLoadedMetadata = () => {
     if (!playerRef.current) return;
@@ -482,14 +499,38 @@ function Watch() {
 
   const handlePlayerEnded = () => {
     const durationMinutes = getPlayerDurationMinutes();
-    void persistProgress(durationMinutes, durationMinutes, "watched");
+    if (movieType === "movie") {
+      void persistProgress(durationMinutes, durationMinutes, "watched");
+      return;
+    }
+
+    const currentEpisodeNumber = Number(episodeId || 0);
+    const currentSeasonNumber = Number(seasonId || 0);
+    const hasNextEpisodeInSeason = Boolean(
+      tvSeasonsDetailsArr?.episodes?.some(
+        (episode) => Number(episode?.episode_number) === currentEpisodeNumber + 1,
+      ),
+    );
+    const remainingRegularSeasons =
+      tvSeriesDetailsDataArr?.seasons?.filter(
+        (season) =>
+          Number(season?.season_number) > currentSeasonNumber &&
+          Number(season?.episode_count || 0) > 0,
+      ) || [];
+    const isSeriesComplete = !hasNextEpisodeInSeason && !remainingRegularSeasons.length;
+
+    void persistProgress(
+      durationMinutes,
+      durationMinutes,
+      isSeriesComplete ? "watched" : "watching",
+    );
   };
 
   if (isIncorrect) {
     return <NotFound />;
   }
 
-  if (isFetching || isPreparingPlayback || !sessionBaseReady) {
+  if (!movieId || !movieType) {
     return (
       <Box width={"100%"} height={"100vh"}>
         {backdropLoading(true, colorScheme)}
@@ -530,6 +571,9 @@ function Watch() {
         overflow: "hidden",
         height: "100vh",
         background: "black",
+        "@media (max-width: 700px)": {
+          height: "100svh",
+        },
       }}
     >
       <Helmet>
@@ -566,15 +610,30 @@ function Watch() {
         <IconButton onClick={() => navigate(`/${movieType}/${movieId}`)}>
           <ArrowBackIos />
         </IconButton>
-        <Typography level="title-lg" sx={{ flex: 1, minWidth: 0 }}>
-          {movieType === "movie"
-            ? movieDetailsDataArr?.title
-            : tvSeriesDetailsDataArr?.name}
-        </Typography>
+        <Box sx={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center" }}>
+          {mediaLogo ? (
+            <Box
+              component="img"
+              src={`https://image.tmdb.org/t/p/original${mediaLogo}`}
+              alt={mediaTitle || "Title logo"}
+              sx={{
+                width: "auto",
+                maxWidth: { xs: "170px", sm: "260px" },
+                height: { xs: "28px", sm: "34px" },
+                objectFit: "contain",
+                objectPosition: "left center",
+                filter: "drop-shadow(0 0 12px rgba(0,0,0,0.75))",
+              }}
+            />
+          ) : (
+            <Typography level="title-lg" sx={{ minWidth: 0 }}>
+              {(movieType === "movie"
+                ? movieDetailsDataArr?.title
+                : tvSeriesDetailsDataArr?.name) || "Preparing stream"}
+            </Typography>
+          )}
+        </Box>
         <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", justifyContent: "flex-end" }}>
-          <Chip size="sm" color="warning" variant="soft">
-            Vixsrc
-          </Chip>
           <Chip
             size="sm"
             variant="soft"
@@ -582,45 +641,65 @@ function Watch() {
           >
             {subtitleTrackCount ? `${subtitleTrackCount} subtitles` : "No subtitles"}
           </Chip>
-          {sourceCount > 1 ? (
-            <Chip size="sm" variant="soft">
-              {sourceCount} sources
-            </Chip>
-          ) : null}
         </Box>
       </Box>
       {movieType === "tv" ? (
         <Box
           sx={{
             position: "absolute",
-            top: "58px",
-            left: "10px",
+            top: { xs: "66px", sm: "62px" },
+            left: "50%",
+            transform: "translateX(-50%)",
             zIndex: 1001,
             display: "flex",
-            gap: "5px",
+            gap: 1,
+            flexWrap: "wrap",
+            alignItems: "center",
+            justifyContent: "center",
+            width: "min(calc(100% - 20px), 620px)",
+            px: 1,
+            py: 1,
+            borderRadius: "18px",
+            background: "rgba(8, 8, 8, 0.62)",
+            border: "1px solid rgba(255, 255, 255, 0.12)",
+            backdropFilter: "blur(16px)",
+            boxShadow: "0 12px 40px rgba(0, 0, 0, 0.24)",
           }}
         >
           <Select
-            value={parseInt(seasonId!)}
-            defaultValue={parseInt(seasonId!)}
-            onChange={(_e, v) => {
-              episodeChange(`/${movieType}/${movieId}/${v}/1/watch`);
+            size="sm"
+            value={parseInt(seasonId || "1")}
+            defaultValue={parseInt(seasonId || "1")}
+            onChange={(_e, value) => {
+              if (!value) return;
+              episodeChange(`/${movieType}/${movieId}/${value}/1/watch`);
+            }}
+            sx={{
+              minWidth: { xs: "130px", sm: "150px" },
+              background: "rgba(255,255,255,0.05)",
             }}
           >
             {tvSeriesDetailsDataArr?.seasons
-              ?.filter((s) => s?.season_number !== 0)
-              .map((s) => (
-                <Option key={s?.id} value={s?.season_number}>
-                  {s?.name}
+              ?.filter((season) => season?.season_number !== 0)
+              .map((season) => (
+                <Option key={season?.id} value={season?.season_number}>
+                  {season?.name}
                 </Option>
               ))}
           </Select>
           <Select
-            onChange={(_e, v) => {
-              episodeChange(`/${movieType}/${movieId}/${seasonId}/${v}/watch`);
+            size="sm"
+            onChange={(_e, value) => {
+              if (!value) return;
+              episodeChange(`/${movieType}/${movieId}/${seasonId}/${value}/watch`);
             }}
-            defaultValue={parseInt(episodeId!)}
-            value={parseInt(episodeId!)}
+            defaultValue={parseInt(episodeId || "1")}
+            value={parseInt(episodeId || "1")}
+            sx={{
+              minWidth: { xs: "220px", sm: "340px" },
+              maxWidth: "100%",
+              background: "rgba(255,255,255,0.05)",
+            }}
           >
             {tvSeasonsDetailsArr?.episodes?.map((episode) => (
               <Option key={episode?.id} value={episode?.episode_number}>
@@ -632,7 +711,7 @@ function Watch() {
       ) : null}
       <PlaybackSurface
         playerRef={playerRef}
-        stream={availableStream}
+        stream={playbackStream}
         poster={backdropPoster}
         title={mediaTitle}
         onLoadedMetadata={handlePlayerLoadedMetadata}
@@ -640,7 +719,7 @@ function Watch() {
         onPause={handlePlayerTimeUpdate}
         onEnded={handlePlayerEnded}
       />
-      {!availableStream ? (
+      {!playbackStream ? (
         <Box
           sx={{
             position: "absolute",
@@ -655,8 +734,13 @@ function Watch() {
           <Box sx={{ width: "min(420px, calc(100% - 32px))" }}>
             <LinearProgress thickness={2} />
             <Typography level="h4" sx={{ mt: 2 }}>
-              Preparing your stream
+              {sessionBaseReady ? "Preparing your stream" : "Restoring your watch session"}
             </Typography>
+            {isFetching ? (
+              <Typography level="body-sm" sx={{ mt: 1, color: "neutral.400" }}>
+                Loading episode details in the background.
+              </Typography>
+            ) : null}
           </Box>
         </Box>
       ) : null}

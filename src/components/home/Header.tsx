@@ -69,7 +69,7 @@ const Header = React.memo(
     }, [trendingAllData?.data]);
     const [activeIndex, setActiveIndex] = useState(0);
     const [useLiteMode, setUseLiteMode] = useState(false);
-    const [availabilityLookup, setAvailabilityLookup] = useState<Record<string, boolean>>({});
+    const [availabilityLookup, setAvailabilityLookup] = useState<Record<string, boolean | null>>({});
     const [availabilityLoading, setAvailabilityLoading] = useState(false);
 
     const trailerData = useMemo(() => {
@@ -202,7 +202,6 @@ const Header = React.memo(
         })
         .catch(() => {
           if (cancelled) return;
-          setAvailabilityLookup({});
           setAvailabilityLoading(false);
         });
 
@@ -243,12 +242,13 @@ const Header = React.memo(
         new Date(
           details?.release_date || details?.first_air_date || ""
         ).getTime() > Date.now();
-      const isPlayable = Boolean(availabilityLookup[availabilityKey]);
+      const availability = availabilityLookup[availabilityKey];
+      const isUnavailable = availability === false;
       const playButtonNote = isReleaseBlocked
         ? details?.status || ""
-        : availabilityLoading
+        : availabilityLoading && availability === null
           ? "Checking video availability..."
-          : !isPlayable
+          : isUnavailable
             ? "Sorry, we don't have it."
             : "";
 
@@ -371,7 +371,7 @@ const Header = React.memo(
                   navigate(playbackTarget.route);
                 }}
                 disabled={
-                  isReleaseBlocked || availabilityLoading || !isPlayable
+                  isReleaseBlocked || isUnavailable
                 }
                 startDecorator={<PlayArrow />}
                 sx={{
@@ -403,7 +403,7 @@ const Header = React.memo(
                 sx={{
                   minHeight: "20px",
                   textShadow: "0 0 8px rgba(0,0,0,0.7)",
-                  color: !isPlayable && !availabilityLoading && !isReleaseBlocked
+                  color: isUnavailable && !availabilityLoading && !isReleaseBlocked
                     ? "rgb(255, 166, 120)"
                     : "inherit",
                 }}
