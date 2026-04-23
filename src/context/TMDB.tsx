@@ -592,6 +592,17 @@ export const TMDBProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const searchMultiAC = async (query: string, page: number) => {
+    const trimmedQuery = query.trim();
+    if (!trimmedQuery) {
+      setSearchMultiACData({
+        isLoading: false,
+        isError: false,
+        data: null,
+        errorResponse: null,
+      });
+      return;
+    }
+
     try {
       setSearchMultiACData({
         isLoading: true,
@@ -599,7 +610,7 @@ export const TMDBProvider = ({ children }: { children: React.ReactNode }) => {
         data: null,
         errorResponse: null,
       });
-      const response = await tmdb.searchMulti(query, page);
+      const response = await tmdb.searchMulti(trimmedQuery, page);
       if (response) {
         setSearchMultiACData({
           isLoading: false,
@@ -618,6 +629,23 @@ export const TMDBProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
   const searchMulti = async (query: string, page: number) => {
+    const trimmedQuery = query.trim();
+    if (!trimmedQuery) {
+      setSearchMultiData({
+        isLoading: false,
+        isError: false,
+        data: null,
+        errorResponse: null,
+      });
+      setSearchMultiACData({
+        isLoading: false,
+        isError: false,
+        data: null,
+        errorResponse: null,
+      });
+      return;
+    }
+
     try {
       setSearchMultiData({
         isLoading: true,
@@ -631,7 +659,7 @@ export const TMDBProvider = ({ children }: { children: React.ReactNode }) => {
         data: null,
         errorResponse: null,
       });
-      const response = await tmdb.searchMulti(query, page);
+      const response = await tmdb.searchMulti(trimmedQuery, page);
       if (response) {
         setSearchMultiData({
           isLoading: false,

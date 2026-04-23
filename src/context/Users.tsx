@@ -3,7 +3,6 @@ import * as userType from "../user";
 import { users } from "../service/api/smb/users.api.service";
 import {
   deviceId,
-  isLoggedIn,
   reload,
   setIsLoggedIn,
 } from "../utilities/defaults";
@@ -34,6 +33,8 @@ const UsersContext = createContext({
   deleteDeviceData: null as userType.ResponseType | null,
   signedInWithGoogle: null as boolean | null,
   isVerified: null as boolean | null,
+  isAuthenticated: false,
+  authResolved: false,
   logoutData: null as userType.ResponseType | null,
   activateDeviceData: null as userType.ResponseType | null,
   requestActivateDeviceData: null as userType.ResponseType | null,
@@ -57,7 +58,7 @@ const UsersContext = createContext({
   ) => {},
   logout: () => {},
   verify: async (_token: string) => {},
-  resendTokenVerification: async (_email: string) => {},
+  resendTokenVerification: async () => {},
   forgotPassword: async (_email: string) => {},
   resendForgotPasswordToken: async (_email: string) => {},
   resetPassword: async (
@@ -162,6 +163,8 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
   const [deleteDeviceData, setDeleteDeviceData] =
     useState<userType.ResponseType | null>(null);
   const [isVerified, setIsVerified] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [authResolved, setAuthResolved] = useState(false);
   const [activateDeviceData, setActivateDeviceData] =
     useState<userType.ResponseType | null>(null);
   const [requestActivateDeviceData, setRequestActivateDeviceData] =
@@ -239,14 +242,17 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
     setMyselfData((prev) => ({ ...prev, isLoading: true }));
     try {
       const response = await users.getMyself();
+      const user = response.data as userType.User;
       setMyselfData({
         isLoading: false,
         isError: false,
         isSuccess: true,
-        data: response.data,
+        data: user,
         code: response.status,
       });
+      setIsAuthenticated(true);
       setIsLoggedIn(true);
+      setIsVerified(!!user?.isVerified);
     } catch (error: unknown) {
       setMyselfData({
         isLoading: false,
@@ -255,6 +261,11 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
         data: (error as userType.ErrorResponse)?.data,
         code: (error as userType.ErrorResponse)?.status,
       });
+      setIsAuthenticated(false);
+      setIsVerified(false);
+      setIsLoggedIn(false);
+    } finally {
+      setAuthResolved(true);
     }
   };
   const updateUserById = async (id: string, user: userType.User) => {
@@ -453,6 +464,10 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
     setLogoutData((prev) => ({ ...prev, isLoading: true }));
     try {
       const response = await users.logout();
+      setIsAuthenticated(false);
+      setIsVerified(false);
+      setIsLoggedIn(false);
+      setMyselfData(null);
       setLogoutData({
         isLoading: false,
         isError: false,
@@ -487,6 +502,8 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
         data: response.data,
         code: response.status,
       });
+      setIsVerified(true);
+      await getMyself();
     } catch (error: unknown) {
       setVerifyData({
         isLoading: false,
@@ -856,13 +873,13 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
     getMyself();
   }, []);
   useEffect(() => {
-  let intervalId: any;
+  let intervalId: ReturnType<typeof setInterval> | null = null;
 
-  if (isLoggedIn && myselfData) {
-    const user = myselfData.data as userType.User
+  if (isAuthenticated && myselfData?.data) {
+    const user = myselfData.data as userType.User;
 
     const hasDevices = user?.devices?.length > 0;
-    const deviceExists = user?.devices?.some(d => d.deviceId === deviceId());
+    const deviceExists = user?.devices?.some((d) => d.deviceId === deviceId());
 
     if (!hasDevices || !deviceExists) {
       logout();
@@ -878,7 +895,7 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
   return () => {
     if (intervalId) clearInterval(intervalId);
   };
-}, [isLoggedIn, myselfData]);
+}, [isAuthenticated, myselfData]);
   return (
     <UsersContext.Provider
       value={{
@@ -890,6 +907,8 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
         verifyDeviceData,
         logoutData,
         signedInWithGoogle,
+        isAuthenticated,
+        authResolved,
         usersData,
         userByIdData,
         verifyData,

@@ -39,7 +39,7 @@ function AdminDashboard() {
   const navigate = useNavigate();
   const location = useLocation();
   const currentTab = Math.max(0, adminTabs.indexOf(location.pathname));
-  const { myselfData, getMyself } = useUsers();
+  const { myselfData, getMyself, isAuthenticated, authResolved } = useUsers();
   const currentUser = myselfData?.data as User | undefined;
   const [loading, setLoading] = useState(true);
   const [users, setUsers] = useState<AdminUserSummary[]>([]);
@@ -80,12 +80,21 @@ function AdminDashboard() {
   };
 
   useEffect(() => {
-    void loadAdminData();
-  }, []);
+    if (!authResolved) {
+      return;
+    }
+
+    if (currentUser?.isAdmin) {
+      void loadAdminData();
+      return;
+    }
+
+    setLoading(false);
+  }, [authResolved, currentUser?.isAdmin]);
 
   useEffect(() => {
     const loadBootstrapStatus = async () => {
-      if (myselfData?.isLoading || !currentUser) return;
+      if (!authResolved || myselfData?.isLoading || !currentUser || currentUser.isAdmin) return;
       try {
         const response = await adminAPI.getBootstrapStatus();
         setBootstrapStatus(response.data);
@@ -98,11 +107,11 @@ function AdminDashboard() {
   }, [currentUser, myselfData?.isLoading]);
 
   useEffect(() => {
-    if (myselfData?.isLoading) return;
-    if (!currentUser) {
+    if (!authResolved || myselfData?.isLoading) return;
+    if (!isAuthenticated) {
       navigate("/auth/login");
     }
-  }, [currentUser, myselfData?.isLoading, navigate]);
+  }, [authResolved, isAuthenticated, myselfData?.isLoading, navigate]);
 
   const filteredUsers = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -122,7 +131,7 @@ function AdminDashboard() {
     return { adminCount, bannedCount, verifiedCount };
   }, [users]);
 
-  if (myselfData?.isLoading) {
+  if (!authResolved || myselfData?.isLoading) {
     return (
       <Box sx={{ display: "grid", placeItems: "center", minHeight: "100vh" }}>
         <CircularProgress />

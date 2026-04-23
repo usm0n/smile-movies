@@ -3,7 +3,7 @@ import { Box, Tab, TabList, TabPanel, Tabs, useColorScheme } from "@mui/joy";
 import { useUsers } from "../../context/Users";
 import { User } from "../../user";
 import { useEffect, useState } from "react";
-import { backdropLoading, isLoggedIn } from "../../utilities/defaults";
+import { backdropLoading } from "../../utilities/defaults";
 import { useLocation, useNavigate } from "react-router-dom";
 import Settings from "./Settings";
 import Devices from "./Devices";
@@ -18,7 +18,13 @@ const tabPaths = [
 ];
 
 const SettingsMain = ({ initialTab = 0 }: { initialTab?: number }) => {
-  const { myselfData, updateMyself, updatedMyselfData } = useUsers();
+  const {
+    myselfData,
+    updateMyself,
+    updatedMyselfData,
+    isAuthenticated,
+    authResolved,
+  } = useUsers();
   const [userValue, setUserValue] = useState<User>(myselfData?.data as User);
 
   const { colorScheme } = useColorScheme();
@@ -30,10 +36,10 @@ const SettingsMain = ({ initialTab = 0 }: { initialTab?: number }) => {
     if (myselfData) {
       setUserValue(myselfData?.data as User);
     }
-    if (!isLoggedIn) {
+    if (authResolved && !isAuthenticated) {
       navigate("/auth/login");
     }
-  }, [myselfData]);
+  }, [authResolved, isAuthenticated, myselfData, navigate]);
   return (
     <form
       onSubmit={(e) => {
@@ -41,7 +47,7 @@ const SettingsMain = ({ initialTab = 0 }: { initialTab?: number }) => {
         updateMyself(userValue);
       }}
     >
-      {backdropLoading(myselfData?.isLoading, colorScheme)}
+      {backdropLoading(!authResolved || myselfData?.isLoading, colorScheme)}
       <Box
         sx={{
           display: "flex",

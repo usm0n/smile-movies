@@ -11,10 +11,10 @@ import {
   Snackbar,
   Typography,
 } from "@mui/joy";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUsers } from "../../context/Users";
 import { User } from "../../user";
-import { isLoggedIn } from "../../utilities/defaults";
 
 function NotVerified({
   type,
@@ -26,7 +26,14 @@ function NotVerified({
   setModalOpen?: (value: boolean) => void;
 }) {
   const navigate = useNavigate();
-  const { myselfData, isVerified, setIsVerified } = useUsers();
+  const { myselfData, isVerified, isAuthenticated } = useUsers();
+  const [dismissed, setDismissed] = useState(false);
+  const currentUser = myselfData?.data as User | undefined;
+
+  useEffect(() => {
+    setDismissed(false);
+  }, [currentUser?.email, currentUser?.isVerified]);
+
   if (type == "page") {
     return (
       <Box
@@ -89,10 +96,11 @@ function NotVerified({
     );
   } else if (type == "snackbar") {
     return (
-      isLoggedIn &&
+      isAuthenticated &&
       myselfData?.data &&
-      !isVerified && (
-        <Snackbar open={!isVerified || false}>
+      !isVerified &&
+      !dismissed && (
+        <Snackbar open>
           <Box
             sx={{
               display: "flex",
@@ -112,7 +120,7 @@ function NotVerified({
               </Typography>
               <Typography level="body-md">
                 We sent you a 6-digit code to your email address{" "}
-                <Link>{(myselfData?.data as User)?.email}</Link>
+                <Link>{currentUser?.email}</Link>
               </Typography>
             </Box>
             <Box
@@ -128,13 +136,12 @@ function NotVerified({
               <Button
                 onClick={() => {
                   navigate("/auth/verify-email");
-                  setIsVerified(true);
                 }}
               >
                 Verify Now!
               </Button>
               <Button
-                onClick={() => setIsVerified(true)}
+                onClick={() => setDismissed(true)}
                 color="neutral"
                 variant="soft"
               >

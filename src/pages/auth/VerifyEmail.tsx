@@ -24,16 +24,16 @@ import { useUsers } from "../../context/Users";
 import { Message, User } from "../../user";
 import { Check, Edit, Email } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
-import NotFound from "../../components/utils/NotFound";
 import {
   backdropLoading,
-  isLoggedIn,
   isValidEmail,
 } from "../../utilities/defaults";
 
 function VerifyEmail() {
   const {
     myselfData,
+    isAuthenticated,
+    authResolved,
     resendTokenVerification,
     resendTokenVerificationData,
     verify,
@@ -46,6 +46,10 @@ function VerifyEmail() {
   const [openRVC, setOpenRVC] = useState<boolean>(false);
   const [openChangeEmail, setOpenChangeEmail] = useState<boolean>(false);
   const [newEmail, setNewEmail] = useState<string>("");
+  const currentUser = myselfData?.data as User | undefined;
+  const verifyMessage = ((verifyData?.data as Message | undefined)?.message || "").trim();
+  const verifyErrorMessage = verifyData?.isError ? verifyMessage || "Could not verify the code." : "";
+  const verifySuccess = Boolean(verifyData?.isSuccess);
 
   const navigate = useNavigate();
   const handleInputChange = (
@@ -76,27 +80,79 @@ function VerifyEmail() {
 
   useEffect(() => {
     if (otp.length === 6) {
-      verify(otp);
+      void verify(otp);
     }
   }, [otp]);
 
   useEffect(() => {
-    if (
-      myselfData?.data &&
-      verifyData?.data &&
-      (verifyData?.data as Message)?.message !== "Token not found"
-    ) {
-      setTimeout(() => {
-        navigate("/");
-      }, 1000);
+    if (!(currentUser?.isVerified || verifySuccess)) {
+      return undefined;
     }
-    setNewEmail((myselfData?.data as User)?.email);
-  }, [verifyData, myselfData]);
 
-  return !isLoggedIn ||
-    (myselfData?.data && (myselfData?.data as User)?.isVerified) ? (
-    <NotFound />
-  ) : (
+    const timeoutId = window.setTimeout(() => {
+      navigate("/");
+    }, 1200);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [currentUser?.isVerified, navigate, verifySuccess]);
+
+  useEffect(() => {
+    setNewEmail(currentUser?.email || "");
+  }, [currentUser?.email]);
+
+  if (!authResolved) {
+    return backdropLoading(true, colorScheme);
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          minHeight: "100vh",
+          px: 2,
+        }}
+      >
+        <Box sx={{ textAlign: "center", maxWidth: 420 }}>
+          <Typography level="h2" sx={{ mb: 1 }}>
+            Sign in to verify your email
+          </Typography>
+          <Typography level="body-md" textColor="neutral.400" sx={{ mb: 2 }}>
+            Your verification code is tied to your active session.
+          </Typography>
+          <Button onClick={() => navigate("/auth/login")}>Go to sign in</Button>
+        </Box>
+      </Box>
+    );
+  }
+
+  if (currentUser?.isVerified) {
+    return (
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          minHeight: "100vh",
+          px: 2,
+        }}
+      >
+        <Box sx={{ textAlign: "center", maxWidth: 420 }}>
+          <Typography level="h2" sx={{ mb: 1 }}>
+            Email already verified
+          </Typography>
+          <Typography level="body-md" textColor="neutral.400" sx={{ mb: 2 }}>
+            Your account is ready. Redirecting you back to the app.
+          </Typography>
+          <Button onClick={() => navigate("/")}>Go home</Button>
+        </Box>
+      </Box>
+    );
+  }
+
+  return (
     <Box
       sx={{
         display: "flex",
@@ -164,7 +220,7 @@ function VerifyEmail() {
         autoHideDuration={5000}
       >
         Verification code sent successfully to{" "}
-        {(myselfData?.data as User)?.email}!
+        {currentUser?.email}!
       </Snackbar>
       <Box
         sx={{
@@ -185,7 +241,7 @@ function VerifyEmail() {
           <Input
             disabled
             startDecorator={<Email />}
-            value={(myselfData?.data as User)?.email}
+            value={currentUser?.email}
           />
           <IconButton
             onClick={() => setOpenChangeEmail(true)}
@@ -210,11 +266,11 @@ function VerifyEmail() {
           {[...Array(6)].map((_, index) => (
             <Input
               color={
-                verifyData
-                  ? (verifyData?.data as Message)?.message === "Token not found"
-                    ? "danger"
-                    : "success"
-                  : "neutral"
+                verifyData?.isError
+                  ? "danger"
+                  : verifySuccess
+                    ? "success"
+                    : "neutral"
               }
               disabled={verifyData?.isLoading}
               key={index}
@@ -248,19 +304,27 @@ function VerifyEmail() {
             />
           ))}{" "}
         </Box>
+        {verifyErrorMessage && (
+          <Typography level="body-sm" color="danger">
+            {verifyErrorMessage}
+          </Typography>
+        )}
+        {verifySuccess && (
+          <Typography level="body-sm" color="success">
+            Verification successful. Redirecting you home.
+          </Typography>
+        )}
         <Link
           startDecorator={
             resendTokenVerificationData?.isLoading && (
               <CircularProgress value={80} variant="plain" size="sm" />
             )
           }
-          onClick={() =>
-            resendTokenVerification((myselfData?.data as User)?.email)
-          }
+          onClick={() => resendTokenVerification()}
           disabled={resendTokenVerificationData?.isLoading}
           level="body-md"
         >
-          Didn't receive the code?{" "}
+          Didn't receive the code? Send another one
         </Link>
       </Box>
     </Box>

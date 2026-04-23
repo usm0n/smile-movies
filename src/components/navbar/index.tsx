@@ -42,8 +42,7 @@ import {
   Typography,
   useColorScheme,
 } from "@mui/joy";
-import { isLoggedIn } from "../../utilities/defaults";
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUsers } from "../../context/Users";
 import { User } from "../../user";
@@ -56,10 +55,11 @@ const Navbar: React.FC = () => {
   const [searchVisibility, setSearchVisibility] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const { colorScheme, setMode } = useColorScheme();
-  const { myselfData, logout, deleteDeviceData } = useUsers();
+  const { myselfData, logout, logoutData, isAuthenticated, authResolved } = useUsers();
   const [searchValue, setSearchValue] = useState("");
   const { searchMultiAC, searchMultiACData } = useTMDB();
   const navigate = useNavigate();
+  const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const navigateTo = (path: string) => {
     navigate(path);
@@ -67,8 +67,9 @@ const Navbar: React.FC = () => {
   };
 
   const handleSearchSubmit = () => {
-    if (searchValue) {
-      navigate(`/search/${searchValue}`);
+    const trimmedSearch = searchValue.trim();
+    if (trimmedSearch) {
+      navigate(`/search/${trimmedSearch}`);
       setSearchValue("");
       setSearchVisibility(false);
     }
@@ -140,9 +141,22 @@ const Navbar: React.FC = () => {
       >
         <Autocomplete
           size="lg"
+          inputValue={searchValue}
           onInputChange={(_event, value) => {
             setSearchValue(value);
-            searchMultiAC(value, 1);
+            if (searchTimeoutRef.current) {
+              clearTimeout(searchTimeoutRef.current);
+            }
+
+            const trimmedValue = value.trim();
+            if (!trimmedValue) {
+              void searchMultiAC("", 1);
+              return;
+            }
+
+            searchTimeoutRef.current = setTimeout(() => {
+              void searchMultiAC(trimmedValue, 1);
+            }, 300);
           }}
           sx={{
             width: "420px",
@@ -273,7 +287,9 @@ const Navbar: React.FC = () => {
             "@media (max-width: 700px)": { display: "none" },
           }}
         >
-          {!isLoggedIn ? (
+          {!authResolved ? (
+            <Skeleton variant="circular" width={40} height={40} />
+          ) : !isAuthenticated ? (
             <Button
               onClick={() => navigate("/auth/login")}
               sx={{
@@ -408,7 +424,11 @@ const Navbar: React.FC = () => {
 
       {/* ── Logout modal ──────────────────────────────────────────────────────── */}
       <Modal open={logoutModal} onClose={() => setLogoutModal(false)}>
-        <ModalDialog minWidth={500} variant="outlined" role="alertdialog">
+        <ModalDialog
+          variant="outlined"
+          role="alertdialog"
+          sx={{ width: { xs: "min(92vw, 420px)", sm: 500 } }}
+        >
           <DialogTitle>
             <WarningRounded /> Confirmation
           </DialogTitle>
@@ -416,7 +436,7 @@ const Navbar: React.FC = () => {
           <DialogContent>Are you sure you want to log out?</DialogContent>
           <DialogActions>
             <Button
-              disabled={deleteDeviceData?.isLoading}
+              disabled={logoutData?.isLoading}
               variant="solid"
               color="danger"
               onClick={() => {
@@ -424,7 +444,7 @@ const Navbar: React.FC = () => {
                 googleLogout();
               }}
             >
-              {deleteDeviceData?.isLoading ? "Loading..." : "Log out"}
+              {logoutData?.isLoading ? "Loading..." : "Log out"}
             </Button>
             <Button
               variant="plain"
@@ -442,7 +462,9 @@ const Navbar: React.FC = () => {
         <ModalClose />
         <Box padding={2} paddingTop={7}>
           <List>
-            {isLoggedIn ? (
+            {!authResolved ? (
+              <Skeleton variant="rectangular" width="100%" height={40} />
+            ) : isAuthenticated ? (
               myselfData?.isLoading ? (
                 <ListItemButton sx={{ justifyContent: "space-between" }}>
                   <Skeleton variant="circular" width={50} height={40} />
