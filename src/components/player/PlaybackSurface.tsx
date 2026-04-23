@@ -64,9 +64,11 @@ function PlaybackSurface({
         key={stream.masterPlaylistUrl}
         ref={playerRef}
         title={title}
-        src={stream.masterPlaylistUrl}
+        src={{
+          src: stream.masterPlaylistUrl,
+          type: "application/x-mpegurl",
+        }}
         poster={poster}
-        thumbnails={stream.thumbnailTrackUrl}
         load="eager"
         aspectRatio={16 / 9}
         streamType="on-demand"
