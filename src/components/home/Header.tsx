@@ -30,6 +30,11 @@ import {
 } from "@mui/icons-material";
 import { User } from "../../user";
 import StatusActions from "../watchlist/StatusActions";
+import { providersAPI } from "../../service/api/smb/providers.api.service";
+import {
+  buildPlaybackAvailabilityKey,
+  getPlaybackTarget,
+} from "../../utilities/playbackTarget";
 
 const Header = React.memo(
   ({
@@ -64,6 +69,8 @@ const Header = React.memo(
     }, [trendingAllData?.data]);
     const [activeIndex, setActiveIndex] = useState(0);
     const [useLiteMode, setUseLiteMode] = useState(false);
+    const [availabilityLookup, setAvailabilityLookup] = useState<Record<string, boolean>>({});
+    const [availabilityLoading, setAvailabilityLoading] = useState(false);
 
     const trailerData = useMemo(() => {
       const current = trendingResults?.[activeIndex];
@@ -143,6 +150,67 @@ const Header = React.memo(
       }
     }, [activeIndex, trendingResults]);
 
+    useEffect(() => {
+      if (!trendingResults.length) {
+        setAvailabilityLookup({});
+        return;
+      }
+
+      const items = trendingResults.map((details) => {
+        const mediaType = details.media_type as "movie" | "tv";
+        const watchlistItem = (myselfData?.data as unknown as User)?.watchlist?.find(
+          (item) => item.id == String(details?.id) && item.type === mediaType,
+        );
+        const playbackTarget = getPlaybackTarget({
+          mediaType,
+          mediaId: details.id,
+          watchlistItem,
+        });
+
+        return {
+          mediaType,
+          tmdbId: String(details.id),
+          season: mediaType === "tv" ? playbackTarget.season : undefined,
+          episode: mediaType === "tv" ? playbackTarget.episode : undefined,
+        };
+      });
+
+      let cancelled = false;
+      setAvailabilityLoading(true);
+
+      void providersAPI
+        .getVixsrcAvailabilityBatch(items)
+        .then((response) => {
+          if (cancelled) return;
+
+          const nextLookup = response.data.items.reduce<Record<string, boolean>>(
+            (acc, item) => {
+              const key = buildPlaybackAvailabilityKey({
+                mediaType: item.mediaType,
+                tmdbId: item.tmdbId,
+                season: item.season,
+                episode: item.episode,
+              });
+              acc[key] = Boolean(item.available);
+              return acc;
+            },
+            {},
+          );
+
+          setAvailabilityLookup(nextLookup);
+          setAvailabilityLoading(false);
+        })
+        .catch(() => {
+          if (cancelled) return;
+          setAvailabilityLookup({});
+          setAvailabilityLoading(false);
+        });
+
+      return () => {
+        cancelled = true;
+      };
+    }, [myselfData?.data, trendingResults]);
+
     const SlideContent = ({
       details,
       isActive,
@@ -155,10 +223,34 @@ const Header = React.memo(
       isTrailerAvailable: boolean;
     }) => {
       const [isVideoLoaded, setIsVideoLoaded] = useState(false);
+      const mediaType = details?.media_type as "movie" | "tv";
 
       const watchlistItem = (myselfData?.data as unknown as User)?.watchlist?.find(
-        (item) => item.id == details?.id && item.type === details?.media_type
+        (item) => item.id == String(details?.id) && item.type === mediaType
       );
+      const playbackTarget = getPlaybackTarget({
+        mediaType,
+        mediaId: details?.id,
+        watchlistItem,
+      });
+      const availabilityKey = buildPlaybackAvailabilityKey({
+        mediaType,
+        tmdbId: details?.id,
+        season: mediaType === "tv" ? playbackTarget.season : undefined,
+        episode: mediaType === "tv" ? playbackTarget.episode : undefined,
+      });
+      const isReleaseBlocked =
+        new Date(
+          details?.release_date || details?.first_air_date || ""
+        ).getTime() > Date.now();
+      const isPlayable = Boolean(availabilityLookup[availabilityKey]);
+      const playButtonNote = isReleaseBlocked
+        ? details?.status || ""
+        : availabilityLoading
+          ? "Checking video availability..."
+          : !isPlayable
+            ? "Sorry, we don't have it."
+            : "";
 
       return (
         <Card
@@ -276,16 +368,10 @@ const Header = React.memo(
               <Button
                 onClick={(e) => {
                   e.stopPropagation();
-                  navigate(
-                    watchlistItem ? `/${details?.media_type}/${details?.id}${details?.media_type == "tv" ? `/${watchlistItem.season}/${watchlistItem.episode}` : ""}/watch/${watchlistItem.currentTime ? watchlistItem.currentTime : 0}` :
-                      `/${details?.media_type}/${details?.id}${details?.media_type == "tv" ? `/1/1` : ""
-                      }/watch`
-                  );
+                  navigate(playbackTarget.route);
                 }}
                 disabled={
-                  new Date(
-                    details?.release_date || details?.first_air_date || ""
-                  ).getTime() > Date.now()
+                  isReleaseBlocked || availabilityLoading || !isPlayable
                 }
                 startDecorator={<PlayArrow />}
                 sx={{
@@ -306,21 +392,33 @@ const Header = React.memo(
                   },
                 }}
               >
-                {details?.media_type === "movie" ? (
+                {mediaType === "movie" ? (
                   watchlistItem ? (watchlistItem.status == "watching" && "Continue Watching" || (watchlistItem.status == "new" || watchlistItem.status == "planned") && "Start Watching") : "Watch Now"
                 ) : (
                   watchlistItem ? (watchlistItem.status == "watching" && `Continue S${watchlistItem.season}:E${watchlistItem.episode}` || (watchlistItem.status == "new" || watchlistItem.status == "planned") && "Start Watching") : "Play Now"
                 )}
               </Button>
+              <Typography
+                level="body-sm"
+                sx={{
+                  minHeight: "20px",
+                  textShadow: "0 0 8px rgba(0,0,0,0.7)",
+                  color: !isPlayable && !availabilityLoading && !isReleaseBlocked
+                    ? "rgb(255, 166, 120)"
+                    : "inherit",
+                }}
+              >
+                {playButtonNote}
+              </Typography>
               <StatusActions
                 mediaId={details.id}
-                mediaType={details.media_type}
+                mediaType={mediaType}
                 poster={details.poster_path}
                 title={details.name || details.title || ""}
                 duration={watchlistItem?.duration || 0}
                 currentTime={watchlistItem?.currentTime || 0}
-                season={watchlistItem?.season || (details.media_type == "tv" ? 1 : 0)}
-                episode={watchlistItem?.episode || (details.media_type == "tv" ? 1 : 0)}
+                season={watchlistItem?.season || (mediaType == "tv" ? 1 : 0)}
+                episode={watchlistItem?.episode || (mediaType == "tv" ? 1 : 0)}
                 currentStatus={watchlistItem?.status}
                 width="300px"
                 mobileWidth="220px"

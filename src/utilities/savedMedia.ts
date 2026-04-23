@@ -22,6 +22,9 @@ export const parseSavedDate = (value?: string) => {
   return new Date(`${match[3]}-${match[2]}-${match[1]}T${match[4]}:${match[5]}:00`).getTime();
 };
 
+const buildSavedActivityKey = (item: SavedMediaItem) =>
+  `${item.type}:${item.id}:${Number(item.season || 0)}:${Number(item.episode || 0)}`;
+
 export const sortSavedItems = (
   items: SavedMediaItem[],
   sortBy: SavedMediaSort = "recent",
@@ -68,3 +71,28 @@ export const filterSavedItems = (
         : item.preference === preferenceFilter);
     return statusMatch && mediaMatch && preferenceMatch;
   });
+
+export const mergeRecentActivity = (
+  collections: SavedMediaItem[][],
+  limit = 6,
+) => {
+  const merged = collections
+    .flat()
+    .sort(
+      (a, b) =>
+        parseSavedDate(b.updatedAt || b.addedAt) -
+        parseSavedDate(a.updatedAt || a.addedAt),
+    );
+
+  const deduped: SavedMediaItem[] = [];
+  const seen = new Set<string>();
+
+  merged.forEach((item) => {
+    const key = buildSavedActivityKey(item);
+    if (seen.has(key)) return;
+    seen.add(key);
+    deduped.push(item);
+  });
+
+  return deduped.slice(0, limit);
+};

@@ -1,12 +1,12 @@
 import { createContext, useContext, useState } from "react";
-import { stream } from "../service/api/nuvio/stream.api.service";
-import { StreamResponse } from "../stream-res";
+import { providersAPI } from "../service/api/smb/providers.api.service";
+import { VixsrcStreamResponse } from "../types/providers";
 
 const StreamContext = createContext({
     getStreamData: {
         isLoading: false,
         isAvailable: false,
-        data: null as StreamResponse | null,
+        data: null as VixsrcStreamResponse | null,
     },
     getStream: async (_movieType: "movie" | "tv", _movieId: string, _seasonId?: string, _episodeId?: string) => { },
 })
@@ -17,7 +17,7 @@ export const StreamProvider = ({ children }: { children: React.ReactNode }) => {
     const [getStreamData, setGetStreamData] = useState<{
         isLoading: boolean;
         isAvailable: boolean;
-        data: StreamResponse | null;
+        data: VixsrcStreamResponse | null;
     }>({
         isLoading: false,
         isAvailable: false,
@@ -27,12 +27,17 @@ export const StreamProvider = ({ children }: { children: React.ReactNode }) => {
     const getStream = async (movieType: "movie" | "tv", movieId: string, seasonId?: string, episodeId?: string) => {
         try {
             setGetStreamData({ isLoading: true, isAvailable: false, data: null });
-            const response = await stream.getStream(movieType == "tv" ? "series" : "movie", movieId, seasonId, episodeId);
-            if (response?.streams && response?.streams.length > 0) {
-                setGetStreamData({ isLoading: false, isAvailable: true, data: response as StreamResponse });
-            } else {
-                setGetStreamData({ isLoading: false, isAvailable: false, data: null });
-            }
+            const response = await providersAPI.getVixsrcStream(
+                movieType,
+                movieId,
+                seasonId ? parseInt(seasonId) : undefined,
+                episodeId ? parseInt(episodeId) : undefined,
+            );
+            setGetStreamData({
+                isLoading: false,
+                isAvailable: Boolean(response.data?.available && response.data?.stream?.masterPlaylistUrl),
+                data: response.data,
+            });
         } catch (error) {
             setGetStreamData({ isLoading: false, isAvailable: false, data: null });
         }

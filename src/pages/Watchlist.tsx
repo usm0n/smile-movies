@@ -35,6 +35,7 @@ import {
   SavedMediaSort,
   SavedMediaStatusFilter,
   SavedMediaTypeFilter,
+  mergeRecentActivity,
   sortSavedItems,
 } from "../utilities/savedMedia";
 import { useDeferredValue, useState } from "react";
@@ -101,10 +102,10 @@ function Watchlist() {
     ),
   }));
 
-  const recentActivity = sortSavedItems(
-    [...(user.recentlyWatched || []), ...(user.watchlist || []), ...(user.favorites || [])],
-    "recent",
-  ).slice(0, 6);
+  const recentActivity = mergeRecentActivity(
+    [user.recentlyWatched || [], user.watchlist || [], user.favorites || []],
+    6,
+  );
 
   if (!isLoggedIn) {
     return (
@@ -343,6 +344,9 @@ function Watchlist() {
                 <Typography level="title-sm">{item.title || `Untitled ${item.type}`}</Typography>
                 <Typography level="body-xs" textColor="neutral.400">
                   {item.type === "tv" ? "TV show" : "Movie"} • {normalizeSavedStatus(item.status)}
+                  {item.type === "tv" && item.season && item.episode
+                    ? ` • S${item.season}:E${item.episode}`
+                    : ""}
                 </Typography>
                 {item.preference ? (
                   <Typography level="body-xs" textColor="neutral.300" sx={{ mt: 0.4 }}>

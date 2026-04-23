@@ -11,7 +11,7 @@ import {
   Typography,
 } from "@mui/joy";
 import { images, movieDetails, tvDetails, videos } from "../../tmdb-res";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   PlayArrow,
   Star,
@@ -26,6 +26,8 @@ import IMDbRating from "./IMDbRating";
 import ParentalGuide from "./ParentalGuide";
 import MatchScore from "./MatchScore";
 import StatusActions from "../watchlist/StatusActions";
+import { providersAPI } from "../../service/api/smb/providers.api.service";
+import { getPlaybackTarget } from "../../utilities/playbackTarget";
 
 function Header({
   movieImages,
@@ -84,6 +86,10 @@ function Header({
   );
   const currentPreference = favoriteItem?.preference || watchlistItem?.preference;
   const favoritePreference = currentPreference === "dislike" ? "like" : currentPreference || "like";
+  const [availabilityState, setAvailabilityState] = useState({
+    isLoading: true,
+    available: false,
+  });
   const progressPercent =
     watchlistItem?.duration && watchlistItem?.currentTime
       ? Math.min(
@@ -91,6 +97,21 @@ function Header({
         Math.max(0, Math.round((watchlistItem.currentTime / watchlistItem.duration) * 100)),
       )
       : 0;
+  const playbackTarget = useMemo(
+    () =>
+      getPlaybackTarget({
+        mediaType: movieType,
+        mediaId: movieId,
+        watchlistItem,
+      }),
+    [movieId, movieType, watchlistItem],
+  );
+  const isReleaseBlocked =
+    new Date(
+      movieDetails?.release_date ||
+      movieDetails?.first_air_date ||
+      ""
+    ).getTime() > Date.now();
   const playLabel = movieType === "movie"
     ? watchlistItem
       ? watchlistItem.status == "watching"
@@ -121,6 +142,49 @@ function Header({
       ? "Liked"
       : currentPreference === "dislike"
         ? "Not for me"
+        : "";
+
+  useEffect(() => {
+    let cancelled = false;
+
+    setAvailabilityState({
+      isLoading: true,
+      available: false,
+    });
+
+    void providersAPI
+      .getVixsrcAvailability(
+        movieType,
+        String(movieId),
+        movieType === "tv" ? playbackTarget.season : undefined,
+        movieType === "tv" ? playbackTarget.episode : undefined,
+      )
+      .then((response) => {
+        if (cancelled) return;
+        setAvailabilityState({
+          isLoading: false,
+          available: Boolean(response.data?.available),
+        });
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setAvailabilityState({
+          isLoading: false,
+          available: false,
+        });
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [movieId, movieType, playbackTarget.episode, playbackTarget.season]);
+
+  const playButtonNote = isReleaseBlocked
+    ? movieDetails?.status || ""
+    : availabilityState.isLoading
+      ? "Checking video availability..."
+      : !availabilityState.available
+        ? "Sorry, we don't have it."
         : "";
   return (
     <Card
@@ -241,18 +305,13 @@ function Header({
             >
               <Button
                 onClick={() => {
-                  navigate(
-                    watchlistItem ? `/${movieType}/${movieId}${movieType == "tv" ? `/${watchlistItem.season}/${watchlistItem.episode}` : ""}/watch/${watchlistItem.currentTime ? watchlistItem.currentTime : 0}` :
-                      `/${movieType}/${movieId}${movieType == "tv" ? `/1/1` : ""
-                      }/watch`
-                  );
+                  navigate(playbackTarget.route);
                 }}
                 disabled={
-                  new Date(
-                    movieDetails?.release_date ||
-                    movieDetails?.first_air_date ||
-                    ""
-                  ).getTime() > Date.now() || myselfData?.isLoading
+                  isReleaseBlocked ||
+                  myselfData?.isLoading ||
+                  availabilityState.isLoading ||
+                  !availabilityState.available
                 }
                 startDecorator={<PlayArrow />}
                 sx={{
@@ -275,14 +334,16 @@ function Header({
               >
                 {playLabel}
               </Button>
-              <Typography level="body-sm">
-                {new Date(
-                  movieDetails?.release_date ||
-                  movieDetails?.first_air_date ||
-                  ""
-                ).getTime() > Date.now()
-                  ? movieDetails?.status
-                  : ""}
+              <Typography
+                level="body-sm"
+                sx={{
+                  minHeight: "20px",
+                  color: !availabilityState.available && !availabilityState.isLoading && !isReleaseBlocked
+                    ? "rgb(255, 166, 120)"
+                    : undefined,
+                }}
+              >
+                {playButtonNote}
               </Typography>
               {progressNote ? (
                 <Typography

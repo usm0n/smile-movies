@@ -93,7 +93,3 @@ export const imdbAPI = axios.create({
 export const ocAPI = axios.create({
   baseURL: import.meta.env.VITE_OC_API_URL,
 });
-
-export const nuvioAPI = axios.create({
-  baseURL: import.meta.env.VITE_NUVIO_API_URL,
-});

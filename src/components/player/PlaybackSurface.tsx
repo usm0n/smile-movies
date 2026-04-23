@@ -1,114 +1,95 @@
 import { useEffect } from "react";
-import { StreamServer } from "../../stream-res";
+import { Box } from "@mui/joy";
+import { MediaCommunitySkin, MediaOutlet, MediaPlayer } from "@vidstack/react";
+import "vidstack/styles/defaults.css";
+import "vidstack/styles/community-skin/video.css";
+import { VixsrcPlaybackStream } from "../../types/providers";
 
 function PlaybackSurface({
-  mode,
-  movieType,
-  movieId,
-  seasonId,
-  episodeId,
-  isTvSE,
-  videoRef,
-  streamServer,
+  playerRef,
+  stream,
+  poster,
+  title,
   onLoadedMetadata,
   onTimeUpdate,
   onPause,
   onEnded,
 }: {
-  mode: "internal" | "external";
-  movieType: string;
-  movieId: string;
-  seasonId?: string;
-  episodeId?: string;
-  isTvSE: string | undefined;
-  videoRef: React.MutableRefObject<HTMLVideoElement | null>;
-  streamServer: StreamServer | null;
+  playerRef: React.MutableRefObject<any>;
+  stream: VixsrcPlaybackStream | null;
+  poster?: string;
+  title: string;
   onLoadedMetadata: () => void;
   onTimeUpdate: () => void;
   onPause: () => void;
   onEnded: () => void;
 }) {
   useEffect(() => {
-    if (mode !== "internal" || !videoRef.current || !streamServer?.url) {
+    const player = playerRef.current;
+    if (!player || !stream?.masterPlaylistUrl) {
       return;
     }
 
-    const video = videoRef.current;
-    const url = streamServer.url;
-    const isHlsLikeSource =
-      /vixsrc|playlist|m3u8/i.test(`${streamServer.name} ${url}`);
-    let disposed = false;
-    let hlsInstance: { destroy: () => void } | null = null;
+    const handleLoadedMetadataEvent = () => onLoadedMetadata();
+    const handleTimeUpdateEvent = () => onTimeUpdate();
+    const handlePauseEvent = () => onPause();
+    const handleEndedEvent = () => onEnded();
 
-    if (video.canPlayType("application/vnd.apple.mpegurl")) {
-      video.src = url;
-      return;
-    }
+    player.addEventListener("loaded-metadata", handleLoadedMetadataEvent);
+    player.addEventListener("time-update", handleTimeUpdateEvent);
+    player.addEventListener("pause", handlePauseEvent);
+    player.addEventListener("ended", handleEndedEvent);
 
-    if (isHlsLikeSource) {
-      void import("hls.js").then(({ default: Hls }) => {
-        if (disposed || !videoRef.current || !Hls.isSupported()) {
-          return;
-        }
-
-        const hls = new Hls({
-          enableWorker: true,
-        });
-        hls.loadSource(url);
-        hls.attachMedia(videoRef.current);
-        hlsInstance = hls;
-      });
-
-      return () => {
-        disposed = true;
-        hlsInstance?.destroy();
-      };
-    }
-
-    video.src = url;
     return () => {
-      disposed = true;
-      hlsInstance?.destroy();
+      player.removeEventListener("loaded-metadata", handleLoadedMetadataEvent);
+      player.removeEventListener("time-update", handleTimeUpdateEvent);
+      player.removeEventListener("pause", handlePauseEvent);
+      player.removeEventListener("ended", handleEndedEvent);
     };
-  }, [mode, streamServer, videoRef]);
+  }, [onEnded, onLoadedMetadata, onPause, onTimeUpdate, playerRef, stream?.masterPlaylistUrl]);
 
-  if (mode === "external") {
-    return (
-      <iframe
-        referrerPolicy="no-referrer-when-downgrade"
-        src={`https://vixsrc.to/${movieType}/${movieId}${
-          isTvSE ? `/${seasonId}` : ""
-        }${isTvSE ? `/${episodeId}` : ""}`}
-        allowFullScreen
-        style={{
-          width: "100%",
-          height: "100%",
-          border: "none",
-          borderRadius: "5px",
-          position: "absolute",
-          top: 0,
-          zIndex: 1000,
-        }}
-      />
-    );
+  if (!stream?.masterPlaylistUrl) {
+    return null;
   }
 
   return (
-    <video
-      ref={videoRef}
-      controls
-      onLoadedMetadata={onLoadedMetadata}
-      onTimeUpdate={onTimeUpdate}
-      onPause={onPause}
-      onEnded={onEnded}
-      style={{
-        width: "100%",
-        height: "100%",
+    <Box
+      sx={{
         position: "absolute",
-        top: 0,
-        zIndex: 1000,
+        inset: 0,
+        background: "black",
       }}
-    />
+    >
+      <MediaPlayer
+        key={stream.masterPlaylistUrl}
+        ref={playerRef}
+        title={title}
+        src={stream.masterPlaylistUrl}
+        poster={poster}
+        thumbnails={stream.thumbnailTrackUrl}
+        load="eager"
+        aspectRatio={16 / 9}
+        streamType="on-demand"
+        viewType="video"
+        crossorigin
+        playsinline
+        preferNativeHLS={false}
+        style={{
+          width: "100%",
+          height: "100%",
+          backgroundColor: "black",
+          "--video-border-radius": "0px",
+          "--video-border": "none",
+          "--video-font-family":
+            "\"IBM Plex Sans\", \"Segoe UI\", sans-serif",
+          "--video-controls-color": "#f8fafc",
+          "--video-brand": "rgb(255, 220, 92)",
+        } as React.CSSProperties}
+      >
+        <MediaOutlet />
+        <MediaCommunitySkin />
+      </MediaPlayer>
+    </Box>
   );
 }
 
