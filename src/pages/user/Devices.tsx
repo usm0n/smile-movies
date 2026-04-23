@@ -46,14 +46,14 @@ function Devices({ myselfData }: { myselfData: ResponseType | null }) {
   const isCurrentDevice = detailDeviceId === currentId;
 
   const handleRequestActivation = async () => {
-    if (!selectedDevice || !user.email) return;
-    await requestActivateDevice(user.email, selectedDevice.deviceId);
+    if (!selectedDevice) return;
+    await requestActivateDevice(selectedDevice.deviceId);
     setActivateStep("code");
   };
 
   const handleVerifyActivation = async () => {
-    if (!selectedDevice || !activateCode.trim() || !user.email) return;
-    await verifyDevice(user.email, selectedDevice.deviceId, activateCode.trim());
+    if (!selectedDevice || !activateCode.trim()) return;
+    await verifyDevice(selectedDevice.deviceId, activateCode.trim());
     await getMyself();
     setDetailDeviceId("");
     setActivateStep("prompt");

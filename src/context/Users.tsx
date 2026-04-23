@@ -100,8 +100,8 @@ const UsersContext = createContext({
   ) => {},
   deleteDevice: async (_deviceId: string) => {},
   activateDevice: async (_deviceId: string) => {},
-  requestActivateDevice: async (_email: string, _deviceId: string) => {},
-  verifyDevice: async (_email: string, _deviceId: string, _token: string) => {},
+  requestActivateDevice: async (_deviceId: string) => {},
+  verifyDevice: async (_deviceId: string, _token: string) => {},
 });
 
 export const useUsers = () => useContext(UsersContext);
@@ -452,7 +452,6 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
   const logout = async () => {
     setLogoutData((prev) => ({ ...prev, isLoading: true }));
     try {
-      deleteDevice(deviceId());
       const response = await users.logout();
       setLogoutData({
         isLoading: false,
@@ -796,10 +795,10 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  const requestActivateDevice = async (email: string, deviceId: string) => {
+  const requestActivateDevice = async (deviceId: string) => {
     setRequestActivateDeviceData((prev) => ({ ...prev, isLoading: true }));
     try {
-      const response = await users.requestActivateDevice(email, deviceId);
+      const response = await users.requestActivateDevice(deviceId);
       setRequestActivateDeviceData({
         isLoading: false,
         isError: false,
@@ -819,13 +818,12 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const verifyDevice = async (
-    email: string,
     deviceId: string,
     token: string,
   ) => {
     setVerifyDeviceData((prev) => ({ ...prev, isLoading: true }));
     try {
-      const response = await users.verifyDevice(email, deviceId, token);
+      const response = await users.verifyDevice(deviceId, token);
       setVerifyDeviceData({
         isLoading: false,
         isError: false,

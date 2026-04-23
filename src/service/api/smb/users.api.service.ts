@@ -141,12 +141,12 @@ export const users = {
     const response = await smbAPI.post(`/users/activateDevice/${deviceId}`);
     return response;
   },
-  requestActivateDevice: async (email: string, deviceId: string) => {
-    const response = await smbAPI.post(`/users/requestActivateDevice/${email}/${deviceId}`);
+  requestActivateDevice: async (deviceId: string) => {
+    const response = await smbAPI.post(`/users/requestActivateDevice/${deviceId}`);
     return response;
   },
-  verifyDevice: async (email: string, deviceId: string, token: string) => {
-    const response = await smbAPI.post(`/users/verifyDevice/${email}/${deviceId}/${token}`);
+  verifyDevice: async (deviceId: string, token: string) => {
+    const response = await smbAPI.post(`/users/verifyDevice/${deviceId}/${token}`);
     return response;
   },
 };

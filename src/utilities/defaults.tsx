@@ -151,17 +151,35 @@ export const deviceBrowser = () => {
 
   return browser;
 };
+const DEVICE_ID_STORAGE_KEY = "smile_device_id";
+
+const generateDeviceId = (): string => {
+  if (typeof window !== "undefined" && window.crypto?.randomUUID) {
+    return window.crypto.randomUUID();
+  }
+
+  if (typeof window !== "undefined" && window.crypto?.getRandomValues) {
+    const randomBytes = new Uint8Array(16);
+    window.crypto.getRandomValues(randomBytes);
+    return Array.from(randomBytes, (value) => value.toString(16).padStart(2, "0")).join("");
+  }
+
+  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 18)}`;
+};
+
 export function deviceId(): string {
-  const ua = navigator.userAgent;
-  const lang = navigator.language;
-  const platform = navigator.platform;
-  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-  const screenSize = `${screen.width}x${screen.height}`;
+  if (typeof window === "undefined") {
+    return "server-device";
+  }
 
-  const raw = `${ua}|${lang}|${platform}|${timezone}|${screenSize}`;
-  const hash = btoa(raw);
+  const existingDeviceId = window.localStorage.getItem(DEVICE_ID_STORAGE_KEY);
+  if (existingDeviceId) {
+    return existingDeviceId;
+  }
 
-  return hash;
+  const nextDeviceId = generateDeviceId();
+  window.localStorage.setItem(DEVICE_ID_STORAGE_KEY, nextDeviceId);
+  return nextDeviceId;
 }
 
 export function formatTimeAgo(dateString: string): string {
