@@ -24,12 +24,14 @@ import {
 import { useNavigate } from "react-router-dom";
 import { ymdToDmy } from "../../utilities/defaults";
 import {
+  Add,
+  Check,
   ArrowBackIos,
   ArrowForwardIos,
   PlayArrow,
 } from "@mui/icons-material";
 import { User } from "../../user";
-import StatusActions from "../watchlist/StatusActions";
+import { useUsers } from "../../context/Users";
 import { providersAPI } from "../../service/api/smb/providers.api.service";
 import {
   buildPlaybackAvailabilityKey,
@@ -117,6 +119,12 @@ const Header = React.memo(
     const { logoPath, logoLoading } = logoData;
 
     const navigate = useNavigate();
+    const {
+      addToWatchlist,
+      addToWatchlistData,
+      removeFromWatchlist,
+      removeFromWatchlistData,
+    } = useUsers();
 
     useEffect(() => {
       trendingAll("week", 1);
@@ -158,13 +166,13 @@ const Header = React.memo(
 
       const items = trendingResults.map((details) => {
         const mediaType = details.media_type as "movie" | "tv";
-        const watchlistItem = (myselfData?.data as unknown as User)?.watchlist?.find(
+        const recentItem = (myselfData?.data as unknown as User)?.recentlyWatched?.find(
           (item) => item.id == String(details?.id) && item.type === mediaType,
         );
         const playbackTarget = getPlaybackTarget({
           mediaType,
           mediaId: details.id,
-          watchlistItem,
+          recentItem,
         });
 
         return {
@@ -227,10 +235,13 @@ const Header = React.memo(
       const watchlistItem = (myselfData?.data as unknown as User)?.watchlist?.find(
         (item) => item.id == String(details?.id) && item.type === mediaType
       );
+      const recentItem = (myselfData?.data as unknown as User)?.recentlyWatched?.find(
+        (item) => item.id == String(details?.id) && item.type === mediaType
+      );
       const playbackTarget = getPlaybackTarget({
         mediaType,
         mediaId: details?.id,
-        watchlistItem,
+        recentItem,
       });
       const availabilityKey = buildPlaybackAvailabilityKey({
         mediaType,
@@ -393,16 +404,27 @@ const Header = React.memo(
                 }}
               >
                 {mediaType === "movie" ? (
-                  watchlistItem ? (watchlistItem.status == "watching" && "Continue Watching" || (watchlistItem.status == "new" || watchlistItem.status == "planned") && "Start Watching") : "Watch Now"
+                  recentItem
+                    ? Number(recentItem.currentTime || 0) > 0
+                      ? "Continue Watching"
+                      : "Watch Again"
+                    : "Watch Now"
                 ) : (
-                  watchlistItem ? (watchlistItem.status == "watching" && `Continue S${watchlistItem.season}:E${watchlistItem.episode}` || (watchlistItem.status == "new" || watchlistItem.status == "planned") && "Start Watching") : "Play Now"
+                  recentItem
+                    ? Number(recentItem.currentTime || 0) > 0
+                      ? `Continue S${recentItem.currentSeason}:E${recentItem.currentEpisode}`
+                      : recentItem.nextSeason && recentItem.nextEpisode
+                        ? `Continue S${recentItem.nextSeason}:E${recentItem.nextEpisode}`
+                        : "Watch Again"
+                    : "Play Now"
                 )}
               </Button>
-              <Typography
-                level="body-sm"
-                sx={{
-                  minHeight: "20px",
-                  textShadow: "0 0 8px rgba(0,0,0,0.7)",
+              {!isReleaseBlocked && isUnavailable && !availabilityLoading && (
+                <Typography
+                  level="body-sm"
+                  sx={{
+                    minHeight: "20px",
+                    textShadow: "0 0 8px rgba(0,0,0,0.7)",
                   color: isUnavailable && !availabilityLoading && !isReleaseBlocked
                     ? "rgb(255, 166, 120)"
                     : "inherit",
@@ -410,19 +432,50 @@ const Header = React.memo(
               >
                 {playButtonNote}
               </Typography>
-              <StatusActions
-                mediaId={details.id}
-                mediaType={mediaType}
-                poster={details.poster_path}
-                title={details.name || details.title || ""}
-                duration={watchlistItem?.duration || 0}
-                currentTime={watchlistItem?.currentTime || 0}
-                season={watchlistItem?.season || (mediaType == "tv" ? 1 : 0)}
-                episode={watchlistItem?.episode || (mediaType == "tv" ? 1 : 0)}
-                currentStatus={watchlistItem?.status}
-                width="300px"
-                mobileWidth="220px"
-              />
+              )}
+              <Button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (watchlistItem) {
+                    void removeFromWatchlist(mediaType, String(details.id));
+                    return;
+                  }
+                  void addToWatchlist(
+                    mediaType,
+                    String(details.id),
+                    details.poster_path || "",
+                    details.name || details.title || "",
+                  );
+                }}
+                disabled={
+                  addToWatchlistData?.isLoading ||
+                  removeFromWatchlistData?.isLoading
+                }
+                startDecorator={watchlistItem ? <Check /> : <Add />}
+                variant="solid"
+                sx={{
+                  width: "300px",
+                  padding: "15px 0px",
+                  backgroundColor: watchlistItem ? "rgb(255, 255, 255, 0.8)" : "white",
+                  color: watchlistItem ? "black" : "black",
+                  "&:hover": {
+                    backgroundColor: watchlistItem
+                      ? "rgb(255, 255, 255, 0.7)"
+                      : "rgb(255, 255, 255, 0.9)",
+                  },
+                  "&:active": {
+                    backgroundColor: watchlistItem
+                      ? "rgb(255, 255, 255, 0.6)"
+                      : "rgb(255, 255, 255, 0.8)",
+                  },
+                  "@media (max-width: 700px)": {
+                    width: "220px",
+                    padding: "10px 0px",
+                  },
+                }}
+              >
+                {watchlistItem ? "In Watchlist" : "Add to Watchlist"}
+              </Button>
             </Box>
           </CardContent>
         </Card>

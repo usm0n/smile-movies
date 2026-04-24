@@ -1,18 +1,11 @@
-import { SavedMediaItem } from "../user";
+export type LibrarySort = "recent" | "added" | "title";
 
-export type SavedMediaSort = "recent" | "added" | "title" | "status";
-export type SavedMediaStatusFilter = "all" | "watching" | "planned" | "watched";
-export type SavedMediaTypeFilter = "all" | "movie" | "tv";
-export type SavedMediaPreferenceFilter =
-  | "all"
-  | "love"
-  | "like"
-  | "dislike"
-  | "none";
-
-export const normalizeSavedStatus = (status?: string) => {
-  if (!status || status === "new" || status === "will_watch") return "planned";
-  return status;
+type DatedItem = {
+  title?: string;
+  addedAt?: string;
+  updatedAt?: string;
+  lastWatchedAt?: string;
+  ratedAt?: string;
 };
 
 export const parseSavedDate = (value?: string) => {
@@ -22,12 +15,17 @@ export const parseSavedDate = (value?: string) => {
   return new Date(`${match[3]}-${match[2]}-${match[1]}T${match[4]}:${match[5]}:00`).getTime();
 };
 
-const buildSavedActivityKey = (item: SavedMediaItem) =>
-  `${item.type}:${item.id}:${Number(item.season || 0)}:${Number(item.episode || 0)}`;
+export const getLibraryTimestamp = (item: DatedItem) =>
+  parseSavedDate(
+    item.lastWatchedAt ||
+    item.ratedAt ||
+    item.updatedAt ||
+    item.addedAt,
+  );
 
-export const sortSavedItems = (
-  items: SavedMediaItem[],
-  sortBy: SavedMediaSort = "recent",
+export const sortLibraryItems = <T extends DatedItem>(
+  items: T[],
+  sortBy: LibrarySort = "recent",
 ) => {
   const sorted = [...items];
 
@@ -35,64 +33,9 @@ export const sortSavedItems = (
     return sorted.sort((a, b) => (a.title || "").localeCompare(b.title || ""));
   }
 
-  if (sortBy === "status") {
-    return sorted.sort((a, b) =>
-      normalizeSavedStatus(a.status).localeCompare(normalizeSavedStatus(b.status)),
-    );
-  }
-
   if (sortBy === "added") {
-    return sorted.sort(
-      (a, b) => parseSavedDate(b.addedAt) - parseSavedDate(a.addedAt),
-    );
+    return sorted.sort((a, b) => parseSavedDate(b.addedAt) - parseSavedDate(a.addedAt));
   }
 
-  return sorted.sort(
-    (a, b) =>
-      parseSavedDate(b.updatedAt || b.addedAt) -
-      parseSavedDate(a.updatedAt || a.addedAt),
-  );
-};
-
-export const filterSavedItems = (
-  items: SavedMediaItem[],
-  statusFilter: SavedMediaStatusFilter,
-  mediaFilter: SavedMediaTypeFilter,
-  preferenceFilter: SavedMediaPreferenceFilter = "all",
-) =>
-  items.filter((item) => {
-    const statusMatch =
-      statusFilter === "all" || normalizeSavedStatus(item.status) === statusFilter;
-    const mediaMatch = mediaFilter === "all" || item.type === mediaFilter;
-    const preferenceMatch =
-      preferenceFilter === "all" ||
-      (preferenceFilter === "none"
-        ? !item.preference
-        : item.preference === preferenceFilter);
-    return statusMatch && mediaMatch && preferenceMatch;
-  });
-
-export const mergeRecentActivity = (
-  collections: SavedMediaItem[][],
-  limit = 6,
-) => {
-  const merged = collections
-    .flat()
-    .sort(
-      (a, b) =>
-        parseSavedDate(b.updatedAt || b.addedAt) -
-        parseSavedDate(a.updatedAt || a.addedAt),
-    );
-
-  const deduped: SavedMediaItem[] = [];
-  const seen = new Set<string>();
-
-  merged.forEach((item) => {
-    const key = buildSavedActivityKey(item);
-    if (seen.has(key)) return;
-    seen.add(key);
-    deduped.push(item);
-  });
-
-  return deduped.slice(0, limit);
+  return sorted.sort((a, b) => getLibraryTimestamp(b) - getLibraryTimestamp(a));
 };

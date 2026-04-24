@@ -1,18 +1,4 @@
-import { Watchlist } from "../user";
-
-export interface PublicTasteSummary {
-  totalSignals: number;
-  loved: number;
-  liked: number;
-  disliked: number;
-  noReaction: number;
-  topFavorites: Array<{
-    id: string;
-    title: string;
-    type: string;
-    poster: string;
-  }>;
-}
+import { RatingItem, RecentlyWatchedItem, Watchlist } from "../user";
 
 export interface PublicProfileResponse {
   id: string;
@@ -22,22 +8,17 @@ export interface PublicProfileResponse {
   avatar: string;
   joinedAt: string;
   lastSeen: string;
-  favoriteMovies: Array<{
-    id: string;
-    title: string;
-    type: "movie" | "tv";
-    poster?: string;
-  }>;
   visibility: {
-    favorites: boolean;
     watchlist: boolean;
     recentlyWatched: boolean;
+    ratings: boolean;
   };
   counts: {
-    favorites: number;
     watchlist: number;
     recentlyWatched: number;
+    ratings: number;
   };
-  tasteSummary: PublicTasteSummary;
-  recentlyWatched?: Watchlist[];
+  watchlist?: Watchlist[];
+  recentlyWatched?: RecentlyWatchedItem[];
+  ratings?: RatingItem[];
 }

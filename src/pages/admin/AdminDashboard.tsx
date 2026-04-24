@@ -369,7 +369,7 @@ function AdminDashboard() {
                         ))}
                       </Stack>
                       <Typography level="body-xs" textColor="neutral.500" sx={{ mt: 1 }}>
-                        Devices {user.deviceCount} · Watchlist {user.watchlistCount} · Favorites {user.favoritesCount}
+                        Devices {user.deviceCount} · Watchlist {user.watchlistCount}
                       </Typography>
                     </Box>
 
@@ -630,8 +630,8 @@ function AdminDashboard() {
                             mediaType: preferredTitle?.type || "movie",
                             title: preferredTitle?.title || "Fight Club",
                             eventType: preferredTitle?.type === "tv" ? "episode_release" : "movie_release",
-                            seasonNumber: preferredTitle?.season || 1,
-                            episodeNumber: preferredTitle?.episode || 1,
+                            seasonNumber: 1,
+                            episodeNumber: 1,
                             summary: preferredTitle?.title
                               ? `A sample release event for ${preferredTitle.title} from the admin dashboard.`
                               : "A sample release event from the admin dashboard.",

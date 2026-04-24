@@ -2,13 +2,11 @@
 
 import {
   AutoAwesome,
-  FavoriteBorder,
   DarkMode,
   LightMode,
   Logout,
   Search,
   Source,
-  Tune,
   WarningRounded,
 } from "@mui/icons-material";
 import MenuIcon from "@mui/icons-material/Menu";
@@ -379,14 +377,6 @@ const Navbar: React.FC = () => {
                     <ListItemContent>Public Profile</ListItemContent>
                   </MenuItem>
                 )}
-                <MenuItem onClick={() => navigate("/favorites")}>
-                  <FavoriteBorder sx={{ fontSize: 18 }} />
-                  <ListItemContent>Favorites</ListItemContent>
-                </MenuItem>
-                <MenuItem onClick={() => navigate("/taste-profile")}>
-                  <Tune sx={{ fontSize: 18 }} />
-                  <ListItemContent>Taste Profile</ListItemContent>
-                </MenuItem>
                 {user?.isAdmin && (
                   <MenuItem onClick={() => navigate("/admin")}>
                     <ListItemContent>Admin</ListItemContent>
@@ -538,12 +528,6 @@ const Navbar: React.FC = () => {
                 Public Profile
               </ListItemButton>
             )}
-            <ListItemButton onClick={() => navigateTo("/favorites")}>
-              Favorites
-            </ListItemButton>
-            <ListItemButton onClick={() => navigateTo("/taste-profile")}>
-              Taste Profile
-            </ListItemButton>
             {user?.isAdmin && (
               <ListItemButton onClick={() => navigateTo("/admin")}>
                 Admin

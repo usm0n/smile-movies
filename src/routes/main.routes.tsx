@@ -23,8 +23,6 @@ import Watch from "../pages/video/Watch";
 import Watchlist from "../pages/Watchlist";
 import AIAssistant from "../pages/ai/AIAssistant";
 import TVRatings from "../pages/tv/TVRatings";
-import Favorites from "../pages/Favorites";
-import TasteProfile from "../pages/TasteProfile";
 
 export const mainRoutes = [
   {
@@ -128,11 +126,15 @@ export const mainRoutes = [
     element: <PublicProfilePage />,
   },
   {
-    path: "/u/:handle/favorites",
+    path: "/u/:handle/watchlist",
     element: <PublicProfilePage />,
   },
   {
-    path: "/u/:handle/watchlist",
+    path: "/u/:handle/recently-watched",
+    element: <PublicProfilePage />,
+  },
+  {
+    path: "/u/:handle/ratings",
     element: <PublicProfilePage />,
   },
   {
@@ -162,14 +164,6 @@ export const mainRoutes = [
   {
     path: "/watchlist",
     element: <Watchlist />,
-  },
-  {
-    path: "/favorites",
-    element: <Favorites />,
-  },
-  {
-    path: "/taste-profile",
-    element: <TasteProfile />,
   },
   {
     path: "/auth/forgot-password",

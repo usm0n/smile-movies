@@ -2,8 +2,8 @@ import {
   Avatar,
   Box,
   Card,
-  Chip,
   CircularProgress,
+  Divider,
   Stack,
   Tab,
   TabList,
@@ -18,9 +18,20 @@ import EventMC from "../../components/cards/EventMC";
 import { profilesAPI } from "../../service/api/smb/profiles.api.service";
 import { PublicProfileResponse } from "../../types/profiles";
 import { ReviewRecord } from "../../types/reviews";
-import { Watchlist } from "../../user";
+import { RatingItem, RecentlyWatchedItem, Watchlist } from "../../user";
 
-const profileTabs = ["", "/favorites", "/watchlist", "/reviews"];
+const tabConfig = [
+  { key: "overview", label: "Overview", suffix: "" },
+  { key: "watchlist", label: "Watchlist", suffix: "/watchlist" },
+  { key: "recently-watched", label: "Recently Watched", suffix: "/recently-watched" },
+  { key: "ratings", label: "Ratings", suffix: "/ratings" },
+  { key: "reviews", label: "Reviews", suffix: "/reviews" },
+] as const;
+
+const tabKeyBySuffix = tabConfig.reduce<Record<string, string>>((acc, tab) => {
+  acc[tab.suffix] = tab.key;
+  return acc;
+}, {});
 
 function MediaGrid({
   items,
@@ -43,14 +54,82 @@ function MediaGrid({
         <EventMC
           key={`profile-${item.type}-${item.id}`}
           eventId={item.id}
-          eventPoster={item.poster}
+          eventPoster={item.poster || ""}
           eventTitle={item.title}
           eventType={item.type}
-          eventStatus={item.status}
+        />
+      ))}
+    </Box>
+  );
+}
+
+function RatingsGrid({
+  items,
+  emptyMessage,
+}: {
+  items: RatingItem[];
+  emptyMessage: string;
+}) {
+  if (!items.length) {
+    return (
+      <Typography level="body-sm" textColor="neutral.400">
+        {emptyMessage}
+      </Typography>
+    );
+  }
+
+  return (
+    <Box display="flex" flexWrap="wrap" justifyContent="center" gap="18px">
+      {items.map((item) => (
+        <Box
+          key={`profile-rating-${item.type}-${item.id}`}
+          sx={{ width: "250px", display: "flex", flexDirection: "column", gap: 1 }}
+        >
+          <EventMC
+            eventId={item.id}
+            eventPoster={item.poster || ""}
+            eventTitle={item.title}
+            eventType={item.type}
+          />
+          <Typography level="body-sm" textAlign="center">
+            Rated {item.rating}/10
+          </Typography>
+        </Box>
+      ))}
+    </Box>
+  );
+}
+
+function RecentlyWatchedGrid({
+  items,
+  emptyMessage,
+}: {
+  items: RecentlyWatchedItem[];
+  emptyMessage: string;
+}) {
+  if (!items.length) {
+    return (
+      <Typography level="body-sm" textColor="neutral.400">
+        {emptyMessage}
+      </Typography>
+    );
+  }
+
+  return (
+    <Box display="flex" flexWrap="wrap" justifyContent="center" gap="18px">
+      {items.map((item) => (
+        <EventMC
+          key={`profile-recent-${item.type}-${item.id}`}
+          eventId={item.id}
+          eventPoster={item.poster || ""}
+          eventTitle={item.title}
+          eventType={item.type}
           eventDuration={item.duration}
           eventCurrentTime={item.currentTime}
-          eventSeason={item.season}
-          eventEpisode={item.episode}
+          eventSeason={item.currentSeason}
+          eventEpisode={item.currentEpisode}
+          eventNextSeason={item.nextSeason}
+          eventNextEpisode={item.nextEpisode}
         />
       ))}
     </Box>
@@ -62,13 +141,32 @@ function PublicProfilePage() {
   const navigate = useNavigate();
   const location = useLocation();
   const [profile, setProfile] = useState<PublicProfileResponse | null>(null);
-  const [favorites, setFavorites] = useState<Watchlist[]>([]);
   const [watchlist, setWatchlist] = useState<Watchlist[]>([]);
+  const [recentlyWatched, setRecentlyWatched] = useState<RecentlyWatchedItem[]>([]);
+  const [ratings, setRatings] = useState<RatingItem[]>([]);
   const [reviews, setReviews] = useState<ReviewRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [sectionLoading, setSectionLoading] = useState(false);
   const currentSuffix = location.pathname.replace(`/u/${handle}`, "") || "";
-  const currentTab = Math.max(0, profileTabs.indexOf(currentSuffix));
+  const requestedTabKey = tabKeyBySuffix[currentSuffix] || "overview";
+
+  const visibleTabs = useMemo(() => {
+    if (!profile) {
+      return tabConfig.filter((tab) => tab.key === "overview" || tab.key === "reviews");
+    }
+
+    return tabConfig.filter((tab) => {
+      if (tab.key === "overview" || tab.key === "reviews") return true;
+      if (tab.key === "watchlist") return profile.visibility.watchlist;
+      if (tab.key === "recently-watched") return profile.visibility.recentlyWatched;
+      if (tab.key === "ratings") return profile.visibility.ratings;
+      return false;
+    });
+  }, [profile]);
+
+  const activeTabKey = visibleTabs.some((tab) => tab.key === requestedTabKey)
+    ? requestedTabKey
+    : "overview";
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -88,19 +186,29 @@ function PublicProfilePage() {
   }, [handle]);
 
   useEffect(() => {
+    if (!profile) return;
+    if (activeTabKey === requestedTabKey) return;
+    navigate(`/u/${handle}`, { replace: true });
+  }, [activeTabKey, handle, navigate, profile, requestedTabKey]);
+
+  useEffect(() => {
     const loadSection = async () => {
       if (!profile) return;
       setSectionLoading(true);
       try {
-        if (currentTab === 1 && profile.visibility.favorites) {
-          const response = await profilesAPI.getFavorites(handle);
-          setFavorites(response.data);
-        }
-        if (currentTab === 2 && profile.visibility.watchlist) {
+        if (activeTabKey === "watchlist" && profile.visibility.watchlist) {
           const response = await profilesAPI.getWatchlist(handle);
           setWatchlist(response.data);
         }
-        if (currentTab === 3) {
+        if (activeTabKey === "recently-watched" && profile.visibility.recentlyWatched) {
+          const response = await profilesAPI.getRecentlyWatched(handle);
+          setRecentlyWatched(response.data);
+        }
+        if (activeTabKey === "ratings" && profile.visibility.ratings) {
+          const response = await profilesAPI.getRatings(handle);
+          setRatings(response.data);
+        }
+        if (activeTabKey === "reviews") {
           const response = await profilesAPI.getReviews(handle);
           setReviews(response.data);
         }
@@ -112,7 +220,7 @@ function PublicProfilePage() {
     };
 
     void loadSection();
-  }, [currentTab, handle, profile]);
+  }, [activeTabKey, handle, profile]);
 
   const title = useMemo(() => {
     if (!profile) return "Public profile";
@@ -123,7 +231,7 @@ function PublicProfilePage() {
     <PublicPageShell
       eyebrow="Public Profile"
       title={title}
-      description="Public identity arrives before social features. Profiles are read-only for now, with privacy-gated library visibility."
+      description="Public profiles can now share watchlist, recently watched activity, ratings, and reviews when the user chooses to make them visible."
     >
       {loading ? (
         <CircularProgress />
@@ -148,104 +256,104 @@ function PublicProfilePage() {
                 </Typography>
               </Box>
             </Stack>
-
-            <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", mt: 2 }}>
-              <Chip variant="soft">Favorites {profile.counts.favorites}</Chip>
-              <Chip variant="soft">Watchlist {profile.counts.watchlist}</Chip>
-              <Chip variant="soft">Recently watched {profile.counts.recentlyWatched}</Chip>
-              <Chip color={profile.visibility.favorites ? "success" : "neutral"}>
-                Favorites {profile.visibility.favorites ? "public" : "private"}
-              </Chip>
-              <Chip color={profile.visibility.watchlist ? "success" : "neutral"}>
-                Watchlist {profile.visibility.watchlist ? "public" : "private"}
-              </Chip>
-              <Chip color={profile.visibility.recentlyWatched ? "success" : "neutral"}>
-                Recent activity {profile.visibility.recentlyWatched ? "public" : "private"}
-              </Chip>
-            </Stack>
           </Card>
-
-          <Card sx={{ p: 3, borderRadius: 28 }}>
-            <Typography level="title-lg" sx={{ mb: 1.5 }}>
-              Taste Summary
-            </Typography>
-            <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", mb: 2 }}>
-              <Chip>Loved {profile.tasteSummary.loved}</Chip>
-              <Chip>Liked {profile.tasteSummary.liked}</Chip>
-              <Chip>Disliked {profile.tasteSummary.disliked}</Chip>
-              <Chip>No reaction {profile.tasteSummary.noReaction}</Chip>
-              <Chip>Total signals {profile.tasteSummary.totalSignals}</Chip>
-            </Stack>
-            <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap" }}>
-              {profile.tasteSummary.topFavorites.map((item) => (
-                <Chip key={`${item.type}-${item.id}`} variant="soft">
-                  {item.title}
-                </Chip>
-              ))}
-              {!profile.tasteSummary.topFavorites.length && (
-                <Typography level="body-sm" textColor="neutral.400">
-                  No standout titles yet.
-                </Typography>
-              )}
-            </Stack>
-          </Card>
-
-          {profile.visibility.recentlyWatched && !!profile.recentlyWatched?.length && (
-            <Card sx={{ p: 3, borderRadius: 28 }}>
-              <Typography level="title-lg" sx={{ mb: 2 }}>
-                Recently Watched
-              </Typography>
-              <MediaGrid
-                items={profile.recentlyWatched || []}
-                emptyMessage="No recent activity to show."
-              />
-            </Card>
-          )}
 
           <Tabs
-            value={currentTab}
-            onChange={(_, value) => navigate(`/u/${handle}${profileTabs[(value as number) || 0]}`)}
+            value={activeTabKey}
+            onChange={(_, value) => {
+              const nextTab = tabConfig.find((tab) => tab.key === value);
+              navigate(`/u/${handle}${nextTab?.suffix || ""}`);
+            }}
             sx={{ background: "transparent" }}
           >
             <TabList>
-              <Tab>Overview</Tab>
-              <Tab>Favorites</Tab>
-              <Tab>Watchlist</Tab>
-              <Tab>Reviews</Tab>
+              {visibleTabs.map((tab) => (
+                <Tab key={tab.key} value={tab.key}>
+                  {tab.label}
+                </Tab>
+              ))}
             </TabList>
 
-            <TabPanel value={0} sx={{ px: 0 }}>
-              <Card sx={{ p: 3, borderRadius: 24 }}>
-                <Typography level="body-md" textColor="neutral.300">
-                  Public profiles are intentionally lightweight at launch. You can see core identity, taste signals, and any library sections this user has chosen to make visible.
-                </Typography>
-              </Card>
-            </TabPanel>
-
-            <TabPanel value={1} sx={{ px: 0 }}>
-              <Card sx={{ p: 3, borderRadius: 24 }}>
-                {sectionLoading ? (
-                  <CircularProgress />
-                ) : profile.visibility.favorites ? (
-                  <MediaGrid
-                    items={favorites}
-                    emptyMessage="No public favorites to show."
-                  />
-                ) : (
-                  <Typography level="body-sm" textColor="neutral.400">
-                    Favorites are private for this profile.
+            <TabPanel value="overview" sx={{ px: 0 }}>
+              <Stack spacing={2}>
+                <Card sx={{ p: 3, borderRadius: 24 }}>
+                  <Typography level="body-md" textColor="neutral.300">
+                    This profile shares only the sections the user has chosen to make public.
                   </Typography>
-                )}
-              </Card>
+                  <Box
+                    sx={{
+                      mt: 2,
+                      display: "grid",
+                      gridTemplateColumns: { xs: "1fr", sm: "repeat(3, minmax(0, 1fr))" },
+                      gap: 1.5,
+                    }}
+                  >
+                    <Card variant="soft">
+                      <Typography level="body-xs" textColor="neutral.400">
+                        Watchlist
+                      </Typography>
+                      <Typography level="h3">{profile.counts.watchlist}</Typography>
+                    </Card>
+                    <Card variant="soft">
+                      <Typography level="body-xs" textColor="neutral.400">
+                        Recently watched
+                      </Typography>
+                      <Typography level="h3">{profile.counts.recentlyWatched}</Typography>
+                    </Card>
+                    <Card variant="soft">
+                      <Typography level="body-xs" textColor="neutral.400">
+                        Ratings
+                      </Typography>
+                      <Typography level="h3">{profile.counts.ratings}</Typography>
+                    </Card>
+                  </Box>
+                </Card>
+
+                {profile.visibility.watchlist ? (
+                  <Card sx={{ p: 3, borderRadius: 24 }}>
+                    <Typography level="title-lg" sx={{ mb: 2 }}>
+                      Watchlist Preview
+                    </Typography>
+                    <MediaGrid
+                      items={profile.watchlist || []}
+                      emptyMessage="No public watchlist items yet."
+                    />
+                  </Card>
+                ) : null}
+
+                {profile.visibility.recentlyWatched ? (
+                  <Card sx={{ p: 3, borderRadius: 24 }}>
+                    <Typography level="title-lg" sx={{ mb: 2 }}>
+                      Recently Watched Preview
+                    </Typography>
+                    <RecentlyWatchedGrid
+                      items={profile.recentlyWatched || []}
+                      emptyMessage="No public recently watched titles yet."
+                    />
+                  </Card>
+                ) : null}
+
+                {profile.visibility.ratings ? (
+                  <Card sx={{ p: 3, borderRadius: 24 }}>
+                    <Typography level="title-lg" sx={{ mb: 2 }}>
+                      Ratings Preview
+                    </Typography>
+                    <RatingsGrid
+                      items={profile.ratings || []}
+                      emptyMessage="No public ratings yet."
+                    />
+                  </Card>
+                ) : null}
+              </Stack>
             </TabPanel>
 
-            <TabPanel value={2} sx={{ px: 0 }}>
+            <TabPanel value="watchlist" sx={{ px: 0 }}>
               <Card sx={{ p: 3, borderRadius: 24 }}>
                 {sectionLoading ? (
                   <CircularProgress />
                 ) : profile.visibility.watchlist ? (
                   <MediaGrid
-                    items={watchlist}
+                    items={watchlist.length ? watchlist : profile.watchlist || []}
                     emptyMessage="No public watchlist items to show."
                   />
                 ) : (
@@ -256,24 +364,58 @@ function PublicProfilePage() {
               </Card>
             </TabPanel>
 
-            <TabPanel value={3} sx={{ px: 0 }}>
+            <TabPanel value="recently-watched" sx={{ px: 0 }}>
+              <Card sx={{ p: 3, borderRadius: 24 }}>
+                {sectionLoading ? (
+                  <CircularProgress />
+                ) : profile.visibility.recentlyWatched ? (
+                  <RecentlyWatchedGrid
+                    items={
+                      recentlyWatched.length
+                        ? recentlyWatched
+                        : profile.recentlyWatched || []
+                    }
+                    emptyMessage="No public recently watched titles to show."
+                  />
+                ) : (
+                  <Typography level="body-sm" textColor="neutral.400">
+                    Recently watched is private for this profile.
+                  </Typography>
+                )}
+              </Card>
+            </TabPanel>
+
+            <TabPanel value="ratings" sx={{ px: 0 }}>
+              <Card sx={{ p: 3, borderRadius: 24 }}>
+                {sectionLoading ? (
+                  <CircularProgress />
+                ) : profile.visibility.ratings ? (
+                  <RatingsGrid
+                    items={ratings.length ? ratings : profile.ratings || []}
+                    emptyMessage="No public ratings to show."
+                  />
+                ) : (
+                  <Typography level="body-sm" textColor="neutral.400">
+                    Ratings are private for this profile.
+                  </Typography>
+                )}
+              </Card>
+            </TabPanel>
+
+            <TabPanel value="reviews" sx={{ px: 0 }}>
               <Card sx={{ p: 3, borderRadius: 24 }}>
                 {sectionLoading ? (
                   <CircularProgress />
                 ) : reviews.length ? (
-                  <Stack spacing={1.25}>
+                  <Stack spacing={2}>
                     {reviews.map((review) => (
-                      <Card key={review.id} sx={{ p: 2, borderRadius: 18, background: "rgba(255,255,255,0.02)" }}>
-                        <Stack direction="row" spacing={1} sx={{ justifyContent: "space-between", mb: 1 }}>
-                          <Typography level="title-sm">{review.title}</Typography>
-                          <Chip size="sm">Rating {review.rating}/10</Chip>
-                        </Stack>
-                        <Typography level="body-sm" textColor="neutral.300">
-                          {review.body}
+                      <Card key={review.id} variant="soft" sx={{ p: 2 }}>
+                        <Typography level="title-md">{review.title}</Typography>
+                        <Typography level="body-sm" textColor="neutral.400">
+                          {review.mediaType}
                         </Typography>
-                        <Typography level="body-xs" textColor="neutral.500" sx={{ mt: 1 }}>
-                          {review.updatedAt}
-                        </Typography>
+                        <Divider sx={{ my: 1 }} />
+                        <Typography sx={{ mt: 1 }}>{review.body}</Typography>
                       </Card>
                     ))}
                   </Stack>

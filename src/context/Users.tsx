@@ -27,8 +27,9 @@ const UsersContext = createContext({
   resetPasswordData: null as userType.ResponseType | null,
   addToWatchlistData: null as userType.ResponseType | null,
   removeFromWatchlistData: null as userType.ResponseType | null,
-  addToFavoritesData: null as userType.ResponseType | null,
-  removeFromFavoritesData: null as userType.ResponseType | null,
+  upsertRecentlyWatchedData: null as userType.ResponseType | null,
+  upsertRatingData: null as userType.ResponseType | null,
+  deleteRatingData: null as userType.ResponseType | null,
   addDeviceData: null as userType.ResponseType | null,
   deleteDeviceData: null as userType.ResponseType | null,
   signedInWithGoogle: null as boolean | null,
@@ -73,27 +74,28 @@ const UsersContext = createContext({
     _id: string,
     _poster: string,
     _title: string,
-    _status: string,
-    _duration: number,
-    _currentTime: number,
-    _season: number,
-    _episode: number,
-    _preference?: userType.SavedMediaPreference,
   ) => {},
   removeFromWatchlist: async (_type: string, _id: string) => {},
-  addToFavorites: async (
+  upsertRecentlyWatched: async (
     _type: string,
     _id: string,
     _poster: string,
     _title: string,
-    _status?: string,
     _duration?: number,
     _currentTime?: number,
-    _season?: number,
-    _episode?: number,
-    _preference?: userType.SavedMediaPreference,
+    _currentSeason?: number,
+    _currentEpisode?: number,
+    _nextSeason?: number,
+    _nextEpisode?: number,
   ) => {},
-  removeFromFavorites: async (_type: string, _id: string) => {},
+  upsertRating: async (
+    _type: string,
+    _id: string,
+    _poster: string,
+    _title: string,
+    _rating: number,
+  ) => {},
+  deleteRating: async (_type: string, _id: string) => {},
   addDevice: async (
     _deviceId: string,
     _deviceName: string,
@@ -154,9 +156,11 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
     useState<userType.ResponseType | null>(null);
   const [removeFromWatchlistData, setRemoveFromWatchlistData] =
     useState<userType.ResponseType | null>(null);
-  const [addToFavoritesData, setAddToFavoritesData] =
+  const [upsertRecentlyWatchedData, setUpsertRecentlyWatchedData] =
     useState<userType.ResponseType | null>(null);
-  const [removeFromFavoritesData, setRemoveFromFavoritesData] =
+  const [upsertRatingData, setUpsertRatingData] =
+    useState<userType.ResponseType | null>(null);
+  const [deleteRatingData, setDeleteRatingData] =
     useState<userType.ResponseType | null>(null);
   const [addDeviceData, setAddDeviceData] =
     useState<userType.ResponseType | null>(null);
@@ -611,12 +615,6 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
     id: string,
     poster: string,
     title: string,
-    status: string,
-    duration: number,
-    currentTime: number,
-    season: number,
-    episode: number,
-    preference?: userType.SavedMediaPreference,
   ) => {
     setAddToWatchlistData((prev) => ({ ...prev, isLoading: true }));
     try {
@@ -625,12 +623,6 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
         id,
         poster,
         title,
-        status,
-        duration,
-        currentTime,
-        season,
-        episode,
-        preference,
       );
       setAddToWatchlistData({
         isLoading: false,
@@ -674,33 +666,33 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  const addToFavorites = async (
+  const upsertRecentlyWatched = async (
     type: string,
     id: string,
     poster: string,
     title: string,
-    status = "favorite",
     duration = 0,
     currentTime = 0,
-    season = 0,
-    episode = 0,
-    preference?: userType.SavedMediaPreference,
+    currentSeason = 0,
+    currentEpisode = 0,
+    nextSeason = 0,
+    nextEpisode = 0,
   ) => {
-    setAddToFavoritesData((prev) => ({ ...prev, isLoading: true }));
+    setUpsertRecentlyWatchedData((prev) => ({ ...prev, isLoading: true }));
     try {
-      const response = await users.addToFavorites(
+      const response = await users.upsertRecentlyWatched(
         type,
         id,
         poster,
         title,
-        status,
         duration,
         currentTime,
-        season,
-        episode,
-        preference,
+        currentSeason,
+        currentEpisode,
+        nextSeason,
+        nextEpisode,
       );
-      setAddToFavoritesData({
+      setUpsertRecentlyWatchedData({
         isLoading: false,
         isError: false,
         isSuccess: true,
@@ -709,7 +701,7 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
       });
       getMyself();
     } catch (error: unknown) {
-      setAddToFavoritesData({
+      setUpsertRecentlyWatchedData({
         isLoading: false,
         isError: true,
         isSuccess: false,
@@ -719,11 +711,17 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  const removeFromFavorites = async (type: string, id: string) => {
-    setRemoveFromFavoritesData((prev) => ({ ...prev, isLoading: true }));
+  const upsertRating = async (
+    type: string,
+    id: string,
+    poster: string,
+    title: string,
+    rating: number,
+  ) => {
+    setUpsertRatingData((prev) => ({ ...prev, isLoading: true }));
     try {
-      const response = await users.removeFromFavorites(type, id);
-      setRemoveFromFavoritesData({
+      const response = await users.upsertRating(type, id, poster, title, rating);
+      setUpsertRatingData({
         isLoading: false,
         isError: false,
         isSuccess: true,
@@ -732,7 +730,30 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
       });
       getMyself();
     } catch (error: unknown) {
-      setRemoveFromFavoritesData({
+      setUpsertRatingData({
+        isLoading: false,
+        isError: true,
+        isSuccess: false,
+        data: (error as userType.ErrorResponse)?.data,
+        code: (error as userType.ErrorResponse)?.status,
+      });
+    }
+  };
+
+  const deleteRating = async (type: string, id: string) => {
+    setDeleteRatingData((prev) => ({ ...prev, isLoading: true }));
+    try {
+      const response = await users.deleteRating(type, id);
+      setDeleteRatingData({
+        isLoading: false,
+        isError: false,
+        isSuccess: true,
+        data: response.data,
+        code: response.status,
+      });
+      getMyself();
+    } catch (error: unknown) {
+      setDeleteRatingData({
         isLoading: false,
         isError: true,
         isSuccess: false,
@@ -948,10 +969,12 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
         addToWatchlistData,
         removeFromWatchlist,
         removeFromWatchlistData,
-        addToFavorites,
-        addToFavoritesData,
-        removeFromFavorites,
-        removeFromFavoritesData,
+        upsertRecentlyWatched,
+        upsertRecentlyWatchedData,
+        upsertRating,
+        upsertRatingData,
+        deleteRating,
+        deleteRatingData,
         addDevice,
         addDeviceData,
         deleteDevice,

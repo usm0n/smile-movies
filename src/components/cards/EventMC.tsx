@@ -1,29 +1,28 @@
 import {
   Box, Button, ButtonGroup, Card, CardCover, Chip,
   Dropdown, LinearProgress, Menu, MenuButton, MenuItem, Typography,
-  IconButton,
 } from "@mui/joy";
 import { useNavigate } from "react-router-dom";
 import BlurImage from "../../utilities/blurImage";
 import {
+  Add,
+  Check,
   DeleteOutline,
   IosShare,
   MoreVert,
   Movie,
   Person,
   PlayArrow,
-  Star,
-  StarBorder,
 } from "@mui/icons-material";
-import { isLoggedIn, shareLink } from "../../utilities/defaults";
+import { shareLink } from "../../utilities/defaults";
 import { useUsers } from "../../context/Users";
 import { User } from "../../user";
-import StatusActions from "../watchlist/StatusActions";
+import { getPlaybackTarget } from "../../utilities/playbackTarget";
 
 function EventMC({
   eventPoster, eventId, eventType, eventDelete,
-  eventDuration, eventCurrentTime, eventStatus,
-  eventSeason, eventEpisode, eventTitle,
+  eventDuration, eventCurrentTime,
+  eventSeason, eventEpisode, eventNextSeason, eventNextEpisode, eventTitle,
 }: {
   eventPoster: string;
   eventId: number | string;
@@ -34,36 +33,39 @@ function EventMC({
   eventStatus?: string;
   eventSeason?: number;
   eventEpisode?: number;
+  eventNextSeason?: number;
+  eventNextEpisode?: number;
   eventTitle?: string;
 }) {
   const navigate = useNavigate();
   const {
-    addToFavorites,
-    addToFavoritesData,
-    removeFromFavorites,
-    removeFromFavoritesData,
+    addToWatchlist,
+    addToWatchlistData,
     myselfData,
+    removeFromWatchlist,
+    removeFromWatchlistData,
   } = useUsers();
 
   const watchlistItem = (myselfData?.data as User)?.watchlist?.find(
     (item) => item.id == String(eventId) && item.type === eventType,
   );
-  const favoriteItem = (myselfData?.data as User)?.favorites?.find((item) => item.id == String(eventId) && item.type === eventType);
-  const isFavorite = favoriteItem;
-  const currentPreference = favoriteItem?.preference || watchlistItem?.preference;
-  const favoritePreference = currentPreference === "dislike" ? "like" : currentPreference || "like";
-  const normalizedStatus =
-    eventStatus === "new" || eventStatus === "will_watch" ? "planned" : eventStatus;
-  const statusLabel =
-    normalizedStatus === "watching"
-      ? "Watching"
-      : normalizedStatus === "watched"
-        ? "Watched"
-        : normalizedStatus === "planned"
-          ? "Will Watch"
-          : normalizedStatus === "favorite"
-            ? "Favorite"
-            : "";
+  const recentItem = (myselfData?.data as User)?.recentlyWatched?.find(
+    (item) => item.id == String(eventId) && item.type === eventType,
+  );
+  const playbackTarget = getPlaybackTarget({
+    mediaType: eventType as "movie" | "tv",
+    mediaId: eventId,
+    recentItem: recentItem || {
+      id: String(eventId),
+      type: eventType as "movie" | "tv",
+      currentTime: eventCurrentTime || 0,
+      currentSeason: eventSeason || 0,
+      currentEpisode: eventEpisode || 0,
+      nextSeason: eventNextSeason || 0,
+      nextEpisode: eventNextEpisode || 0,
+    },
+  });
+  const hasResumeProgress = Number(eventCurrentTime || 0) > 0;
 
   return (
     <Box onClick={() => navigate(`/${eventType}/${eventId}`)} key={eventId}>
@@ -88,56 +90,6 @@ function EventMC({
           )}
         </CardCover>
 
-        {eventType !== "person" && (
-          <Box sx={{ position: "absolute", top: 0, left: 0, zIndex: 3, padding: 1 }}>
-            <IconButton
-              onClick={(e) => {
-                e.stopPropagation();
-                if (!isLoggedIn) {
-                  navigate("/auth/login");
-                  return;
-                }
-
-                isFavorite
-                  ? removeFromFavorites(eventType, String(eventId))
-                  : addToFavorites(
-                    eventType,
-                    String(eventId),
-                    eventPoster,
-                    eventTitle || "",
-                    normalizedStatus || "favorite",
-                    eventDuration || 0,
-                    eventCurrentTime || 0,
-                    eventSeason || (eventType === "tv" ? 1 : 0),
-                    eventEpisode || (eventType === "tv" ? 1 : 0),
-                    favoritePreference,
-                  );
-              }}
-              disabled={
-                myselfData?.isLoading ||
-                addToFavoritesData?.isLoading ||
-                removeFromFavoritesData?.isLoading
-              }
-              sx={{
-                borderRadius: "999px",
-                background: isFavorite
-                  ? "rgba(78, 168, 255, 0.22)"
-                  : "rgba(10, 16, 32, 0.7)",
-                border: "1px solid",
-                borderColor: isFavorite ? "rgba(96, 183, 255, 0.65)" : "rgba(255,255,255,0.12)",
-                color: isFavorite ? "rgb(96, 183, 255)" : "white",
-                boxShadow: isFavorite ? "0 0 22px rgba(64, 156, 255, 0.35)" : "none",
-                backdropFilter: "blur(14px)",
-                "&:hover": {
-                  background: isFavorite ? "rgba(78, 168, 255, 0.3)" : "rgba(255,255,255,0.12)",
-                },
-              }}
-            >
-              {isFavorite ? <Star /> : <StarBorder />}
-            </IconButton>
-          </Box>
-        )}
-
         {/* Menu — top right */}
         <Box sx={{ position: "absolute", top: 0, right: 0, zIndex: 3, padding: 1 }}>
           <Dropdown>
@@ -153,21 +105,30 @@ function EventMC({
               </MenuItem>
               {eventType !== "person" && (
                 <>
-                  <MenuItem onClick={() => navigate(`/${eventType}/${eventId}${eventType === "tv" ? "/1/1" : ""}/watch`)}>
-                    <PlayArrow /> {eventType === "movie" ? "Watch Now" : "Play S1:E1"}
+                  <MenuItem onClick={() => navigate(playbackTarget.route)}>
+                    <PlayArrow /> {hasResumeProgress ? "Resume" : eventType === "movie" ? "Watch now" : "Play now"}
                   </MenuItem>
-                  <StatusActions
-                    mediaId={eventId}
-                    mediaType={eventType as "movie" | "tv"}
-                    poster={eventPoster}
-                    title={eventTitle || ""}
-                    duration={eventDuration || 0}
-                    currentTime={eventCurrentTime || 0}
-                    season={eventSeason || (eventType === "tv" ? 1 : 0)}
-                    episode={eventEpisode || (eventType === "tv" ? 1 : 0)}
-                    currentStatus={watchlistItem ? watchlistItem.status || normalizedStatus : undefined}
-                    mode="menu"
-                  />
+                  <MenuItem
+                    onClick={() => {
+                      if (watchlistItem) {
+                        void removeFromWatchlist(eventType, String(eventId));
+                        return;
+                      }
+                      void addToWatchlist(
+                        eventType,
+                        String(eventId),
+                        eventPoster,
+                        eventTitle || "",
+                      );
+                    }}
+                    disabled={
+                      addToWatchlistData?.isLoading ||
+                      removeFromWatchlistData?.isLoading
+                    }
+                  >
+                    {watchlistItem ? <Check /> : <Add />}
+                    {watchlistItem ? "Remove from watchlist" : "Add to watchlist"}
+                  </MenuItem>
                   {eventDelete && (
                     <MenuItem color="danger" onClick={() => eventDelete(eventId)}>
                       <DeleteOutline /> Delete
@@ -180,22 +141,24 @@ function EventMC({
         </Box>
 
         {/* Continue watching button */}
-        {eventStatus === "watching" && (
+        {(hasResumeProgress || (eventNextSeason && eventNextEpisode)) && (
           <ButtonGroup orientation="vertical" sx={{ position: "absolute", zIndex: 3, bottom: 30, width: "90%" }}>
             <Button
               sx={{ width: "100%", backgroundColor: "rgba(255,255,255,1)", color: "black", gap: 1, border: "none", ":hover": { backgroundColor: "rgba(255,255,255,1)", opacity: 0.9 } }}
               onClick={(e) => {
                 e.stopPropagation();
-                navigate(`/${eventType}/${eventId}${eventType === "tv" ? `/${eventSeason}/${eventEpisode}` : ""}/watch/${eventCurrentTime || 0}`);
+                navigate(playbackTarget.route);
               }}
             >
               <PlayArrow sx={{ color: "black" }} />
-              Continue {eventType === "movie" ? null : `S${eventSeason}:E${eventEpisode}`}
+              {hasResumeProgress
+                ? `Continue ${eventType === "movie" ? "" : `S${eventSeason}:E${eventEpisode}`}`.trim()
+                : `Next ${eventType === "movie" ? "" : `S${eventNextSeason}:E${eventNextEpisode}`}`.trim()}
             </Button>
           </ButtonGroup>
         )}
 
-        {eventStatus === "watching" && (
+        {hasResumeProgress && (
           <LinearProgress
             sx={{ position: "absolute", zIndex: 2, bottom: 10, width: "90%", color: "rgb(255,220,92)", "--LinearProgress-thickness": "3px" }}
             determinate
@@ -207,45 +170,6 @@ function EventMC({
           <Chip sx={{ padding: "0px 15px", position: "absolute", zIndex: 3, top: 8, right: 8, backgroundColor: "rgba(0,0,0,0.6)", color: "white" }}>
             <Typography level="body-sm">S{eventSeason}-E{eventEpisode}</Typography>
           </Chip>
-        ) : null}
-
-        {statusLabel ? (
-          <Box sx={{ display: "flex", gap: 0.8, flexWrap: "wrap" }}>
-            <Chip
-              sx={{
-                color:
-                  normalizedStatus === "watched"
-                    ? "rgb(120, 255, 178)"
-                    : normalizedStatus === "watching"
-                      ? "rgb(255, 220, 92)"
-                      : "rgb(150, 188, 255)",
-                backgroundColor: "rgba(5, 10, 22, 0.7)",
-                border: "1px solid rgba(255,255,255,0.08)",
-              }}
-            >
-              {statusLabel}
-            </Chip>
-            {currentPreference ? (
-              <Chip
-                sx={{
-                  color:
-                    currentPreference === "love"
-                      ? "rgb(255, 139, 184)"
-                      : currentPreference === "like"
-                        ? "rgb(124, 214, 255)"
-                        : "rgb(255, 166, 120)",
-                  backgroundColor: "rgba(5, 10, 22, 0.7)",
-                  border: "1px solid rgba(255,255,255,0.08)",
-                }}
-              >
-                {currentPreference === "love"
-                  ? "Loved"
-                  : currentPreference === "like"
-                    ? "Liked"
-                    : "Disliked"}
-              </Chip>
-            ) : null}
-          </Box>
         ) : null}
       </Card>
     </Box>

@@ -28,11 +28,58 @@ import { useUsers } from "../../context/Users";
 import { User } from "../../user";
 import PlaybackSurface from "../../components/player/PlaybackSurface";
 import { playbackAPI } from "../../service/api/smb/playback.api.service";
+import RatingDialog from "../../components/library/RatingDialog";
 
 const AUTO_SAVE_INTERVAL_MS = 60000;
 const MIN_PROGRESS_DELTA_MINUTES = 1;
 const MIN_PROGRESS_TO_SAVE_MINUTES = 0.25;
-const SESSION_PROGRESS_PREFIX = "watch-progress:";
+const MOVIE_COMPLETION_THRESHOLD = 0.9;
+const EPISODE_COMPLETION_THRESHOLD = 0.95;
+const LOCAL_ROUTE_PROGRESS_PREFIX = "watch-progress:";
+const LOCAL_RECENT_PROGRESS_PREFIX = "recent-progress:";
+
+type LocalRecentProgress = {
+  id: string;
+  type: "movie" | "tv";
+  title: string;
+  poster: string;
+  duration: number;
+  currentTime: number;
+  currentSeason: number;
+  currentEpisode: number;
+  nextSeason: number;
+  nextEpisode: number;
+  progressMarker: number;
+  updatedAtMs: number;
+  isCompleted: boolean;
+};
+
+const readStoredNumber = (key: string): number => {
+  if (typeof window === "undefined" || !key) return 0;
+  return Number(window.localStorage.getItem(key) || 0) || 0;
+};
+
+const writeStoredNumber = (key: string, value: number) => {
+  if (typeof window === "undefined" || !key) return;
+  window.localStorage.setItem(key, String(Math.max(0, value || 0)));
+};
+
+const readStoredRecentProgress = (key: string): LocalRecentProgress | null => {
+  if (typeof window === "undefined" || !key) return null;
+
+  try {
+    const rawValue = window.localStorage.getItem(key);
+    if (!rawValue) return null;
+    return JSON.parse(rawValue) as LocalRecentProgress;
+  } catch (_error) {
+    return null;
+  }
+};
+
+const writeStoredRecentProgress = (key: string, payload: LocalRecentProgress) => {
+  if (typeof window === "undefined" || !key) return;
+  window.localStorage.setItem(key, JSON.stringify(payload));
+};
 
 function Watch() {
   const {
@@ -50,12 +97,12 @@ function Watch() {
   const { colorScheme } = useColorScheme();
   const { movieId, movieType, seasonId, episodeId, startAt } = useParams();
   const { getStreamData, getStream } = useStream();
-  const { addToWatchlist, myselfData } = useUsers();
+  const { deleteRating, myselfData, upsertRecentlyWatched, upsertRating } = useUsers();
   const navigate = useNavigate();
   const playerRef = useRef<any>(null);
   const progressRef = useRef({
-    lastSavedAt: 0,
-    lastSavedProgressMinutes: 0,
+    lastFlushedAt: 0,
+    lastFlushedProgressMinutes: 0,
     lastKnownProgressMinutes: 0,
   });
   const playbackSessionRef = useRef({
@@ -63,6 +110,7 @@ function Watch() {
     signature: "",
     requestedSignature: "",
     isCompleted: false,
+    completionHandled: false,
   });
 
   const isFetching =
@@ -76,15 +124,22 @@ function Watch() {
   const tvSeasonsDetailsArr = tvSeasonsDetailsData?.data as tvSeasonsDetails;
   const movieImagesDataArr = movieImagesData?.data as images;
   const tvImagesDataArr = tvImagesData?.data as images;
-  const watchlistItem = (myselfData?.data as User)?.watchlist?.find(
+  const recentItem = (myselfData?.data as User)?.recentlyWatched?.find(
+    (item) => item.id === movieId && item.type === movieType,
+  );
+  const ratingItem = (myselfData?.data as User)?.ratings?.find(
     (item) => item.id === movieId && item.type === movieType,
   );
   const activeEpisodeData = tvSeasonsDetailsArr?.episodes?.find(
     (episode) => episode?.episode_number === Number(episodeId),
   );
-  const sessionProgressKey =
+  const routeProgressStorageKey =
     movieId && movieType
-      ? `${SESSION_PROGRESS_PREFIX}${movieType}:${movieId}:${seasonId || 0}:${episodeId || 0}`
+      ? `${LOCAL_ROUTE_PROGRESS_PREFIX}${movieType}:${movieId}:${seasonId || 0}:${episodeId || 0}`
+      : "";
+  const recentProgressStorageKey =
+    movieId && movieType
+      ? `${LOCAL_RECENT_PROGRESS_PREFIX}${movieType}:${movieId}`
       : "";
   const mediaTitle =
     movieType === "tv"
@@ -135,8 +190,11 @@ function Watch() {
       signature: "",
       requestedSignature: "",
       isCompleted: false,
+      completionHandled: false,
     };
-  }, [sessionProgressKey]);
+  }, [routeProgressStorageKey]);
+
+  const [isRatingOpen, setIsRatingOpen] = useState(false);
 
   useEffect(() => {
     if (sessionBaseReady || !movieId || !movieType) return;
@@ -150,29 +208,47 @@ function Watch() {
 
     if (myselfData?.isLoading) return;
 
-    let persistedSessionProgress = 0;
-    if (typeof window !== "undefined" && sessionProgressKey) {
-      persistedSessionProgress =
-        Number(sessionStorage.getItem(sessionProgressKey) || 0) || 0;
-    }
+    const persistedRouteProgress = readStoredNumber(routeProgressStorageKey);
+    const stagedRecentProgress = readStoredRecentProgress(recentProgressStorageKey);
 
-    let watchlistProgress = 0;
-    if (watchlistItem) {
+    let recentProgress = 0;
+    if (recentItem) {
       if (movieType === "movie") {
-        watchlistProgress = Number(watchlistItem.currentTime) || 0;
+        recentProgress = Number(recentItem.currentTime) || 0;
       } else {
         const sameEpisode =
-          Number(watchlistItem.season) === Number(seasonId || 0) &&
-          Number(watchlistItem.episode) === Number(episodeId || 0);
+          Number(recentItem.currentSeason) === Number(seasonId || 0) &&
+          Number(recentItem.currentEpisode) === Number(episodeId || 0);
 
-        watchlistProgress = sameEpisode
-          ? Number(watchlistItem.currentTime) || 0
+        recentProgress = sameEpisode
+          ? Number(recentItem.currentTime) || 0
+          : 0;
+      }
+    }
+
+    let localRecentProgress = 0;
+    if (stagedRecentProgress) {
+      if (movieType === "movie") {
+        localRecentProgress = Number(stagedRecentProgress.currentTime) || 0;
+      } else {
+        const sameEpisode =
+          Number(stagedRecentProgress.currentSeason) === Number(seasonId || 0) &&
+          Number(stagedRecentProgress.currentEpisode) === Number(episodeId || 0);
+
+        localRecentProgress = sameEpisode
+          ? Number(stagedRecentProgress.currentTime) || 0
           : 0;
       }
     }
 
     setSessionBaseProgress(
-      Math.max(routeProgress, watchlistProgress, persistedSessionProgress, 0),
+      Math.max(
+        routeProgress,
+        recentProgress,
+        localRecentProgress,
+        persistedRouteProgress,
+        0,
+      ),
     );
     setSessionBaseReady(true);
   }, [
@@ -182,9 +258,10 @@ function Watch() {
     myselfData?.isLoading,
     seasonId,
     sessionBaseReady,
-    sessionProgressKey,
+    recentProgressStorageKey,
+    routeProgressStorageKey,
     startAt,
-    watchlistItem,
+    recentItem,
   ]);
 
   const getCurrentProgressMinutes = () => {
@@ -256,20 +333,120 @@ function Watch() {
     }
   };
 
+  const getNextEpisodeForSeries = () => {
+    const currentEpisodeNumber = Number(episodeId || 0);
+    const currentSeasonNumber = Number(seasonId || 0);
+    const hasNextEpisodeInSeason = Boolean(
+      tvSeasonsDetailsArr?.episodes?.some(
+        (episode) => Number(episode?.episode_number) === currentEpisodeNumber + 1,
+      ),
+    );
+
+    if (hasNextEpisodeInSeason) {
+      return {
+        nextSeason: currentSeasonNumber,
+        nextEpisode: currentEpisodeNumber + 1,
+      };
+    }
+
+    const nextSeason = (tvSeriesDetailsDataArr?.seasons || []).find(
+      (season) =>
+        Number(season?.season_number) > currentSeasonNumber &&
+        Number(season?.episode_count || 0) > 0,
+    );
+
+    if (nextSeason) {
+      return {
+        nextSeason: Number(nextSeason.season_number),
+        nextEpisode: 1,
+      };
+    }
+
+    return {
+      nextSeason: 0,
+      nextEpisode: 0,
+    };
+  };
+
+  const flushRecentProgress = async (
+    options?: {
+      force?: boolean;
+      payload?: LocalRecentProgress | null;
+    },
+  ) => {
+    const stagedPayload =
+      options?.payload || readStoredRecentProgress(recentProgressStorageKey);
+
+    if (
+      !isLoggedIn ||
+      !movieId ||
+      !movieType ||
+      !stagedPayload
+    ) {
+      return;
+    }
+
+    const syncProgressMinutes =
+      stagedPayload.isCompleted && stagedPayload.duration > 0
+        ? Math.max(stagedPayload.progressMarker, stagedPayload.duration)
+        : stagedPayload.progressMarker;
+
+    if (
+      !options?.force &&
+      !stagedPayload.isCompleted &&
+      syncProgressMinutes < MIN_PROGRESS_TO_SAVE_MINUTES
+    ) {
+      return;
+    }
+
+    const now = Date.now();
+    const progressDelta = Math.abs(
+      syncProgressMinutes - progressRef.current.lastFlushedProgressMinutes,
+    );
+
+    if (
+      !options?.force &&
+      now - progressRef.current.lastFlushedAt < AUTO_SAVE_INTERVAL_MS &&
+      progressDelta < MIN_PROGRESS_DELTA_MINUTES
+    ) {
+      return;
+    }
+
+    progressRef.current.lastFlushedAt = now;
+    progressRef.current.lastFlushedProgressMinutes = syncProgressMinutes;
+
+    await upsertRecentlyWatched(
+      stagedPayload.type,
+      stagedPayload.id,
+      stagedPayload.poster,
+      stagedPayload.title,
+      stagedPayload.duration,
+      stagedPayload.currentTime,
+      stagedPayload.currentSeason,
+      stagedPayload.currentEpisode,
+      stagedPayload.nextSeason,
+      stagedPayload.nextEpisode,
+    );
+
+    await syncPlaybackTelemetry(
+      syncProgressMinutes,
+      stagedPayload.duration,
+      stagedPayload.isCompleted ? { complete: true } : undefined,
+    );
+  };
+
   const persistProgress = async (
     rawProgressMinutes: number,
     rawDurationMinutes?: number,
-    forceStatus?: "watching" | "watched",
+    forceCompleted = false,
   ) => {
-    if (!isLoggedIn || !movieId || !movieType) return;
+    if (!movieId || !movieType) return;
 
     if (!sessionBaseReady) {
-      if (typeof window !== "undefined" && sessionProgressKey) {
-        sessionStorage.setItem(
-          sessionProgressKey,
-          String(Math.max(0, rawProgressMinutes || 0)),
-        );
-      }
+      writeStoredNumber(
+        routeProgressStorageKey,
+        Math.max(0, rawProgressMinutes || 0),
+      );
       return;
     }
 
@@ -286,65 +463,66 @@ function Watch() {
     );
     const progressRatio =
       durationMinutes > 0 ? boundedProgressMinutes / durationMinutes : 0;
-    const shouldAutoComplete = movieType === "movie" && progressRatio >= 0.9;
-    const resolvedStatus = forceStatus
-      ? forceStatus
-      : shouldAutoComplete
-        ? "watched"
-        : "watching";
+    const shouldAutoComplete =
+      forceCompleted ||
+      progressRatio >=
+        (movieType === "movie"
+          ? MOVIE_COMPLETION_THRESHOLD
+          : EPISODE_COMPLETION_THRESHOLD);
     const nextProgressMinutes =
-      resolvedStatus === "watched" && durationMinutes > 0
+      shouldAutoComplete && durationMinutes > 0
         ? durationMinutes
         : boundedProgressMinutes;
 
     if (
-      resolvedStatus !== "watched" &&
+      !shouldAutoComplete &&
       nextProgressMinutes < MIN_PROGRESS_TO_SAVE_MINUTES
     ) {
       return;
     }
-
-    const now = Date.now();
-    const progressDelta = Math.abs(
-      nextProgressMinutes - progressRef.current.lastSavedProgressMinutes,
-    );
-    if (
-      !forceStatus &&
-      now - progressRef.current.lastSavedAt < AUTO_SAVE_INTERVAL_MS &&
-      progressDelta < MIN_PROGRESS_DELTA_MINUTES
-    ) {
-      return;
-    }
-
-    progressRef.current.lastSavedAt = now;
-    progressRef.current.lastSavedProgressMinutes = nextProgressMinutes;
     progressRef.current.lastKnownProgressMinutes = nextProgressMinutes;
-    if (typeof window !== "undefined" && sessionProgressKey) {
-      sessionStorage.setItem(sessionProgressKey, String(nextProgressMinutes));
+    writeStoredNumber(routeProgressStorageKey, nextProgressMinutes);
+
+    const currentSeasonNumber = seasonId ? parseInt(seasonId) : 0;
+    const currentEpisodeNumber = episodeId ? parseInt(episodeId) : 0;
+    const nextEpisodeMeta =
+      movieType === "tv" && shouldAutoComplete
+        ? getNextEpisodeForSeries()
+        : { nextSeason: 0, nextEpisode: 0 };
+    const payload: LocalRecentProgress = {
+      id: String(movieId),
+      type: movieType === "tv" ? "tv" : "movie",
+      title: mediaTitle,
+      poster: mediaPoster || "",
+      duration: durationMinutes,
+      currentTime:
+        movieType === "tv" && shouldAutoComplete ? 0 : nextProgressMinutes,
+      currentSeason: currentSeasonNumber,
+      currentEpisode: currentEpisodeNumber,
+      nextSeason: nextEpisodeMeta.nextSeason,
+      nextEpisode: nextEpisodeMeta.nextEpisode,
+      progressMarker: nextProgressMinutes,
+      updatedAtMs: Date.now(),
+      isCompleted: shouldAutoComplete,
+    };
+
+    writeStoredRecentProgress(recentProgressStorageKey, payload);
+
+    if (shouldAutoComplete && !playbackSessionRef.current.completionHandled) {
+      playbackSessionRef.current.completionHandled = true;
+      await flushRecentProgress({ force: true, payload });
+      if (!ratingItem) {
+        setIsRatingOpen(true);
+      }
     }
-
-    await addToWatchlist(
-      movieType,
-      movieId,
-      mediaPoster || "",
-      mediaTitle,
-      resolvedStatus,
-      durationMinutes,
-      nextProgressMinutes,
-      seasonId ? parseInt(seasonId) : 0,
-      episodeId ? parseInt(episodeId) : 0,
-    );
-
-    await syncPlaybackTelemetry(
-      nextProgressMinutes,
-      durationMinutes,
-      forceStatus === "watched" ? { complete: true } : undefined,
-    );
   };
 
   const episodeChange = (nextPath: string) => {
-    void persistProgress(getCurrentProgressMinutes(), getPlayerDurationMinutes());
-    navigate(nextPath);
+    void (async () => {
+      await persistProgress(getCurrentProgressMinutes(), getPlayerDurationMinutes());
+      await flushRecentProgress({ force: true });
+      navigate(nextPath);
+    })();
   };
 
   useEffect(() => {
@@ -370,11 +548,16 @@ function Watch() {
   useEffect(() => {
     if (!sessionBaseReady) return;
     progressRef.current = {
-      lastSavedAt: 0,
-      lastSavedProgressMinutes: sessionBaseProgress,
+      lastFlushedAt: 0,
+      lastFlushedProgressMinutes: sessionBaseProgress,
       lastKnownProgressMinutes: sessionBaseProgress,
     };
-  }, [availableStream?.masterPlaylistUrl, sessionBaseProgress, sessionBaseReady, sessionProgressKey]);
+  }, [
+    availableStream?.masterPlaylistUrl,
+    routeProgressStorageKey,
+    sessionBaseProgress,
+    sessionBaseReady,
+  ]);
 
   useEffect(() => {
     if (
@@ -407,6 +590,7 @@ function Watch() {
       signature: "",
       requestedSignature: sessionSignature,
       isCompleted: false,
+      completionHandled: false,
     };
 
     let cancelled = false;
@@ -417,22 +601,24 @@ function Watch() {
       )
       .then((response) => {
         if (cancelled) return;
-        playbackSessionRef.current = {
-          id: String(response.data?.id || ""),
-          signature: sessionSignature,
-          requestedSignature: sessionSignature,
-          isCompleted: false,
-        };
-      })
-      .catch(() => {
-        if (cancelled) return;
-        playbackSessionRef.current = {
-          id: "",
-          signature: "",
-          requestedSignature: sessionSignature,
-          isCompleted: false,
-        };
-      });
+      playbackSessionRef.current = {
+        id: String(response.data?.id || ""),
+        signature: sessionSignature,
+        requestedSignature: sessionSignature,
+        isCompleted: false,
+        completionHandled: false,
+      };
+    })
+    .catch(() => {
+      if (cancelled) return;
+      playbackSessionRef.current = {
+        id: "",
+        signature: "",
+        requestedSignature: sessionSignature,
+        isCompleted: false,
+        completionHandled: false,
+      };
+    });
 
     return () => {
       cancelled = true;
@@ -452,30 +638,42 @@ function Watch() {
   useEffect(() => {
     if (!sessionBaseReady || !playbackStream?.masterPlaylistUrl) return;
 
-    const flushProgress = () => {
-      void persistProgress(getCurrentProgressMinutes(), getPlayerDurationMinutes());
+    const flushProgress = (force = false) => {
+      void persistProgress(getCurrentProgressMinutes(), getPlayerDurationMinutes()).then(
+        () => flushRecentProgress({ force }),
+      );
     };
 
     const handleVisibilityChange = () => {
       if (document.visibilityState === "hidden") {
-        flushProgress();
+        flushProgress(true);
       }
+    };
+    const handlePageHide = () => {
+      flushProgress(true);
+    };
+    const handleBeforeUnload = () => {
+      flushProgress(true);
     };
 
     const interval = window.setInterval(flushProgress, AUTO_SAVE_INTERVAL_MS);
 
-    window.addEventListener("pagehide", flushProgress);
-    window.addEventListener("beforeunload", flushProgress);
+    window.addEventListener("pagehide", handlePageHide);
+    window.addEventListener("beforeunload", handleBeforeUnload);
     document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
       window.clearInterval(interval);
-      flushProgress();
-      window.removeEventListener("pagehide", flushProgress);
-      window.removeEventListener("beforeunload", flushProgress);
+      flushProgress(true);
+      window.removeEventListener("pagehide", handlePageHide);
+      window.removeEventListener("beforeunload", handleBeforeUnload);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [fallbackDurationMinutes, playbackStream?.masterPlaylistUrl, sessionBaseReady]);
+  }, [
+    fallbackDurationMinutes,
+    playbackStream?.masterPlaylistUrl,
+    sessionBaseReady,
+  ]);
 
   const handlePlayerLoadedMetadata = () => {
     if (!playerRef.current) return;
@@ -491,39 +689,22 @@ function Watch() {
     const progressMinutes = Number(playerRef.current.currentTime || 0) / 60;
     const durationMinutes = getPlayerDurationMinutes();
     progressRef.current.lastKnownProgressMinutes = progressMinutes;
-    if (typeof window !== "undefined" && sessionProgressKey) {
-      sessionStorage.setItem(sessionProgressKey, String(progressMinutes));
-    }
+    writeStoredNumber(routeProgressStorageKey, progressMinutes);
     void persistProgress(progressMinutes, durationMinutes);
+  };
+
+  const handlePlayerPause = () => {
+    if (!playerRef.current) return;
+    const progressMinutes = Number(playerRef.current.currentTime || 0) / 60;
+    const durationMinutes = getPlayerDurationMinutes();
+    void persistProgress(progressMinutes, durationMinutes).then(() =>
+      flushRecentProgress({ force: true }),
+    );
   };
 
   const handlePlayerEnded = () => {
     const durationMinutes = getPlayerDurationMinutes();
-    if (movieType === "movie") {
-      void persistProgress(durationMinutes, durationMinutes, "watched");
-      return;
-    }
-
-    const currentEpisodeNumber = Number(episodeId || 0);
-    const currentSeasonNumber = Number(seasonId || 0);
-    const hasNextEpisodeInSeason = Boolean(
-      tvSeasonsDetailsArr?.episodes?.some(
-        (episode) => Number(episode?.episode_number) === currentEpisodeNumber + 1,
-      ),
-    );
-    const remainingRegularSeasons =
-      tvSeriesDetailsDataArr?.seasons?.filter(
-        (season) =>
-          Number(season?.season_number) > currentSeasonNumber &&
-          Number(season?.episode_count || 0) > 0,
-      ) || [];
-    const isSeriesComplete = !hasNextEpisodeInSeason && !remainingRegularSeasons.length;
-
-    void persistProgress(
-      durationMinutes,
-      durationMinutes,
-      isSeriesComplete ? "watched" : "watching",
-    );
+    void persistProgress(durationMinutes, durationMinutes, true);
   };
 
   if (isIncorrect) {
@@ -716,7 +897,7 @@ function Watch() {
         title={mediaTitle}
         onLoadedMetadata={handlePlayerLoadedMetadata}
         onTimeUpdate={handlePlayerTimeUpdate}
-        onPause={handlePlayerTimeUpdate}
+        onPause={handlePlayerPause}
         onEnded={handlePlayerEnded}
       />
       {!playbackStream ? (
@@ -744,6 +925,31 @@ function Watch() {
           </Box>
         </Box>
       ) : null}
+      <RatingDialog
+        open={isRatingOpen}
+        title={mediaTitle}
+        titleLogoSrc={
+          mediaLogo ? `https://image.tmdb.org/t/p/original${mediaLogo}` : undefined
+        }
+        initialRating={ratingItem?.rating || 0}
+        onClose={() => setIsRatingOpen(false)}
+        onSave={async (rating) => {
+          await upsertRating(
+            movieType,
+            movieId,
+            mediaPoster || "",
+            mediaTitle,
+            rating,
+          );
+        }}
+        onDelete={
+          ratingItem
+            ? async () => {
+              await deleteRating(movieType, movieId);
+            }
+            : undefined
+        }
+      />
     </Box>
   );
 }

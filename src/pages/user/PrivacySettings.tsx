@@ -39,13 +39,13 @@ function PrivacySettings({
       >
       <Typography level="h4">Privacy Settings</Typography>
       <Typography level="body-sm" textColor="neutral.400">
-        Choose what other people can see before public profiles and social features expand.
+        Choose which library sections appear on your public profile. Watchlist stays social by default, while recently watched and ratings stay private until you opt in.
       </Typography>
       <Divider />
       {[
         { key: "showWatchlist", label: "Show my watchlist to others" },
-        { key: "showFavorites", label: "Show my favorites to others" },
         { key: "showRecentlyWatched", label: "Show my recently watched titles" },
+        { key: "showRatings", label: "Show my ratings to others" },
       ].map(({ key, label }) => (
         <Box
           key={key}

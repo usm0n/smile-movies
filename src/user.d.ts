@@ -1,10 +1,3 @@
-export interface FavoriteMedia {
-  id: string;
-  title: string;
-  type: "movie" | "tv";
-  poster?: string;
-}
-
 export interface NotificationPreferences {
   emailNotifications: boolean;
   productAnnouncements: boolean;
@@ -27,20 +20,41 @@ export interface NotificationInterests {
 
 export interface PrivacySettings {
   showWatchlist: boolean;
-  showFavorites: boolean;
-  showRecentlyWatched?: boolean;
+  showRecentlyWatched: boolean;
+  showRatings: boolean;
 }
 
-export type SavedMediaStatus =
-  | "planned"
-  | "watching"
-  | "watched"
-  | "favorite";
+export interface WatchlistItem {
+  id: string;
+  type: "movie" | "tv";
+  title?: string;
+  poster?: string;
+  addedAt?: string;
+  updatedAt?: string;
+}
 
-export type SavedMediaPreference =
-  | "love"
-  | "like"
-  | "dislike";
+export interface RecentlyWatchedItem {
+  id: string;
+  type: "movie" | "tv";
+  title?: string;
+  poster?: string;
+  duration?: number;
+  currentTime?: number;
+  lastWatchedAt?: string;
+  currentSeason?: number;
+  currentEpisode?: number;
+  nextSeason?: number;
+  nextEpisode?: number;
+}
+
+export interface RatingItem {
+  id: string;
+  type: "movie" | "tv";
+  title?: string;
+  poster?: string;
+  rating: number;
+  ratedAt?: string;
+}
 
 export interface User {
   handle?: string;
@@ -55,37 +69,21 @@ export interface User {
   isVerified: boolean;
   isAdmin: boolean;
   isBanned: boolean;
-  watchlist: Watchlist[];
-  favorites: Watchlist[];
-  recentlyWatched: Watchlist[];
+  watchlist: WatchlistItem[];
+  recentlyWatched: RecentlyWatchedItem[];
+  ratings: RatingItem[];
   lastLogin: string;
   devices: Device[];
   loginType: string;
   roles?: string[];
   age?: number;
   gender?: "male" | "female" | "other" | "prefer_not_to_say";
-  favoriteMovies?: FavoriteMedia[];
   notifications?: NotificationPreferences;
   notificationInterests?: NotificationInterests;
   privacy?: PrivacySettings;
 }
 
-export interface SavedMediaItem {
-  poster: string;
-  type: string;
-  status: SavedMediaStatus | string;
-  preference?: SavedMediaPreference;
-  title?: string;
-  duration?: number;
-  currentTime?: number;
-  id: string;
-  season?: number;
-  episode?: number;
-  addedAt?: string;
-  updatedAt?: string;
-}
-
-export type Watchlist = SavedMediaItem;
+export type Watchlist = WatchlistItem;
 
 export interface Location {
   latitude: number;
@@ -125,7 +123,6 @@ export interface UserRegister {
   deviceLocation: Location;
   age?: number;
   gender?: "male" | "female" | "other" | "prefer_not_to_say";
-  favoriteMovies?: FavoriteMedia[];
   notifications?: NotificationPreferences;
   notificationInterests?: NotificationInterests;
   privacy?: PrivacySettings;

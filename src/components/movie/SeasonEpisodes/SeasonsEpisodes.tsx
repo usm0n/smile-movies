@@ -6,6 +6,8 @@ import { useNavigate } from "react-router-dom";
 import BarChartIcon from "@mui/icons-material/BarChart";
 import { useEffect, useRef, useState } from "react";
 import { resolveImdbId, fetchImdbEpisodesBySeason, ImdbEpisode } from "../../../service/api/imdb/imdb.api.service";
+import { useUsers } from "../../../context/Users";
+import { User } from "../../../user";
 
 function SeasonsEpisodes({
   tvData,
@@ -21,9 +23,13 @@ function SeasonsEpisodes({
   isLoading: boolean;
 }) {
   const navigate = useNavigate();
+  const { myselfData } = useUsers();
   const [imdbEpisodes, setImdbEpisodes] = useState<Map<number, ImdbEpisode>>(new Map());
   const imdbIdRef = useRef<string | null>(null);
   const resolvedRef = useRef(false);
+  const recentItem = (myselfData?.data as User)?.recentlyWatched?.find(
+    (item) => item.id === String(tvData?.id) && item.type === "tv",
+  );
 
   // Resolve the show's IMDb ID once
   useEffect(() => {
@@ -96,6 +102,29 @@ function SeasonsEpisodes({
         ) : (
           tvSeasonData?.episodes?.map((episode: any) => {
             const imdbEp = imdbEpisodes.get(episode.episode_number);
+            const isCurrentSeason = Number(recentItem?.currentSeason || 0) === Number(currentSeason);
+            const isNextSeason = Number(recentItem?.nextSeason || 0) === Number(currentSeason);
+            const progressValue =
+              isCurrentSeason &&
+              Number(recentItem?.currentEpisode || 0) === Number(episode.episode_number) &&
+              Number(recentItem?.duration || 0) > 0
+                ? Math.min(
+                  100,
+                  Math.max(
+                    0,
+                    ((Number(recentItem?.currentTime || 0) / Number(recentItem?.duration || 1)) * 100),
+                  ),
+                )
+                : 0;
+            const isInProgress = progressValue > 0;
+            const isCompleted =
+              isCurrentSeason &&
+              !isInProgress &&
+              Number(recentItem?.currentEpisode || 0) > Number(episode.episode_number);
+            const isNext =
+              isNextSeason &&
+              Number(recentItem?.nextEpisode || 0) === Number(episode.episode_number);
+
             return (
               <EpisodeCard
                 key={episode.id}
@@ -103,6 +132,10 @@ function SeasonsEpisodes({
                 episode={episode}
                 imdbRating={imdbEp?.rating?.aggregateRating}
                 imdbEpisodeId={imdbEp?.id}
+                progressValue={progressValue}
+                isCompleted={isCompleted}
+                isInProgress={isInProgress}
+                isNext={isNext}
               />
             );
           })

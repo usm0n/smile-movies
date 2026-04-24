@@ -1,4 +1,4 @@
-import { SavedMediaItem } from "../user";
+import { RecentlyWatchedItem } from "../user";
 
 export const getDefaultPlaybackEpisode = (mediaType: "movie" | "tv") => ({
   season: mediaType === "tv" ? 1 : 0,
@@ -8,22 +8,35 @@ export const getDefaultPlaybackEpisode = (mediaType: "movie" | "tv") => ({
 export const getPlaybackTarget = ({
   mediaType,
   mediaId,
-  watchlistItem,
+  recentItem,
 }: {
   mediaType: "movie" | "tv";
   mediaId: string | number;
-  watchlistItem?: SavedMediaItem;
+  recentItem?: RecentlyWatchedItem;
 }) => {
   const defaults = getDefaultPlaybackEpisode(mediaType);
-  const season = watchlistItem?.season || defaults.season;
-  const episode = watchlistItem?.episode || defaults.episode;
-  const startAt = watchlistItem?.currentTime || 0;
+  const hasPartialProgress = Number(recentItem?.currentTime || 0) > 0;
+  const season = mediaType === "tv"
+    ? (
+      hasPartialProgress
+        ? recentItem?.currentSeason
+        : recentItem?.nextSeason || recentItem?.currentSeason
+    ) || defaults.season
+    : defaults.season;
+  const episode = mediaType === "tv"
+    ? (
+      hasPartialProgress
+        ? recentItem?.currentEpisode
+        : recentItem?.nextEpisode || recentItem?.currentEpisode
+    ) || defaults.episode
+    : defaults.episode;
+  const startAt = hasPartialProgress ? Number(recentItem?.currentTime || 0) : 0;
 
   return {
     season,
     episode,
     startAt,
-    route: watchlistItem
+    route: recentItem
       ? `/${mediaType}/${mediaId}${mediaType === "tv" ? `/${season}/${episode}` : ""}/watch/${startAt}`
       : `/${mediaType}/${mediaId}${mediaType === "tv" ? `/${season}/${episode}` : ""}/watch`,
   };

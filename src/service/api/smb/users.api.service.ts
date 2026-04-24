@@ -1,5 +1,4 @@
 import {
-  SavedMediaPreference,
   User,
   UserLogin,
   UserRegister,
@@ -88,15 +87,9 @@ export const users = {
     movieId: string,
     poster: string,
     title: string,
-    status: string,
-    duration: number,
-    currentTime: number,
-    season: number,
-    episode: number,
-    preference?: SavedMediaPreference,
   ) => {
     const response = await smbAPI.post(`/users/watchlist/`, {
-      typeMovie, movieId, poster, title, status, duration, currentTime, season, episode, preference,
+      typeMovie, movieId, poster, title,
     });
     return response;
   },
@@ -104,25 +97,46 @@ export const users = {
     const response = await smbAPI.delete(`/users/watchlist/${typeMovie}/${movieId}`);
     return response;
   },
-  addToFavorites: async (
+  upsertRecentlyWatched: async (
     typeMovie: string,
     movieId: string,
     poster: string,
     title: string,
-    status = "favorite",
     duration = 0,
     currentTime = 0,
-    season = 0,
-    episode = 0,
-    preference?: SavedMediaPreference,
+    currentSeason = 0,
+    currentEpisode = 0,
+    nextSeason = 0,
+    nextEpisode = 0,
   ) => {
-    const response = await smbAPI.post(`/users/favorites/`, {
-      typeMovie, movieId, poster, title, status, duration, currentTime, season, episode, preference,
+    const response = await smbAPI.post(`/users/recently-watched/`, {
+      typeMovie,
+      movieId,
+      poster,
+      title,
+      duration,
+      currentTime,
+      currentSeason,
+      currentEpisode,
+      nextSeason,
+      nextEpisode,
     });
     return response;
   },
-  removeFromFavorites: async (typeMovie: string, movieId: string) => {
-    const response = await smbAPI.delete(`/users/favorites/${typeMovie}/${movieId}`);
+  upsertRating: async (
+    typeMovie: string,
+    movieId: string,
+    poster: string,
+    title: string,
+    rating: number,
+  ) => {
+    const response = await smbAPI.post(`/users/ratings/`, {
+      typeMovie, movieId, poster, title, rating,
+    });
+    return response;
+  },
+  deleteRating: async (typeMovie: string, movieId: string) => {
+    const response = await smbAPI.delete(`/users/ratings/${typeMovie}/${movieId}`);
     return response;
   },
   lastLogin: async (deviceId: string) => {

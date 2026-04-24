@@ -9,7 +9,6 @@ import {
   useColorScheme,
 } from "@mui/joy";
 import NotVerified from "./components/utils/NotVerified";
-import { TastePromptProvider } from "./context/TastePrompt";
 import { useLocation } from "react-router-dom";
 
 function App() {
@@ -19,25 +18,23 @@ function App() {
 
 
   return (
-    <TastePromptProvider>
-      <Box
-        className="app-shell"
-        sx={{
-          backgroundColor:
-            colorScheme === "light" ? "rgb(255, 255, 255)" : "transparent",
-        }}
-      >
-        <NotVerified type="snackbar" />
-        <Navbar />
-        <Routes>
-          {mainRoutes?.map((route, index) => (
-            <Route key={index} path={route.path} element={route.element} />
-          ))}
-        </Routes>
-        {!hideFooter && <AppFooter />}
-        {/* <Navigation /> */}
-      </Box>
-    </TastePromptProvider>
+    <Box
+      className="app-shell"
+      sx={{
+        backgroundColor:
+          colorScheme === "light" ? "rgb(255, 255, 255)" : "transparent",
+      }}
+    >
+      <NotVerified type="snackbar" />
+      <Navbar />
+      <Routes>
+        {mainRoutes?.map((route, index) => (
+          <Route key={index} path={route.path} element={route.element} />
+        ))}
+      </Routes>
+      {!hideFooter && <AppFooter />}
+      {/* <Navigation /> */}
+    </Box>
   );
 }
 export default App;

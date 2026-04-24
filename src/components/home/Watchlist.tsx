@@ -1,4 +1,4 @@
-import { ArrowForwardIos, BookmarkAdd, Favorite, History } from "@mui/icons-material";
+import { ArrowForwardIos, BookmarkAdd, History, Star } from "@mui/icons-material";
 import { Box, Button, Link, Typography } from "@mui/joy";
 import type { ReactNode } from "react";
 import { isLoggedIn } from "../../utilities/defaults";
@@ -7,7 +7,7 @@ import { User } from "../../user";
 import { useNavigate } from "react-router-dom";
 import EventMCS from "../cards/skeleton/EventMC";
 import EventMC from "../cards/EventMC";
-import { normalizeSavedStatus, sortSavedItems } from "../../utilities/savedMedia";
+import { sortLibraryItems } from "../../utilities/savedMedia";
 
 function Watchlist() {
   const {
@@ -19,14 +19,9 @@ function Watchlist() {
 
   const navigate = useNavigate();
   const user = (myselfData?.data as User) || ({} as User);
-  const continueWatching = sortSavedItems(
-    (user.watchlist || []).filter(
-      (item) => normalizeSavedStatus(item.status) === "watching",
-    ),
-    "recent",
-  );
-  const recentlyWatched = sortSavedItems(user.recentlyWatched || [], "recent");
-  const favorites = sortSavedItems(user.favorites || [], "recent");
+  const watchlist = sortLibraryItems(user.watchlist || [], "recent");
+  const recentlyWatched = sortLibraryItems(user.recentlyWatched || [], "recent");
+  const ratings = sortLibraryItems(user.ratings || [], "recent");
 
   const renderRow = (
     title: string,
@@ -59,11 +54,12 @@ function Watchlist() {
               eventDelete={
                 allowDelete ? () => removeFromWatchlist(item.type, item.id) : undefined
               }
-              eventStatus={item.status}
               eventDuration={item.duration}
               eventCurrentTime={item.currentTime}
-              eventSeason={item.season}
-              eventEpisode={item.episode}
+              eventSeason={item.currentSeason}
+              eventEpisode={item.currentEpisode}
+              eventNextSeason={item.nextSeason}
+              eventNextEpisode={item.nextEpisode}
             />
           ))}
         </Box>
@@ -113,14 +109,9 @@ function Watchlist() {
           Your Library
         </Typography>
         {isLoggedIn && (
-          <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
-            <Button variant="soft" onClick={() => navigate("/watchlist")}>
-              Watchlist
-            </Button>
-            <Button variant="soft" onClick={() => navigate("/favorites")}>
-              Favorites
-            </Button>
-          </Box>
+          <Button variant="soft" onClick={() => navigate("/watchlist")}>
+            Open library
+          </Button>
         )}
       </Box>
       <Box
@@ -150,39 +141,37 @@ function Watchlist() {
               <EventMCS />
               <EventMCS />
               <EventMCS />
-              <EventMCS />
-              <EventMCS />
             </Box>
-          ) : user.watchlist?.length > 0 || favorites.length > 0 || recentlyWatched.length > 0 ? (
+          ) : user.watchlist?.length > 0 || recentlyWatched.length > 0 || ratings.length > 0 ? (
             <>
               {renderRow(
-                "Continue Watching",
-                continueWatching.slice(0, 8),
+                "Watchlist",
+                watchlist.slice(0, 8),
                 <BookmarkAdd />,
-                "Start watching something and it will appear here.",
+                "Add a few titles and your watchlist will show up here.",
                 true,
               )}
               {renderRow(
                 "Recently Watched",
                 recentlyWatched.slice(0, 8),
                 <History />,
-                "Finished episodes and movies will build your recent history here.",
+                "Start watching something and your recent progress will appear here.",
               )}
               {renderRow(
-                "Favorite Picks",
-                favorites.slice(0, 8),
-                <Favorite />,
-                "Star a few titles to build your favorites shelf.",
+                "Ratings",
+                ratings.slice(0, 8),
+                <Star />,
+                "Rate a few titles and they will show up here.",
               )}
             </>
           ) : (
             <>
               <BookmarkAdd sx={{ fontSize: "50px", mx: "auto" }} />
               <Typography level="h2" textAlign="center">
-                There&apos;s no shows or movies in your library yet
+                There&apos;s no library activity yet
               </Typography>
               <Typography level="body-md" textAlign="center">
-                Add shows and movies to track what you want to watch and what you loved.
+                Add something to your watchlist, start watching, or rate a title to begin.
               </Typography>
             </>
           )
@@ -207,7 +196,7 @@ function Watchlist() {
               to access your library
             </Typography>
             <Typography level="body-md" textAlign="center">
-              Save shows and movies to keep track of what you want to watch.
+              Track what you plan to watch, what you recently watched, and how you rated it.
             </Typography>
             <Button
               onClick={() => navigate("/auth/login")}

@@ -1,4 +1,4 @@
-import { Box, Card, Dropdown, Menu, MenuButton, MenuItem, Typography } from "@mui/joy";
+import { Box, Card, Dropdown, LinearProgress, Menu, MenuButton, MenuItem, Typography } from "@mui/joy";
 import BlurImage from "../../utilities/blurImage";
 import { tvEpisodeDetails } from "../../tmdb-res";
 import { minuteToHour, shareLink, ymdToDmy } from "../../utilities/defaults";
@@ -14,11 +14,19 @@ function EpisodeCard({
   tvId,
   imdbRating,
   imdbEpisodeId,
+  progressValue = 0,
+  isCompleted = false,
+  isInProgress = false,
+  isNext = false,
 }: {
   episode: tvEpisodeDetails;
   tvId: string | number;
   imdbRating?: number;
   imdbEpisodeId?: string;
+  progressValue?: number;
+  isCompleted?: boolean;
+  isInProgress?: boolean;
+  isNext?: boolean;
 }) {
   const navigate = useNavigate();
   const [spoiled, _setSpoiled] = useState(false);
@@ -125,6 +133,26 @@ function EpisodeCard({
       <Typography level="body-sm">
         {episode?.overview?.length > 70 ? <>{episode.overview.slice(0, 70)}...</> : episode?.overview}
       </Typography>
+      {(isCompleted || isInProgress || isNext) ? (
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
+          <LinearProgress
+            determinate
+            value={isCompleted ? 100 : isInProgress ? progressValue : 0}
+            sx={{
+              "--LinearProgress-thickness": "4px",
+              color: isCompleted ? "rgb(120, 255, 178)" : "rgb(255, 220, 92)",
+              background: "rgba(255,255,255,0.08)",
+            }}
+          />
+          <Typography level="body-xs" textColor="neutral.400">
+            {isCompleted
+              ? "Completed"
+              : isInProgress
+                ? `${Math.round(progressValue)}% complete`
+                : "Next episode"}
+          </Typography>
+        </Box>
+      ) : null}
 
       {/* ── Footer row: runtime + parental guide icon ── */}
       <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mt: "auto" }}>
