@@ -9,7 +9,6 @@ import AdminDashboard from "../pages/admin/AdminDashboard";
 import AboutPage from "../pages/public/AboutPage";
 import ContactPage from "../pages/public/ContactPage";
 import DownloadPage from "../pages/public/DownloadPage";
-import LandingPage from "../pages/public/LandingPage";
 import LegalDocumentPage from "../pages/public/LegalDocumentPage";
 import UnsubscribePage from "../pages/public/UnsubscribePage";
 import Discover from "../pages/Discover";
@@ -27,7 +26,7 @@ import TVRatings from "../pages/tv/TVRatings";
 export const mainRoutes = [
   {
     path: "/",
-    element: <LandingPage />,
+    element: <HomeLayout />,
   },
   {
     path: "/browse",
