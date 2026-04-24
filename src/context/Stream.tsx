@@ -1,14 +1,21 @@
 import { createContext, useContext, useState } from "react";
 import { providersAPI } from "../service/api/smb/providers.api.service";
-import { VixsrcStreamResponse } from "../types/providers";
+import { AnimeMode, VixsrcStreamResponse } from "../types/providers";
 
 const StreamContext = createContext({
     getStreamData: {
         isLoading: false,
         isAvailable: false,
+        errorMessage: "",
         data: null as VixsrcStreamResponse | null,
     },
-    getStream: async (_movieType: "movie" | "tv", _movieId: string, _seasonId?: string, _episodeId?: string) => { },
+    getStream: async (
+      _movieType: "movie" | "tv",
+      _movieId: string,
+      _seasonId?: string,
+      _episodeId?: string,
+      _mode?: AnimeMode,
+    ) => { },
 })
 
 export const useStream = () => useContext(StreamContext);
@@ -17,29 +24,49 @@ export const StreamProvider = ({ children }: { children: React.ReactNode }) => {
     const [getStreamData, setGetStreamData] = useState<{
         isLoading: boolean;
         isAvailable: boolean;
+        errorMessage: string;
         data: VixsrcStreamResponse | null;
     }>({
         isLoading: false,
         isAvailable: false,
+        errorMessage: "",
         data: null,
     });
 
-    const getStream = async (movieType: "movie" | "tv", movieId: string, seasonId?: string, episodeId?: string) => {
+    const getStream = async (
+      movieType: "movie" | "tv",
+      movieId: string,
+      seasonId?: string,
+      episodeId?: string,
+      mode?: AnimeMode,
+    ) => {
         try {
-            setGetStreamData({ isLoading: true, isAvailable: false, data: null });
+            setGetStreamData({
+              isLoading: true,
+              isAvailable: false,
+              errorMessage: "",
+              data: null,
+            });
             const response = await providersAPI.getVixsrcStream(
                 movieType,
                 movieId,
                 seasonId ? parseInt(seasonId) : undefined,
                 episodeId ? parseInt(episodeId) : undefined,
+                mode,
             );
             setGetStreamData({
                 isLoading: false,
                 isAvailable: Boolean(response.data?.available && response.data?.stream?.masterPlaylistUrl),
+                errorMessage: "",
                 data: response.data,
             });
-        } catch (error) {
-            setGetStreamData({ isLoading: false, isAvailable: false, data: null });
+        } catch (error: any) {
+            setGetStreamData({
+              isLoading: false,
+              isAvailable: false,
+              errorMessage: String(error?.data?.message || "Unable to load stream"),
+              data: null,
+            });
         }
     };
 

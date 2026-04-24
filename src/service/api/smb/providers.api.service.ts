@@ -1,4 +1,5 @@
 import {
+  AnimeMode,
   VixsrcAvailabilityBatchResponse,
   VixsrcAvailabilityItem,
   VixsrcMediaType,
@@ -61,6 +62,7 @@ export const providersAPI = {
     tmdbId: string,
     season?: number,
     episode?: number,
+    mode?: AnimeMode,
   ) => {
     const response = await smbV1API.get<VixsrcStreamResponse>(
       `/providers/vixsrc/stream/${mediaType}/${tmdbId}`,
@@ -68,6 +70,7 @@ export const providersAPI = {
         params: {
           ...(season ? { season } : {}),
           ...(episode ? { episode } : {}),
+          ...(mode ? { mode } : {}),
         },
       },
     );

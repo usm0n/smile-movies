@@ -37,6 +37,7 @@ import {
   buildPlaybackAvailabilityKey,
   getPlaybackTarget,
 } from "../../utilities/playbackTarget";
+import { isLikelyAnimeFromSummary } from "../../utilities/anime";
 
 const Header = React.memo(
   ({
@@ -176,18 +177,41 @@ const Header = React.memo(
         });
 
         return {
+          key: buildPlaybackAvailabilityKey({
+            mediaType,
+            tmdbId: details.id,
+            season: mediaType === "tv" ? playbackTarget.season : undefined,
+            episode: mediaType === "tv" ? playbackTarget.episode : undefined,
+          }),
+          isAnimeCandidate: isLikelyAnimeFromSummary(details),
           mediaType,
           tmdbId: String(details.id),
           season: mediaType === "tv" ? playbackTarget.season : undefined,
           episode: mediaType === "tv" ? playbackTarget.episode : undefined,
         };
       });
+      const animeBypassLookup = items.reduce<Record<string, boolean>>((acc, item) => {
+        if (item.isAnimeCandidate) {
+          acc[item.key] = true;
+        }
+        return acc;
+      }, {});
+      const nonAnimeItems = items.filter((item) => !item.isAnimeCandidate);
 
       let cancelled = false;
+      setAvailabilityLookup(animeBypassLookup);
+
+      if (!nonAnimeItems.length) {
+        setAvailabilityLoading(false);
+        return () => {
+          cancelled = true;
+        };
+      }
+
       setAvailabilityLoading(true);
 
       void providersAPI
-        .getVixsrcAvailabilityBatch(items)
+        .getVixsrcAvailabilityBatch(nonAnimeItems)
         .then((response) => {
           if (cancelled) return;
 
@@ -205,7 +229,10 @@ const Header = React.memo(
             {},
           );
 
-          setAvailabilityLookup(nextLookup);
+          setAvailabilityLookup({
+            ...animeBypassLookup,
+            ...nextLookup,
+          });
           setAvailabilityLoading(false);
         })
         .catch(() => {
@@ -254,7 +281,8 @@ const Header = React.memo(
           details?.release_date || details?.first_air_date || ""
         ).getTime() > Date.now();
       const availability = availabilityLookup[availabilityKey];
-      const isUnavailable = availability === false;
+      const isAnimeCandidate = isLikelyAnimeFromSummary(details);
+      const isUnavailable = !isAnimeCandidate && availability === false;
       const playButtonNote = isReleaseBlocked
         ? details?.status || ""
         : availabilityLoading && availability === null

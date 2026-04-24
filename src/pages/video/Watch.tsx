@@ -1,5 +1,6 @@
 import {
   ArrowBackIos,
+  RefreshRounded,
   SubtitlesRounded,
 } from "@mui/icons-material";
 import {
@@ -29,6 +30,7 @@ import { User } from "../../user";
 import PlaybackSurface from "../../components/player/PlaybackSurface";
 import { playbackAPI } from "../../service/api/smb/playback.api.service";
 import RatingDialog from "../../components/library/RatingDialog";
+import { AnimeMode } from "../../types/providers";
 
 const AUTO_SAVE_INTERVAL_MS = 60000;
 const MIN_PROGRESS_DELTA_MINUTES = 1;
@@ -174,13 +176,21 @@ function Watch() {
   ]);
   const [sessionBaseProgress, setSessionBaseProgress] = useState(0);
   const [sessionBaseReady, setSessionBaseReady] = useState(false);
+  const [preferredAnimeMode, setPreferredAnimeMode] = useState<AnimeMode>("dub");
 
   const availableStream = getStreamData.data?.stream || null;
   const playbackStream = sessionBaseReady ? availableStream : null;
+  const streamProvider = getStreamData.data?.provider || "vixsrc";
+  const isAnimeCandidate = Boolean(getStreamData.data?.isAnimeCandidate);
+  const animeModeOptions = getStreamData.data?.modeOptions || [];
   const subtitleTrackCount = availableStream?.subtitleTracks?.length || 0;
   const isPreparingPlayback = getStreamData.isLoading;
   const isPlaybackUnavailable =
     !isPreparingPlayback && sessionBaseReady && !getStreamData.isAvailable;
+  const canSwitchAnimeMode =
+    isAnimeCandidate &&
+    animeModeOptions.includes("sub") &&
+    animeModeOptions.includes("dub");
 
   useEffect(() => {
     setSessionBaseProgress(0);
@@ -531,7 +541,7 @@ function Watch() {
     if (movieType === "movie") {
       movie(movieId);
       movieImages(movieId);
-      getStream("movie", movieId);
+      getStream("movie", movieId, undefined, undefined, preferredAnimeMode);
       return;
     }
 
@@ -541,9 +551,9 @@ function Watch() {
       tvSeasonsDetails(movieId, parseInt(seasonId));
     }
     if (seasonId && episodeId) {
-      getStream("tv", movieId, seasonId, episodeId);
+      getStream("tv", movieId, seasonId, episodeId, preferredAnimeMode);
     }
-  }, [episodeId, movieId, movieType, seasonId]);
+  }, [episodeId, movieId, movieType, preferredAnimeMode, seasonId]);
 
   useEffect(() => {
     if (!sessionBaseReady) return;
@@ -707,6 +717,22 @@ function Watch() {
     void persistProgress(durationMinutes, durationMinutes, true);
   };
 
+  const retryStream = () => {
+    if (!movieId || !movieType) return;
+
+    if (movieType === "movie") {
+      void getStream("movie", movieId, undefined, undefined, preferredAnimeMode);
+      return;
+    }
+
+    if (!seasonId || !episodeId) return;
+    void getStream("tv", movieId, seasonId, episodeId, preferredAnimeMode);
+  };
+
+  const handleAnimeModeSelect = (mode: AnimeMode) => {
+    setPreferredAnimeMode(mode);
+  };
+
   if (isIncorrect) {
     return <NotFound />;
   }
@@ -729,7 +755,20 @@ function Watch() {
               This title is not currently available from the new Smile Movies
               provider yet.
             </Typography>
+            {getStreamData.errorMessage ? (
+              <Typography level="body-sm" textColor="warning.300">
+                {getStreamData.errorMessage}
+              </Typography>
+            ) : null}
             <DialogActions>
+              <Button
+                color="warning"
+                variant="solid"
+                startDecorator={<RefreshRounded />}
+                onClick={retryStream}
+              >
+                Retry
+              </Button>
               <Button
                 color="neutral"
                 variant="soft"
@@ -815,6 +854,9 @@ function Watch() {
           )}
         </Box>
         <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", justifyContent: "flex-end" }}>
+          <Chip size="sm" color={streamProvider === "animekai" ? "success" : "warning"} variant="soft">
+            {streamProvider === "animekai" ? "Animekai" : "Vixsrc"}
+          </Chip>
           <Chip
             size="sm"
             variant="soft"
@@ -822,9 +864,18 @@ function Watch() {
           >
             {subtitleTrackCount ? `${subtitleTrackCount} subtitles` : "No subtitles"}
           </Chip>
+          <Button
+            size="sm"
+            variant="soft"
+            startDecorator={<RefreshRounded />}
+            loading={isPreparingPlayback}
+            onClick={retryStream}
+          >
+            Retry
+          </Button>
         </Box>
       </Box>
-      {movieType === "tv" ? (
+      {movieType === "tv" || canSwitchAnimeMode ? (
         <Box
           sx={{
             position: "absolute",
@@ -847,47 +898,68 @@ function Watch() {
             boxShadow: "0 12px 40px rgba(0, 0, 0, 0.24)",
           }}
         >
-          <Select
-            size="sm"
-            value={parseInt(seasonId || "1")}
-            defaultValue={parseInt(seasonId || "1")}
-            onChange={(_e, value) => {
-              if (!value) return;
-              episodeChange(`/${movieType}/${movieId}/${value}/1/watch`);
-            }}
-            sx={{
-              minWidth: { xs: "130px", sm: "150px" },
-              background: "rgba(255,255,255,0.05)",
-            }}
-          >
-            {tvSeriesDetailsDataArr?.seasons
-              ?.filter((season) => season?.season_number !== 0)
-              .map((season) => (
-                <Option key={season?.id} value={season?.season_number}>
-                  {season?.name}
-                </Option>
-              ))}
-          </Select>
-          <Select
-            size="sm"
-            onChange={(_e, value) => {
-              if (!value) return;
-              episodeChange(`/${movieType}/${movieId}/${seasonId}/${value}/watch`);
-            }}
-            defaultValue={parseInt(episodeId || "1")}
-            value={parseInt(episodeId || "1")}
-            sx={{
-              minWidth: { xs: "220px", sm: "340px" },
-              maxWidth: "100%",
-              background: "rgba(255,255,255,0.05)",
-            }}
-          >
-            {tvSeasonsDetailsArr?.episodes?.map((episode) => (
-              <Option key={episode?.id} value={episode?.episode_number}>
-                E{episode?.episode_number}: {episode?.name}
-              </Option>
-            ))}
-          </Select>
+          {movieType === "tv" ? (
+            <>
+              <Select
+                size="sm"
+                value={parseInt(seasonId || "1")}
+                defaultValue={parseInt(seasonId || "1")}
+                onChange={(_e, value) => {
+                  if (!value) return;
+                  episodeChange(`/${movieType}/${movieId}/${value}/1/watch`);
+                }}
+                sx={{
+                  minWidth: { xs: "130px", sm: "150px" },
+                  background: "rgba(255,255,255,0.05)",
+                }}
+              >
+                {tvSeriesDetailsDataArr?.seasons
+                  ?.filter((season) => season?.season_number !== 0)
+                  .map((season) => (
+                    <Option key={season?.id} value={season?.season_number}>
+                      {season?.name}
+                    </Option>
+                  ))}
+              </Select>
+              <Select
+                size="sm"
+                onChange={(_e, value) => {
+                  if (!value) return;
+                  episodeChange(`/${movieType}/${movieId}/${seasonId}/${value}/watch`);
+                }}
+                defaultValue={parseInt(episodeId || "1")}
+                value={parseInt(episodeId || "1")}
+                sx={{
+                  minWidth: { xs: "220px", sm: "340px" },
+                  maxWidth: "100%",
+                  background: "rgba(255,255,255,0.05)",
+                }}
+              >
+                {tvSeasonsDetailsArr?.episodes?.map((episode) => (
+                  <Option key={episode?.id} value={episode?.episode_number}>
+                    E{episode?.episode_number}: {episode?.name}
+                  </Option>
+                ))}
+              </Select>
+            </>
+          ) : null}
+          {canSwitchAnimeMode ? (
+            <Select
+              size="sm"
+              value={preferredAnimeMode}
+              onChange={(_e, value) => {
+                if (!value) return;
+                handleAnimeModeSelect(value as AnimeMode);
+              }}
+              sx={{
+                minWidth: { xs: "120px", sm: "140px" },
+                background: "rgba(255,255,255,0.05)",
+              }}
+            >
+              <Option value="dub">Audio: DUB</Option>
+              <Option value="sub">Audio: SUB</Option>
+            </Select>
+          ) : null}
         </Box>
       ) : null}
       <PlaybackSurface

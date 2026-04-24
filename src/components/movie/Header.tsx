@@ -28,6 +28,7 @@ import MatchScore from "./MatchScore";
 import RatingDialog from "../library/RatingDialog";
 import { providersAPI } from "../../service/api/smb/providers.api.service";
 import { getPlaybackTarget } from "../../utilities/playbackTarget";
+import { isLikelyAnimeFromDetails } from "../../utilities/anime";
 
 const getPreferredLogoPath = (movieImages: images) =>
   movieImages?.logos?.find((logo) => logo.iso_639_1 === "en")?.file_path ||
@@ -116,6 +117,7 @@ function Header({
   const isReleaseBlocked =
     new Date(movieDetails?.release_date || movieDetails?.first_air_date || "")
       .getTime() > Date.now();
+  const isAnimeCandidate = isLikelyAnimeFromDetails(movieDetails);
   const playLabel =
     movieType === "movie"
       ? recentItem
@@ -145,6 +147,16 @@ function Header({
 
   useEffect(() => {
     let cancelled = false;
+
+    if (isAnimeCandidate) {
+      setAvailabilityState({
+        isLoading: false,
+        available: true,
+      });
+      return () => {
+        cancelled = true;
+      };
+    }
 
     setAvailabilityState({
       isLoading: true,
@@ -176,7 +188,7 @@ function Header({
     return () => {
       cancelled = true;
     };
-  }, [movieId, movieType, playbackTarget.episode, playbackTarget.season]);
+  }, [isAnimeCandidate, movieId, movieType, playbackTarget.episode, playbackTarget.season]);
 
   const playButtonNote = isReleaseBlocked
     ? movieDetails?.status || ""

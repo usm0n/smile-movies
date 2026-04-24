@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { Box } from "@mui/joy";
 import { MediaCommunitySkin, MediaOutlet, MediaPlayer } from "@vidstack/react";
 import "vidstack/styles/defaults.css";
@@ -24,6 +24,55 @@ function PlaybackSurface({
   onPause: () => void;
   onEnded: () => void;
 }) {
+  const subtitleTracks = useMemo(() => {
+    const languageMap: Record<string, string> = {
+      eng: "en",
+      ita: "it",
+      spa: "es",
+      fra: "fr",
+      fre: "fr",
+      deu: "de",
+      ger: "de",
+      por: "pt",
+      ara: "ar",
+      tur: "tr",
+      rus: "ru",
+      hin: "hi",
+      ind: "id",
+      jpn: "ja",
+      kor: "ko",
+      zho: "zh",
+    };
+
+    const normalizeLanguage = (value?: string) => {
+      const raw = String(value || "und").trim().toLowerCase();
+      if (!raw) return "en";
+
+      const withoutForcedPrefix = raw.replace(/^forced[-_]/, "");
+      if (languageMap[withoutForcedPrefix]) {
+        return languageMap[withoutForcedPrefix];
+      }
+
+      if (/^[a-z]{2}(-[a-z]{2})?$/.test(withoutForcedPrefix)) {
+        return withoutForcedPrefix;
+      }
+
+      if (/^[a-z]{3}$/.test(withoutForcedPrefix) && languageMap[withoutForcedPrefix]) {
+        return languageMap[withoutForcedPrefix];
+      }
+
+      return "en";
+    };
+
+    return (stream?.subtitleTracks || []).map((track, index) => ({
+      src: track.url,
+      kind: "subtitles" as const,
+      label: track.name || `Subtitle ${index + 1}`,
+      language: normalizeLanguage(track.language),
+      default: Boolean(track.isDefault || index === 0),
+    }));
+  }, [stream?.subtitleTracks]);
+
   useEffect(() => {
     const player = playerRef.current;
     if (!player || !stream?.masterPlaylistUrl) {
@@ -84,6 +133,7 @@ function PlaybackSurface({
           src: stream.masterPlaylistUrl,
           type: "application/x-mpegurl",
         }}
+        textTracks={subtitleTracks}
         poster={poster}
         load="eager"
         aspectRatio={16 / 9}

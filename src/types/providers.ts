@@ -1,5 +1,7 @@
 export type VixsrcMediaType = "movie" | "tv";
 export type VixsrcAvailabilityMatch = "movie" | "tv" | "episode" | null;
+export type ProviderId = "vixsrc" | "animekai";
+export type AnimeMode = "sub" | "dub";
 
 export interface VixsrcTrack {
   kind: "audio" | "subtitles";
@@ -39,11 +41,16 @@ export interface VixsrcAvailabilityItem {
   available: boolean;
   imdbId?: string | null;
   matchedBy: VixsrcAvailabilityMatch;
+  isAnimeCandidate?: boolean;
 }
 
 export interface VixsrcStreamResponse {
   available: boolean;
-  availability: VixsrcAvailabilityItem;
+  provider: ProviderId;
+  isAnimeCandidate: boolean;
+  modeOptions: AnimeMode[];
+  selectedMode?: AnimeMode;
+  availability?: VixsrcAvailabilityItem;
   stream: VixsrcPlaybackStream;
 }
 
