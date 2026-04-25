@@ -9,6 +9,8 @@ import {
 
 const ANIMEKAI_BASE_URL = "https://animekai.to";
 const ENC_DEC_BASE_URL = "https://enc-dec.app/api";
+const ANIMEKAI_USER_AGENT =
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36";
 
 type TmdbGenre = {
   id?: number;
@@ -476,7 +478,7 @@ const resolveServerToStream = async (serverId: string) => {
     },
     body: JSON.stringify({
       text: encryptedMegaPayload,
-      agent: navigator.userAgent,
+      agent: ANIMEKAI_USER_AGENT,
     }),
   });
 
