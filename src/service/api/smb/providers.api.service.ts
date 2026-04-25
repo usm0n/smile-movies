@@ -79,7 +79,13 @@ export const providersAPI = {
       return response;
     } catch (error: any) {
       const status = Number(error?.response?.status || error?.status || 0);
-      if (status === 502) {
+      const shouldTryAnimeFallback =
+        status === 0 ||
+        status === 502 ||
+        status >= 500 ||
+        !error?.response;
+
+      if (shouldTryAnimeFallback) {
         const fallback = await resolveAnimekaiStreamInBrowser({
           mediaType,
           tmdbId,
