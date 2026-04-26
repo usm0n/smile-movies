@@ -1,12 +1,11 @@
 import {
-  AnimeMode,
+  ProviderId,
   VixsrcAvailabilityBatchResponse,
   VixsrcAvailabilityItem,
   VixsrcMediaType,
   VixsrcStreamResponse,
 } from "../../../types/providers";
 import { smbV1API } from "../api";
-import { resolveAnimekaiStreamInBrowser } from "../../providers/animekai.client";
 
 const AVAILABILITY_CACHE_TTL_MS = 30 * 60 * 1000;
 
@@ -63,44 +62,18 @@ export const providersAPI = {
     tmdbId: string,
     season?: number,
     episode?: number,
-    mode?: AnimeMode,
+    server?: ProviderId,
   ) => {
-    try {
-      const response = await smbV1API.get<VixsrcStreamResponse>(
-        `/providers/vixsrc/stream/${mediaType}/${tmdbId}`,
-        {
-          params: {
-            ...(season ? { season } : {}),
-            ...(episode ? { episode } : {}),
-            ...(mode ? { mode } : {}),
-          },
+    return smbV1API.get<VixsrcStreamResponse>(
+      `/providers/vixsrc/stream/${mediaType}/${tmdbId}`,
+      {
+        params: {
+          ...(season ? { season } : {}),
+          ...(episode ? { episode } : {}),
+          ...(server ? { server } : {}),
         },
-      );
-      return response;
-    } catch (error: any) {
-      const status = Number(error?.response?.status || error?.status || 0);
-      const shouldTryAnimeFallback =
-        status === 0 ||
-        status === 502 ||
-        status >= 500 ||
-        !error?.response;
-
-      if (shouldTryAnimeFallback) {
-        const fallback = await resolveAnimekaiStreamInBrowser({
-          mediaType,
-          tmdbId,
-          season,
-          episode,
-          mode,
-        }).catch(() => null);
-
-        if (fallback?.stream?.masterPlaylistUrl) {
-          return { data: fallback };
-        }
-      }
-
-      throw error;
-    }
+      },
+    );
   },
   getVixsrcAvailability: async (
     mediaType: VixsrcMediaType,

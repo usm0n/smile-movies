@@ -28,7 +28,6 @@ import MatchScore from "./MatchScore";
 import RatingDialog from "../library/RatingDialog";
 import { providersAPI } from "../../service/api/smb/providers.api.service";
 import { getPlaybackTarget } from "../../utilities/playbackTarget";
-import { isLikelyAnimeFromDetails } from "../../utilities/anime";
 
 const getPreferredLogoPath = (movieImages: images) =>
   movieImages?.logos?.find((logo) => logo.iso_639_1 === "en")?.file_path ||
@@ -117,7 +116,6 @@ function Header({
   const isReleaseBlocked =
     new Date(movieDetails?.release_date || movieDetails?.first_air_date || "")
       .getTime() > Date.now();
-  const isAnimeCandidate = isLikelyAnimeFromDetails(movieDetails);
   const playLabel =
     movieType === "movie"
       ? recentItem
@@ -147,16 +145,6 @@ function Header({
 
   useEffect(() => {
     let cancelled = false;
-
-    if (isAnimeCandidate) {
-      setAvailabilityState({
-        isLoading: false,
-        available: true,
-      });
-      return () => {
-        cancelled = true;
-      };
-    }
 
     setAvailabilityState({
       isLoading: true,
@@ -188,15 +176,13 @@ function Header({
     return () => {
       cancelled = true;
     };
-  }, [isAnimeCandidate, movieId, movieType, playbackTarget.episode, playbackTarget.season]);
+  }, [movieId, movieType, playbackTarget.episode, playbackTarget.season]);
 
   const playButtonNote = isReleaseBlocked
     ? movieDetails?.status || ""
     : availabilityState.isLoading && availabilityState.available === null
       ? "Checking video availability..."
-      : availabilityState.available === false
-        ? "Sorry, we don't have it."
-        : "";
+      : "";
 
   const metadataItems = [
     movieDetails?.genres?.length
@@ -403,8 +389,7 @@ function Header({
                     }}
                     disabled={
                       isReleaseBlocked ||
-                      myselfData?.isLoading ||
-                      availabilityState.available === false
+                      myselfData?.isLoading
                     }
                     startDecorator={<PlayArrow />}
                     sx={{
@@ -470,11 +455,7 @@ function Header({
                   sx={{
                     minHeight: "20px",
                     color:
-                      availabilityState.available === false &&
-                      !availabilityState.isLoading &&
-                      !isReleaseBlocked
-                        ? "rgb(255, 166, 120)"
-                        : "rgba(255,255,255,0.72)",
+                      "rgba(255,255,255,0.72)",
                   }}
                 >
                   {playButtonNote}

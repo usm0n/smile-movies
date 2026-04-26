@@ -37,7 +37,6 @@ import {
   buildPlaybackAvailabilityKey,
   getPlaybackTarget,
 } from "../../utilities/playbackTarget";
-import { isLikelyAnimeFromSummary } from "../../utilities/anime";
 
 const Header = React.memo(
   ({
@@ -183,25 +182,17 @@ const Header = React.memo(
             season: mediaType === "tv" ? playbackTarget.season : undefined,
             episode: mediaType === "tv" ? playbackTarget.episode : undefined,
           }),
-          isAnimeCandidate: isLikelyAnimeFromSummary(details),
           mediaType,
           tmdbId: String(details.id),
           season: mediaType === "tv" ? playbackTarget.season : undefined,
           episode: mediaType === "tv" ? playbackTarget.episode : undefined,
         };
       });
-      const animeBypassLookup = items.reduce<Record<string, boolean>>((acc, item) => {
-        if (item.isAnimeCandidate) {
-          acc[item.key] = true;
-        }
-        return acc;
-      }, {});
-      const nonAnimeItems = items.filter((item) => !item.isAnimeCandidate);
 
       let cancelled = false;
-      setAvailabilityLookup(animeBypassLookup);
+      setAvailabilityLookup({});
 
-      if (!nonAnimeItems.length) {
+      if (!items.length) {
         setAvailabilityLoading(false);
         return () => {
           cancelled = true;
@@ -211,7 +202,7 @@ const Header = React.memo(
       setAvailabilityLoading(true);
 
       void providersAPI
-        .getVixsrcAvailabilityBatch(nonAnimeItems)
+        .getVixsrcAvailabilityBatch(items)
         .then((response) => {
           if (cancelled) return;
 
@@ -229,10 +220,7 @@ const Header = React.memo(
             {},
           );
 
-          setAvailabilityLookup({
-            ...animeBypassLookup,
-            ...nextLookup,
-          });
+          setAvailabilityLookup(nextLookup);
           setAvailabilityLoading(false);
         })
         .catch(() => {
@@ -281,15 +269,11 @@ const Header = React.memo(
           details?.release_date || details?.first_air_date || ""
         ).getTime() > Date.now();
       const availability = availabilityLookup[availabilityKey];
-      const isAnimeCandidate = isLikelyAnimeFromSummary(details);
-      const isUnavailable = !isAnimeCandidate && availability === false;
       const playButtonNote = isReleaseBlocked
         ? details?.status || ""
         : availabilityLoading && availability === null
           ? "Checking video availability..."
-          : isUnavailable
-            ? "Sorry, we don't have it."
-            : "";
+          : "";
 
       return (
         <Card
@@ -409,9 +393,7 @@ const Header = React.memo(
                   e.stopPropagation();
                   navigate(playbackTarget.route);
                 }}
-                disabled={
-                  isReleaseBlocked || isUnavailable
-                }
+                disabled={isReleaseBlocked}
                 startDecorator={<PlayArrow />}
                 sx={{
                   padding: "15px 0px",
@@ -447,15 +429,13 @@ const Header = React.memo(
                     : "Play Now"
                 )}
               </Button>
-              {!isReleaseBlocked && isUnavailable && !availabilityLoading && (
+              {!isReleaseBlocked && playButtonNote && !availabilityLoading && (
                 <Typography
                   level="body-sm"
                   sx={{
                     minHeight: "20px",
                     textShadow: "0 0 8px rgba(0,0,0,0.7)",
-                  color: isUnavailable && !availabilityLoading && !isReleaseBlocked
-                    ? "rgb(255, 166, 120)"
-                    : "inherit",
+                    color: "inherit",
                 }}
               >
                 {playButtonNote}

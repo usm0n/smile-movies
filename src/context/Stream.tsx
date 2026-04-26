@@ -1,6 +1,6 @@
 import { createContext, useContext, useState } from "react";
 import { providersAPI } from "../service/api/smb/providers.api.service";
-import { AnimeMode, VixsrcStreamResponse } from "../types/providers";
+import { ProviderId, VixsrcStreamResponse } from "../types/providers";
 
 const StreamContext = createContext({
     getStreamData: {
@@ -14,7 +14,7 @@ const StreamContext = createContext({
       _movieId: string,
       _seasonId?: string,
       _episodeId?: string,
-      _mode?: AnimeMode,
+      _server?: ProviderId,
     ) => { },
 })
 
@@ -38,7 +38,7 @@ export const StreamProvider = ({ children }: { children: React.ReactNode }) => {
       movieId: string,
       seasonId?: string,
       episodeId?: string,
-      mode?: AnimeMode,
+      server?: ProviderId,
     ) => {
         try {
             setGetStreamData({
@@ -52,7 +52,7 @@ export const StreamProvider = ({ children }: { children: React.ReactNode }) => {
                 movieId,
                 seasonId ? parseInt(seasonId) : undefined,
                 episodeId ? parseInt(episodeId) : undefined,
-                mode,
+                server,
             );
             setGetStreamData({
                 isLoading: false,
@@ -64,7 +64,11 @@ export const StreamProvider = ({ children }: { children: React.ReactNode }) => {
             setGetStreamData({
               isLoading: false,
               isAvailable: false,
-              errorMessage: String(error?.data?.message || "Unable to load stream"),
+              errorMessage: String(
+                error?.response?.data?.message ||
+                  error?.data?.message ||
+                  "Unable to load stream",
+              ),
               data: null,
             });
         }

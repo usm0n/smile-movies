@@ -30,7 +30,7 @@ import { User } from "../../user";
 import PlaybackSurface from "../../components/player/PlaybackSurface";
 import { playbackAPI } from "../../service/api/smb/playback.api.service";
 import RatingDialog from "../../components/library/RatingDialog";
-import { AnimeMode } from "../../types/providers";
+import { ProviderId } from "../../types/providers";
 
 const AUTO_SAVE_INTERVAL_MS = 60000;
 const MIN_PROGRESS_DELTA_MINUTES = 1;
@@ -39,6 +39,10 @@ const MOVIE_COMPLETION_THRESHOLD = 0.9;
 const EPISODE_COMPLETION_THRESHOLD = 0.95;
 const LOCAL_ROUTE_PROGRESS_PREFIX = "watch-progress:";
 const LOCAL_RECENT_PROGRESS_PREFIX = "recent-progress:";
+const SERVER_OPTIONS: Array<{ value: ProviderId; label: string }> = [
+  { value: "vidsrcpm", label: "VidSrcPM" },
+  { value: "vixsrc", label: "Vixsrc" },
+];
 
 type LocalRecentProgress = {
   id: string;
@@ -176,21 +180,15 @@ function Watch() {
   ]);
   const [sessionBaseProgress, setSessionBaseProgress] = useState(0);
   const [sessionBaseReady, setSessionBaseReady] = useState(false);
-  const [preferredAnimeMode, setPreferredAnimeMode] = useState<AnimeMode>("dub");
+  const [preferredServer, setPreferredServer] = useState<ProviderId>("vidsrcpm");
 
   const availableStream = getStreamData.data?.stream || null;
   const playbackStream = sessionBaseReady ? availableStream : null;
-  const streamProvider = getStreamData.data?.provider || "vixsrc";
-  const isAnimeCandidate = Boolean(getStreamData.data?.isAnimeCandidate);
-  const animeModeOptions = getStreamData.data?.modeOptions || [];
+  const streamProvider = getStreamData.data?.provider || preferredServer;
   const subtitleTrackCount = availableStream?.subtitleTracks?.length || 0;
   const isPreparingPlayback = getStreamData.isLoading;
   const isPlaybackUnavailable =
     !isPreparingPlayback && sessionBaseReady && !getStreamData.isAvailable;
-  const canSwitchAnimeMode =
-    isAnimeCandidate &&
-    animeModeOptions.includes("sub") &&
-    animeModeOptions.includes("dub");
 
   useEffect(() => {
     setSessionBaseProgress(0);
@@ -541,7 +539,7 @@ function Watch() {
     if (movieType === "movie") {
       movie(movieId);
       movieImages(movieId);
-      getStream("movie", movieId, undefined, undefined, preferredAnimeMode);
+      getStream("movie", movieId, undefined, undefined, preferredServer);
       return;
     }
 
@@ -551,9 +549,9 @@ function Watch() {
       tvSeasonsDetails(movieId, parseInt(seasonId));
     }
     if (seasonId && episodeId) {
-      getStream("tv", movieId, seasonId, episodeId, preferredAnimeMode);
+      getStream("tv", movieId, seasonId, episodeId, preferredServer);
     }
-  }, [episodeId, movieId, movieType, preferredAnimeMode, seasonId]);
+  }, [episodeId, movieId, movieType, preferredServer, seasonId]);
 
   useEffect(() => {
     if (!sessionBaseReady) return;
@@ -721,16 +719,12 @@ function Watch() {
     if (!movieId || !movieType) return;
 
     if (movieType === "movie") {
-      void getStream("movie", movieId, undefined, undefined, preferredAnimeMode);
+      void getStream("movie", movieId, undefined, undefined, preferredServer);
       return;
     }
 
     if (!seasonId || !episodeId) return;
-    void getStream("tv", movieId, seasonId, episodeId, preferredAnimeMode);
-  };
-
-  const handleAnimeModeSelect = (mode: AnimeMode) => {
-    setPreferredAnimeMode(mode);
+    void getStream("tv", movieId, seasonId, episodeId, preferredServer);
   };
 
   if (isIncorrect) {
@@ -854,8 +848,12 @@ function Watch() {
           )}
         </Box>
         <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", justifyContent: "flex-end" }}>
-          <Chip size="sm" color={streamProvider === "animekai" ? "success" : "warning"} variant="soft">
-            {streamProvider === "animekai" ? "Animekai" : "Vixsrc"}
+          <Chip
+            size="sm"
+            color={streamProvider === "vidsrcpm" ? "success" : "warning"}
+            variant="soft"
+          >
+            {streamProvider === "vidsrcpm" ? "VidSrcPM" : "Vixsrc"}
           </Chip>
           <Chip
             size="sm"
@@ -875,7 +873,7 @@ function Watch() {
           </Button>
         </Box>
       </Box>
-      {movieType === "tv" || canSwitchAnimeMode ? (
+      {movieType === "tv" || SERVER_OPTIONS.length > 1 ? (
         <Box
           sx={{
             position: "absolute",
@@ -943,27 +941,29 @@ function Watch() {
               </Select>
             </>
           ) : null}
-          {canSwitchAnimeMode ? (
-            <Select
-              size="sm"
-              value={preferredAnimeMode}
-              onChange={(_e, value) => {
-                if (!value) return;
-                handleAnimeModeSelect(value as AnimeMode);
-              }}
-              sx={{
-                minWidth: { xs: "120px", sm: "140px" },
-                background: "rgba(255,255,255,0.05)",
-              }}
-            >
-              <Option value="dub">Audio: DUB</Option>
-              <Option value="sub">Audio: SUB</Option>
-            </Select>
-          ) : null}
+          <Select
+            size="sm"
+            value={preferredServer}
+            onChange={(_e, value) => {
+              if (!value) return;
+              setPreferredServer(value as ProviderId);
+            }}
+            sx={{
+              minWidth: { xs: "140px", sm: "160px" },
+              background: "rgba(255,255,255,0.05)",
+            }}
+          >
+            {SERVER_OPTIONS.map((option) => (
+              <Option key={option.value} value={option.value}>
+                Server: {option.label}
+              </Option>
+            ))}
+          </Select>
         </Box>
       ) : null}
       <PlaybackSurface
         playerRef={playerRef}
+        provider={streamProvider}
         stream={playbackStream}
         poster={backdropPoster}
         title={mediaTitle}
