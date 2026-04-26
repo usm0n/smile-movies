@@ -1,5 +1,4 @@
 import {
-  ProviderId,
   VixsrcAvailabilityBatchResponse,
   VixsrcAvailabilityItem,
   VixsrcMediaType,
@@ -62,7 +61,6 @@ export const providersAPI = {
     tmdbId: string,
     season?: number,
     episode?: number,
-    server?: ProviderId,
   ) => {
     return smbV1API.get<VixsrcStreamResponse>(
       `/providers/vixsrc/stream/${mediaType}/${tmdbId}`,
@@ -70,7 +68,6 @@ export const providersAPI = {
         params: {
           ...(season ? { season } : {}),
           ...(episode ? { episode } : {}),
-          ...(server ? { server } : {}),
         },
       },
     );

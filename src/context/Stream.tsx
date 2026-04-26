@@ -1,6 +1,6 @@
 import { createContext, useContext, useState } from "react";
 import { providersAPI } from "../service/api/smb/providers.api.service";
-import { ProviderId, VixsrcStreamResponse } from "../types/providers";
+import { VixsrcStreamResponse } from "../types/providers";
 
 const StreamContext = createContext({
     getStreamData: {
@@ -14,7 +14,6 @@ const StreamContext = createContext({
       _movieId: string,
       _seasonId?: string,
       _episodeId?: string,
-      _server?: ProviderId,
     ) => { },
 })
 
@@ -38,7 +37,6 @@ export const StreamProvider = ({ children }: { children: React.ReactNode }) => {
       movieId: string,
       seasonId?: string,
       episodeId?: string,
-      server?: ProviderId,
     ) => {
         try {
             setGetStreamData({
@@ -52,7 +50,6 @@ export const StreamProvider = ({ children }: { children: React.ReactNode }) => {
                 movieId,
                 seasonId ? parseInt(seasonId) : undefined,
                 episodeId ? parseInt(episodeId) : undefined,
-                server,
             );
             setGetStreamData({
                 isLoading: false,

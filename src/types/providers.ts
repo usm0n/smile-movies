@@ -1,6 +1,6 @@
 export type VixsrcMediaType = "movie" | "tv";
 export type VixsrcAvailabilityMatch = "movie" | "tv" | "episode" | null;
-export type ProviderId = "vixsrc" | "vidsrcpm";
+export type ProviderId = "vixsrc";
 
 export interface VixsrcTrack {
   kind: "audio" | "subtitles";

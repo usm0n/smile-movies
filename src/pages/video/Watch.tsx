@@ -1,12 +1,10 @@
 import {
   ArrowBackIos,
   RefreshRounded,
-  SubtitlesRounded,
 } from "@mui/icons-material";
 import {
   Box,
   Button,
-  Chip,
   DialogActions,
   IconButton,
   LinearProgress,
@@ -30,7 +28,6 @@ import { User } from "../../user";
 import PlaybackSurface from "../../components/player/PlaybackSurface";
 import { playbackAPI } from "../../service/api/smb/playback.api.service";
 import RatingDialog from "../../components/library/RatingDialog";
-import { ProviderId } from "../../types/providers";
 
 const AUTO_SAVE_INTERVAL_MS = 60000;
 const MIN_PROGRESS_DELTA_MINUTES = 1;
@@ -39,10 +36,6 @@ const MOVIE_COMPLETION_THRESHOLD = 0.9;
 const EPISODE_COMPLETION_THRESHOLD = 0.95;
 const LOCAL_ROUTE_PROGRESS_PREFIX = "watch-progress:";
 const LOCAL_RECENT_PROGRESS_PREFIX = "recent-progress:";
-const SERVER_OPTIONS: Array<{ value: ProviderId; label: string }> = [
-  { value: "vidsrcpm", label: "VidSrcPM" },
-  { value: "vixsrc", label: "Vixsrc" },
-];
 
 type LocalRecentProgress = {
   id: string;
@@ -180,12 +173,9 @@ function Watch() {
   ]);
   const [sessionBaseProgress, setSessionBaseProgress] = useState(0);
   const [sessionBaseReady, setSessionBaseReady] = useState(false);
-  const [preferredServer, setPreferredServer] = useState<ProviderId>("vidsrcpm");
 
   const availableStream = getStreamData.data?.stream || null;
   const playbackStream = sessionBaseReady ? availableStream : null;
-  const streamProvider = getStreamData.data?.provider || preferredServer;
-  const subtitleTrackCount = availableStream?.subtitleTracks?.length || 0;
   const isPreparingPlayback = getStreamData.isLoading;
   const isPlaybackUnavailable =
     !isPreparingPlayback && sessionBaseReady && !getStreamData.isAvailable;
@@ -539,7 +529,7 @@ function Watch() {
     if (movieType === "movie") {
       movie(movieId);
       movieImages(movieId);
-      getStream("movie", movieId, undefined, undefined, preferredServer);
+      getStream("movie", movieId);
       return;
     }
 
@@ -549,9 +539,9 @@ function Watch() {
       tvSeasonsDetails(movieId, parseInt(seasonId));
     }
     if (seasonId && episodeId) {
-      getStream("tv", movieId, seasonId, episodeId, preferredServer);
+      getStream("tv", movieId, seasonId, episodeId);
     }
-  }, [episodeId, movieId, movieType, preferredServer, seasonId]);
+  }, [episodeId, movieId, movieType, seasonId]);
 
   useEffect(() => {
     if (!sessionBaseReady) return;
@@ -719,12 +709,12 @@ function Watch() {
     if (!movieId || !movieType) return;
 
     if (movieType === "movie") {
-      void getStream("movie", movieId, undefined, undefined, preferredServer);
+      void getStream("movie", movieId);
       return;
     }
 
     if (!seasonId || !episodeId) return;
-    void getStream("tv", movieId, seasonId, episodeId, preferredServer);
+    void getStream("tv", movieId, seasonId, episodeId);
   };
 
   if (isIncorrect) {
@@ -847,33 +837,8 @@ function Watch() {
             </Typography>
           )}
         </Box>
-        <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", justifyContent: "flex-end" }}>
-          <Chip
-            size="sm"
-            color={streamProvider === "vidsrcpm" ? "success" : "warning"}
-            variant="soft"
-          >
-            {streamProvider === "vidsrcpm" ? "VidSrcPM" : "Vixsrc"}
-          </Chip>
-          <Chip
-            size="sm"
-            variant="soft"
-            startDecorator={<SubtitlesRounded sx={{ fontSize: 18 }} />}
-          >
-            {subtitleTrackCount ? `${subtitleTrackCount} subtitles` : "No subtitles"}
-          </Chip>
-          <Button
-            size="sm"
-            variant="soft"
-            startDecorator={<RefreshRounded />}
-            loading={isPreparingPlayback}
-            onClick={retryStream}
-          >
-            Retry
-          </Button>
-        </Box>
       </Box>
-      {movieType === "tv" || SERVER_OPTIONS.length > 1 ? (
+      {movieType === "tv" ? (
         <Box
           sx={{
             position: "absolute",
@@ -941,29 +906,10 @@ function Watch() {
               </Select>
             </>
           ) : null}
-          <Select
-            size="sm"
-            value={preferredServer}
-            onChange={(_e, value) => {
-              if (!value) return;
-              setPreferredServer(value as ProviderId);
-            }}
-            sx={{
-              minWidth: { xs: "140px", sm: "160px" },
-              background: "rgba(255,255,255,0.05)",
-            }}
-          >
-            {SERVER_OPTIONS.map((option) => (
-              <Option key={option.value} value={option.value}>
-                Server: {option.label}
-              </Option>
-            ))}
-          </Select>
         </Box>
       ) : null}
       <PlaybackSurface
         playerRef={playerRef}
-        provider={streamProvider}
         stream={playbackStream}
         poster={backdropPoster}
         title={mediaTitle}

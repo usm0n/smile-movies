@@ -3,11 +3,10 @@ import { Box } from "@mui/joy";
 import { MediaCommunitySkin, MediaOutlet, MediaPlayer } from "@vidstack/react";
 import "vidstack/styles/defaults.css";
 import "vidstack/styles/community-skin/video.css";
-import { ProviderId, VixsrcPlaybackStream } from "../../types/providers";
+import { VixsrcPlaybackStream } from "../../types/providers";
 
 function PlaybackSurface({
   playerRef,
-  provider,
   stream,
   poster,
   title,
@@ -17,7 +16,6 @@ function PlaybackSurface({
   onEnded,
 }: {
   playerRef: React.MutableRefObject<any>;
-  provider: ProviderId;
   stream: VixsrcPlaybackStream | null;
   poster?: string;
   title: string;
@@ -27,82 +25,8 @@ function PlaybackSurface({
   onEnded: () => void;
 }) {
   const subtitleTracks = useMemo(() => {
-    if (provider !== "vidsrcpm") {
-      return [];
-    }
-
-    const languageMap: Record<string, string> = {
-      eng: "en",
-      ita: "it",
-      spa: "es",
-      fra: "fr",
-      fre: "fr",
-      deu: "de",
-      ger: "de",
-      por: "pt",
-      ara: "ar",
-      tur: "tr",
-      rus: "ru",
-      hin: "hi",
-      ind: "id",
-      jpn: "ja",
-      kor: "ko",
-      zho: "zh",
-      english: "en",
-      italian: "it",
-      spanish: "es",
-      french: "fr",
-      german: "de",
-      portuguese: "pt",
-      arabic: "ar",
-      turkish: "tr",
-      russian: "ru",
-      japanese: "ja",
-    };
-
-    const normalizeLanguage = (value?: string) => {
-      const raw = String(value || "und").trim().toLowerCase();
-      if (!raw) return "en";
-
-      const normalized = raw
-        .replace(/^forced[-_]/, "")
-        .replace(/^cc[-_]/, "")
-        .replace(/^sdh[-_]/, "")
-        .replace(/\s+/g, "-");
-      const withoutDecorators = normalized.replace(/[^a-z-]/g, "");
-
-      if (languageMap[withoutDecorators]) {
-        return languageMap[withoutDecorators];
-      }
-
-      if (/^[a-z]{2}(-[a-z]{2})?$/.test(withoutDecorators)) {
-        return withoutDecorators;
-      }
-
-      if (/^[a-z]{3}$/.test(withoutDecorators) && languageMap[withoutDecorators]) {
-        return languageMap[withoutDecorators];
-      }
-
-      return "en";
-    };
-
-    let defaultAssigned = false;
-
-    return (stream?.subtitleTracks || []).map((track, index) => {
-      const isDefault = !defaultAssigned && Boolean(track.isDefault || index === 0);
-      if (isDefault) {
-        defaultAssigned = true;
-      }
-
-      return {
-        src: track.url,
-        kind: "subtitles" as const,
-        label: track.name || `Subtitle ${index + 1}`,
-        language: normalizeLanguage(track.language),
-        default: isDefault,
-      };
-    });
-  }, [provider, stream?.subtitleTracks]);
+    return [];
+  }, []);
 
   useEffect(() => {
     const player = playerRef.current;
