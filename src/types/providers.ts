@@ -1,6 +1,7 @@
 export type VixsrcMediaType = "movie" | "tv";
 export type VixsrcAvailabilityMatch = "movie" | "tv" | "episode" | null;
-export type ProviderId = "vixsrc";
+export type ProviderId = "vixsrc" | "showbox";
+export type ProviderSourceFormat = "hls" | "mp4" | "unknown";
 
 export interface VixsrcTrack {
   kind: "audio" | "subtitles";
@@ -14,8 +15,11 @@ export interface VixsrcTrack {
 }
 
 export interface VixsrcSourceOption {
+  id: string;
   name: string;
   active: boolean;
+  format: ProviderSourceFormat;
+  quality?: string;
   url: string;
 }
 
@@ -24,7 +28,7 @@ export interface VixsrcPlaybackStream {
   tmdbId: string;
   season?: number;
   episode?: number;
-  embedUrl: string;
+  embedUrl?: string;
   masterPlaylistUrl: string;
   thumbnailTrackUrl?: string;
   audioTracks: VixsrcTrack[];

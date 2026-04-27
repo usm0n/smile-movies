@@ -1,4 +1,5 @@
 import {
+  ProviderId,
   VixsrcAvailabilityBatchResponse,
   VixsrcAvailabilityItem,
   VixsrcMediaType,
@@ -56,14 +57,15 @@ const buildSyntheticAvailabilityBatchResponse = (items: VixsrcAvailabilityItem[]
   ({ data: { items } } as { data: VixsrcAvailabilityBatchResponse });
 
 export const providersAPI = {
-  getVixsrcStream: async (
+  getStream: async (
+    provider: ProviderId,
     mediaType: VixsrcMediaType,
     tmdbId: string,
     season?: number,
     episode?: number,
   ) => {
     return smbV1API.get<VixsrcStreamResponse>(
-      `/providers/vixsrc/stream/${mediaType}/${tmdbId}`,
+      `/providers/${provider}/stream/${mediaType}/${tmdbId}`,
       {
         params: {
           ...(season ? { season } : {}),
@@ -71,6 +73,14 @@ export const providersAPI = {
         },
       },
     );
+  },
+  getVixsrcStream: async (
+    mediaType: VixsrcMediaType,
+    tmdbId: string,
+    season?: number,
+    episode?: number,
+  ) => {
+    return providersAPI.getStream("vixsrc", mediaType, tmdbId, season, episode);
   },
   getVixsrcAvailability: async (
     mediaType: VixsrcMediaType,

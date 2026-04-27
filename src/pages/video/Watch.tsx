@@ -5,17 +5,14 @@ import {
 import {
   Box,
   Button,
-  DialogActions,
   IconButton,
   LinearProgress,
-  Modal,
-  ModalDialog,
   Option,
   Select,
   Typography,
   useColorScheme,
 } from "@mui/joy";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useTMDB } from "../../context/TMDB";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { backdropLoading, isLoggedIn } from "../../utilities/defaults";
@@ -28,6 +25,7 @@ import { User } from "../../user";
 import PlaybackSurface from "../../components/player/PlaybackSurface";
 import { playbackAPI } from "../../service/api/smb/playback.api.service";
 import RatingDialog from "../../components/library/RatingDialog";
+import { ProviderId, ProviderSourceFormat } from "../../types/providers";
 
 const AUTO_SAVE_INTERVAL_MS = 60000;
 const MIN_PROGRESS_DELTA_MINUTES = 1;
@@ -36,6 +34,22 @@ const MOVIE_COMPLETION_THRESHOLD = 0.9;
 const EPISODE_COMPLETION_THRESHOLD = 0.95;
 const LOCAL_ROUTE_PROGRESS_PREFIX = "watch-progress:";
 const LOCAL_RECENT_PROGRESS_PREFIX = "recent-progress:";
+const PROVIDER_PARAM_KEY = "provider";
+const SERVER_PARAM_KEY = "server";
+const PROVIDER_OPTIONS: ProviderId[] = ["showbox", "vixsrc"];
+
+const parseProviderFromQuery = (value: string | null): ProviderId =>
+  value === "vixsrc" ? "vixsrc" : "showbox";
+
+const getProviderLabel = (provider: ProviderId) =>
+  provider === "showbox" ? "ShowBox" : "Vixsrc";
+
+const inferFormatFromUrl = (url: string): ProviderSourceFormat => {
+  const normalized = String(url || "").toLowerCase();
+  if (normalized.includes(".m3u8")) return "hls";
+  if (normalized.includes(".mp4")) return "mp4";
+  return "unknown";
+};
 
 type LocalRecentProgress = {
   id: string;
@@ -95,6 +109,7 @@ function Watch() {
   } = useTMDB();
   const { colorScheme } = useColorScheme();
   const { movieId, movieType, seasonId, episodeId, startAt } = useParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { getStreamData, getStream } = useStream();
   const { deleteRating, myselfData, upsertRecentlyWatched, upsertRating } = useUsers();
   const navigate = useNavigate();
@@ -173,16 +188,88 @@ function Watch() {
   ]);
   const [sessionBaseProgress, setSessionBaseProgress] = useState(0);
   const [sessionBaseReady, setSessionBaseReady] = useState(false);
-
+  const [playerReloadToken, setPlayerReloadToken] = useState(0);
+  const [lastPlaybackError, setLastPlaybackError] = useState("");
+  const selectedProvider = parseProviderFromQuery(searchParams.get(PROVIDER_PARAM_KEY));
+  const selectedServerFromQuery = String(searchParams.get(SERVER_PARAM_KEY) || "").trim();
   const availableStream = getStreamData.data?.stream || null;
+  const availableSources = availableStream?.sources || [];
+  const activeSource =
+    availableSources.find((source) => source.id === selectedServerFromQuery) ||
+    availableSources.find((source) => source.active) ||
+    availableSources[0] ||
+    null;
   const playbackStream = sessionBaseReady ? availableStream : null;
+  const playbackSourceUrl = sessionBaseReady
+    ? activeSource?.url || availableStream?.masterPlaylistUrl || ""
+    : "";
+  const playbackSourceFormat: ProviderSourceFormat = activeSource?.format
+    ? activeSource.format
+    : inferFormatFromUrl(playbackSourceUrl);
   const isPreparingPlayback = getStreamData.isLoading;
   const isPlaybackUnavailable =
-    !isPreparingPlayback && sessionBaseReady && !getStreamData.isAvailable;
+    !isPreparingPlayback &&
+    sessionBaseReady &&
+    !getStreamData.isAvailable &&
+    getStreamData.provider === selectedProvider;
+  const activeSourceIndex = activeSource
+    ? availableSources.findIndex((source) => source.id === activeSource.id)
+    : -1;
+  const nextSourceOption =
+    activeSourceIndex >= 0 ? availableSources[activeSourceIndex + 1] || null : null;
+  const providerLabel = getProviderLabel(selectedProvider);
+  const serverLabel = activeSource?.name || "No server selected";
+  const statusLabel = isPreparingPlayback
+    ? "Loading stream"
+    : playbackSourceUrl
+      ? "Ready"
+      : "Waiting for playable source";
+  const failoverContextKey = `${selectedProvider}:${movieType || ""}:${movieId || ""}:${seasonId || 0}:${episodeId || 0}`;
+  const autoFailoverStateRef = useRef({
+    contextKey: "",
+    used: false,
+  });
+
+  useEffect(() => {
+    const currentProvider = searchParams.get(PROVIDER_PARAM_KEY);
+    if (currentProvider === selectedProvider) return;
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.set(PROVIDER_PARAM_KEY, selectedProvider);
+    setSearchParams(nextParams, { replace: true });
+  }, [searchParams, selectedProvider, setSearchParams]);
+
+  useEffect(() => {
+    if (!availableSources.length || !activeSource?.id) return;
+    if (selectedServerFromQuery === activeSource.id) return;
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.set(PROVIDER_PARAM_KEY, selectedProvider);
+    nextParams.set(SERVER_PARAM_KEY, activeSource.id);
+    setSearchParams(nextParams, { replace: true });
+  }, [
+    activeSource?.id,
+    availableSources.length,
+    searchParams,
+    selectedProvider,
+    selectedServerFromQuery,
+    setSearchParams,
+  ]);
+
+  useEffect(() => {
+    if (autoFailoverStateRef.current.contextKey === failoverContextKey) {
+      return;
+    }
+
+    autoFailoverStateRef.current = {
+      contextKey: failoverContextKey,
+      used: false,
+    };
+    setLastPlaybackError("");
+  }, [failoverContextKey]);
 
   useEffect(() => {
     setSessionBaseProgress(0);
     setSessionBaseReady(false);
+    setPlayerReloadToken(0);
     playbackSessionRef.current = {
       id: "",
       signature: "",
@@ -301,7 +388,7 @@ function Watch() {
       title: mediaTitle,
       playerKind: "provider_modern",
       sourceType: "provider_stream",
-      fallbackReason: "",
+      fallbackReason: `provider:${selectedProvider};server:${activeSource?.id || "default"}`,
       lastPosition: progressMinutes,
       duration: resolvedDuration,
       completionRatio,
@@ -519,7 +606,8 @@ function Watch() {
     void (async () => {
       await persistProgress(getCurrentProgressMinutes(), getPlayerDurationMinutes());
       await flushRecentProgress({ force: true });
-      navigate(nextPath);
+      const query = searchParams.toString();
+      navigate(query ? `${nextPath}?${query}` : nextPath);
     })();
   };
 
@@ -529,7 +617,7 @@ function Watch() {
     if (movieType === "movie") {
       movie(movieId);
       movieImages(movieId);
-      getStream("movie", movieId);
+      getStream(selectedProvider, "movie", movieId);
       return;
     }
 
@@ -539,9 +627,9 @@ function Watch() {
       tvSeasonsDetails(movieId, parseInt(seasonId));
     }
     if (seasonId && episodeId) {
-      getStream("tv", movieId, seasonId, episodeId);
+      getStream(selectedProvider, "tv", movieId, seasonId, episodeId);
     }
-  }, [episodeId, movieId, movieType, seasonId]);
+  }, [episodeId, movieId, movieType, seasonId, selectedProvider]);
 
   useEffect(() => {
     if (!sessionBaseReady) return;
@@ -551,7 +639,7 @@ function Watch() {
       lastKnownProgressMinutes: sessionBaseProgress,
     };
   }, [
-    availableStream?.masterPlaylistUrl,
+    playbackSourceUrl,
     routeProgressStorageKey,
     sessionBaseProgress,
     sessionBaseReady,
@@ -563,7 +651,7 @@ function Watch() {
       !movieId ||
       !movieType ||
       !sessionBaseReady ||
-      !playbackStream?.masterPlaylistUrl
+      !playbackSourceUrl
     ) {
       return;
     }
@@ -573,7 +661,9 @@ function Watch() {
       movieId,
       seasonId || 0,
       episodeId || 0,
-      playbackStream.masterPlaylistUrl,
+      selectedProvider,
+      activeSource?.id || "default",
+      playbackSourceUrl,
     ].join(":");
 
     if (
@@ -622,19 +712,21 @@ function Watch() {
       cancelled = true;
     };
   }, [
-    playbackStream?.masterPlaylistUrl,
+    activeSource?.id,
     episodeId,
     fallbackDurationMinutes,
     isLoggedIn,
     movieId,
     movieType,
+    playbackSourceUrl,
     seasonId,
+    selectedProvider,
     sessionBaseProgress,
     sessionBaseReady,
   ]);
 
   useEffect(() => {
-    if (!sessionBaseReady || !playbackStream?.masterPlaylistUrl) return;
+    if (!sessionBaseReady || !playbackSourceUrl) return;
 
     const flushProgress = (force = false) => {
       void persistProgress(getCurrentProgressMinutes(), getPlayerDurationMinutes()).then(
@@ -669,7 +761,7 @@ function Watch() {
     };
   }, [
     fallbackDurationMinutes,
-    playbackStream?.masterPlaylistUrl,
+    playbackSourceUrl,
     sessionBaseReady,
   ]);
 
@@ -705,17 +797,95 @@ function Watch() {
     void persistProgress(durationMinutes, durationMinutes, true);
   };
 
-  const retryStream = () => {
+  const requestStream = () => {
     if (!movieId || !movieType) return;
 
     if (movieType === "movie") {
-      void getStream("movie", movieId);
+      void getStream(selectedProvider, "movie", movieId);
       return;
     }
 
     if (!seasonId || !episodeId) return;
-    void getStream("tv", movieId, seasonId, episodeId);
+    void getStream(selectedProvider, "tv", movieId, seasonId, episodeId);
   };
+
+  const setProviderInQuery = (provider: ProviderId) => {
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.set(PROVIDER_PARAM_KEY, provider);
+    nextParams.delete(SERVER_PARAM_KEY);
+    setLastPlaybackError("");
+    setPlayerReloadToken(0);
+    setSearchParams(nextParams);
+  };
+
+  const setServerInQuery = (serverId: string) => {
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.set(PROVIDER_PARAM_KEY, selectedProvider);
+    nextParams.set(SERVER_PARAM_KEY, serverId);
+    setLastPlaybackError("");
+    setSearchParams(nextParams);
+  };
+
+  const tryNextServer = (options?: { auto?: boolean }) => {
+    if (!nextSourceOption?.id) {
+      return false;
+    }
+
+    setServerInQuery(nextSourceOption.id);
+    setPlayerReloadToken(0);
+
+    if (options?.auto) {
+      setLastPlaybackError(
+        `Playback failed on ${serverLabel}. Auto-switched to ${nextSourceOption.name}.`,
+      );
+    }
+
+    return true;
+  };
+
+  const retryCurrentServer = () => {
+    setLastPlaybackError("");
+
+    if (!playbackSourceUrl || isPlaybackUnavailable) {
+      autoFailoverStateRef.current = {
+        ...autoFailoverStateRef.current,
+        used: false,
+      };
+      requestStream();
+      return;
+    }
+
+    setPlayerReloadToken((value) => value + 1);
+  };
+
+  const handlePlaybackReady = () => {
+    setLastPlaybackError("");
+  };
+
+  const handlePlaybackError = (message: string) => {
+    const normalizedError = String(message || "").trim() || "Playback failed for this server.";
+
+    if (selectedProvider === "showbox" && !autoFailoverStateRef.current.used) {
+      autoFailoverStateRef.current = {
+        ...autoFailoverStateRef.current,
+        used: true,
+      };
+
+      const switched = tryNextServer({ auto: true });
+      if (switched) {
+        return;
+      }
+    }
+
+    setLastPlaybackError(normalizedError);
+  };
+
+  useEffect(() => {
+    if (!isPlaybackUnavailable) return;
+    setLastPlaybackError(
+      String(getStreamData.errorMessage || "Unable to load stream for this provider/server."),
+    );
+  }, [getStreamData.errorMessage, isPlaybackUnavailable]);
 
   if (isIncorrect) {
     return <NotFound />;
@@ -725,44 +895,6 @@ function Watch() {
     return (
       <Box width={"100%"} height={"100vh"}>
         {backdropLoading(true, colorScheme)}
-      </Box>
-    );
-  }
-
-  if (isPlaybackUnavailable) {
-    return (
-      <Box width={"100%"} height={"100vh"}>
-        <Modal open={true} sx={{ zIndex: 1002 }}>
-          <ModalDialog>
-            <Typography level="h3">Sorry, we don&apos;t have it right now.</Typography>
-            <Typography>
-              This title is not currently available from the new Smile Movies
-              provider yet.
-            </Typography>
-            {getStreamData.errorMessage ? (
-              <Typography level="body-sm" textColor="warning.300">
-                {getStreamData.errorMessage}
-              </Typography>
-            ) : null}
-            <DialogActions>
-              <Button
-                color="warning"
-                variant="solid"
-                startDecorator={<RefreshRounded />}
-                onClick={retryStream}
-              >
-                Retry
-              </Button>
-              <Button
-                color="neutral"
-                variant="soft"
-                onClick={() => navigate(`/${movieType}/${movieId}`)}
-              >
-                Go Back
-              </Button>
-            </DialogActions>
-          </ModalDialog>
-        </Modal>
       </Box>
     );
   }
@@ -838,87 +970,170 @@ function Watch() {
           )}
         </Box>
       </Box>
-      {movieType === "tv" ? (
+      <Box
+        sx={{
+          position: "absolute",
+          top: { xs: "66px", sm: "62px" },
+          left: "50%",
+          transform: "translateX(-50%)",
+          zIndex: 1001,
+          display: "flex",
+          gap: 1,
+          flexWrap: "wrap",
+          alignItems: "center",
+          justifyContent: "center",
+          width: "min(calc(100% - 20px), 820px)",
+          px: 1,
+          py: 1,
+          borderRadius: "18px",
+          background: "rgba(8, 8, 8, 0.62)",
+          border: "1px solid rgba(255, 255, 255, 0.12)",
+          backdropFilter: "blur(16px)",
+          boxShadow: "0 12px 40px rgba(0, 0, 0, 0.24)",
+        }}
+      >
+        <Select
+          size="sm"
+          value={selectedProvider}
+          onChange={(_e, value) => {
+            if (!value) return;
+            const nextProvider = parseProviderFromQuery(String(value));
+            if (nextProvider === selectedProvider) return;
+            setProviderInQuery(nextProvider);
+          }}
+          sx={{
+            minWidth: { xs: "130px", sm: "150px" },
+            background: "rgba(255,255,255,0.05)",
+          }}
+        >
+          {PROVIDER_OPTIONS.map((providerOption) => (
+            <Option key={providerOption} value={providerOption}>
+              {getProviderLabel(providerOption)}
+            </Option>
+          ))}
+        </Select>
+        <Select
+          size="sm"
+          value={activeSource?.id || null}
+          placeholder={availableSources.length ? "Select server" : "No servers yet"}
+          onChange={(_e, value) => {
+            if (!value) return;
+            setServerInQuery(String(value));
+          }}
+          disabled={!availableSources.length}
+          sx={{
+            minWidth: { xs: "200px", sm: "260px" },
+            maxWidth: "100%",
+            background: "rgba(255,255,255,0.05)",
+          }}
+        >
+          {availableSources.map((source) => (
+            <Option key={source.id} value={source.id}>
+              {source.name}
+            </Option>
+          ))}
+        </Select>
+        {movieType === "tv" ? (
+          <>
+            <Select
+              size="sm"
+              value={parseInt(seasonId || "1")}
+              defaultValue={parseInt(seasonId || "1")}
+              onChange={(_e, value) => {
+                if (!value) return;
+                episodeChange(`/${movieType}/${movieId}/${value}/1/watch`);
+              }}
+              sx={{
+                minWidth: { xs: "130px", sm: "150px" },
+                background: "rgba(255,255,255,0.05)",
+              }}
+            >
+              {tvSeriesDetailsDataArr?.seasons
+                ?.filter((season) => season?.season_number !== 0)
+                .map((season) => (
+                  <Option key={season?.id} value={season?.season_number}>
+                    {season?.name}
+                  </Option>
+                ))}
+            </Select>
+            <Select
+              size="sm"
+              onChange={(_e, value) => {
+                if (!value) return;
+                episodeChange(`/${movieType}/${movieId}/${seasonId}/${value}/watch`);
+              }}
+              defaultValue={parseInt(episodeId || "1")}
+              value={parseInt(episodeId || "1")}
+              sx={{
+                minWidth: { xs: "220px", sm: "280px" },
+                maxWidth: "100%",
+                background: "rgba(255,255,255,0.05)",
+              }}
+            >
+              {tvSeasonsDetailsArr?.episodes?.map((episode) => (
+                <Option key={episode?.id} value={episode?.episode_number}>
+                  E{episode?.episode_number}: {episode?.name}
+                </Option>
+              ))}
+            </Select>
+          </>
+        ) : null}
         <Box
           sx={{
-            position: "absolute",
-            top: { xs: "66px", sm: "62px" },
-            left: "50%",
-            transform: "translateX(-50%)",
-            zIndex: 1001,
+            width: "100%",
             display: "flex",
             gap: 1,
             flexWrap: "wrap",
-            alignItems: "center",
             justifyContent: "center",
-            width: "min(calc(100% - 20px), 620px)",
-            px: 1,
-            py: 1,
-            borderRadius: "18px",
-            background: "rgba(8, 8, 8, 0.62)",
-            border: "1px solid rgba(255, 255, 255, 0.12)",
-            backdropFilter: "blur(16px)",
-            boxShadow: "0 12px 40px rgba(0, 0, 0, 0.24)",
+            alignItems: "center",
+            pt: 0.5,
           }}
         >
-          {movieType === "tv" ? (
-            <>
-              <Select
-                size="sm"
-                value={parseInt(seasonId || "1")}
-                defaultValue={parseInt(seasonId || "1")}
-                onChange={(_e, value) => {
-                  if (!value) return;
-                  episodeChange(`/${movieType}/${movieId}/${value}/1/watch`);
-                }}
-                sx={{
-                  minWidth: { xs: "130px", sm: "150px" },
-                  background: "rgba(255,255,255,0.05)",
-                }}
-              >
-                {tvSeriesDetailsDataArr?.seasons
-                  ?.filter((season) => season?.season_number !== 0)
-                  .map((season) => (
-                    <Option key={season?.id} value={season?.season_number}>
-                      {season?.name}
-                    </Option>
-                  ))}
-              </Select>
-              <Select
-                size="sm"
-                onChange={(_e, value) => {
-                  if (!value) return;
-                  episodeChange(`/${movieType}/${movieId}/${seasonId}/${value}/watch`);
-                }}
-                defaultValue={parseInt(episodeId || "1")}
-                value={parseInt(episodeId || "1")}
-                sx={{
-                  minWidth: { xs: "220px", sm: "340px" },
-                  maxWidth: "100%",
-                  background: "rgba(255,255,255,0.05)",
-                }}
-              >
-                {tvSeasonsDetailsArr?.episodes?.map((episode) => (
-                  <Option key={episode?.id} value={episode?.episode_number}>
-                    E{episode?.episode_number}: {episode?.name}
-                  </Option>
-                ))}
-              </Select>
-            </>
-          ) : null}
+          <Typography level="body-sm" sx={{ color: "neutral.200", textAlign: "center" }}>
+            Provider: {providerLabel} | Server: {serverLabel} | Status: {statusLabel}
+            {lastPlaybackError ? ` | Last error: ${lastPlaybackError}` : ""}
+          </Typography>
+          <Button
+            size="sm"
+            variant="soft"
+            color="warning"
+            startDecorator={<RefreshRounded />}
+            onClick={retryCurrentServer}
+          >
+            Retry current server
+          </Button>
+          <Button
+            size="sm"
+            variant="soft"
+            color="neutral"
+            onClick={() => {
+              const switched = tryNextServer();
+              if (!switched) {
+                setLastPlaybackError("No additional servers available to try.");
+              }
+            }}
+            disabled={!nextSourceOption}
+          >
+            Try next server
+          </Button>
         </Box>
-      ) : null}
+      </Box>
       <PlaybackSurface
         playerRef={playerRef}
         stream={playbackStream}
+        sourceUrl={playbackSourceUrl}
+        sourceFormat={playbackSourceFormat}
         poster={backdropPoster}
         title={mediaTitle}
         onLoadedMetadata={handlePlayerLoadedMetadata}
         onTimeUpdate={handlePlayerTimeUpdate}
         onPause={handlePlayerPause}
         onEnded={handlePlayerEnded}
+        onPlaybackError={handlePlaybackError}
+        onPlaybackReady={handlePlaybackReady}
+        reloadToken={playerReloadToken}
       />
-      {!playbackStream ? (
+      {!playbackSourceUrl ? (
         <Box
           sx={{
             position: "absolute",
