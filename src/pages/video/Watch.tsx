@@ -1,6 +1,5 @@
 import {
   ArrowBackIos,
-  RefreshRounded,
 } from "@mui/icons-material";
 import {
   Box,
@@ -217,18 +216,17 @@ function Watch() {
     : -1;
   const nextSourceOption =
     activeSourceIndex >= 0 ? availableSources[activeSourceIndex + 1] || null : null;
-  const providerLabel = getProviderLabel(selectedProvider);
   const serverLabel = activeSource?.name || "No server selected";
-  const statusLabel = isPreparingPlayback
-    ? "Loading stream"
-    : playbackSourceUrl
-      ? "Ready"
-      : "Waiting for playable source";
   const failoverContextKey = `${selectedProvider}:${movieType || ""}:${movieId || ""}:${seasonId || 0}:${episodeId || 0}`;
   const autoFailoverStateRef = useRef({
     contextKey: "",
     used: false,
   });
+  const centerErrorMessage = String(
+    isPlaybackUnavailable
+      ? getStreamData.errorMessage || "Unable to load stream for this provider/server."
+      : lastPlaybackError,
+  ).trim();
 
   useEffect(() => {
     const currentProvider = searchParams.get(PROVIDER_PARAM_KEY);
@@ -826,7 +824,7 @@ function Watch() {
     setSearchParams(nextParams);
   };
 
-  const tryNextServer = (options?: { auto?: boolean }) => {
+  const tryNextServer = () => {
     if (!nextSourceOption?.id) {
       return false;
     }
@@ -834,17 +832,20 @@ function Watch() {
     setServerInQuery(nextSourceOption.id);
     setPlayerReloadToken(0);
 
-    if (options?.auto) {
-      setLastPlaybackError(
-        `Playback failed on ${serverLabel}. Auto-switched to ${nextSourceOption.name}.`,
-      );
-    }
-
     return true;
   };
 
   const retryCurrentServer = () => {
     setLastPlaybackError("");
+
+    if (selectedProvider === "showbox") {
+      autoFailoverStateRef.current = {
+        ...autoFailoverStateRef.current,
+        used: false,
+      };
+      requestStream();
+      return;
+    }
 
     if (!playbackSourceUrl || isPlaybackUnavailable) {
       autoFailoverStateRef.current = {
@@ -871,7 +872,7 @@ function Watch() {
         used: true,
       };
 
-      const switched = tryNextServer({ auto: true });
+      const switched = tryNextServer();
       if (switched) {
         return;
       }
@@ -979,10 +980,9 @@ function Watch() {
           zIndex: 1001,
           display: "flex",
           gap: 1,
-          flexWrap: "wrap",
           alignItems: "center",
           justifyContent: "center",
-          width: "min(calc(100% - 20px), 820px)",
+          width: "min(calc(100% - 20px), 560px)",
           px: 1,
           py: 1,
           borderRadius: "18px",
@@ -1033,91 +1033,73 @@ function Watch() {
             </Option>
           ))}
         </Select>
-        {movieType === "tv" ? (
-          <>
-            <Select
-              size="sm"
-              value={parseInt(seasonId || "1")}
-              defaultValue={parseInt(seasonId || "1")}
-              onChange={(_e, value) => {
-                if (!value) return;
-                episodeChange(`/${movieType}/${movieId}/${value}/1/watch`);
-              }}
-              sx={{
-                minWidth: { xs: "130px", sm: "150px" },
-                background: "rgba(255,255,255,0.05)",
-              }}
-            >
-              {tvSeriesDetailsDataArr?.seasons
-                ?.filter((season) => season?.season_number !== 0)
-                .map((season) => (
-                  <Option key={season?.id} value={season?.season_number}>
-                    {season?.name}
-                  </Option>
-                ))}
-            </Select>
-            <Select
-              size="sm"
-              onChange={(_e, value) => {
-                if (!value) return;
-                episodeChange(`/${movieType}/${movieId}/${seasonId}/${value}/watch`);
-              }}
-              defaultValue={parseInt(episodeId || "1")}
-              value={parseInt(episodeId || "1")}
-              sx={{
-                minWidth: { xs: "220px", sm: "280px" },
-                maxWidth: "100%",
-                background: "rgba(255,255,255,0.05)",
-              }}
-            >
-              {tvSeasonsDetailsArr?.episodes?.map((episode) => (
-                <Option key={episode?.id} value={episode?.episode_number}>
-                  E{episode?.episode_number}: {episode?.name}
-                </Option>
-              ))}
-            </Select>
-          </>
-        ) : null}
+      </Box>
+      {movieType === "tv" ? (
         <Box
           sx={{
-            width: "100%",
+            position: "absolute",
+            top: { xs: "126px", sm: "118px" },
+            left: "50%",
+            transform: "translateX(-50%)",
+            zIndex: 1001,
             display: "flex",
             gap: 1,
             flexWrap: "wrap",
-            justifyContent: "center",
             alignItems: "center",
-            pt: 0.5,
+            justifyContent: "center",
+            width: "min(calc(100% - 20px), 700px)",
+            px: 1,
+            py: 1,
+            borderRadius: "18px",
+            background: "rgba(8, 8, 8, 0.62)",
+            border: "1px solid rgba(255, 255, 255, 0.12)",
+            backdropFilter: "blur(16px)",
+            boxShadow: "0 12px 40px rgba(0, 0, 0, 0.24)",
           }}
         >
-          <Typography level="body-sm" sx={{ color: "neutral.200", textAlign: "center" }}>
-            Provider: {providerLabel} | Server: {serverLabel} | Status: {statusLabel}
-            {lastPlaybackError ? ` | Last error: ${lastPlaybackError}` : ""}
-          </Typography>
-          <Button
+          <Select
             size="sm"
-            variant="soft"
-            color="warning"
-            startDecorator={<RefreshRounded />}
-            onClick={retryCurrentServer}
-          >
-            Retry current server
-          </Button>
-          <Button
-            size="sm"
-            variant="soft"
-            color="neutral"
-            onClick={() => {
-              const switched = tryNextServer();
-              if (!switched) {
-                setLastPlaybackError("No additional servers available to try.");
-              }
+            value={parseInt(seasonId || "1")}
+            defaultValue={parseInt(seasonId || "1")}
+            onChange={(_e, value) => {
+              if (!value) return;
+              episodeChange(`/${movieType}/${movieId}/${value}/1/watch`);
             }}
-            disabled={!nextSourceOption}
+            sx={{
+              minWidth: { xs: "140px", sm: "180px" },
+              background: "rgba(255,255,255,0.05)",
+            }}
           >
-            Try next server
-          </Button>
+            {tvSeriesDetailsDataArr?.seasons
+              ?.filter((season) => season?.season_number !== 0)
+              .map((season) => (
+                <Option key={season?.id} value={season?.season_number}>
+                  {season?.name}
+                </Option>
+              ))}
+          </Select>
+          <Select
+            size="sm"
+            onChange={(_e, value) => {
+              if (!value) return;
+              episodeChange(`/${movieType}/${movieId}/${seasonId}/${value}/watch`);
+            }}
+            defaultValue={parseInt(episodeId || "1")}
+            value={parseInt(episodeId || "1")}
+            sx={{
+              minWidth: { xs: "220px", sm: "380px" },
+              maxWidth: "100%",
+              background: "rgba(255,255,255,0.05)",
+            }}
+          >
+            {tvSeasonsDetailsArr?.episodes?.map((episode) => (
+              <Option key={episode?.id} value={episode?.episode_number}>
+                E{episode?.episode_number}: {episode?.name}
+              </Option>
+            ))}
+          </Select>
         </Box>
-      </Box>
+      ) : null}
       <PlaybackSurface
         playerRef={playerRef}
         stream={playbackStream}
@@ -1133,7 +1115,47 @@ function Watch() {
         onPlaybackReady={handlePlaybackReady}
         reloadToken={playerReloadToken}
       />
-      {!playbackSourceUrl ? (
+      {centerErrorMessage ? (
+        <Box
+          sx={{
+            position: "absolute",
+            inset: 0,
+            zIndex: 1000,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            pointerEvents: "none",
+          }}
+        >
+          <Box
+            sx={{
+              width: "min(560px, calc(100% - 32px))",
+              px: 2,
+              py: 2,
+              borderRadius: "14px",
+              border: "1px solid rgba(255,255,255,0.16)",
+              background: "rgba(8,8,8,0.74)",
+              backdropFilter: "blur(14px)",
+              textAlign: "center",
+              pointerEvents: "auto",
+            }}
+          >
+            <Typography level="h4" sx={{ mb: 1 }}>
+              Playback error
+            </Typography>
+            <Typography level="body-md" sx={{ color: "neutral.300", mb: 2 }}>
+              {centerErrorMessage}
+            </Typography>
+            <Typography level="body-sm" sx={{ color: "neutral.400", mb: 2 }}>
+              Provider: {getProviderLabel(selectedProvider)} | Server: {serverLabel}
+            </Typography>
+            <Button size="md" variant="solid" color="warning" onClick={retryCurrentServer}>
+              Retry
+            </Button>
+          </Box>
+        </Box>
+      ) : null}
+      {!playbackSourceUrl && !centerErrorMessage ? (
         <Box
           sx={{
             position: "absolute",

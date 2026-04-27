@@ -4,6 +4,7 @@ export type ProviderId = "vixsrc" | "showbox";
 export type ProviderSourceFormat = "hls" | "mp4" | "unknown";
 
 export interface VixsrcTrack {
+  id: string;
   kind: "audio" | "subtitles";
   groupId: string;
   name: string;

@@ -39,15 +39,22 @@ function PlaybackSurface({
 }) {
   const subtitleTracks = useMemo(() => {
     const tracks = Array.isArray(stream?.subtitleTracks) ? stream.subtitleTracks : [];
-    return tracks
+    const normalizedTracks = tracks
       .filter((track) => track?.url)
-      .map((track) => ({
+      .map((track, index) => ({
+        id: track.id || `subtitle-${index}`,
         src: track.url,
         kind: "subtitles" as const,
         label: track.name || track.language || "Subtitle",
         language: track.language || "und",
-        default: Boolean(track.isDefault),
+        default: Boolean(track.isDefault || track.autoSelect),
       }));
+    const defaultIndex = normalizedTracks.findIndex((track) => track.default);
+
+    return normalizedTracks.map((track, index) => ({
+      ...track,
+      default: defaultIndex >= 0 ? index === defaultIndex : index === 0,
+    }));
   }, [stream?.subtitleTracks]);
 
   const sourceMimeType = useMemo(() => {
