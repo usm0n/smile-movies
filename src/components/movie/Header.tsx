@@ -7,11 +7,29 @@ import {
   Card,
   CardContent,
   CardCover,
+  Dropdown,
+  Menu,
+  MenuButton,
+  MenuItem,
   Typography,
 } from "@mui/joy";
-import { images, movieDetails, tvDetails, videos } from "../../tmdb-res";
+import {
+  images,
+  movieDetails,
+  tvDetails,
+  tvEpisodeDetails,
+  videos,
+} from "../../tmdb-res";
 import { useEffect, useMemo, useState } from "react";
-import { Add, Check, PlayArrow, Star, StarBorder } from "@mui/icons-material";
+import {
+  Add,
+  ArrowDropDown,
+  Check,
+  PlayArrow,
+  Star,
+  StarBorder,
+  Replay
+} from "@mui/icons-material";
 import {
   formatTimeAgo,
   isLoggedIn,
@@ -27,7 +45,11 @@ import ParentalGuide from "./ParentalGuide";
 import MatchScore from "./MatchScore";
 import RatingDialog from "../library/RatingDialog";
 import { providersAPI } from "../../service/api/smb/providers.api.service";
-import { getPlaybackTarget } from "../../utilities/playbackTarget";
+import { tmdb } from "../../service/api/tmdb/tmdb.api.service";
+import {
+  getPlaybackTarget,
+  getStartOverTarget,
+} from "../../utilities/playbackTarget";
 
 const getPreferredLogoPath = (movieImages: images) =>
   movieImages?.logos?.find((logo) => logo.iso_639_1 === "en")?.file_path ||
@@ -62,6 +84,8 @@ function Header({
   const [isVideoLoaded, setIsVideoLoaded] = useState(false);
   const [isRatingOpen, setIsRatingOpen] = useState(false);
   const [isOverviewExpanded, setIsOverviewExpanded] = useState(false);
+  const [activeEpisodeDetails, setActiveEpisodeDetails] =
+    useState<tvEpisodeDetails | null>(null);
   const navigate = useNavigate();
 
   const trailerKey = movieVideos?.results?.find(
@@ -73,9 +97,6 @@ function Header({
   const isTrailerAvailable = Boolean(trailerKey);
   const movieLogo = getPreferredLogoPath(movieImages);
   const movieTitle = movieDetails?.title || movieDetails?.name || "";
-  const overview = movieDetails?.overview?.trim() || "";
-  const isOverviewLong = overview.length > 220;
-  const backdropPath = movieDetails?.backdrop_path || movieDetails?.poster_path;
 
   useEffect(() => {
     setIsOverviewExpanded(false);
@@ -87,6 +108,45 @@ function Header({
   const recentItem = (myselfData?.data as unknown as User)?.recentlyWatched?.find(
     (item) => item.id == movieId && item.type === movieType,
   );
+  const hasStartedWatching = Number(recentItem?.currentTime || 0) > 0;
+  useEffect(() => {
+    let cancelled = false;
+
+    if (
+      movieType !== "tv" ||
+      !hasStartedWatching ||
+      !recentItem?.currentSeason ||
+      !recentItem?.currentEpisode
+    ) {
+      setActiveEpisodeDetails(null);
+      return;
+    }
+
+    void tmdb
+      .tvEpisodeDetails(
+        String(movieId),
+        Number(recentItem.currentSeason),
+        Number(recentItem.currentEpisode),
+      )
+      .then((response) => {
+        if (cancelled || !response || "response" in response) return;
+        setActiveEpisodeDetails(response as tvEpisodeDetails);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setActiveEpisodeDetails(null);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    hasStartedWatching,
+    movieId,
+    movieType,
+    recentItem?.currentEpisode,
+    recentItem?.currentSeason,
+  ]);
   const ratingItem = (myselfData?.data as unknown as User)?.ratings?.find(
     (item) => item.id == movieId && item.type === movieType,
   );
@@ -97,12 +157,12 @@ function Header({
   const progressPercent =
     recentItem?.duration && recentItem?.currentTime
       ? Math.min(
-          100,
-          Math.max(
-            0,
-            Math.round((recentItem.currentTime / recentItem.duration) * 100),
-          ),
-        )
+        100,
+        Math.max(
+          0,
+          Math.round((recentItem.currentTime / recentItem.duration) * 100),
+        ),
+      )
       : 0;
   const playbackTarget = useMemo(
     () =>
@@ -113,6 +173,45 @@ function Header({
       }),
     [movieId, movieType, recentItem],
   );
+  const startOverEpisodeTarget = useMemo(
+    () =>
+      getStartOverTarget({
+        mediaType: movieType,
+        mediaId: movieId,
+        recentItem,
+        mode: "episode",
+      }),
+    [movieId, movieType, recentItem],
+  );
+  const startOverSeriesTarget = useMemo(
+    () =>
+      getStartOverTarget({
+        mediaType: movieType,
+        mediaId: movieId,
+        recentItem,
+        mode: "series",
+      }),
+    [movieId, movieType, recentItem],
+  );
+  const activeEpisodeTitle =
+    movieType === "tv" && hasStartedWatching
+      ? activeEpisodeDetails?.name?.trim() ||
+      (recentItem?.currentSeason && recentItem?.currentEpisode
+        ? `Episode ${recentItem.currentEpisode}`
+        : "")
+      : "";
+  const overview = (
+    movieType === "tv" && hasStartedWatching
+      ? activeEpisodeDetails?.overview
+      : movieDetails?.overview
+  )?.trim() || "";
+  const isOverviewLong = overview.length > 220;
+  const backdropPath =
+    (movieType === "tv" && hasStartedWatching
+      ? activeEpisodeDetails?.still_path
+      : null) ||
+    movieDetails?.backdrop_path ||
+    movieDetails?.poster_path;
   const isReleaseBlocked =
     new Date(movieDetails?.release_date || movieDetails?.first_air_date || "")
       .getTime() > Date.now();
@@ -131,7 +230,7 @@ function Header({
             : "Watch Again"
         : "Play Now";
   const progressNote =
-    Number(recentItem?.currentTime || 0) > 0
+    hasStartedWatching
       ? movieType === "movie"
         ? `${progressPercent}% done${recentItem?.currentTime ? ` • Resume at ${minuteToHour(recentItem.currentTime)}` : ""}`
         : `${progressPercent}% done${recentItem?.currentSeason && recentItem?.currentEpisode ? ` • Resume S${recentItem.currentSeason}:E${recentItem.currentEpisode}` : ""}`
@@ -193,8 +292,8 @@ function Header({
       : null,
     movieDetails?.runtime || movieDetails?.episode_run_time?.length
       ? minuteToHour(
-          movieDetails?.runtime || movieDetails?.episode_run_time?.[0],
-        )
+        movieDetails?.runtime || movieDetails?.episode_run_time?.[0],
+      )
       : null,
   ].filter(Boolean);
 
@@ -258,7 +357,7 @@ function Header({
                   onLoad={() => {
                     setTimeout(() => {
                       setIsVideoLoaded(true);
-                    }, 250);
+                    }, 4000);
                   }}
                   style={{
                     position: "absolute",
@@ -367,16 +466,16 @@ function Header({
                 </Typography>
               ) : null}
 
-                <Box
-                  sx={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: 1,
-                    width: "100%",
-                    maxWidth: { md: 360 },
-                    alignItems: { xs: "center", md: "stretch" },
-                  }}
-                >
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 1,
+                  width: "100%",
+                  maxWidth: { md: 360 },
+                  alignItems: { xs: "center", md: "stretch" },
+                }}
+              >
                 <ButtonGroup
                   variant="solid"
                   sx={{
@@ -450,6 +549,53 @@ function Header({
                     {watchlistItem ? <Check /> : <Add />}
                   </Button>
                 </ButtonGroup>
+                {hasStartedWatching ? (
+                  <ButtonGroup
+                    variant="plain"
+                    sx={{
+                      width: "100%",
+                    }}
+                  >
+                    <Button
+                      sx={{
+                        flex: 1,
+                      }}
+                      startDecorator={<Replay />}
+                      onClick={() => {
+                        navigate(startOverEpisodeTarget.route);
+                      }}
+                      disabled={isReleaseBlocked || myselfData?.isLoading}
+                    >
+                      Play from beginning
+                    </Button>
+                    {movieType === "tv" ? (
+                      <Dropdown>
+                        <MenuButton
+                          slots={{ root: Button }}
+                          disabled={isReleaseBlocked || myselfData?.isLoading}
+                        >
+                          <ArrowDropDown />
+                        </MenuButton>
+                        <Menu>
+                          <MenuItem
+                            onClick={() => {
+                              navigate(startOverEpisodeTarget.route);
+                            }}
+                          >
+                            Start over the episode
+                          </MenuItem>
+                          <MenuItem
+                            onClick={() => {
+                              navigate(startOverSeriesTarget.route);
+                            }}
+                          >
+                            Start over the series
+                          </MenuItem>
+                        </Menu>
+                      </Dropdown>
+                    ) : null}
+                  </ButtonGroup>
+                ) : null}
                 <Typography
                   level="body-sm"
                   sx={{
@@ -556,6 +702,16 @@ function Header({
 
               {overview ? (
                 <Box sx={{ display: "flex", flexDirection: "column", gap: 0.75 }}>
+                  {activeEpisodeTitle ? (
+                    <Typography
+                      level="title-md"
+                      sx={{
+                        color: "rgba(255,255,255,0.86)",
+                      }}
+                    >
+                      {activeEpisodeTitle}
+                    </Typography>
+                  ) : null}
                   <Typography
                     level="body-md"
                     sx={{
@@ -650,8 +806,8 @@ function Header({
         onDelete={
           ratingItem
             ? async () => {
-                await deleteRating(movieType, String(movieId));
-              }
+              await deleteRating(movieType, String(movieId));
+            }
             : undefined
         }
       />

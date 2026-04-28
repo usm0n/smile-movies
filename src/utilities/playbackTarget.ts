@@ -42,6 +42,41 @@ export const getPlaybackTarget = ({
   };
 };
 
+export const getStartOverTarget = ({
+  mediaType,
+  mediaId,
+  recentItem,
+  mode,
+}: {
+  mediaType: "movie" | "tv";
+  mediaId: string | number;
+  recentItem?: RecentlyWatchedItem;
+  mode?: "episode" | "series";
+}) => {
+  if (mediaType === "movie") {
+    return {
+      season: 0,
+      episode: 0,
+      startAt: 0,
+      route: `/${mediaType}/${mediaId}/watch/0`,
+    };
+  }
+
+  const defaults = getDefaultPlaybackEpisode("tv");
+  const fallbackSeason = recentItem?.currentSeason || defaults.season;
+  const fallbackEpisode = recentItem?.currentEpisode || defaults.episode;
+  const isSeriesStart = mode === "series";
+  const season = isSeriesStart ? defaults.season : fallbackSeason;
+  const episode = isSeriesStart ? defaults.episode : fallbackEpisode;
+
+  return {
+    season,
+    episode,
+    startAt: 0,
+    route: `/tv/${mediaId}/${season}/${episode}/watch/0`,
+  };
+};
+
 export const buildPlaybackAvailabilityKey = ({
   mediaType,
   tmdbId,
