@@ -63,6 +63,7 @@ export const providersAPI = {
     tmdbId: string,
     season?: number,
     episode?: number,
+    version?: "sub" | "dub",
   ) => {
     return smbV1API.get<VixsrcStreamResponse>(
       `/providers/${provider}/stream/${mediaType}/${tmdbId}`,
@@ -70,6 +71,7 @@ export const providersAPI = {
         params: {
           ...(season ? { season } : {}),
           ...(episode ? { episode } : {}),
+          ...(version ? { version } : {}),
         },
       },
     );

@@ -16,6 +16,7 @@ const StreamContext = createContext({
       _movieId: string,
       _seasonId?: string,
       _episodeId?: string,
+      _version?: "sub" | "dub",
     ) => { },
 })
 
@@ -42,6 +43,7 @@ export const StreamProvider = ({ children }: { children: React.ReactNode }) => {
       movieId: string,
       seasonId?: string,
       episodeId?: string,
+      version?: "sub" | "dub",
     ) => {
         try {
             setGetStreamData({
@@ -57,6 +59,7 @@ export const StreamProvider = ({ children }: { children: React.ReactNode }) => {
                 movieId,
                 seasonId ? parseInt(seasonId) : undefined,
                 episodeId ? parseInt(episodeId) : undefined,
+                version,
             );
             setGetStreamData({
                 isLoading: false,

@@ -35,13 +35,17 @@ const LOCAL_ROUTE_PROGRESS_PREFIX = "watch-progress:";
 const LOCAL_RECENT_PROGRESS_PREFIX = "recent-progress:";
 const PROVIDER_PARAM_KEY = "provider";
 const SERVER_PARAM_KEY = "server";
-const PROVIDER_OPTIONS: ProviderId[] = ["showbox", "vixsrc"];
+const PROVIDER_OPTIONS: ProviderId[] = ["showbox", "vixsrc", "anikai"];
 
-const parseProviderFromQuery = (value: string | null): ProviderId =>
-  value === "vixsrc" ? "vixsrc" : "showbox";
+const parseProviderFromQuery = (value: string | null): ProviderId => {
+  if (value === "anikai") return "anikai";
+  return value === "vixsrc" ? "vixsrc" : "showbox";
+};
 
-const getProviderLabel = (provider: ProviderId) =>
-  provider === "showbox" ? "ShowBox" : "Vixsrc";
+const getProviderLabel = (provider: ProviderId) => {
+  if (provider === "anikai") return "Anikai";
+  return provider === "showbox" ? "ShowBox" : "Vixsrc";
+};
 
 const inferFormatFromUrl = (url: string): ProviderSourceFormat => {
   const normalized = String(url || "").toLowerCase();
@@ -113,6 +117,7 @@ function Watch() {
   const { deleteRating, myselfData, upsertRecentlyWatched, upsertRating } = useUsers();
   const navigate = useNavigate();
   const playerRef = useRef<any>(null);
+  const playbackReadyRef = useRef(false);
   const progressRef = useRef({
     lastFlushedAt: 0,
     lastFlushedProgressMinutes: 0,
@@ -190,6 +195,8 @@ function Watch() {
   const [playerReloadToken, setPlayerReloadToken] = useState(0);
   const [lastPlaybackError, setLastPlaybackError] = useState("");
   const selectedProvider = parseProviderFromQuery(searchParams.get(PROVIDER_PARAM_KEY));
+  const versionParam = searchParams.get("version") as "sub" | "dub" | null;
+  const version = versionParam === "dub" ? "dub" : "sub";
   const selectedServerFromQuery = String(searchParams.get(SERVER_PARAM_KEY) || "").trim();
   const availableStream = getStreamData.data?.stream || null;
   const availableSources = availableStream?.sources || [];
@@ -615,7 +622,7 @@ function Watch() {
     if (movieType === "movie") {
       movie(movieId);
       movieImages(movieId);
-      getStream(selectedProvider, "movie", movieId);
+      getStream(selectedProvider, "movie", movieId, undefined, undefined, selectedProvider === "anikai" ? version : undefined);
       return;
     }
 
@@ -625,9 +632,9 @@ function Watch() {
       tvSeasonsDetails(movieId, parseInt(seasonId));
     }
     if (seasonId && episodeId) {
-      getStream(selectedProvider, "tv", movieId, seasonId, episodeId);
+      getStream(selectedProvider, "tv", movieId, seasonId, episodeId, selectedProvider === "anikai" ? version : undefined);
     }
-  }, [episodeId, movieId, movieType, seasonId, selectedProvider]);
+  }, [episodeId, movieId, movieType, seasonId, selectedProvider, version]);
 
   useEffect(() => {
     if (!sessionBaseReady) return;
@@ -799,12 +806,12 @@ function Watch() {
     if (!movieId || !movieType) return;
 
     if (movieType === "movie") {
-      void getStream(selectedProvider, "movie", movieId);
+      void getStream(selectedProvider, "movie", movieId, undefined, undefined, selectedProvider === "anikai" ? version : undefined);
       return;
     }
 
     if (!seasonId || !episodeId) return;
-    void getStream(selectedProvider, "tv", movieId, seasonId, episodeId);
+    void getStream(selectedProvider, "tv", movieId, seasonId, episodeId, selectedProvider === "anikai" ? version : undefined);
   };
 
   const setProviderInQuery = (provider: ProviderId) => {
@@ -860,10 +867,12 @@ function Watch() {
   };
 
   const handlePlaybackReady = () => {
+    playbackReadyRef.current = true;
     setLastPlaybackError("");
   };
 
   const handlePlaybackError = (message: string) => {
+    playbackReadyRef.current = false;
     const normalizedError = String(message || "").trim() || "Playback failed for this server.";
 
     if (selectedProvider === "showbox" && !autoFailoverStateRef.current.used) {
@@ -887,6 +896,29 @@ function Watch() {
       String(getStreamData.errorMessage || "Unable to load stream for this provider/server."),
     );
   }, [getStreamData.errorMessage, isPlaybackUnavailable]);
+
+  useEffect(() => {
+    playbackReadyRef.current = false;
+
+    if (!sessionBaseReady || !playbackSourceUrl || isPlaybackUnavailable) {
+      return;
+    }
+
+    const timeout = window.setTimeout(() => {
+      if (!playbackReadyRef.current) {
+        setLastPlaybackError("Stream timeout: provider did not return playable media.");
+      }
+    }, 25000);
+
+    return () => {
+      window.clearTimeout(timeout);
+    };
+  }, [
+    isPlaybackUnavailable,
+    playbackSourceUrl,
+    playerReloadToken,
+    sessionBaseReady,
+  ]);
 
   if (isIncorrect) {
     return <NotFound />;
@@ -1033,6 +1065,28 @@ function Watch() {
             </Option>
           ))}
         </Select>
+        {selectedProvider === "anikai" && (
+          <Select
+            size="sm"
+            value={version}
+            onChange={(_e, value) => {
+              if (value) {
+                setSearchParams((prev) => {
+                  const next = new URLSearchParams(prev);
+                  next.set("version", String(value));
+                  return next;
+                });
+              }
+            }}
+            sx={{
+              minWidth: { xs: "80px", sm: "100px" },
+              background: "rgba(255,255,255,0.05)",
+            }}
+          >
+            <Option value="sub">Sub</Option>
+            <Option value="dub">Dub</Option>
+          </Select>
+        )}
       </Box>
       {movieType === "tv" ? (
         <Box

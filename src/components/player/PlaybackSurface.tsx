@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { Box } from "@mui/joy";
 import { MediaCommunitySkin, MediaOutlet, MediaPlayer } from "@vidstack/react";
 import "vidstack/styles/defaults.css";
@@ -37,6 +37,8 @@ function PlaybackSurface({
   onPlaybackReady?: () => void;
   reloadToken?: number;
 }) {
+  const playbackReadyRef = useRef(false);
+
   const subtitleTracks = useMemo(() => {
     const tracks = Array.isArray(stream?.subtitleTracks) ? stream.subtitleTracks : [];
     const normalizedTracks = tracks
@@ -81,12 +83,24 @@ function PlaybackSurface({
       return;
     }
 
+    playbackReadyRef.current = false;
+
     const handleLoadedMetadataEvent = () => onLoadedMetadata();
     const handleTimeUpdateEvent = () => onTimeUpdate();
     const handlePauseEvent = () => onPause();
     const handleEndedEvent = () => onEnded();
     const handleCanPlayEvent = () => onPlaybackReady?.();
     const handlePlayEvent = () => onPlaybackReady?.();
+    const markReady = () => {
+      playbackReadyRef.current = true;
+    };
+    const handleWaitingEvent = () => {
+      // waiting/stalled during bootstrap can hang indefinitely on bad HLS retries.
+      // we only escalate if initial readiness never happened.
+      if (!playbackReadyRef.current) {
+        onPlaybackError?.("Stream is taking too long to start.");
+      }
+    };
     const handleErrorEvent = (event: Event) => {
       const customEvent = event as CustomEvent<{ message?: string }>;
       const detailMessage = String(customEvent?.detail?.message || "").trim();
@@ -95,22 +109,37 @@ function PlaybackSurface({
       onPlaybackError?.(fallbackMessage);
     };
 
+    const bootstrapTimeout = window.setTimeout(() => {
+      if (!playbackReadyRef.current) {
+        onPlaybackError?.("Stream timeout: provider did not return playable media.");
+      }
+    }, 20000);
+
     player.addEventListener("loaded-metadata", handleLoadedMetadataEvent);
     player.addEventListener("time-update", handleTimeUpdateEvent);
     player.addEventListener("pause", handlePauseEvent);
     player.addEventListener("ended", handleEndedEvent);
     player.addEventListener("can-play", handleCanPlayEvent);
     player.addEventListener("play", handlePlayEvent);
+    player.addEventListener("can-play", markReady);
+    player.addEventListener("play", markReady);
+    player.addEventListener("waiting", handleWaitingEvent);
+    player.addEventListener("stalled", handleWaitingEvent);
     player.addEventListener("error", handleErrorEvent);
     player.addEventListener("stream-error", handleErrorEvent);
 
     return () => {
+      window.clearTimeout(bootstrapTimeout);
       player.removeEventListener("loaded-metadata", handleLoadedMetadataEvent);
       player.removeEventListener("time-update", handleTimeUpdateEvent);
       player.removeEventListener("pause", handlePauseEvent);
       player.removeEventListener("ended", handleEndedEvent);
       player.removeEventListener("can-play", handleCanPlayEvent);
       player.removeEventListener("play", handlePlayEvent);
+      player.removeEventListener("can-play", markReady);
+      player.removeEventListener("play", markReady);
+      player.removeEventListener("waiting", handleWaitingEvent);
+      player.removeEventListener("stalled", handleWaitingEvent);
       player.removeEventListener("error", handleErrorEvent);
       player.removeEventListener("stream-error", handleErrorEvent);
     };
