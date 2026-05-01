@@ -51,6 +51,8 @@ export interface VixsrcAvailabilityItem {
 export interface VixsrcStreamResponse {
   available: boolean;
   provider: ProviderId;
+  resolvedProvider?: ProviderId;
+  message?: string;
   availability?: VixsrcAvailabilityItem;
   stream: VixsrcPlaybackStream;
 }

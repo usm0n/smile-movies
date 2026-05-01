@@ -199,6 +199,8 @@ function Watch() {
   const version = versionParam === "dub" ? "dub" : "sub";
   const selectedServerFromQuery = String(searchParams.get(SERVER_PARAM_KEY) || "").trim();
   const availableStream = getStreamData.data?.stream || null;
+  const resolvedProvider = getStreamData.data?.resolvedProvider || selectedProvider;
+  const providerNotice = String(getStreamData.data?.message || "").trim();
   const availableSources = availableStream?.sources || [];
   const activeSource =
     availableSources.find((source) => source.id === selectedServerFromQuery) ||
@@ -1201,12 +1203,35 @@ function Watch() {
               {centerErrorMessage}
             </Typography>
             <Typography level="body-sm" sx={{ color: "neutral.400", mb: 2 }}>
-              Provider: {getProviderLabel(selectedProvider)} | Server: {serverLabel}
+              Provider: {getProviderLabel(resolvedProvider)} | Server: {serverLabel}
             </Typography>
             <Button size="md" variant="solid" color="warning" onClick={retryCurrentServer}>
               Retry
             </Button>
           </Box>
+        </Box>
+      ) : null}
+      {providerNotice && playbackSourceUrl ? (
+        <Box
+          sx={{
+            position: "absolute",
+            left: "50%",
+            bottom: { xs: "18px", md: "26px" },
+            transform: "translateX(-50%)",
+            zIndex: 1001,
+            width: "min(680px, calc(100% - 24px))",
+            px: 2,
+            py: 1.25,
+            borderRadius: "12px",
+            border: "1px solid rgba(255,255,255,0.12)",
+            background: "rgba(12,12,12,0.72)",
+            backdropFilter: "blur(12px)",
+            textAlign: "center",
+          }}
+        >
+          <Typography level="body-sm" sx={{ color: "warning.200" }}>
+            {providerNotice}
+          </Typography>
         </Box>
       ) : null}
       {!playbackSourceUrl && !centerErrorMessage ? (
