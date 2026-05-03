@@ -13,7 +13,7 @@ import {
 } from "@mui/joy";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useTMDB } from "../../context/TMDB";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { backdropLoading, isLoggedIn } from "../../utilities/defaults";
 import NotFound from "../../components/utils/NotFound";
 import { images, movieDetails, tvDetails, tvSeasonsDetails } from "../../tmdb-res";
@@ -207,13 +207,21 @@ function Watch() {
     availableSources.find((source) => source.active) ||
     availableSources[0] ||
     null;
-  const playbackStream = sessionBaseReady ? availableStream : null;
-  const playbackSourceUrl = sessionBaseReady
-    ? activeSource?.url || availableStream?.masterPlaylistUrl || ""
-    : "";
-  const playbackSourceFormat: ProviderSourceFormat = activeSource?.format
-    ? activeSource.format
-    : inferFormatFromUrl(playbackSourceUrl);
+  const playbackStream = useMemo(() => (sessionBaseReady ? availableStream : null), [availableStream, sessionBaseReady]);
+  const playbackSourceUrl = useMemo(
+    () =>
+      sessionBaseReady
+        ? activeSource?.url || availableStream?.masterPlaylistUrl || ""
+        : "",
+    [activeSource?.url, availableStream?.masterPlaylistUrl, sessionBaseReady],
+  );
+  const playbackSourceFormat: ProviderSourceFormat = useMemo(
+    () =>
+      activeSource?.format
+        ? activeSource.format
+        : inferFormatFromUrl(playbackSourceUrl),
+    [activeSource?.format, playbackSourceUrl],
+  );
   const isPreparingPlayback = getStreamData.isLoading;
   const isPlaybackUnavailable =
     !isPreparingPlayback &&
@@ -376,7 +384,7 @@ function Watch() {
     return durationSeconds > 0 ? durationSeconds / 60 : fallbackDurationMinutes;
   };
 
-  const getPlaybackSessionPayload = (
+  const getPlaybackSessionPayload = useCallback((
     progressMinutes: number,
     durationMinutes?: number,
   ) => {
@@ -400,9 +408,9 @@ function Watch() {
       duration: resolvedDuration,
       completionRatio,
     };
-  };
+  }, [activeSource?.id, episodeId, fallbackDurationMinutes, mediaTitle, movieId, movieType, seasonId, selectedProvider]);
 
-  const syncPlaybackTelemetry = async (
+  const syncPlaybackTelemetry = useCallback(async (
     progressMinutes: number,
     durationMinutes?: number,
     options?: { complete?: boolean },
@@ -423,9 +431,9 @@ function Watch() {
     } catch (_error) {
       // Best effort only.
     }
-  };
+  }, [getPlaybackSessionPayload, isLoggedIn]);
 
-  const getNextEpisodeForSeries = () => {
+  const getNextEpisodeForSeries = useCallback(() => {
     const currentEpisodeNumber = Number(episodeId || 0);
     const currentSeasonNumber = Number(seasonId || 0);
     const hasNextEpisodeInSeason = Boolean(
@@ -458,9 +466,9 @@ function Watch() {
       nextSeason: 0,
       nextEpisode: 0,
     };
-  };
+  }, [episodeId, seasonId, tvSeasonsDetailsArr?.episodes, tvSeriesDetailsDataArr?.seasons]);
 
-  const flushRecentProgress = async (
+  const flushRecentProgress = useCallback(async (
     options?: {
       force?: boolean;
       payload?: LocalRecentProgress | null;
@@ -525,9 +533,9 @@ function Watch() {
       stagedPayload.duration,
       stagedPayload.isCompleted ? { complete: true } : undefined,
     );
-  };
+  }, [isLoggedIn, movieId, movieType, recentProgressStorageKey, syncPlaybackTelemetry, upsertRecentlyWatched]);
 
-  const persistProgress = async (
+  const persistProgress = useCallback(async (
     rawProgressMinutes: number,
     rawDurationMinutes?: number,
     forceCompleted = false,
@@ -607,7 +615,7 @@ function Watch() {
         setIsRatingOpen(true);
       }
     }
-  };
+  }, [episodeId, fallbackDurationMinutes, flushRecentProgress, getNextEpisodeForSeries, mediaPoster, mediaTitle, movieId, movieType, ratingItem, recentProgressStorageKey, routeProgressStorageKey, seasonId, sessionBaseReady]);
 
   const episodeChange = (nextPath: string) => {
     void (async () => {
@@ -772,37 +780,37 @@ function Watch() {
     sessionBaseReady,
   ]);
 
-  const handlePlayerLoadedMetadata = () => {
+  const handlePlayerLoadedMetadata = useCallback(() => {
     if (!playerRef.current) return;
 
     const startAtMinutes = Math.max(0, sessionBaseProgress);
     if (startAtMinutes > 0) {
       playerRef.current.currentTime = startAtMinutes * 60;
     }
-  };
+  }, [sessionBaseProgress]);
 
-  const handlePlayerTimeUpdate = () => {
+  const handlePlayerTimeUpdate = useCallback(() => {
     if (!playerRef.current) return;
     const progressMinutes = Number(playerRef.current.currentTime || 0) / 60;
     const durationMinutes = getPlayerDurationMinutes();
     progressRef.current.lastKnownProgressMinutes = progressMinutes;
     writeStoredNumber(routeProgressStorageKey, progressMinutes);
     void persistProgress(progressMinutes, durationMinutes);
-  };
+  }, [getPlayerDurationMinutes, persistProgress, routeProgressStorageKey]);
 
-  const handlePlayerPause = () => {
+  const handlePlayerPause = useCallback(() => {
     if (!playerRef.current) return;
     const progressMinutes = Number(playerRef.current.currentTime || 0) / 60;
     const durationMinutes = getPlayerDurationMinutes();
     void persistProgress(progressMinutes, durationMinutes).then(() =>
       flushRecentProgress({ force: true }),
     );
-  };
+  }, [flushRecentProgress, getPlayerDurationMinutes, persistProgress]);
 
-  const handlePlayerEnded = () => {
+  const handlePlayerEnded = useCallback(() => {
     const durationMinutes = getPlayerDurationMinutes();
     void persistProgress(durationMinutes, durationMinutes, true);
-  };
+  }, [getPlayerDurationMinutes, persistProgress]);
 
   const requestStream = () => {
     if (!movieId || !movieType) return;
@@ -825,15 +833,15 @@ function Watch() {
     setSearchParams(nextParams);
   };
 
-  const setServerInQuery = (serverId: string) => {
+  const setServerInQuery = useCallback((serverId: string) => {
     const nextParams = new URLSearchParams(searchParams);
     nextParams.set(PROVIDER_PARAM_KEY, selectedProvider);
     nextParams.set(SERVER_PARAM_KEY, serverId);
     setLastPlaybackError("");
     setSearchParams(nextParams);
-  };
+  }, [searchParams, selectedProvider, setSearchParams]);
 
-  const tryNextServer = () => {
+  const tryNextServer = useCallback(() => {
     if (!nextSourceOption?.id) {
       return false;
     }
@@ -842,7 +850,7 @@ function Watch() {
     setPlayerReloadToken(0);
 
     return true;
-  };
+  }, [nextSourceOption?.id, setServerInQuery]);
 
   const retryCurrentServer = () => {
     setLastPlaybackError("");
@@ -868,12 +876,12 @@ function Watch() {
     setPlayerReloadToken((value) => value + 1);
   };
 
-  const handlePlaybackReady = () => {
+  const handlePlaybackReady = useCallback(() => {
     playbackReadyRef.current = true;
     setLastPlaybackError("");
-  };
+  }, []);
 
-  const handlePlaybackError = (message: string) => {
+  const handlePlaybackError = useCallback((message: string) => {
     playbackReadyRef.current = false;
     const normalizedError = String(message || "").trim() || "Playback failed for this server.";
 
@@ -890,7 +898,7 @@ function Watch() {
     }
 
     setLastPlaybackError(normalizedError);
-  };
+  }, [selectedProvider, tryNextServer]);
 
   useEffect(() => {
     if (!isPlaybackUnavailable) return;

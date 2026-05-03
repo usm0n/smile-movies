@@ -51,6 +51,7 @@ function TVSeries() {
     tvSeasonsDetailsData?.data as tvSeasonsDetails;
 
   const isFetching =
+    !tvSeriesDetailsData ||
     tvSeriesDetailsData?.isLoading ||
     tvSeriesCreditsData?.isLoading ||
     tvSeriesVideosData?.isLoading ||

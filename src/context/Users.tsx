@@ -894,29 +894,33 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
     getMyself();
   }, []);
   useEffect(() => {
-  let intervalId: ReturnType<typeof setInterval> | null = null;
+    let intervalId: ReturnType<typeof setInterval> | null = null;
 
-  if (isAuthenticated && myselfData?.data) {
-    const user = myselfData.data as userType.User;
+    if (isAuthenticated && myselfData?.isSuccess && myselfData?.data) {
+      const user = myselfData.data as userType.User;
 
-    const hasDevices = user?.devices?.length > 0;
-    const deviceExists = user?.devices?.some((d) => d.deviceId === deviceId());
+      // Only perform device-based logout if we have confirmed data and devices array is present
+      if (Array.isArray(user?.devices)) {
+        const deviceExists = user.devices.some((d) => d.deviceId === deviceId());
 
-    if (!hasDevices || !deviceExists) {
-      logout();
-    } else {
+        if (!deviceExists && user.devices.length > 0) {
+          // If we have devices but ours is not there, it might have been deleted from another session
+          logout();
+          return;
+        }
+      }
+
       setIsVerified(!!user?.isVerified);
 
       intervalId = setInterval(() => {
         users?.lastLogin(deviceId());
       }, 60000);
     }
-  }
 
-  return () => {
-    if (intervalId) clearInterval(intervalId);
-  };
-}, [isAuthenticated, myselfData]);
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [isAuthenticated, myselfData]);
   return (
     <UsersContext.Provider
       value={{

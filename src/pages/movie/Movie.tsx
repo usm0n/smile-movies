@@ -46,6 +46,7 @@ function Movie() {
   const movieVideosDataArr = movieVideosData?.data as videos;
   const movieCreditsDataArr = movieCreditsData?.data as movieCredits;
   const isFetching =
+    !movieDetailsData ||
     movieDetailsData?.isLoading ||
     movieCreditsData?.isLoading ||
     movieRecommendationsData?.isLoading ||

@@ -77,20 +77,45 @@ function PlaybackSurface({
     return "application/x-mpegurl";
   }, [sourceFormat, sourceUrl]);
 
+  const onLoadedMetadataRef = useRef(onLoadedMetadata);
+  const onTimeUpdateRef = useRef(onTimeUpdate);
+  const onPauseRef = useRef(onPause);
+  const onEndedRef = useRef(onEnded);
+  const onPlaybackErrorRef = useRef(onPlaybackError);
+  const onPlaybackReadyRef = useRef(onPlaybackReady);
+
+  useEffect(() => {
+    onLoadedMetadataRef.current = onLoadedMetadata;
+    onTimeUpdateRef.current = onTimeUpdate;
+    onPauseRef.current = onPause;
+    onEndedRef.current = onEnded;
+    onPlaybackErrorRef.current = onPlaybackError;
+    onPlaybackReadyRef.current = onPlaybackReady;
+  }, [
+    onLoadedMetadata,
+    onTimeUpdate,
+    onPause,
+    onEnded,
+    onPlaybackError,
+    onPlaybackReady,
+  ]);
+
+  useEffect(() => {
+    playbackReadyRef.current = false;
+  }, [sourceUrl, reloadToken]);
+
   useEffect(() => {
     const player = playerRef.current;
     if (!player || !sourceUrl) {
       return;
     }
 
-    playbackReadyRef.current = false;
-
-    const handleLoadedMetadataEvent = () => onLoadedMetadata();
-    const handleTimeUpdateEvent = () => onTimeUpdate();
-    const handlePauseEvent = () => onPause();
-    const handleEndedEvent = () => onEnded();
-    const handleCanPlayEvent = () => onPlaybackReady?.();
-    const handlePlayEvent = () => onPlaybackReady?.();
+    const handleLoadedMetadataEvent = () => onLoadedMetadataRef.current();
+    const handleTimeUpdateEvent = () => onTimeUpdateRef.current();
+    const handlePauseEvent = () => onPauseRef.current();
+    const handleEndedEvent = () => onEndedRef.current();
+    const handleCanPlayEvent = () => onPlaybackReadyRef.current?.();
+    const handlePlayEvent = () => onPlaybackReadyRef.current?.();
     const markReady = () => {
       playbackReadyRef.current = true;
     };
@@ -98,7 +123,7 @@ function PlaybackSurface({
       // waiting/stalled during bootstrap can hang indefinitely on bad HLS retries.
       // we only escalate if initial readiness never happened.
       if (!playbackReadyRef.current) {
-        onPlaybackError?.("Stream is taking too long to start.");
+        onPlaybackErrorRef.current?.("Stream is taking too long to start.");
       }
     };
     const handleErrorEvent = (event: Event) => {
@@ -106,12 +131,12 @@ function PlaybackSurface({
       const detailMessage = String(customEvent?.detail?.message || "").trim();
       const eventMessage = String((event as { type?: string })?.type || "").trim();
       const fallbackMessage = detailMessage || eventMessage || "Playback failed";
-      onPlaybackError?.(fallbackMessage);
+      onPlaybackErrorRef.current?.(fallbackMessage);
     };
 
     const bootstrapTimeout = window.setTimeout(() => {
       if (!playbackReadyRef.current) {
-        onPlaybackError?.("Stream timeout: provider did not return playable media.");
+        onPlaybackErrorRef.current?.("Stream timeout: provider did not return playable media.");
       }
     }, 20000);
 
@@ -143,16 +168,7 @@ function PlaybackSurface({
       player.removeEventListener("error", handleErrorEvent);
       player.removeEventListener("stream-error", handleErrorEvent);
     };
-  }, [
-    onEnded,
-    onLoadedMetadata,
-    onPause,
-    onPlaybackError,
-    onPlaybackReady,
-    onTimeUpdate,
-    playerRef,
-    sourceUrl,
-  ]);
+  }, [playerRef, sourceUrl, reloadToken]);
 
   if (!sourceUrl) {
     return null;
