@@ -1,4 +1,4 @@
-import { ArrowForwardIos, BookmarkAdd, History, Star } from "@mui/icons-material";
+import { ArrowForwardIos, BookmarkAdd, History } from "@mui/icons-material";
 import { Box, Button, Link, Typography } from "@mui/joy";
 import type { ReactNode } from "react";
 import { isLoggedIn } from "../../utilities/defaults";
@@ -21,7 +21,6 @@ function Watchlist() {
   const user = (myselfData?.data as User) || ({} as User);
   const watchlist = sortLibraryItems(user.watchlist || [], "recent");
   const recentlyWatched = sortLibraryItems(user.recentlyWatched || [], "recent");
-  const ratings = sortLibraryItems(user.ratings || [], "recent");
 
   const renderRow = (
     title: string,
@@ -142,7 +141,7 @@ function Watchlist() {
               <EventMCS />
               <EventMCS />
             </Box>
-          ) : user.watchlist?.length > 0 || recentlyWatched.length > 0 || ratings.length > 0 ? (
+          ) : user.watchlist?.length > 0 || recentlyWatched.length > 0 ? (
             <>
               {renderRow(
                 "Watchlist",
@@ -156,12 +155,6 @@ function Watchlist() {
                 recentlyWatched.slice(0, 8),
                 <History />,
                 "Start watching something and your recent progress will appear here.",
-              )}
-              {renderRow(
-                "Ratings",
-                ratings.slice(0, 8),
-                <Star />,
-                "Rate a few titles and they will show up here.",
               )}
             </>
           ) : (

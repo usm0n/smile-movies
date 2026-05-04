@@ -238,6 +238,15 @@ const Navbar: React.FC = () => {
             <MenuItem onClick={() => navigate("/watchlist")}>
               <ListItemContent>Watchlist</ListItemContent>
             </MenuItem>
+            <MenuItem onClick={() => navigate("/collections")}>
+              <ListItemContent>My Lists</ListItemContent>
+            </MenuItem>
+            <MenuItem onClick={() => navigate("/downloads")}>
+              <ListItemContent>Downloads</ListItemContent>
+            </MenuItem>
+            <MenuItem onClick={() => navigate("/what-to-watch")}>
+              <ListItemContent>✨ What to Watch?</ListItemContent>
+            </MenuItem>
             {user?.handle && (
               <MenuItem onClick={() => navigate(`/u/${user.handle}`)}>
                 <ListItemContent>Public Profile</ListItemContent>
@@ -622,6 +631,15 @@ const Navbar: React.FC = () => {
             </ListItemButton>
             <ListItemButton onClick={() => navigateTo("/watchlist")}>
               Watchlist
+            </ListItemButton>
+            <ListItemButton onClick={() => navigateTo("/collections")}>
+              My Lists
+            </ListItemButton>
+            <ListItemButton onClick={() => navigateTo("/downloads")}>
+              My Downloads
+            </ListItemButton>
+            <ListItemButton onClick={() => navigateTo("/what-to-watch")}>
+              ✨ What to Watch?
             </ListItemButton>
           </List>
         </Box>

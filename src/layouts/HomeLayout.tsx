@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import Event from "../components/home/Event";
 import Header from "../components/home/Header";
 import Watchlist from "../components/home/Watchlist";
+import BecauseYouWatched from "../components/home/BecauseYouWatched";
+import PopularInRegion from "../components/home/PopularInRegion";
 import { useTMDB } from "../context/TMDB";
 import Container from "../utilities/Container";
 import { ResponseType } from "../tmdb-res";
@@ -99,6 +101,7 @@ function HomeLayout() {
       />
 
       <Container>
+        <BecauseYouWatched />
         <Watchlist />
         <Event
           eventTitle="Movies"
@@ -130,6 +133,7 @@ function HomeLayout() {
           setEventCategory={setEventCategoryTv}
           eventCategory={eventCategoryTv}
         />
+        <PopularInRegion />
       </Container>
     </Box>
   );

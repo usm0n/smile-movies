@@ -21,7 +21,12 @@ import Settings from "../pages/user";
 import Watch from "../pages/video/Watch";
 import Watchlist from "../pages/Watchlist";
 import AIAssistant from "../pages/ai/AIAssistant";
+import WhatToWatch from "../pages/ai/WhatToWatch";
 import TVRatings from "../pages/tv/TVRatings";
+import Collections from "../pages/Collections";
+import CollectionDetail from "../pages/CollectionDetail";
+import Downloads from "../pages/Downloads";
+import WatchParty from "../pages/WatchParty";
 
 export const mainRoutes = [
   {
@@ -175,6 +180,26 @@ export const mainRoutes = [
   {
     path: "/ai",
     element: <AIAssistant />,
+  },
+  {
+    path: "/what-to-watch",
+    element: <WhatToWatch />,
+  },
+  {
+    path: "/collections",
+    element: <Collections />,
+  },
+  {
+    path: "/collections/:collectionId",
+    element: <CollectionDetail />,
+  },
+  {
+    path: "/downloads",
+    element: <Downloads />,
+  },
+  {
+    path: "/party/:code",
+    element: <WatchParty />,
   },
   {
     path: "/tv/:tvId/ratings",

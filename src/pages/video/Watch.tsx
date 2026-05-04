@@ -1,5 +1,10 @@
 import {
   ArrowBackIos,
+  ContentCut,
+  Link as LinkIcon,
+  People,
+  SkipNext,
+  Close,
 } from "@mui/icons-material";
 import {
   Box,
@@ -25,6 +30,10 @@ import PlaybackSurface from "../../components/player/PlaybackSurface";
 import { playbackAPI } from "../../service/api/smb/playback.api.service";
 import RatingDialog from "../../components/library/RatingDialog";
 import { ProviderId, ProviderSourceFormat } from "../../types/providers";
+import DownloadButton from "../../components/player/DownloadButton";
+import { copyToClipboard } from "../../utilities/defaults";
+import { watchPartyAPI } from "../../service/api/smb/watchparty.api.service";
+import toast from "react-hot-toast";
 
 const AUTO_SAVE_INTERVAL_MS = 60000;
 const MIN_PROGRESS_DELTA_MINUTES = 1;
@@ -194,6 +203,12 @@ function Watch() {
   const [sessionBaseReady, setSessionBaseReady] = useState(false);
   const [playerReloadToken, setPlayerReloadToken] = useState(0);
   const [lastPlaybackError, setLastPlaybackError] = useState("");
+  // Autoplay countdown
+  const [autoplayCountdown, setAutoplayCountdown] = useState<number | null>(null);
+  const [autoplayNextPath, setAutoplayNextPath] = useState<string>("");
+  const autoplayTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  // Clip sharing
+  const [clipCopied, setClipCopied] = useState(false);
   const selectedProvider = parseProviderFromQuery(searchParams.get(PROVIDER_PARAM_KEY));
   const versionParam = searchParams.get("version") as "sub" | "dub" | null;
   const version = versionParam === "dub" ? "dub" : "sub";
@@ -468,6 +483,44 @@ function Watch() {
     };
   }, [episodeId, seasonId, tvSeasonsDetailsArr?.episodes, tvSeriesDetailsDataArr?.seasons]);
 
+  // Autoplay countdown logic
+  const startAutoplay = useCallback((nextPath: string) => {
+    setAutoplayNextPath(nextPath);
+    setAutoplayCountdown(10);
+    autoplayTimerRef.current = setInterval(() => {
+      setAutoplayCountdown((prev) => {
+        if (prev === null || prev <= 1) {
+          clearInterval(autoplayTimerRef.current!);
+          navigate(nextPath);
+          return null;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  }, [navigate]);
+
+  const cancelAutoplay = useCallback(() => {
+    if (autoplayTimerRef.current) clearInterval(autoplayTimerRef.current);
+    setAutoplayCountdown(null);
+    setAutoplayNextPath("");
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (autoplayTimerRef.current) clearInterval(autoplayTimerRef.current);
+    };
+  }, []);
+
+  // Clip sharing
+  const shareCurrentTime = useCallback(() => {
+    const currentSecs = Math.floor(Number(playerRef.current?.currentTime || 0));
+    const url = new URL(window.location.href);
+    url.searchParams.set("t", String(currentSecs));
+    copyToClipboard(url.toString());
+    setClipCopied(true);
+    setTimeout(() => setClipCopied(false), 2000);
+  }, []);
+
   const flushRecentProgress = useCallback(async (
     options?: {
       force?: boolean;
@@ -613,6 +666,14 @@ function Watch() {
       await flushRecentProgress({ force: true, payload });
       if (!ratingItem) {
         setIsRatingOpen(true);
+      }
+      // Start autoplay countdown for TV episodes
+      if (movieType === "tv") {
+        const next = getNextEpisodeForSeries();
+        if (next.nextSeason && next.nextEpisode && movieId) {
+          const nextPath = `/tv/${movieId}/${next.nextSeason}/${next.nextEpisode}/watch`;
+          startAutoplay(nextPath);
+        }
       }
     }
   }, [episodeId, fallbackDurationMinutes, flushRecentProgress, getNextEpisodeForSeries, mediaPoster, mediaTitle, movieId, movieType, ratingItem, recentProgressStorageKey, routeProgressStorageKey, seasonId, sessionBaseReady]);
@@ -783,11 +844,12 @@ function Watch() {
   const handlePlayerLoadedMetadata = useCallback(() => {
     if (!playerRef.current) return;
 
-    const startAtMinutes = Math.max(0, sessionBaseProgress);
+    const tParam = Number(searchParams.get("t") || 0);
+    const startAtMinutes = Math.max(0, tParam > 0 ? tParam / 60 : sessionBaseProgress);
     if (startAtMinutes > 0) {
       playerRef.current.currentTime = startAtMinutes * 60;
     }
-  }, [sessionBaseProgress]);
+  }, [sessionBaseProgress, searchParams]);
 
   const handlePlayerTimeUpdate = useCallback(() => {
     if (!playerRef.current) return;
@@ -989,6 +1051,27 @@ function Watch() {
         <IconButton onClick={() => navigate(`/${movieType}/${movieId}`)}>
           <ArrowBackIos />
         </IconButton>
+        <Button
+          size="sm"
+          variant="plain"
+          startDecorator={<People />}
+          sx={{ color: "rgba(255,255,255,0.8)", ml: 1, display: { xs: "none", sm: "flex" } }}
+          onClick={async () => {
+            try {
+              const r = await watchPartyAPI.create({
+                mediaType: movieType || "movie",
+                mediaId: movieId || "",
+                ...(seasonId && { season: Number(seasonId) }),
+                ...(episodeId && { episode: Number(episodeId) }),
+              });
+              navigate(`/party/${r.code}`);
+            } catch {
+              toast.error("Could not create watch party.");
+            }
+          }}
+        >
+          Watch together
+        </Button>
         <Box sx={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center" }}>
           {mediaLogo ? (
             <Box
@@ -1213,9 +1296,18 @@ function Watch() {
             <Typography level="body-sm" sx={{ color: "neutral.400", mb: 2 }}>
               Provider: {getProviderLabel(resolvedProvider)} | Server: {serverLabel}
             </Typography>
-            <Button size="md" variant="solid" color="warning" onClick={retryCurrentServer}>
-              Retry
-            </Button>
+            <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", justifyContent: "center" }}>
+              <Button size="md" variant="solid" color="warning" onClick={retryCurrentServer}>
+                Retry
+              </Button>
+              <DownloadButton
+                streamUrl={playbackSourceUrl}
+                title={mediaTitle}
+                cacheKey={movieType === "tv"
+                  ? `tv-${movieId}-s${seasonId}e${episodeId}`
+                  : `movie-${movieId}`}
+              />
+            </Box>
           </Box>
         </Box>
       ) : null}
@@ -1291,7 +1383,98 @@ function Watch() {
             }
             : undefined
         }
-      />
+      />\n
+      {/* Autoplay countdown overlay */}
+      {autoplayCountdown !== null && (
+        <Box
+          sx={{
+            position: "fixed",
+            bottom: 90,
+            right: 32,
+            zIndex: 9999,
+            background: "rgba(0,0,0,0.88)",
+            borderRadius: "xl",
+            p: 3,
+            display: "flex",
+            flexDirection: "column",
+            gap: 1.5,
+            minWidth: 300,
+            border: "1px solid rgba(255,255,255,0.1)",
+            backdropFilter: "blur(12px)",
+          }}
+        >
+          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <Typography level="body-sm" sx={{ color: "rgba(255,255,255,0.6)" }}>
+              Up next
+            </Typography>
+            <IconButton size="sm" variant="plain" sx={{ color: "white" }} onClick={cancelAutoplay}>
+              <Close fontSize="small" />
+            </IconButton>
+          </Box>
+          <Typography level="title-md" sx={{ color: "white" }}>
+            Next episode
+          </Typography>
+          <Box sx={{ display: "flex", gap: 1.5, mt: 0.5 }}>
+            <Button
+              size="sm"
+              startDecorator={<SkipNext />}
+              sx={{ background: "white", color: "black", "&:hover": { background: "rgba(255,255,255,0.9)" } }}
+              onClick={() => {
+                cancelAutoplay();
+                navigate(autoplayNextPath);
+              }}
+            >
+              Play now
+            </Button>
+            <Button
+              size="sm"
+              variant="outlined"
+              color="neutral"
+              sx={{ color: "white", borderColor: "rgba(255,255,255,0.3)" }}
+              onClick={cancelAutoplay}
+            >
+              Cancel ({autoplayCountdown}s)
+            </Button>
+          </Box>
+          <LinearProgress
+            determinate
+            value={((10 - autoplayCountdown) / 10) * 100}
+            sx={{
+              mt: 0.5,
+              "--LinearProgress-progressColor": "rgb(255,220,92)",
+              "--LinearProgress-trackColor": "rgba(255,255,255,0.15)",
+            }}
+          />
+        </Box>
+      )}
+
+      {/* Clip share button */}
+      <Box
+        sx={{
+          position: "fixed",
+          bottom: 32,
+          right: 32,
+          zIndex: 9998,
+          display: "flex",
+          gap: 1,
+        }}
+      >
+        <Button
+          size="sm"
+          variant="soft"
+          color="neutral"
+          startDecorator={clipCopied ? <LinkIcon /> : <ContentCut />}
+          onClick={shareCurrentTime}
+          sx={{
+            background: "rgba(0,0,0,0.65)",
+            backdropFilter: "blur(8px)",
+            color: clipCopied ? "rgb(255,220,92)" : "white",
+            border: "1px solid rgba(255,255,255,0.12)",
+          }}
+        >
+          {clipCopied ? "Link copied!" : "Share from here"}
+        </Button>
+      </Box>
     </Box>
   );
 }

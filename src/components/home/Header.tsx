@@ -29,6 +29,7 @@ import {
   ArrowBackIos,
   ArrowForwardIos,
   PlayArrow,
+  AutoAwesome,
 } from "@mui/icons-material";
 import { User } from "../../user";
 import { useUsers } from "../../context/Users";
@@ -65,13 +66,15 @@ const Header = React.memo(
     myselfData: ResponseType | null;
   }) => {
     const trendingResults = useMemo(() => {
-      return (((trendingAllData?.data as searchMulti)?.results) || []).filter(
-        (item) => item?.media_type !== "person"
+      return ((trendingAllData?.data as searchMulti)?.results || []).filter(
+        (item) => item?.media_type !== "person",
       );
     }, [trendingAllData?.data]);
     const [activeIndex, setActiveIndex] = useState(0);
     const [useLiteMode, setUseLiteMode] = useState(false);
-    const [availabilityLookup, setAvailabilityLookup] = useState<Record<string, boolean | null>>({});
+    const [availabilityLookup, setAvailabilityLookup] = useState<
+      Record<string, boolean | null>
+    >({});
     const [availabilityLoading, setAvailabilityLoading] = useState(false);
 
     const trailerData = useMemo(() => {
@@ -84,7 +87,7 @@ const Header = React.memo(
           : (tvVideosData as ResponseType)?.data;
 
       const filtered = (videoData as videos)?.results?.filter(
-        (video) => video?.type === "Trailer"
+        (video) => video?.type === "Trailer",
       );
 
       return {
@@ -166,7 +169,9 @@ const Header = React.memo(
 
       const items = trendingResults.map((details) => {
         const mediaType = details.media_type as "movie" | "tv";
-        const recentItem = (myselfData?.data as unknown as User)?.recentlyWatched?.find(
+        const recentItem = (
+          myselfData?.data as unknown as User
+        )?.recentlyWatched?.find(
           (item) => item.id == String(details?.id) && item.type === mediaType,
         );
         const playbackTarget = getPlaybackTarget({
@@ -206,19 +211,18 @@ const Header = React.memo(
         .then((response) => {
           if (cancelled) return;
 
-          const nextLookup = response.data.items.reduce<Record<string, boolean>>(
-            (acc, item) => {
-              const key = buildPlaybackAvailabilityKey({
-                mediaType: item.mediaType,
-                tmdbId: item.tmdbId,
-                season: item.season,
-                episode: item.episode,
-              });
-              acc[key] = Boolean(item.available);
-              return acc;
-            },
-            {},
-          );
+          const nextLookup = response.data.items.reduce<
+            Record<string, boolean>
+          >((acc, item) => {
+            const key = buildPlaybackAvailabilityKey({
+              mediaType: item.mediaType,
+              tmdbId: item.tmdbId,
+              season: item.season,
+              episode: item.episode,
+            });
+            acc[key] = Boolean(item.available);
+            return acc;
+          }, {});
 
           setAvailabilityLookup(nextLookup);
           setAvailabilityLoading(false);
@@ -247,11 +251,15 @@ const Header = React.memo(
       const [isVideoLoaded, setIsVideoLoaded] = useState(false);
       const mediaType = details?.media_type as "movie" | "tv";
 
-      const watchlistItem = (myselfData?.data as unknown as User)?.watchlist?.find(
-        (item) => item.id == String(details?.id) && item.type === mediaType
+      const watchlistItem = (
+        myselfData?.data as unknown as User
+      )?.watchlist?.find(
+        (item) => item.id == String(details?.id) && item.type === mediaType,
       );
-      const recentItem = (myselfData?.data as unknown as User)?.recentlyWatched?.find(
-        (item) => item.id == String(details?.id) && item.type === mediaType
+      const recentItem = (
+        myselfData?.data as unknown as User
+      )?.recentlyWatched?.find(
+        (item) => item.id == String(details?.id) && item.type === mediaType,
       );
       const playbackTarget = getPlaybackTarget({
         mediaType,
@@ -266,7 +274,7 @@ const Header = React.memo(
       });
       const isReleaseBlocked =
         new Date(
-          details?.release_date || details?.first_air_date || ""
+          details?.release_date || details?.first_air_date || "",
         ).getTime() > Date.now();
       const availability = availabilityLookup[availabilityKey];
       const playButtonNote = isReleaseBlocked
@@ -413,21 +421,19 @@ const Header = React.memo(
                   },
                 }}
               >
-                {mediaType === "movie" ? (
-                  recentItem
+                {mediaType === "movie"
+                  ? recentItem
                     ? Number(recentItem.currentTime || 0) > 0
                       ? "Continue Watching"
                       : "Watch Again"
                     : "Watch Now"
-                ) : (
-                  recentItem
+                  : recentItem
                     ? Number(recentItem.currentTime || 0) > 0
                       ? `Continue S${recentItem.currentSeason}:E${recentItem.currentEpisode}`
                       : recentItem.nextSeason && recentItem.nextEpisode
                         ? `Continue S${recentItem.nextSeason}:E${recentItem.nextEpisode}`
                         : "Watch Again"
-                    : "Play Now"
-                )}
+                    : "Play Now"}
               </Button>
               {!isReleaseBlocked && playButtonNote && !availabilityLoading && (
                 <Typography
@@ -436,10 +442,10 @@ const Header = React.memo(
                     minHeight: "20px",
                     textShadow: "0 0 8px rgba(0,0,0,0.7)",
                     color: "inherit",
-                }}
-              >
-                {playButtonNote}
-              </Typography>
+                  }}
+                >
+                  {playButtonNote}
+                </Typography>
               )}
               <Button
                 onClick={(e) => {
@@ -464,7 +470,9 @@ const Header = React.memo(
                 sx={{
                   width: "300px",
                   padding: "15px 0px",
-                  backgroundColor: watchlistItem ? "rgb(255, 255, 255, 0.8)" : "white",
+                  backgroundColor: watchlistItem
+                    ? "rgb(255, 255, 255, 0.8)"
+                    : "white",
                   color: watchlistItem ? "black" : "black",
                   "&:hover": {
                     backgroundColor: watchlistItem
@@ -483,6 +491,28 @@ const Header = React.memo(
                 }}
               >
                 {watchlistItem ? "In Watchlist" : "Add to Watchlist"}
+              </Button>
+              <Button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigate("/what-to-watch");
+                }}
+                startDecorator={<AutoAwesome />}
+                variant="outlined"
+                sx={{
+                  borderRadius: "16px",
+                  borderColor: "rgba(255,255,255,0.3)",
+                  color: "white",
+                  background: "rgba(255,255,255,0.08)",
+                  backdropFilter: "blur(8px)",
+                  "&:hover": {
+                    background: "rgba(255,255,255,0.15)",
+                    borderColor: "rgba(255,220,92,0.6)",
+                    color: "rgb(255,220,92)",
+                  },
+                }}
+              >
+                Not sure? Let AI pick
               </Button>
             </Box>
           </CardContent>
@@ -580,7 +610,7 @@ const Header = React.memo(
         </IconButton>
       </Box>
     );
-  }
+  },
 );
 
 export default Header;

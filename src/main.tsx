@@ -23,7 +23,7 @@ createRoot(document.getElementById("root")!).render(
             <UsersProvider>
               <TMDBProvider>
                 <StrictMode>
-                  <Toaster position="top-center" reverseOrder={false} />
+                  <Toaster position="bottom-center"/>
                   <App />
                 </StrictMode>
               </TMDBProvider>

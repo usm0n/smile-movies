@@ -1,6 +1,18 @@
 import {
-  Box, Button, ButtonGroup, Card, CardCover, Chip,
-  Dropdown, LinearProgress, Menu, MenuButton, MenuItem, Typography,
+  Box,
+  Button,
+  ButtonGroup,
+  Card,
+  CardCover,
+  Chip,
+  Dropdown,
+  LinearProgress,
+  Menu,
+  MenuButton,
+  MenuItem,
+  Modal,
+  ModalDialog,
+  Typography,
 } from "@mui/joy";
 import { useNavigate } from "react-router-dom";
 import BlurImage from "../../utilities/blurImage";
@@ -13,16 +25,31 @@ import {
   Movie,
   Person,
   PlayArrow,
+  PlaylistAdd,
 } from "@mui/icons-material";
 import { shareLink } from "../../utilities/defaults";
 import { useUsers } from "../../context/Users";
 import { User } from "../../user";
 import { getPlaybackTarget } from "../../utilities/playbackTarget";
+import { tmdbAPI } from "../../service/api/api";
+import {
+  collectionsAPI,
+  Collection,
+} from "../../service/api/smb/collections.api.service";
+import { useRef, useState } from "react";
 
 function EventMC({
-  eventPoster, eventId, eventType, eventDelete,
-  eventDuration, eventCurrentTime,
-  eventSeason, eventEpisode, eventNextSeason, eventNextEpisode, eventTitle,
+  eventPoster,
+  eventId,
+  eventType,
+  eventDelete,
+  eventDuration,
+  eventCurrentTime,
+  eventSeason,
+  eventEpisode,
+  eventNextSeason,
+  eventNextEpisode,
+  eventTitle,
 }: {
   eventPoster: string;
   eventId: number | string;
@@ -44,7 +71,72 @@ function EventMC({
     myselfData,
     removeFromWatchlist,
     removeFromWatchlistData,
+    isAuthenticated,
   } = useUsers();
+
+  // Trailer hover
+  const [trailerKey, setTrailerKey] = useState<string | null>(null);
+  const [showTrailer, setShowTrailer] = useState(false);
+  const hoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Collections
+  const [collectionsOpen, setCollectionsOpen] = useState(false);
+  const [collections, setCollections] = useState<Collection[]>([]);
+  const [loadingCollections, setLoadingCollections] = useState(false);
+
+  const handleMouseEnter = () => {
+    if (eventType === "person") return;
+    hoverTimerRef.current = setTimeout(async () => {
+      if (trailerKey) {
+        setShowTrailer(true);
+        return;
+      }
+      try {
+        const endpoint =
+          eventType === "movie"
+            ? `/movie/${eventId}/videos`
+            : `/tv/${eventId}/videos`;
+        const r = await tmdbAPI.get(endpoint);
+        const key = r.data?.results?.find(
+          (v: any) => v.type === "Trailer" && v.site === "YouTube",
+        )?.key;
+        if (key) {
+          setTrailerKey(key);
+          setShowTrailer(true);
+        }
+      } catch {}
+    }, 800);
+  };
+
+  const handleMouseLeave = () => {
+    if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
+    setShowTrailer(false);
+  };
+
+  const openCollections = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setCollectionsOpen(true);
+    if (!isAuthenticated) return;
+    setLoadingCollections(true);
+    try {
+      const d = await collectionsAPI.getAll();
+      setCollections(d.collections);
+    } catch {
+    } finally {
+      setLoadingCollections(false);
+    }
+  };
+
+  const addToCollection = async (colId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    await collectionsAPI.addItem(colId, {
+      id: String(eventId),
+      type: eventType as "movie" | "tv",
+      title: eventTitle,
+      poster: eventPoster,
+    });
+    setCollectionsOpen(false);
+  };
 
   const watchlistItem = (myselfData?.data as User)?.watchlist?.find(
     (item) => item.id == String(eventId) && item.type === eventType,
@@ -68,13 +160,27 @@ function EventMC({
   const hasResumeProgress = Number(eventCurrentTime || 0) > 0;
 
   return (
-    <Box onClick={() => navigate(`/${eventType}/${eventId}`)} key={eventId}>
+    <Box
+      onClick={() => navigate(`/${eventType}/${eventId}`)}
+      key={eventId}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
       <Card
         sx={{
-          cursor: "pointer", minHeight: "400px", width: "250px",
+          cursor: "pointer",
+          minHeight: "400px",
+          width: "250px",
           background: "transparent",
-          "@media (max-width: 800px)": { margin: "0 auto", width: "200px", minHeight: "300px" },
-          ":hover": { transition: "all 0.2s ease-in-out", opacity: 0.7 },
+          "@media (max-width: 800px)": {
+            margin: "0 auto",
+            width: "200px",
+            minHeight: "300px",
+          },
+          ":hover": {
+            transition: "transform 0.2s ease-in-out",
+            transform: "scale(1.03)",
+          },
         }}
       >
         <CardCover>
@@ -90,8 +196,35 @@ function EventMC({
           )}
         </CardCover>
 
+        {/* Trailer overlay on hover */}
+        {showTrailer && trailerKey && (
+          <Box
+            sx={{
+              position: "absolute",
+              inset: 0,
+              zIndex: 10,
+              borderRadius: "inherit",
+              overflow: "hidden",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <iframe
+              src={`https://www.youtube.com/embed/${trailerKey}?autoplay=1&mute=1&controls=0&modestbranding=1&loop=1&playlist=${trailerKey}`}
+              style={{
+                width: "100%",
+                height: "100%",
+                border: "none",
+                pointerEvents: "none",
+              }}
+              allow="autoplay"
+            />
+          </Box>
+        )}
+
         {/* Menu — top right */}
-        <Box sx={{ position: "absolute", top: 0, right: 0, zIndex: 3, padding: 1 }}>
+        <Box
+          sx={{ position: "absolute", top: 0, right: 0, zIndex: 3, padding: 1 }}
+        >
           <Dropdown>
             <MenuButton
               onClick={(e) => e.stopPropagation()}
@@ -100,13 +233,27 @@ function EventMC({
               <MoreVert />
             </MenuButton>
             <Menu onClick={(e) => e.stopPropagation()}>
-              <MenuItem onClick={() => shareLink(`https://smile-movies.uz/${eventType}/${eventId}`)}>
-                <IosShare /> Share this {eventType === "movie" ? "Movie" : eventType === "tv" ? "TV show" : "Person"}
+              <MenuItem
+                onClick={() =>
+                  shareLink(`https://smile-movies.uz/${eventType}/${eventId}`)
+                }
+              >
+                <IosShare /> Share this{" "}
+                {eventType === "movie"
+                  ? "Movie"
+                  : eventType === "tv"
+                    ? "TV show"
+                    : "Person"}
               </MenuItem>
               {eventType !== "person" && (
                 <>
                   <MenuItem onClick={() => navigate(playbackTarget.route)}>
-                    <PlayArrow /> {hasResumeProgress ? "Resume" : eventType === "movie" ? "Watch now" : "Play now"}
+                    <PlayArrow />{" "}
+                    {hasResumeProgress
+                      ? "Resume"
+                      : eventType === "movie"
+                        ? "Watch now"
+                        : "Play now"}
                   </MenuItem>
                   <MenuItem
                     onClick={() => {
@@ -127,10 +274,18 @@ function EventMC({
                     }
                   >
                     {watchlistItem ? <Check /> : <Add />}
-                    {watchlistItem ? "Remove from watchlist" : "Add to watchlist"}
+                    {watchlistItem
+                      ? "Remove from watchlist"
+                      : "Add to watchlist"}
+                  </MenuItem>
+                  <MenuItem onClick={openCollections}>
+                    <PlaylistAdd /> Add to list
                   </MenuItem>
                   {eventDelete && (
-                    <MenuItem color="danger" onClick={() => eventDelete(eventId)}>
+                    <MenuItem
+                      color="danger"
+                      onClick={() => eventDelete(eventId)}
+                    >
                       <DeleteOutline /> Delete
                     </MenuItem>
                   )}
@@ -142,9 +297,22 @@ function EventMC({
 
         {/* Continue watching button */}
         {(hasResumeProgress || (eventNextSeason && eventNextEpisode)) && (
-          <ButtonGroup orientation="vertical" sx={{ position: "absolute", zIndex: 3, bottom: 30, width: "90%" }}>
+          <ButtonGroup
+            orientation="vertical"
+            sx={{ position: "absolute", zIndex: 3, bottom: 30, width: "90%" }}
+          >
             <Button
-              sx={{ width: "100%", backgroundColor: "rgba(255,255,255,1)", color: "black", gap: 1, border: "none", ":hover": { backgroundColor: "rgba(255,255,255,1)", opacity: 0.9 } }}
+              sx={{
+                width: "100%",
+                backgroundColor: "rgba(255,255,255,1)",
+                color: "black",
+                gap: 1,
+                border: "none",
+                ":hover": {
+                  backgroundColor: "rgba(255,255,255,1)",
+                  opacity: 0.9,
+                },
+              }}
               onClick={(e) => {
                 e.stopPropagation();
                 navigate(playbackTarget.route);
@@ -160,18 +328,91 @@ function EventMC({
 
         {hasResumeProgress && (
           <LinearProgress
-            sx={{ position: "absolute", zIndex: 2, bottom: 10, width: "90%", color: "rgb(255,220,92)", "--LinearProgress-thickness": "3px" }}
+            sx={{
+              position: "absolute",
+              zIndex: 2,
+              bottom: 10,
+              width: "90%",
+              color: "rgb(255,220,92)",
+              "--LinearProgress-thickness": "3px",
+            }}
             determinate
-            value={eventCurrentTime && eventDuration ? (eventCurrentTime / eventDuration) * 100 : 0}
+            value={
+              eventCurrentTime && eventDuration
+                ? (eventCurrentTime / eventDuration) * 100
+                : 0
+            }
           />
         )}
 
         {eventType === "tv" && eventSeason && eventEpisode ? (
-          <Chip sx={{ padding: "0px 15px", position: "absolute", zIndex: 3, top: 8, right: 8, backgroundColor: "rgba(0,0,0,0.6)", color: "white" }}>
-            <Typography level="body-sm">S{eventSeason}-E{eventEpisode}</Typography>
+          <Chip
+            sx={{
+              padding: "0px 15px",
+              position: "absolute",
+              zIndex: 3,
+              top: 8,
+              right: 8,
+              backgroundColor: "rgba(0,0,0,0.6)",
+              color: "white",
+            }}
+          >
+            <Typography level="body-sm">
+              S{eventSeason}-E{eventEpisode}
+            </Typography>
           </Chip>
         ) : null}
       </Card>
+
+      {/* Add to list modal */}
+      <Modal open={collectionsOpen} onClose={() => setCollectionsOpen(false)}>
+        <ModalDialog
+          sx={{ maxWidth: 360 }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <Typography level="title-md" sx={{ mb: 2 }}>
+            Add "{eventTitle}" to a list
+          </Typography>
+          {loadingCollections ? (
+            <Typography level="body-sm" sx={{ color: "text.tertiary" }}>
+              Loading lists...
+            </Typography>
+          ) : collections.length === 0 ? (
+            <Typography level="body-sm" sx={{ color: "text.tertiary" }}>
+              You have no lists yet. Create one from My Lists page.
+            </Typography>
+          ) : (
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+              {collections.map((col) => (
+                <Button
+                  key={col.id}
+                  variant="outlined"
+                  color="neutral"
+                  fullWidth
+                  onClick={(e) => addToCollection(col.id, e)}
+                  sx={{ justifyContent: "flex-start" }}
+                >
+                  {col.name}
+                  <Typography
+                    level="body-xs"
+                    sx={{ color: "text.tertiary", ml: "auto" }}
+                  >
+                    {col.items.length} titles
+                  </Typography>
+                </Button>
+              ))}
+            </Box>
+          )}
+          <Button
+            variant="plain"
+            color="neutral"
+            onClick={() => setCollectionsOpen(false)}
+            sx={{ mt: 1 }}
+          >
+            Cancel
+          </Button>
+        </ModalDialog>
+      </Modal>
     </Box>
   );
 }

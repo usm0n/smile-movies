@@ -28,7 +28,9 @@ import {
   PlayArrow,
   Star,
   StarBorder,
-  Replay
+  Replay,
+  Notifications,
+  NotificationsNone,
 } from "@mui/icons-material";
 import {
   formatTimeAgo,
@@ -80,6 +82,7 @@ function Header({
     removeFromWatchlistData,
     upsertRating,
     upsertRatingData,
+    updateMyself,
   } = useUsers();
   const [isVideoLoaded, setIsVideoLoaded] = useState(false);
   const [isRatingOpen, setIsRatingOpen] = useState(false);
@@ -658,6 +661,47 @@ function Header({
                       : "Rate this title"}
                   </Typography>
                 </Button>
+                {movieType === "tv" && isLoggedIn && (
+                  <Button
+                    onClick={() => {
+                      const interests = (myselfData?.data as unknown as User)?.notificationInterests;
+                      const followed = interests?.followedShows || [];
+                      const isCurrentlyFollowing = followed.includes(String(movieId));
+                      updateMyself({
+                        notificationInterests: {
+                          ...interests,
+                          followedShows: isCurrentlyFollowing
+                            ? followed.filter((id: string) => id !== String(movieId))
+                            : [...followed, String(movieId)],
+                        },
+                      } as any);
+                    }}
+                    sx={{
+                      width: "100%",
+                      borderRadius: "16px",
+                      color: (myselfData?.data as unknown as User)?.notificationInterests?.followedShows?.includes(String(movieId))
+                        ? "rgb(255, 224, 130)"
+                        : "white",
+                      border: "1px solid",
+                      borderColor: (myselfData?.data as unknown as User)?.notificationInterests?.followedShows?.includes(String(movieId))
+                        ? "rgba(255, 204, 92, 0.72)"
+                        : "rgba(255,255,255,0.28)",
+                      background: "linear-gradient(180deg, rgba(22, 33, 57, 0.96) 0%, rgba(10, 16, 28, 0.96) 100%)",
+                      "&:hover": {
+                        background: "linear-gradient(180deg, rgba(22, 33, 57, 0.96) 0%, rgba(10, 16, 28, 0.96) 100%)",
+                      },
+                    }}
+                  >
+                    {(myselfData?.data as unknown as User)?.notificationInterests?.followedShows?.includes(String(movieId))
+                      ? <Notifications />
+                      : <NotificationsNone />}
+                    <Typography level="body-sm" sx={{ fontWeight: 700 }}>
+                      {(myselfData?.data as unknown as User)?.notificationInterests?.followedShows?.includes(String(movieId))
+                        ? "Following — new episodes"
+                        : "Follow for new episodes"}
+                    </Typography>
+                  </Button>
+                )}
                 {(watchlistItem || recentItem || ratingItem) && (
                   <Box
                     sx={{
