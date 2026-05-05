@@ -9,22 +9,20 @@ import {
   Tooltip,
   Typography,
 } from "@mui/joy";
-import {
-  ContentCopy,
-  People,
-  Send,
-  ArrowBackIos,
-} from "@mui/icons-material";
+import { ContentCopy, People, Send, ArrowBackIos } from "@mui/icons-material";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { watchPartyAPI, WatchParty, WatchPartyMessage } from "../service/api/smb/watchparty.api.service";
+import {
+  watchPartyAPI,
+  WatchParty,
+  WatchPartyMessage,
+} from "../service/api/smb/watchparty.api.service";
 import { useUsers } from "../context/Users";
 import { User } from "../user";
-// import PlaybackSurface from "../components/player/PlaybackSurface";
 import toast from "react-hot-toast";
 import { copyToClipboard } from "../utilities/defaults";
 
-const POLL_INTERVAL_MS = 2000;
+const POLL_INTERVAL_MS = 2500;
 
 function WatchPartyPage() {
   const { code } = useParams<{ code: string }>();
@@ -33,11 +31,35 @@ function WatchPartyPage() {
   const [loading, setLoading] = useState(true);
   const [chatInput, setChatInput] = useState("");
   const [sending, setSending] = useState(false);
+  const [joined, setJoined] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
   const navigate = useNavigate();
 
   const myUid = (myselfData?.data as User)?.id;
   const isHost = party?.hostUid === myUid;
+
+  // Build the embedded watch URL — point to the same watch page inside an iframe
+  const watchUrl = party
+    ? `/${party.mediaType}/${party.mediaId}${
+        party.mediaType === "tv" && party.season && party.episode
+          ? `/${party.season}/${party.episode}`
+          : ""
+      }/watch`
+    : null;
+
+  // Join party on mount
+  useEffect(() => {
+    if (!code || joined) return;
+    watchPartyAPI.join(code).then(() => setJoined(true)).catch(() => {});
+  }, [code, joined]);
+
+  // Leave party on unmount
+  useEffect(() => {
+    return () => {
+      if (code) watchPartyAPI.leave(code).catch(() => {});
+    };
+  }, [code]);
 
   // Poll for party state
   useEffect(() => {
@@ -86,14 +108,7 @@ function WatchPartyPage() {
 
   if (loading) {
     return (
-      <Box
-        sx={{
-          height: "100vh",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
+      <Box sx={{ height: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
         <CircularProgress size="lg" />
       </Box>
     );
@@ -104,9 +119,10 @@ function WatchPartyPage() {
   const messages: WatchPartyMessage[] = party.messages || [];
 
   return (
-    <Box sx={{ display: "flex", height: "100vh", overflow: "hidden" }}>
-      {/* Player */}
+    <Box sx={{ display: "flex", height: "100vh", overflow: "hidden", background: "#000", zIndex: 100000 }}>
+      {/* Player side */}
       <Box sx={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
+        {/* Top bar */}
         <Box
           sx={{
             px: 2,
@@ -115,31 +131,84 @@ function WatchPartyPage() {
             alignItems: "center",
             gap: 1,
             borderBottom: "1px solid rgba(255,255,255,0.08)",
+            background: "rgba(0,0,0,0.8)",
+            backdropFilter: "blur(8px)",
+            zIndex: 10,
           }}
         >
-          <IconButton variant="plain" onClick={() => navigate(-1)}>
+          <IconButton variant="plain" sx={{ color: "white" }} onClick={() => navigate(-1)}>
             <ArrowBackIos />
           </IconButton>
-          <Typography level="title-md" sx={{ flex: 1 }}>
+          <Typography level="title-md" sx={{ flex: 1, color: "white" }}>
             Watch Party
+            {party.mediaId && (
+              <Typography component="span" level="body-sm" sx={{ color: "rgba(255,255,255,0.5)", ml: 1 }}>
+                · {party.mediaType === "tv" ? `S${party.season} E${party.episode}` : "Movie"}
+              </Typography>
+            )}
           </Typography>
-          <Chip
-            startDecorator={<People />}
-            variant="soft"
-            color="neutral"
-            size="sm"
-          >
-            {party.members.length} watching
+          <Chip startDecorator={<People />} variant="soft" color="neutral" size="sm">
+            {Array.isArray(party.members) ? party.members.length : 1} watching
           </Chip>
           {isHost && (
             <Chip variant="solid" color="warning" size="sm">
               Host
             </Chip>
           )}
+          <Tooltip title="Copy invite link">
+            <Button
+              size="sm"
+              variant="outlined"
+              color="neutral"
+              startDecorator={<ContentCopy fontSize="small" />}
+              onClick={copyInviteLink}
+              sx={{ color: "white", borderColor: "rgba(255,255,255,0.3)", display: { xs: "none", sm: "flex" } }}
+            >
+              {code}
+            </Button>
+          </Tooltip>
         </Box>
-        <Box sx={{ flex: 1 }}>
-          {/* <PlaybackSurface /> */}
-        </Box>
+
+        {/* Embedded watch page */}
+        {watchUrl ? (
+          <Box sx={{ flex: 1, position: "relative" }}>
+            <iframe
+              ref={iframeRef}
+              src={watchUrl}
+              style={{
+                width: "100%",
+                height: "100%",
+                border: "none",
+                background: "#000",
+              }}
+              allow="autoplay; fullscreen; encrypted-media"
+              allowFullScreen
+            />
+            {/* Sync indicator for guests */}
+            {!isHost && (
+              <Box
+                sx={{
+                  position: "absolute",
+                  top: 12,
+                  left: 12,
+                  background: "rgba(0,0,0,0.7)",
+                  borderRadius: "sm",
+                  px: 1.5,
+                  py: 0.5,
+                  backdropFilter: "blur(4px)",
+                }}
+              >
+                <Typography level="body-xs" sx={{ color: "rgba(255,255,255,0.6)" }}>
+                  🎬 Watching together
+                </Typography>
+              </Box>
+            )}
+          </Box>
+        ) : (
+          <Box sx={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <Typography sx={{ color: "rgba(255,255,255,0.4)" }}>Loading player...</Typography>
+          </Box>
+        )}
       </Box>
 
       {/* Chat sidebar */}
@@ -150,6 +219,7 @@ function WatchPartyPage() {
           display: "flex",
           flexDirection: "column",
           borderLeft: "1px solid rgba(255,255,255,0.08)",
+          background: "rgba(10,10,15,0.97)",
           "@media (max-width: 900px)": { display: "none" },
         }}
       >
@@ -163,18 +233,19 @@ function WatchPartyPage() {
             alignItems: "center",
           }}
         >
-          <Typography level="title-md">Party Chat</Typography>
-          <Tooltip title="Copy invite link">
-            <Button
-              size="sm"
-              variant="outlined"
-              color="neutral"
-              startDecorator={<ContentCopy fontSize="small" />}
-              onClick={copyInviteLink}
-            >
-              {code}
-            </Button>
-          </Tooltip>
+          <Typography level="title-md" sx={{ color: "white" }}>
+            Party Chat
+          </Typography>
+          <IconButton size="sm" variant="plain" sx={{ color: "white" }} onClick={copyInviteLink}>
+            <ContentCopy fontSize="small" />
+          </IconButton>
+        </Box>
+
+        {/* Members */}
+        <Box sx={{ px: 2, py: 1, borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+          <Typography level="body-xs" sx={{ color: "rgba(255,255,255,0.4)", mb: 0.5 }}>
+            {Array.isArray(party.members) ? party.members.length : 1} people watching
+          </Typography>
         </Box>
 
         {/* Messages */}
@@ -189,10 +260,7 @@ function WatchPartyPage() {
           }}
         >
           {messages.length === 0 && (
-            <Typography
-              level="body-sm"
-              sx={{ color: "text.tertiary", textAlign: "center", mt: 4 }}
-            >
+            <Typography level="body-sm" sx={{ color: "rgba(255,255,255,0.3)", textAlign: "center", mt: 4 }}>
               No messages yet. Say hi! 👋
             </Typography>
           )}
@@ -208,17 +276,15 @@ function WatchPartyPage() {
                 }}
               >
                 {!isMine && (
-                  <Typography level="body-xs" sx={{ color: "text.tertiary", mb: 0.3 }}>
-                    {msg.displayName || msg.uid.slice(0, 8)}
+                  <Typography level="body-xs" sx={{ color: "rgba(255,255,255,0.4)", mb: 0.3 }}>
+                    {msg.displayName || msg.uid?.slice(0, 8)}
                   </Typography>
                 )}
                 <Box
                   sx={{
-                    background: isMine
-                      ? "rgb(255,220,92)"
-                      : "rgba(255,255,255,0.08)",
+                    background: isMine ? "rgb(255,220,92)" : "rgba(255,255,255,0.1)",
                     color: isMine ? "black" : "white",
-                    borderRadius: "lg",
+                    borderRadius: isMine ? "16px 16px 4px 16px" : "16px 16px 16px 4px",
                     px: 1.5,
                     py: 0.75,
                     maxWidth: "85%",
@@ -227,6 +293,9 @@ function WatchPartyPage() {
                 >
                   <Typography level="body-sm">{msg.text}</Typography>
                 </Box>
+                <Typography level="body-xs" sx={{ color: "rgba(255,255,255,0.25)", mt: 0.3 }}>
+                  {new Date(msg.at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                </Typography>
               </Box>
             );
           })}
@@ -241,8 +310,8 @@ function WatchPartyPage() {
             placeholder="Type a message..."
             value={chatInput}
             onChange={(e) => setChatInput(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-            sx={{ flex: 1 }}
+            onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && sendMessage()}
+            sx={{ flex: 1, background: "rgba(255,255,255,0.06)", color: "white" }}
           />
           <IconButton
             size="sm"

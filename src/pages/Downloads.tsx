@@ -69,12 +69,13 @@ function Downloads() {
   };
 
   const playOffline = (entry: DownloadEntry) => {
-    // Parse the cache key to navigate to the right watch page
     // cacheKey format: "movie-123" or "tv-456-s1e2"
-    const parts = entry.cacheKey.split("-");
-    const type = parts[0];
-    const id = parts[1];
-    if (type && id) {
+    const match = entry.cacheKey.match(/^(movie|tv)-(\d+)(?:-s(\d+)e(\d+))?$/);
+    if (!match) { toast.error("Could not parse download info."); return; }
+    const [, type, id, season, episode] = match;
+    if (type === "tv" && season && episode) {
+      navigate(`/tv/${id}/${season}/${episode}/watch?offline=1`);
+    } else {
       navigate(`/${type}/${id}/watch?offline=1`);
     }
   };
