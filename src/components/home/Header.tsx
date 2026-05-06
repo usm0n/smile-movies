@@ -495,7 +495,7 @@ const Header = React.memo(
               <Button
                 onClick={(e) => {
                   e.stopPropagation();
-                  navigate("/what-to-watch");
+                  navigate(`/ai?prompt=${encodeURIComponent("Help me decide what to watch. Ask me a few questions about my mood, genre preferences, and how long I have — then give me personalised picks.")}`);
                 }}
                 startDecorator={<AutoAwesome />}
                 variant="outlined"

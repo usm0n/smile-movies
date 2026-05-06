@@ -21,4 +21,25 @@ export const profilesAPI = {
     const response = await smbV1API.get(`/profiles/${handle}/reviews`);
     return response;
   },
+  setPin: async (pin: string) => {
+    const response = await smbV1API.post("/profiles/pin/set", { pin });
+    return response.data;
+  },
+  disablePin: async () => {
+    const response = await smbV1API.post("/profiles/pin/set", { disable: true });
+    return response.data;
+  },
+  verifyPin: async (pin: string) => {
+    const response = await smbV1API.post("/profiles/pin/verify", { pin });
+    return response.data as { valid: boolean };
+  },
+  resetPinRequest: async () => {
+    const response = await smbV1API.post("/profiles/pin/reset-request");
+    return response.data;
+  },
+  resetPinConfirm: async (token: string, newPin: string) => {
+    const response = await smbV1API.post("/profiles/pin/reset-confirm", { token, newPin });
+    return response.data;
+  },
 };
+

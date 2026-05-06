@@ -31,6 +31,7 @@ import {
   Replay,
   Notifications,
   NotificationsNone,
+  PlaylistAdd,
 } from "@mui/icons-material";
 import {
   formatTimeAgo,
@@ -45,6 +46,10 @@ import { User } from "../../user";
 import IMDbRating from "./IMDbRating";
 import ParentalGuide from "./ParentalGuide";
 import MatchScore from "./MatchScore";
+import {
+  collectionsAPI,
+  Collection,
+} from "../../service/api/smb/collections.api.service";
 import RatingDialog from "../library/RatingDialog";
 import { providersAPI } from "../../service/api/smb/providers.api.service";
 import { tmdb } from "../../service/api/tmdb/tmdb.api.service";
@@ -86,6 +91,57 @@ function Header({
   } = useUsers();
   const [isVideoLoaded, setIsVideoLoaded] = useState(false);
   const [isRatingOpen, setIsRatingOpen] = useState(false);
+  const [collections, setCollections] = useState<Collection[]>([]);
+  const [collectionsMenuOpen, setCollectionsMenuOpen] = useState(false);
+  const [addingToList, setAddingToList] = useState<string | null>(null);
+
+  const loadCollections = async () => {
+    if (!isLoggedIn) return;
+    try {
+      const d = await collectionsAPI.getAll();
+      setCollections(d.collections);
+    } catch {
+      /* silent */
+    }
+  };
+
+  const addToList = async (collectionId: string, collectionName: string) => {
+    setAddingToList(collectionId);
+    try {
+      await collectionsAPI.addItem(collectionId, {
+        id: String(movieId),
+        type: movieType as "movie" | "tv",
+        title: movieTitle,
+        poster: (movieDetails as any)?.poster_path || "",
+      });
+    } catch {
+      /* silent */
+    } finally {
+      setAddingToList(null);
+      setCollectionsMenuOpen(false);
+    }
+  };
+
+  const createListAndAdd = async () => {
+    const name = prompt("New list name:");
+    if (!name?.trim()) return;
+    setAddingToList("new");
+    try {
+      const created = await collectionsAPI.create(name.trim());
+      await collectionsAPI.addItem(created.collection.id, {
+        id: String(movieId),
+        type: movieType as "movie" | "tv",
+        title: movieTitle,
+        poster: (movieDetails as any)?.poster_path || "",
+      });
+      setCollections((prev) => [...prev, created.collection]);
+    } catch {
+      /* silent */
+    } finally {
+      setAddingToList(null);
+      setCollectionsMenuOpen(false);
+    }
+  };
   const [isOverviewExpanded, setIsOverviewExpanded] = useState(false);
   const [activeEpisodeDetails, setActiveEpisodeDetails] =
     useState<tvEpisodeDetails | null>(null);
@@ -108,7 +164,9 @@ function Header({
   const watchlistItem = (myselfData?.data as unknown as User)?.watchlist?.find(
     (item) => item.id == movieId && item.type === movieType,
   );
-  const recentItem = (myselfData?.data as unknown as User)?.recentlyWatched?.find(
+  const recentItem = (
+    myselfData?.data as unknown as User
+  )?.recentlyWatched?.find(
     (item) => item.id == movieId && item.type === movieType,
   );
   const hasStartedWatching = Number(recentItem?.currentTime || 0) > 0;
@@ -160,12 +218,12 @@ function Header({
   const progressPercent =
     recentItem?.duration && recentItem?.currentTime
       ? Math.min(
-        100,
-        Math.max(
-          0,
-          Math.round((recentItem.currentTime / recentItem.duration) * 100),
-        ),
-      )
+          100,
+          Math.max(
+            0,
+            Math.round((recentItem.currentTime / recentItem.duration) * 100),
+          ),
+        )
       : 0;
   const playbackTarget = useMemo(
     () =>
@@ -199,15 +257,15 @@ function Header({
   const activeEpisodeTitle =
     movieType === "tv" && hasStartedWatching
       ? activeEpisodeDetails?.name?.trim() ||
-      (recentItem?.currentSeason && recentItem?.currentEpisode
-        ? `Episode ${recentItem.currentEpisode}`
-        : "")
+        (recentItem?.currentSeason && recentItem?.currentEpisode
+          ? `Episode ${recentItem.currentEpisode}`
+          : "")
       : "";
-  const overview = (
-    movieType === "tv" && hasStartedWatching
+  const overview =
+    (movieType === "tv" && hasStartedWatching
       ? activeEpisodeDetails?.overview
       : movieDetails?.overview
-  )?.trim() || "";
+    )?.trim() || "";
   const isOverviewLong = overview.length > 220;
   const backdropPath =
     (movieType === "tv" && hasStartedWatching
@@ -216,8 +274,9 @@ function Header({
     movieDetails?.backdrop_path ||
     movieDetails?.poster_path;
   const isReleaseBlocked =
-    new Date(movieDetails?.release_date || movieDetails?.first_air_date || "")
-      .getTime() > Date.now();
+    new Date(
+      movieDetails?.release_date || movieDetails?.first_air_date || "",
+    ).getTime() > Date.now();
   const playLabel =
     movieType === "movie"
       ? recentItem
@@ -232,18 +291,17 @@ function Header({
             ? `Continue S${recentItem.nextSeason}:E${recentItem.nextEpisode}`
             : "Watch Again"
         : "Play Now";
-  const progressNote =
-    hasStartedWatching
-      ? movieType === "movie"
-        ? `${progressPercent}% done${recentItem?.currentTime ? ` • Resume at ${minuteToHour(recentItem.currentTime)}` : ""}`
-        : `${progressPercent}% done${recentItem?.currentSeason && recentItem?.currentEpisode ? ` • Resume S${recentItem.currentSeason}:E${recentItem.currentEpisode}` : ""}`
-      : recentItem?.nextSeason && recentItem?.nextEpisode
-        ? `Next up • S${recentItem.nextSeason}:E${recentItem.nextEpisode}${recentItem.lastWatchedAt ? ` • ${formatTimeAgo(recentItem.lastWatchedAt)}` : ""}`
-        : recentItem?.lastWatchedAt
-          ? `Last watched ${formatTimeAgo(recentItem.lastWatchedAt)}`
-          : watchlistItem?.addedAt
-            ? `Saved for later • Added ${formatTimeAgo(watchlistItem.addedAt)}`
-            : "";
+  const progressNote = hasStartedWatching
+    ? movieType === "movie"
+      ? `${progressPercent}% done${recentItem?.currentTime ? ` • Resume at ${minuteToHour(recentItem.currentTime)}` : ""}`
+      : `${progressPercent}% done${recentItem?.currentSeason && recentItem?.currentEpisode ? ` • Resume S${recentItem.currentSeason}:E${recentItem.currentEpisode}` : ""}`
+    : recentItem?.nextSeason && recentItem?.nextEpisode
+      ? `Next up • S${recentItem.nextSeason}:E${recentItem.nextEpisode}${recentItem.lastWatchedAt ? ` • ${formatTimeAgo(recentItem.lastWatchedAt)}` : ""}`
+      : recentItem?.lastWatchedAt
+        ? `Last watched ${formatTimeAgo(recentItem.lastWatchedAt)}`
+        : watchlistItem?.addedAt
+          ? `Saved for later • Added ${formatTimeAgo(watchlistItem.addedAt)}`
+          : "";
 
   useEffect(() => {
     let cancelled = false;
@@ -295,8 +353,8 @@ function Header({
       : null,
     movieDetails?.runtime || movieDetails?.episode_run_time?.length
       ? minuteToHour(
-        movieDetails?.runtime || movieDetails?.episode_run_time?.[0],
-      )
+          movieDetails?.runtime || movieDetails?.episode_run_time?.[0],
+        )
       : null,
   ].filter(Boolean);
 
@@ -332,7 +390,10 @@ function Header({
                 width: { xs: "100%", md: desktopMediaStage.width },
                 height: { xs: "100%", md: desktopMediaStage.height },
                 overflow: "hidden",
-                borderBottomLeftRadius: { xs: 0, md: desktopMediaStage.borderBottomLeftRadius },
+                borderBottomLeftRadius: {
+                  xs: 0,
+                  md: desktopMediaStage.borderBottomLeftRadius,
+                },
               }}
             >
               {BlurImage({
@@ -376,7 +437,9 @@ function Header({
               ) : null}
             </Box>
           ) : (
-            <Box sx={{ width: "100%", height: "100%", backgroundColor: "#000" }} />
+            <Box
+              sx={{ width: "100%", height: "100%", backgroundColor: "#000" }}
+            />
           )}
         </CardCover>
         <CardCover
@@ -489,10 +552,7 @@ function Header({
                     onClick={() => {
                       navigate(playbackTarget.route);
                     }}
-                    disabled={
-                      isReleaseBlocked ||
-                      myselfData?.isLoading
-                    }
+                    disabled={isReleaseBlocked || myselfData?.isLoading}
                     startDecorator={<PlayArrow />}
                     sx={{
                       flex: 1,
@@ -513,44 +573,104 @@ function Header({
                   >
                     {playLabel}
                   </Button>
-                  <Button
-                    disabled={
-                      myselfData?.isLoading ||
-                      addToWatchlistData?.isLoading ||
-                      removeFromWatchlistData?.isLoading
-                    }
-                    onClick={() => {
-                      if (!isLoggedIn) {
-                        navigate("/auth/login");
-                        return;
-                      }
-
-                      if (watchlistItem) {
-                        void removeFromWatchlist(movieType, movieId.toString());
-                        return;
-                      }
-
-                      void addToWatchlist(
-                        movieType,
-                        movieId.toString(),
-                        movieDetails.poster_path,
-                        movieTitle,
-                      );
-                    }}
-                    sx={{
-                      minWidth: { xs: "54px", md: "64px" },
-                      color: "black",
-                      backgroundColor: "white",
-                      "&:hover": {
-                        backgroundColor: "rgb(255, 255, 255, 0.9)",
-                      },
-                      "&:active": {
-                        backgroundColor: "rgb(255, 255, 255, 0.8)",
-                      },
+                  <Dropdown
+                    open={collectionsMenuOpen}
+                    onOpenChange={(_, o) => {
+                      if (o) {
+                        setCollectionsMenuOpen(true);
+                        loadCollections();
+                      } else setCollectionsMenuOpen(false);
                     }}
                   >
-                    {watchlistItem ? <Check /> : <Add />}
-                  </Button>
+                    <MenuButton
+                      slots={{ root: Button }}
+                      slotProps={{
+                        root: {
+                          sx: {
+                            minWidth: { xs: "44px", md: "50px" },
+                            color: "black",
+                            backgroundColor: "white",
+                            borderLeft: "1px solid rgba(0,0,0,0.12)",
+                            padding: 0,
+                            "&:hover": {
+                              backgroundColor: "rgb(255,255,255,0.9)",
+                            },
+                            "&:active": {
+                              backgroundColor: "rgb(255,255,255,0.8)",
+                            },
+                          },
+                        },
+                      }}
+                    >
+                      <ArrowDropDown />
+                    </MenuButton>
+                    <Menu
+                      placement="bottom-end"
+                      sx={{ minWidth: 220, zIndex: 1300 }}
+                    >
+                      <MenuItem
+                        disabled={
+                          addToWatchlistData?.isLoading ||
+                          removeFromWatchlistData?.isLoading
+                        }
+                        onClick={() => {
+                          if (!isLoggedIn) {
+                            navigate("/auth/login");
+                            return;
+                          }
+                          if (watchlistItem)
+                            void removeFromWatchlist(
+                              movieType,
+                              movieId.toString(),
+                            );
+                          else
+                            void addToWatchlist(
+                              movieType,
+                              movieId.toString(),
+                              (movieDetails as any)?.poster_path,
+                              movieTitle,
+                            );
+                          setCollectionsMenuOpen(false);
+                        }}
+                      >
+                        {watchlistItem ? (
+                          <Check sx={{ fontSize: 18 }} />
+                        ) : (
+                          <Add sx={{ fontSize: 18 }} />
+                        )}
+                        {watchlistItem
+                          ? "Remove from Watchlist"
+                          : "Add to Watchlist"}
+                      </MenuItem>
+                      {collections.length > 0 && (
+                        <>
+                          <MenuItem
+                            disabled
+                            sx={{ fontSize: "0.72rem", opacity: 0.5, py: 0.5 }}
+                          >
+                            MY LISTS
+                          </MenuItem>
+                          {collections.map((col) => (
+                            <MenuItem
+                              key={col.id}
+                              onClick={() => addToList(col.id, col.name)}
+                              disabled={addingToList === col.id}
+                            >
+                              <PlaylistAdd sx={{ fontSize: 18 }} />
+                              Add to "{col.name}"
+                            </MenuItem>
+                          ))}
+                        </>
+                      )}
+                      <MenuItem
+                        onClick={createListAndAdd}
+                        disabled={addingToList === "new"}
+                      >
+                        <Add sx={{ fontSize: 18 }} />
+                        Create new list &amp; add
+                      </MenuItem>
+                    </Menu>
+                  </Dropdown>
                 </ButtonGroup>
                 {hasStartedWatching ? (
                   <ButtonGroup
@@ -603,8 +723,7 @@ function Header({
                   level="body-sm"
                   sx={{
                     minHeight: "20px",
-                    color:
-                      "rgba(255,255,255,0.72)",
+                    color: "rgba(255,255,255,0.72)",
                   }}
                 >
                   {playButtonNote}
@@ -664,14 +783,19 @@ function Header({
                 {movieType === "tv" && isLoggedIn && (
                   <Button
                     onClick={() => {
-                      const interests = (myselfData?.data as unknown as User)?.notificationInterests;
+                      const interests = (myselfData?.data as unknown as User)
+                        ?.notificationInterests;
                       const followed = interests?.followedShows || [];
-                      const isCurrentlyFollowing = followed.includes(String(movieId));
+                      const isCurrentlyFollowing = followed.includes(
+                        String(movieId),
+                      );
                       updateMyself({
                         notificationInterests: {
                           ...interests,
                           followedShows: isCurrentlyFollowing
-                            ? followed.filter((id: string) => id !== String(movieId))
+                            ? followed.filter(
+                                (id: string) => id !== String(movieId),
+                              )
                             : [...followed, String(movieId)],
                         },
                       } as any);
@@ -679,24 +803,44 @@ function Header({
                     sx={{
                       width: "100%",
                       borderRadius: "16px",
-                      color: (myselfData?.data as unknown as User)?.notificationInterests?.followedShows?.includes(String(movieId))
+                      color: (
+                        myselfData?.data as unknown as User
+                      )?.notificationInterests?.followedShows?.includes(
+                        String(movieId),
+                      )
                         ? "rgb(255, 224, 130)"
                         : "white",
                       border: "1px solid",
-                      borderColor: (myselfData?.data as unknown as User)?.notificationInterests?.followedShows?.includes(String(movieId))
+                      borderColor: (
+                        myselfData?.data as unknown as User
+                      )?.notificationInterests?.followedShows?.includes(
+                        String(movieId),
+                      )
                         ? "rgba(255, 204, 92, 0.72)"
                         : "rgba(255,255,255,0.28)",
-                      background: "linear-gradient(180deg, rgba(22, 33, 57, 0.96) 0%, rgba(10, 16, 28, 0.96) 100%)",
+                      background:
+                        "linear-gradient(180deg, rgba(22, 33, 57, 0.96) 0%, rgba(10, 16, 28, 0.96) 100%)",
                       "&:hover": {
-                        background: "linear-gradient(180deg, rgba(22, 33, 57, 0.96) 0%, rgba(10, 16, 28, 0.96) 100%)",
+                        background:
+                          "linear-gradient(180deg, rgba(22, 33, 57, 0.96) 0%, rgba(10, 16, 28, 0.96) 100%)",
                       },
                     }}
                   >
-                    {(myselfData?.data as unknown as User)?.notificationInterests?.followedShows?.includes(String(movieId))
-                      ? <Notifications />
-                      : <NotificationsNone />}
+                    {(
+                      myselfData?.data as unknown as User
+                    )?.notificationInterests?.followedShows?.includes(
+                      String(movieId),
+                    ) ? (
+                      <Notifications />
+                    ) : (
+                      <NotificationsNone />
+                    )}
                     <Typography level="body-sm" sx={{ fontWeight: 700 }}>
-                      {(myselfData?.data as unknown as User)?.notificationInterests?.followedShows?.includes(String(movieId))
+                      {(
+                        myselfData?.data as unknown as User
+                      )?.notificationInterests?.followedShows?.includes(
+                        String(movieId),
+                      )
                         ? "Following — new episodes"
                         : "Follow for new episodes"}
                     </Typography>
@@ -745,7 +889,9 @@ function Header({
               </Box>
 
               {overview ? (
-                <Box sx={{ display: "flex", flexDirection: "column", gap: 0.75 }}>
+                <Box
+                  sx={{ display: "flex", flexDirection: "column", gap: 0.75 }}
+                >
                   {activeEpisodeTitle ? (
                     <Typography
                       level="title-md"
@@ -776,7 +922,9 @@ function Header({
                     <Button
                       variant="plain"
                       size="sm"
-                      onClick={() => setIsOverviewExpanded((current) => !current)}
+                      onClick={() =>
+                        setIsOverviewExpanded((current) => !current)
+                      }
                       sx={{
                         alignSelf: { xs: "center", md: "flex-start" },
                         px: 0,
@@ -834,7 +982,9 @@ function Header({
         open={isRatingOpen}
         title={movieTitle}
         titleLogoSrc={
-          movieLogo ? `https://image.tmdb.org/t/p/original${movieLogo}` : undefined
+          movieLogo
+            ? `https://image.tmdb.org/t/p/original${movieLogo}`
+            : undefined
         }
         initialRating={ratingItem?.rating || 0}
         onClose={() => setIsRatingOpen(false)}
@@ -850,8 +1000,8 @@ function Header({
         onDelete={
           ratingItem
             ? async () => {
-              await deleteRating(movieType, String(movieId));
-            }
+                await deleteRating(movieType, String(movieId));
+              }
             : undefined
         }
       />

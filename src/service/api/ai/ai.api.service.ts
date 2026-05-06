@@ -15,11 +15,20 @@ export interface AIRecommendation {
   reason: string;
 }
 
+export interface ListAction {
+  action: "add" | "create_and_add";
+  listName: string;
+  title: string;
+  mediaType: "movie" | "tv";
+  tmdbId?: number;
+}
+
 export interface AIChatResponse {
   sessionId: string;
   reply: string;
   recommendations: AIRecommendation[];
   searchQueries: string[];
+  listActions?: ListAction[];
 }
 
 export interface AIChatSessionSummary {

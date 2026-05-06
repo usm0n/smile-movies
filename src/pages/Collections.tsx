@@ -15,7 +15,6 @@ import { useNavigate } from "react-router-dom";
 import { collectionsAPI, Collection } from "../service/api/smb/collections.api.service";
 import Container from "../utilities/Container";
 import { useUsers } from "../context/Users";
-import NotLoggedIn from "../components/utils/NotLoggedIn";
 
 function Collections() {
   const [collections, setCollections] = useState<Collection[]>([]);
@@ -27,17 +26,13 @@ function Collections() {
   const { isAuthenticated } = useUsers();
 
   useEffect(() => {
-    if (!isAuthenticated) { setLoading(false); return; }
+    if (!isAuthenticated) return;
     collectionsAPI
       .getAll()
       .then((d) => setCollections(d.collections))
       .catch(() => {})
       .finally(() => setLoading(false));
   }, [isAuthenticated]);
-
-  if (!loading && !isAuthenticated) {
-    return <NotLoggedIn type="page" />;
-  }
 
   const create = async () => {
     if (!newName.trim()) return;
@@ -61,7 +56,7 @@ function Collections() {
 
   return (
     <Container>
-      <Box sx={{ py: 4 }}>
+      <Box sx={{ padding: "100px 0px", display: "flex", flexDirection: "column", gap: "28px", minHeight: "100vh" }}>
         <Box
           sx={{
             display: "flex",

@@ -1,88 +1,106 @@
 import {
-  Box,
-  Button,
-  Chip,
-  CircularProgress,
-  Divider,
-  IconButton,
-  Input,
-  Tooltip,
-  Typography,
+  Box, Button, Chip, CircularProgress, Divider, IconButton, Input,
+  Modal, ModalDialog, Tab, TabList, TabPanel, Tabs, Tooltip, Typography,
 } from "@mui/joy";
-import { ContentCopy, People, Send, ArrowBackIos } from "@mui/icons-material";
-import { useEffect, useRef, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
 import {
-  watchPartyAPI,
-  WatchParty,
-  WatchPartyMessage,
-} from "../service/api/smb/watchparty.api.service";
+  ContentCopy, People, Send, ArrowBackIos, Chat, PersonOutline,
+} from "@mui/icons-material";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { watchPartyAPI, WatchParty, WatchPartyMessage } from "../service/api/smb/watchparty.api.service";
 import { useUsers } from "../context/Users";
 import { User } from "../user";
 import toast from "react-hot-toast";
 import { copyToClipboard } from "../utilities/defaults";
 
-const POLL_INTERVAL_MS = 2500;
+const POLL_INTERVAL_MS = 3000;
+const MAX_RETRIES = 3;
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 function WatchPartyPage() {
   const { code } = useParams<{ code: string }>();
-  const { myselfData } = useUsers();
+  const { myselfData, isAuthenticated } = useUsers();
   const [party, setParty] = useState<WatchParty | null>(null);
   const [loading, setLoading] = useState(true);
+  const [pageError, setPageError] = useState<string | null>(null);
   const [chatInput, setChatInput] = useState("");
   const [sending, setSending] = useState(false);
-  const [joined, setJoined] = useState(false);
+  const [guestName, setGuestName] = useState("");
+  const [guestNameSubmitted, setGuestNameSubmitted] = useState(false);
+  const [activeTab, setActiveTab] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const iframeRef = useRef<HTMLIFrameElement>(null);
   const navigate = useNavigate();
+  const joinedRef = useRef(false);
 
   const myUid = (myselfData?.data as User)?.id;
   const isHost = party?.hostUid === myUid;
+  const displayName = isAuthenticated
+    ? `${(myselfData?.data as User)?.firstname || ""} ${(myselfData?.data as User)?.lastname || ""}`.trim()
+    : guestName;
 
-  // Build the embedded watch URL — point to the same watch page inside an iframe
   const watchUrl = party
     ? `/${party.mediaType}/${party.mediaId}${
         party.mediaType === "tv" && party.season && party.episode
-          ? `/${party.season}/${party.episode}`
-          : ""
+          ? `/${party.season}/${party.episode}` : ""
       }/watch`
     : null;
 
-  // Join party on mount
-  useEffect(() => {
-    if (!code || joined) return;
-    watchPartyAPI.join(code).then(() => setJoined(true)).catch(() => {});
-  }, [code, joined]);
-
-  // Leave party on unmount
-  useEffect(() => {
-    return () => {
-      if (code) watchPartyAPI.leave(code).catch(() => {});
-    };
+  const fetchWithRetry = useCallback(async (): Promise<WatchParty | null> => {
+    if (!code) return null;
+    for (let i = 0; i <= MAX_RETRIES; i++) {
+      try {
+        return await watchPartyAPI.get(code);
+      } catch (err: any) {
+        if (err?.response?.status === 404) return null;
+        if (i < MAX_RETRIES) await sleep(1500);
+      }
+    }
+    return null;
   }, [code]);
 
-  // Poll for party state
+  // Initial load
   useEffect(() => {
     if (!code) return;
+    let cancelled = false;
+    fetchWithRetry().then((data) => {
+      if (cancelled) return;
+      if (!data) { setPageError("Party not found or has ended."); }
+      else setParty(data);
+      setLoading(false);
+    });
+    return () => { cancelled = true; };
+  }, [code, fetchWithRetry]);
 
-    const fetchParty = async () => {
-      try {
-        const data = await watchPartyAPI.get(code);
-        setParty(data);
-      } catch {
-        toast.error("Party not found or has ended.");
-        navigate("/");
-      } finally {
-        setLoading(false);
-      }
-    };
+  // Join once identity is known
+  useEffect(() => {
+    if (!party || loading || joinedRef.current) return;
+    if (!isAuthenticated && !guestNameSubmitted) return;
+    joinedRef.current = true;
+    watchPartyAPI.join(code!).catch(() => {});
+  }, [party, loading, isAuthenticated, guestNameSubmitted]);
 
-    fetchParty();
-    const interval = setInterval(fetchParty, POLL_INTERVAL_MS);
-    return () => clearInterval(interval);
+  // Leave on unmount
+  useEffect(() => {
+    return () => { if (code && joinedRef.current) watchPartyAPI.leave(code).catch(() => {}); };
   }, [code]);
 
-  // Scroll chat to bottom when messages arrive
+  // Poll
+  useEffect(() => {
+    if (!code || loading || pageError) return;
+    const interval = setInterval(async () => {
+      try {
+        setParty(await watchPartyAPI.get(code));
+      } catch (err: any) {
+        if (err?.response?.status === 404) {
+          clearInterval(interval);
+          toast("The watch party has ended.");
+          navigate("/");
+        }
+      }
+    }, POLL_INTERVAL_MS);
+    return () => clearInterval(interval);
+  }, [code, loading, pageError]);
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [party?.messages?.length]);
@@ -93,114 +111,81 @@ function WatchPartyPage() {
     try {
       await watchPartyAPI.sendMessage(code, chatInput.trim());
       setChatInput("");
-    } catch {
-      toast.error("Failed to send message.");
-    } finally {
-      setSending(false);
-    }
+    } catch { toast.error("Failed to send message."); }
+    finally { setSending(false); }
   };
 
-  const copyInviteLink = () => {
-    const url = `${window.location.origin}/party/${code}`;
-    copyToClipboard(url);
-    toast.success("Invite link copied!");
-  };
+  const copyLink = () => { copyToClipboard(`${window.location.origin}/party/${code}`); toast.success("Invite link copied!"); };
 
-  if (loading) {
+  // Guest name prompt for unauthenticated users
+  if (!loading && !pageError && !isAuthenticated && !guestNameSubmitted) {
     return (
-      <Box sx={{ height: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <CircularProgress size="lg" />
-      </Box>
+      <Modal open onClose={() => navigate("/")}>
+        <ModalDialog sx={{ maxWidth: 360, textAlign: "center", p: 4, display: "flex", flexDirection: "column", gap: 2, alignItems: "center" }}>
+          <Box sx={{ width: 52, height: 52, borderRadius: "50%", background: "rgba(255,220,92,0.15)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <PersonOutline sx={{ color: "rgb(255,220,92)", fontSize: 28 }} />
+          </Box>
+          <Typography level="h4">Join the party</Typography>
+          <Typography level="body-sm" sx={{ color: "text.tertiary" }}>What should everyone call you?</Typography>
+          <Input autoFocus placeholder="Your name..." value={guestName}
+            onChange={(e) => setGuestName(e.target.value.slice(0, 30))}
+            onKeyDown={(e) => e.key === "Enter" && guestName.trim() && setGuestNameSubmitted(true)}
+            sx={{ width: "100%" }} />
+          <Box sx={{ display: "flex", gap: 1, width: "100%" }}>
+            <Button fullWidth onClick={() => { if (guestName.trim()) setGuestNameSubmitted(true); }} disabled={!guestName.trim()}>Join</Button>
+            <Button fullWidth variant="outlined" color="neutral" onClick={() => navigate("/auth/login")}>Log in</Button>
+          </Box>
+        </ModalDialog>
+      </Modal>
     );
   }
+
+  if (loading) return (
+    <Box sx={{ height: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <CircularProgress size="lg" />
+    </Box>
+  );
+
+  if (pageError) return (
+    <Box sx={{ height: "100vh", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 2 }}>
+      <Typography level="h3" sx={{ color: "text.tertiary" }}>{pageError}</Typography>
+      <Button onClick={() => navigate("/")} variant="outlined">Go Home</Button>
+    </Box>
+  );
 
   if (!party) return null;
 
   const messages: WatchPartyMessage[] = party.messages || [];
+  const members: any[] = Array.isArray(party.members) ? party.members : [];
 
   return (
-    <Box sx={{ display: "flex", height: "100vh", overflow: "hidden", background: "#000", zIndex: 100000 }}>
-      {/* Player side */}
+    <Box sx={{ display: "flex", height: "100vh", overflow: "hidden", background: "#000" }}>
+      {/* Player */}
       <Box sx={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
-        {/* Top bar */}
-        <Box
-          sx={{
-            px: 2,
-            py: 1,
-            display: "flex",
-            alignItems: "center",
-            gap: 1,
-            borderBottom: "1px solid rgba(255,255,255,0.08)",
-            background: "rgba(0,0,0,0.8)",
-            backdropFilter: "blur(8px)",
-            zIndex: 10,
-          }}
-        >
-          <IconButton variant="plain" sx={{ color: "white" }} onClick={() => navigate(-1)}>
-            <ArrowBackIos />
-          </IconButton>
+        <Box sx={{ px: 2, py: 1, display: "flex", alignItems: "center", gap: 1, borderBottom: "1px solid rgba(255,255,255,0.08)", background: "rgba(0,0,0,0.8)", backdropFilter: "blur(8px)", zIndex: 10 }}>
+          <IconButton variant="plain" sx={{ color: "white" }} onClick={() => navigate(-1)}><ArrowBackIos /></IconButton>
           <Typography level="title-md" sx={{ flex: 1, color: "white" }}>
             Watch Party
-            {party.mediaId && (
-              <Typography component="span" level="body-sm" sx={{ color: "rgba(255,255,255,0.5)", ml: 1 }}>
-                · {party.mediaType === "tv" ? `S${party.season} E${party.episode}` : "Movie"}
-              </Typography>
+            {party.mediaType === "tv" && party.season && (
+              <Typography component="span" level="body-sm" sx={{ color: "rgba(255,255,255,0.4)", ml: 1 }}>· S{party.season} E{party.episode}</Typography>
             )}
           </Typography>
-          <Chip startDecorator={<People />} variant="soft" color="neutral" size="sm">
-            {Array.isArray(party.members) ? party.members.length : 1} watching
-          </Chip>
-          {isHost && (
-            <Chip variant="solid" color="warning" size="sm">
-              Host
-            </Chip>
-          )}
+          <Chip startDecorator={<People />} variant="soft" color="neutral" size="sm">{members.length || 1} watching</Chip>
+          {isHost && <Chip variant="solid" color="warning" size="sm">Host</Chip>}
           <Tooltip title="Copy invite link">
-            <Button
-              size="sm"
-              variant="outlined"
-              color="neutral"
-              startDecorator={<ContentCopy fontSize="small" />}
-              onClick={copyInviteLink}
-              sx={{ color: "white", borderColor: "rgba(255,255,255,0.3)", display: { xs: "none", sm: "flex" } }}
-            >
+            <Button size="sm" variant="outlined" color="neutral" startDecorator={<ContentCopy fontSize="small" />} onClick={copyLink}
+              sx={{ color: "white", borderColor: "rgba(255,255,255,0.3)", display: { xs: "none", sm: "flex" } }}>
               {code}
             </Button>
           </Tooltip>
         </Box>
-
-        {/* Embedded watch page */}
         {watchUrl ? (
           <Box sx={{ flex: 1, position: "relative" }}>
-            <iframe
-              ref={iframeRef}
-              src={watchUrl}
-              style={{
-                width: "100%",
-                height: "100%",
-                border: "none",
-                background: "#000",
-              }}
-              allow="autoplay; fullscreen; encrypted-media"
-              allowFullScreen
-            />
-            {/* Sync indicator for guests */}
+            <iframe src={watchUrl} style={{ width: "100%", height: "100%", border: "none", background: "#000" }}
+              allow="autoplay; fullscreen; encrypted-media" allowFullScreen />
             {!isHost && (
-              <Box
-                sx={{
-                  position: "absolute",
-                  top: 12,
-                  left: 12,
-                  background: "rgba(0,0,0,0.7)",
-                  borderRadius: "sm",
-                  px: 1.5,
-                  py: 0.5,
-                  backdropFilter: "blur(4px)",
-                }}
-              >
-                <Typography level="body-xs" sx={{ color: "rgba(255,255,255,0.6)" }}>
-                  🎬 Watching together
-                </Typography>
+              <Box sx={{ position: "absolute", top: 12, left: 12, background: "rgba(0,0,0,0.7)", borderRadius: "sm", px: 1.5, py: 0.5, backdropFilter: "blur(4px)" }}>
+                <Typography level="body-xs" sx={{ color: "rgba(255,255,255,0.6)" }}>🎬 Watching together</Typography>
               </Box>
             )}
           </Box>
@@ -211,118 +196,70 @@ function WatchPartyPage() {
         )}
       </Box>
 
-      {/* Chat sidebar */}
-      <Box
-        sx={{
-          width: 320,
-          flexShrink: 0,
-          display: "flex",
-          flexDirection: "column",
-          borderLeft: "1px solid rgba(255,255,255,0.08)",
-          background: "rgba(10,10,15,0.97)",
-          "@media (max-width: 900px)": { display: "none" },
-        }}
-      >
-        {/* Sidebar header */}
-        <Box
-          sx={{
-            p: 2,
-            borderBottom: "1px solid rgba(255,255,255,0.08)",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
-          <Typography level="title-md" sx={{ color: "white" }}>
-            Party Chat
-          </Typography>
-          <IconButton size="sm" variant="plain" sx={{ color: "white" }} onClick={copyInviteLink}>
-            <ContentCopy fontSize="small" />
-          </IconButton>
-        </Box>
+      {/* Sidebar */}
+      <Box sx={{ width: 320, flexShrink: 0, display: "flex", flexDirection: "column", borderLeft: "1px solid rgba(255,255,255,0.08)", background: "rgba(10,10,15,0.97)", "@media (max-width: 900px)": { display: "none" } }}>
+        <Tabs value={activeTab} onChange={(_, v) => setActiveTab(v as number)} sx={{ background: "transparent", flex: 1, display: "flex", flexDirection: "column" }}>
+          <TabList sx={{ borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
+            <Tab sx={{ color: "white", flex: 1 }}><Chat sx={{ fontSize: 16, mr: 0.5 }} />Chat</Tab>
+            <Tab sx={{ color: "white", flex: 1 }}><People sx={{ fontSize: 16, mr: 0.5 }} />Members ({members.length || 1})</Tab>
+          </TabList>
 
-        {/* Members */}
-        <Box sx={{ px: 2, py: 1, borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-          <Typography level="body-xs" sx={{ color: "rgba(255,255,255,0.4)", mb: 0.5 }}>
-            {Array.isArray(party.members) ? party.members.length : 1} people watching
-          </Typography>
-        </Box>
+          <TabPanel value={0} sx={{ flex: 1, display: "flex", flexDirection: "column", p: 0, overflow: "hidden" }}>
+            <Box sx={{ flex: 1, overflowY: "auto", p: 2, display: "flex", flexDirection: "column", gap: 1.5 }}>
+              {messages.length === 0 && (
+                <Typography level="body-sm" sx={{ color: "rgba(255,255,255,0.3)", textAlign: "center", mt: 4 }}>No messages yet. Say hi! 👋</Typography>
+              )}
+              {messages.map((msg, i) => {
+                const isMine = msg.uid === myUid || (!myUid && msg.displayName === displayName);
+                return (
+                  <Box key={i} sx={{ display: "flex", flexDirection: "column", alignItems: isMine ? "flex-end" : "flex-start" }}>
+                    {!isMine && <Typography level="body-xs" sx={{ color: "rgba(255,255,255,0.4)", mb: 0.3 }}>{msg.displayName || "Guest"}</Typography>}
+                    <Box sx={{ background: isMine ? "rgb(255,220,92)" : "rgba(255,255,255,0.1)", color: isMine ? "black" : "white", borderRadius: isMine ? "16px 16px 4px 16px" : "16px 16px 16px 4px", px: 1.5, py: 0.75, maxWidth: "85%", wordBreak: "break-word" }}>
+                      <Typography level="body-sm">{msg.text}</Typography>
+                    </Box>
+                    <Typography level="body-xs" sx={{ color: "rgba(255,255,255,0.25)", mt: 0.3 }}>
+                      {new Date(msg.at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                    </Typography>
+                  </Box>
+                );
+              })}
+              <div ref={messagesEndRef} />
+            </Box>
+            <Divider />
+            <Box sx={{ p: 2, display: "flex", gap: 1 }}>
+              <Input size="sm" placeholder="Type a message..." value={chatInput}
+                onChange={(e) => setChatInput(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && sendMessage()}
+                sx={{ flex: 1, background: "rgba(255,255,255,0.06)", color: "white" }} />
+              <IconButton size="sm" variant="solid" color="warning" onClick={sendMessage} disabled={!chatInput.trim() || sending}>
+                <Send fontSize="small" />
+              </IconButton>
+            </Box>
+          </TabPanel>
 
-        {/* Messages */}
-        <Box
-          sx={{
-            flex: 1,
-            overflowY: "auto",
-            p: 2,
-            display: "flex",
-            flexDirection: "column",
-            gap: 1.5,
-          }}
-        >
-          {messages.length === 0 && (
-            <Typography level="body-sm" sx={{ color: "rgba(255,255,255,0.3)", textAlign: "center", mt: 4 }}>
-              No messages yet. Say hi! 👋
-            </Typography>
-          )}
-          {messages.map((msg, i) => {
-            const isMine = msg.uid === myUid;
-            return (
-              <Box
-                key={i}
-                sx={{
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: isMine ? "flex-end" : "flex-start",
-                }}
-              >
-                {!isMine && (
-                  <Typography level="body-xs" sx={{ color: "rgba(255,255,255,0.4)", mb: 0.3 }}>
-                    {msg.displayName || msg.uid?.slice(0, 8)}
-                  </Typography>
-                )}
-                <Box
-                  sx={{
-                    background: isMine ? "rgb(255,220,92)" : "rgba(255,255,255,0.1)",
-                    color: isMine ? "black" : "white",
-                    borderRadius: isMine ? "16px 16px 4px 16px" : "16px 16px 16px 4px",
-                    px: 1.5,
-                    py: 0.75,
-                    maxWidth: "85%",
-                    wordBreak: "break-word",
-                  }}
-                >
-                  <Typography level="body-sm">{msg.text}</Typography>
-                </Box>
-                <Typography level="body-xs" sx={{ color: "rgba(255,255,255,0.25)", mt: 0.3 }}>
-                  {new Date(msg.at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                </Typography>
+          <TabPanel value={1} sx={{ p: 2, flex: 1, overflowY: "auto" }}>
+            {members.length === 0 ? (
+              <Typography level="body-sm" sx={{ color: "rgba(255,255,255,0.3)", textAlign: "center", mt: 4 }}>Just you for now...</Typography>
+            ) : (
+              <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+                {members.map((m: any, i: number) => {
+                  const uid = typeof m === "string" ? m : m.uid;
+                  const name = typeof m === "string" ? m.slice(0, 8) : (m.displayName || "Guest");
+                  const isMe = uid === myUid || name === displayName;
+                  return (
+                    <Box key={i} sx={{ display: "flex", alignItems: "center", gap: 1.5, py: 0.5 }}>
+                      <Box sx={{ width: 32, height: 32, borderRadius: "50%", background: "rgba(255,220,92,0.2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        <Typography level="body-sm" sx={{ color: "rgb(255,220,92)", fontWeight: 700 }}>{name.slice(0, 1).toUpperCase()}</Typography>
+                      </Box>
+                      <Typography level="body-sm" sx={{ color: "white", flex: 1 }}>{name}{isMe ? " (you)" : ""}</Typography>
+                      {uid === party.hostUid && <Chip size="sm" variant="solid" color="warning">Host</Chip>}
+                    </Box>
+                  );
+                })}
               </Box>
-            );
-          })}
-          <div ref={messagesEndRef} />
-        </Box>
-
-        {/* Chat input */}
-        <Divider />
-        <Box sx={{ p: 2, display: "flex", gap: 1 }}>
-          <Input
-            size="sm"
-            placeholder="Type a message..."
-            value={chatInput}
-            onChange={(e) => setChatInput(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && sendMessage()}
-            sx={{ flex: 1, background: "rgba(255,255,255,0.06)", color: "white" }}
-          />
-          <IconButton
-            size="sm"
-            variant="solid"
-            color="warning"
-            onClick={sendMessage}
-            disabled={!chatInput.trim() || sending}
-          >
-            <Send fontSize="small" />
-          </IconButton>
-        </Box>
+            )}
+          </TabPanel>
+        </Tabs>
       </Box>
     </Box>
   );

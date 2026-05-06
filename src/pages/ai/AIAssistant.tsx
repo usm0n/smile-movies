@@ -2,6 +2,7 @@ import {
   Box,
   Button,
   Card,
+  Chip,
   CircularProgress,
   Divider,
   Drawer,
@@ -18,6 +19,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   AIRecommendation,
   AIChatSessionSummary,
+  ListAction,
   aiService,
   ChatMessage,
 } from "../../service/api/ai/ai.api.service";
@@ -32,11 +34,15 @@ import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import MenuRoundedIcon from "@mui/icons-material/MenuRounded";
 import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
 import ReplayRoundedIcon from "@mui/icons-material/ReplayRounded";
+import PlaylistAddIcon from "@mui/icons-material/PlaylistAdd";
+import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import { isLoggedIn } from "../../utilities/defaults";
 import NotLoggedIn from "../../components/utils/NotLoggedIn";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { tmdb } from "../../service/api/tmdb/tmdb.api.service";
 import EventMC from "../../components/cards/EventMC";
+import { collectionsAPI } from "../../service/api/smb/collections.api.service";
+import { useUsers } from "../../context/Users";
 
 const SUGGESTIONS = [
   "Recommend me something like Interstellar",
@@ -68,6 +74,7 @@ type UIChatMessage = ChatMessage & {
   id: string;
   relatedMedia?: ResolvedMedia[];
   resolvingMedia?: boolean;
+  listActions?: import("../../service/api/ai/ai.api.service").ListAction[];
 };
 
 const makeMessageId = () =>
@@ -196,11 +203,61 @@ function AIAssistant() {
     sessionId: string | null;
   } | null>(null);
   const [syncingHistory, setSyncingHistory] = useState(false);
+  // Track which list actions have been executed (by msgId+index)
+  const [executedListActions, setExecutedListActions] = useState<Set<string>>(new Set());
+  const [executingListAction, setExecutingListAction] = useState<string | null>(null);
+
+  const { isAuthenticated } = useUsers();
+
+  const handleListAction = useCallback(async (action: ListAction, actionKey: string) => {
+    if (!isAuthenticated) return;
+    setExecutingListAction(actionKey);
+    try {
+      const allLists = await collectionsAPI.getAll();
+      const existing = allLists.collections.find(
+        (c) => c.name.toLowerCase() === action.listName.toLowerCase(),
+      );
+      let collectionId = existing?.id;
+      if (!collectionId) {
+        const created = await collectionsAPI.create(action.listName);
+        collectionId = created.collection.id;
+      }
+      await collectionsAPI.addItem(collectionId, {
+        id: String(action.tmdbId || action.title),
+        type: action.mediaType,
+        title: action.title,
+      });
+      setExecutedListActions((prev) => new Set([...prev, actionKey]));
+    } catch {
+      // silently fail — user can do it manually
+    } finally {
+      setExecutingListAction(null);
+    }
+  }, [isAuthenticated]);
 
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const shouldAutoScrollRef = useRef(true);
   const sessionLoadToken = useRef(0);
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Auto-send a prompt passed via ?prompt= query param (e.g. from "Let AI pick" button)
+  const autoPromptRef = useRef(false);
+  useEffect(() => {
+    const promptParam = searchParams.get("prompt");
+    if (!promptParam || autoPromptRef.current || loadingHistory) return;
+    autoPromptRef.current = true;
+    setInput(promptParam);
+    // Remove param from URL without re-render loop
+    const next = new URLSearchParams(searchParams);
+    next.delete("prompt");
+    setSearchParams(next, { replace: true });
+    // Small delay so input renders before we send
+    setTimeout(() => {
+      setInput("");
+      void sendMessage({ overrideInput: promptParam });
+    }, 120);
+  }, [searchParams, loadingHistory]);
 
   const scrollMessagesToBottom = useCallback(
     (behavior: ScrollBehavior = "smooth") => {
@@ -428,6 +485,7 @@ function AIAssistant() {
           role: "assistant",
           content: response.reply,
           recommendations: response.recommendations,
+          listActions: response.listActions,
           resolvingMedia: true,
           relatedMedia: [],
           createdAtMs: Date.now(),
@@ -464,8 +522,9 @@ function AIAssistant() {
   );
 
   const sendMessage = useCallback(
-    async (text?: string) => {
-      const userText = (text || input).trim();
+    async (textOrOptions?: string | { overrideInput?: string }) => {
+      const overrideInput = typeof textOrOptions === "object" ? textOrOptions?.overrideInput : textOrOptions;
+      const userText = (overrideInput || input).trim();
       if (!userText || loading || loadingSession) return;
 
       setInput("");
@@ -1091,6 +1150,46 @@ function AIAssistant() {
                           </Box>
                         ))}
                       </Box>
+                    </Box>
+                  )}
+
+                  {/* List action suggestions */}
+                  {msg.role === "assistant" && msg.listActions && msg.listActions.length > 0 && (
+                    <Box sx={{ mt: 1.5, display: "flex", flexWrap: "wrap", gap: 1 }}>
+                      {msg.listActions.map((action, idx) => {
+                        const actionKey = `${msg.id}-${idx}`;
+                        const done = executedListActions.has(actionKey);
+                        const busy = executingListAction === actionKey;
+                        return (
+                          <Chip
+                            key={actionKey}
+                            size="sm"
+                            variant={done ? "solid" : "outlined"}
+                            color={done ? "success" : "neutral"}
+                            startDecorator={
+                              busy ? (
+                                <CircularProgress size="sm" sx={{ "--CircularProgress-size": "14px" }} />
+                              ) : done ? (
+                                <CheckCircleOutlineIcon sx={{ fontSize: 14 }} />
+                              ) : (
+                                <PlaylistAddIcon sx={{ fontSize: 14 }} />
+                              )
+                            }
+                            onClick={() => !done && !busy && handleListAction(action, actionKey)}
+                            sx={{
+                              cursor: done ? "default" : "pointer",
+                              fontSize: "0.75rem",
+                              py: 0.5,
+                            }}
+                          >
+                            {done
+                              ? `Added to "${action.listName}"`
+                              : action.action === "create_and_add"
+                              ? `Create "${action.listName}" & add ${action.title}`
+                              : `Add ${action.title} → "${action.listName}"`}
+                          </Chip>
+                        );
+                      })}
                     </Box>
                   )}
                 </Card>

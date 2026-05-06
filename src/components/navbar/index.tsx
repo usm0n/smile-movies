@@ -5,6 +5,10 @@ import {
   Logout,
   Search,
   WarningRounded,
+  Lock,
+  LockOpen,
+  SwitchAccount,
+  PersonAdd,
 } from "@mui/icons-material";
 import MenuIcon from "@mui/icons-material/Menu";
 import highLogo from "../../assets/images/logo-1000.png";
@@ -43,6 +47,7 @@ import { User } from "../../user";
 import { googleLogout } from "@react-oauth/google";
 import { useTMDB } from "../../context/TMDB";
 import { images, movieDetails, searchMulti, tvDetails } from "../../tmdb-res";
+import PinLockModal from "../account/PinLockModal";
 
 const DETAIL_PAGE_REGEX = /^\/(movie|tv)\/([^/]+)$/;
 
@@ -56,6 +61,8 @@ const Navbar: React.FC = () => {
   const [logoutModal, setLogoutModal] = useState(false);
   const [searchVisibility, setSearchVisibility] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [pinModalMode, setPinModalMode] = useState<"setup" | "verify" | "change" | null>(null);
+  const [isLocked, setIsLocked] = useState(false);
   const { myselfData, logout, logoutData, isAuthenticated, authResolved } =
     useUsers();
   const [searchValue, setSearchValue] = useState("");
@@ -244,9 +251,30 @@ const Navbar: React.FC = () => {
             <MenuItem onClick={() => navigate("/downloads")}>
               <ListItemContent>Downloads</ListItemContent>
             </MenuItem>
-            <MenuItem onClick={() => navigate("/what-to-watch")}>
+            <MenuItem onClick={() => navigate(`/ai?prompt=${encodeURIComponent("Help me decide what to watch. Ask me a few questions about my mood, genre preferences, and how long I have — then give me personalised picks.")}`)}>
               <ListItemContent>✨ What to Watch?</ListItemContent>
             </MenuItem>
+            <Divider />
+            {/* PIN lock */}
+            {user?.accountPin?.enabled ? (
+              <MenuItem onClick={() => { setIsLocked(true); }}>
+                <Lock sx={{ fontSize: 18, mr: 1 }} />
+                <ListItemContent>Lock Account</ListItemContent>
+              </MenuItem>
+            ) : (
+              <MenuItem onClick={() => setPinModalMode("setup")}>
+                <LockOpen sx={{ fontSize: 18, mr: 1 }} />
+                <ListItemContent>Set up PIN Lock</ListItemContent>
+              </MenuItem>
+            )}
+            {/* Verify account badge */}
+            {!user?.isVerified && (
+              <MenuItem onClick={() => navigate("/user/settings")} sx={{ color: "warning.400" }}>
+                <WarningRounded sx={{ fontSize: 18, mr: 1, color: "warning.400" }} />
+                <ListItemContent>Verify your account</ListItemContent>
+              </MenuItem>
+            )}
+            <Divider />
             {user?.handle && (
               <MenuItem onClick={() => navigate(`/u/${user.handle}`)}>
                 <ListItemContent>Public Profile</ListItemContent>
@@ -638,12 +666,54 @@ const Navbar: React.FC = () => {
             <ListItemButton onClick={() => navigateTo("/downloads")}>
               My Downloads
             </ListItemButton>
-            <ListItemButton onClick={() => navigateTo("/what-to-watch")}>
+            <ListItemButton onClick={() => navigateTo(`/ai?prompt=${encodeURIComponent("Help me decide what to watch. Ask me a few questions about my mood, genre preferences, and how long I have — then give me personalised picks.")}`)}>
               ✨ What to Watch?
             </ListItemButton>
           </List>
         </Box>
       </Drawer>
+
+      {/* PIN lock modal */}
+      {pinModalMode && (
+        <PinLockModal
+          open
+          mode={pinModalMode}
+          onSuccess={() => {
+            setPinModalMode(null);
+            if (pinModalMode === "verify") setIsLocked(false);
+          }}
+          onCancel={() => setPinModalMode(null)}
+        />
+      )}
+
+      {/* Lock screen overlay */}
+      {isLocked && (
+        <Box sx={{
+          position: "fixed", inset: 0, zIndex: 99999,
+          background: "rgba(0,0,0,0.97)",
+          backdropFilter: "blur(24px)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          flexDirection: "column", gap: 3,
+        }}>
+          <Avatar src={user?.profilePic} sx={{ width: 72, height: 72, fontSize: 28 }}>
+            {!user?.profilePic && <>{user?.firstname?.slice(0, 1)}{user?.lastname?.slice(0, 1)}</>}
+          </Avatar>
+          <Typography level="h3" sx={{ color: "white" }}>
+            {user?.firstname} {user?.lastname}
+          </Typography>
+          <Typography level="body-sm" sx={{ color: "rgba(255,255,255,0.5)" }}>
+            Account is locked
+          </Typography>
+          <Button
+            startDecorator={<LockOpen />}
+            size="lg"
+            onClick={() => setPinModalMode("verify")}
+            sx={{ mt: 1 }}
+          >
+            Unlock
+          </Button>
+        </Box>
+      )}
     </>
   );
 };

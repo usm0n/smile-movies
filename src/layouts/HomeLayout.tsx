@@ -6,7 +6,6 @@ import Header from "../components/home/Header";
 import Watchlist from "../components/home/Watchlist";
 import BecauseYouWatched from "../components/home/BecauseYouWatched";
 import PopularInRegion from "../components/home/PopularInRegion";
-import ContinueWatching from "../components/home/ContinueWatching";
 import { useTMDB } from "../context/TMDB";
 import Container from "../utilities/Container";
 import { ResponseType } from "../tmdb-res";
@@ -102,7 +101,6 @@ function HomeLayout() {
       />
 
       <Container>
-        <ContinueWatching />
         <BecauseYouWatched />
         <Watchlist />
         <Event

@@ -2,11 +2,10 @@ import {
   Box,
   Button,
   IconButton,
-  Input,
   Skeleton,
   Typography,
 } from "@mui/joy";
-import { ArrowBackIos, Edit, Check, Close } from "@mui/icons-material";
+import { ArrowBackIos } from "@mui/icons-material";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
@@ -21,29 +20,22 @@ function CollectionDetail() {
   const { collectionId } = useParams<{ collectionId: string }>();
   const [collection, setCollection] = useState<Collection | null>(null);
   const [loading, setLoading] = useState(true);
-  const [renaming, setRenaming] = useState(false);
-  const [newName, setNewName] = useState("");
-  const [savingName, setSavingName] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
     if (!collectionId) return;
-    // Try getById first, fall back to getAll if endpoint doesn't exist yet
     collectionsAPI
-      .getById(collectionId)
-      .then((d) => setCollection(d.collection))
-      .catch(() =>
-        collectionsAPI.getAll().then((d) => {
-          const found = d.collections.find((c) => c.id === collectionId);
-          setCollection(found || null);
-        }),
-      )
+      .getAll()
+      .then((d) => {
+        const found = d.collections.find((c) => c.id === collectionId);
+        setCollection(found || null);
+      })
       .catch(() => {})
       .finally(() => setLoading(false));
   }, [collectionId]);
 
   const removeItem = async (item: CollectionItem) => {
-    if (!collectionId || !collection) return;
+    if (!collectionId) return;
     await collectionsAPI.removeItem(collectionId, item.id, item.type);
     setCollection((prev) =>
       prev
@@ -55,19 +47,6 @@ function CollectionDetail() {
           }
         : prev,
     );
-  };
-
-  const saveRename = async () => {
-    if (!collectionId || !newName.trim()) return;
-    setSavingName(true);
-    try {
-      await collectionsAPI.rename(collectionId, newName.trim());
-      setCollection((prev) => prev ? { ...prev, name: newName.trim() } : prev);
-      setRenaming(false);
-    } catch {
-    } finally {
-      setSavingName(false);
-    }
   };
 
   if (loading) {
@@ -107,51 +86,20 @@ function CollectionDetail() {
   return (
     <Container>
       <Box sx={{ py: 4 }}>
-        {/* Header */}
         <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 4 }}>
-          <IconButton variant="outlined" onClick={() => navigate("/collections")}>
+          <IconButton
+            variant="outlined"
+            onClick={() => navigate("/collections")}
+          >
             <ArrowBackIos />
           </IconButton>
-          {renaming ? (
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1, flex: 1 }}>
-              <Input
-                autoFocus
-                value={newName}
-                onChange={(e) => setNewName(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && saveRename()}
-                sx={{ flex: 1, maxWidth: 320 }}
-              />
-              <IconButton
-                size="sm"
-                color="success"
-                variant="solid"
-                onClick={saveRename}
-                loading={savingName}
-              >
-                <Check />
-              </IconButton>
-              <IconButton size="sm" variant="outlined" onClick={() => setRenaming(false)}>
-                <Close />
-              </IconButton>
-            </Box>
-          ) : (
-            <Box sx={{ flex: 1, display: "flex", alignItems: "center", gap: 1 }}>
-              <Box>
-                <Typography level="h2">{collection.name}</Typography>
-                <Typography level="body-sm" sx={{ color: "text.tertiary" }}>
-                  {collection.items.length} title{collection.items.length !== 1 ? "s" : ""}
-                </Typography>
-              </Box>
-              <IconButton
-                size="sm"
-                variant="plain"
-                sx={{ ml: 1 }}
-                onClick={() => { setNewName(collection.name); setRenaming(true); }}
-              >
-                <Edit fontSize="small" />
-              </IconButton>
-            </Box>
-          )}
+          <Box>
+            <Typography level="h2">{collection.name}</Typography>
+            <Typography level="body-sm" sx={{ color: "text.tertiary" }}>
+              {collection.items.length} title
+              {collection.items.length !== 1 ? "s" : ""}
+            </Typography>
+          </Box>
         </Box>
 
         {collection.items.length === 0 ? (
@@ -169,7 +117,8 @@ function CollectionDetail() {
               This list is empty
             </Typography>
             <Typography level="body-md" sx={{ color: "text.tertiary" }}>
-              Add movies and TV shows by clicking the ⋮ menu on any card and choosing "Add to list".
+              Add movies and TV shows by right-clicking (or long-pressing) any
+              title and choosing "Add to list".
             </Typography>
             <Button variant="outlined" onClick={() => navigate("/")}>
               Browse titles

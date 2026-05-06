@@ -33,6 +33,7 @@ function Devices({ myselfData }: { myselfData: ResponseType | null }) {
     verifyDevice,
     verifyDeviceData,
     getMyself,
+    updateMyself,
   } = useUsers();
 
   const [detailDeviceId, setDetailDeviceId] = useState("");
@@ -65,6 +66,14 @@ function Devices({ myselfData }: { myselfData: ResponseType | null }) {
     await getMyself();
     setDetailDeviceId("");
     setDeleteConfirmId("");
+  };
+
+  const handleRequirePasswordChange = async (deviceId: string, value: string) => {
+    const devices = (user?.devices || []).map((d) =>
+      d.deviceId === deviceId ? { ...d, requirePassword: value } : d,
+    );
+    await updateMyself({ devices } as any);
+    await getMyself();
   };
 
   const activeDevices = user?.devices?.filter((d) => d.isActive) || [];
@@ -216,6 +225,39 @@ function Devices({ myselfData }: { myselfData: ResponseType | null }) {
                     )}
                   </Box>
                 </>
+              )}
+
+              <Divider />
+
+              {/* Require-password (device lock) setting */}
+              {selectedDevice.isActive && (
+                <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+                  <Typography level="title-sm">Require PIN when app is opened</Typography>
+                  <Typography level="body-xs" textColor="neutral.400">
+                    This setting only applies to this device. Your other devices are not affected.
+                  </Typography>
+                  <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mt: 0.5 }}>
+                    {[
+                      { value: "immediately", label: "Immediately" },
+                      { value: "5min", label: "5 min after" },
+                      { value: "30min", label: "30 min after" },
+                      { value: "never", label: "Never" },
+                    ].map((opt) => {
+                      const current = selectedDevice.requirePassword || "never";
+                      return (
+                        <Chip
+                          key={opt.value}
+                          variant={current === opt.value ? "solid" : "outlined"}
+                          color={current === opt.value ? "warning" : "neutral"}
+                          onClick={() => handleRequirePasswordChange(selectedDevice.deviceId, opt.value)}
+                          sx={{ cursor: "pointer" }}
+                        >
+                          {opt.label}
+                        </Chip>
+                      );
+                    })}
+                  </Box>
+                </Box>
               )}
 
               <Divider />
