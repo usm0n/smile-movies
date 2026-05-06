@@ -47,7 +47,8 @@ import { User } from "../../user";
 import { googleLogout } from "@react-oauth/google";
 import { useTMDB } from "../../context/TMDB";
 import { images, movieDetails, searchMulti, tvDetails } from "../../tmdb-res";
-import PinLockModal from "../account/PinLockModal";
+import PinLockModal from "../../components/account/PinLockModal";
+import { savedAccountsManager, SavedAccount } from "../../utilities/savedAccounts";
 
 const DETAIL_PAGE_REGEX = /^\/(movie|tv)\/([^/]+)$/;
 
@@ -63,6 +64,8 @@ const Navbar: React.FC = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [pinModalMode, setPinModalMode] = useState<"setup" | "verify" | "change" | null>(null);
   const [isLocked, setIsLocked] = useState(false);
+  const [showSwitchAccounts, setShowSwitchAccounts] = useState(false);
+  const [savedAccounts, setSavedAccounts] = useState<SavedAccount[]>([]);
   const { myselfData, logout, logoutData, isAuthenticated, authResolved } =
     useUsers();
   const [searchValue, setSearchValue] = useState("");
@@ -267,6 +270,11 @@ const Navbar: React.FC = () => {
                 <ListItemContent>Set up PIN Lock</ListItemContent>
               </MenuItem>
             )}
+            {/* Switch accounts */}
+            <MenuItem onClick={() => { setSavedAccounts(savedAccountsManager.getAll()); setShowSwitchAccounts(true); }}>
+              <SwitchAccount sx={{ fontSize: 18, mr: 1 }} />
+              <ListItemContent>Switch Account</ListItemContent>
+            </MenuItem>
             {/* Verify account badge */}
             {!user?.isVerified && (
               <MenuItem onClick={() => navigate("/user/settings")} sx={{ color: "warning.400" }}>
@@ -672,6 +680,49 @@ const Navbar: React.FC = () => {
           </List>
         </Box>
       </Drawer>
+
+      {/* Switch Accounts modal */}
+      <Modal open={showSwitchAccounts} onClose={() => setShowSwitchAccounts(false)}>
+        <ModalDialog sx={{ maxWidth: 380, p: 3 }}>
+          <Typography level="title-lg" sx={{ mb: 2 }}>Switch Account</Typography>
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+            {savedAccounts.filter((a) => a.id !== (user as any)?.id).map((acct) => (
+              <Box
+                key={acct.id}
+                sx={{ display: "flex", alignItems: "center", gap: 1.5, p: 1.5, borderRadius: "md", cursor: "pointer", "&:hover": { background: "rgba(255,255,255,0.06)" } }}
+                onClick={() => {
+                  setShowSwitchAccounts(false);
+                  // Log out current session then go to login
+                  // The user will log in to the other account manually
+                  navigate(`/auth/login?hint=${encodeURIComponent(acct.email)}`);
+                }}
+              >
+                <Avatar src={acct.profilePic} sx={{ width: 40, height: 40 }}>
+                  {!acct.profilePic && <>{acct.firstname?.slice(0, 1)}{acct.lastname?.slice(0, 1)}</>}
+                </Avatar>
+                <Box sx={{ flex: 1 }}>
+                  <Typography level="title-sm">{acct.firstname} {acct.lastname}</Typography>
+                  <Typography level="body-xs" sx={{ color: "text.tertiary" }}>{acct.email}</Typography>
+                </Box>
+              </Box>
+            ))}
+            {savedAccounts.filter((a) => a.id !== (user as any)?.id).length === 0 && (
+              <Typography level="body-sm" sx={{ color: "text.tertiary", textAlign: "center", py: 2 }}>
+                No other saved accounts.
+              </Typography>
+            )}
+            <Divider />
+            <Button
+              startDecorator={<PersonAdd />}
+              variant="outlined"
+              color="neutral"
+              onClick={() => { setShowSwitchAccounts(false); navigate("/auth/login"); }}
+            >
+              Add account
+            </Button>
+          </Box>
+        </ModalDialog>
+      </Modal>
 
       {/* PIN lock modal */}
       {pinModalMode && (

@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import * as userType from "../user";
 import { users } from "../service/api/smb/users.api.service";
+import { savedAccountsManager } from "../utilities/savedAccounts";
 import {
   deviceId,
   reload,
@@ -898,6 +899,18 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
 
     if (isAuthenticated && myselfData?.isSuccess && myselfData?.data) {
       const user = myselfData.data as userType.User;
+
+      // Save to switch-accounts list
+      if (user?.id) {
+        savedAccountsManager.upsert({
+          id: user.id,
+          email: user.email,
+          firstname: user.firstname,
+          lastname: user.lastname,
+          profilePic: user.profilePic,
+          handle: user.handle,
+        });
+      }
 
       // Only perform device-based logout if we have confirmed data and devices array is present
       if (Array.isArray(user?.devices)) {

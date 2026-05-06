@@ -81,7 +81,7 @@ function Downloads() {
 
   return (
     <Container>
-      <Box sx={{ py: 4 }}>
+      <Box sx={{ padding: "100px 0px", display: "flex", flexDirection: "column", gap: "28px", minHeight: "100vh" }}>
         <Box
           sx={{
             display: "flex",

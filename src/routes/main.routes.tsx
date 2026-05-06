@@ -2,6 +2,7 @@ import NotFound from "../components/utils/NotFound";
 import HomeLayout from "../layouts/HomeLayout";
 import ForgotPassword from "../pages/auth/forgot-password";
 import Login from "../pages/auth/Login";
+import QRApprove from "../pages/auth/QRApprove";
 import Register from "../pages/auth/Register";
 import ResetPassword from "../pages/auth/ResetPassword";
 import VerifyEmail from "../pages/auth/VerifyEmail";
@@ -71,6 +72,10 @@ export const mainRoutes = [
   {
     path: "/auth/login",
     element: <Login />,
+  },
+  {
+    path: "/qr-approve/:token",
+    element: <QRApprove />,
   },
   {
     path: "/admin",

@@ -20,12 +20,13 @@ import {
   Typography,
 } from "@mui/joy";
 import { ResponseType, User } from "../../user";
-import { Edit, Lock, LockOpen, Visibility, VisibilityOff } from "@mui/icons-material";
+import { Edit, Lock, LockOpen, Mail, WarningAmber, Visibility, VisibilityOff } from "@mui/icons-material";
 import { isValidEmail } from "../../utilities/defaults";
 import React, { useState } from "react";
 import toast from "react-hot-toast";
 import { smbAPI } from "../../service/api/api";
 import { useUsers } from "../../context/Users";
+import { useNavigate } from "react-router-dom";
 import PinLockModal from "../../components/account/PinLockModal";
 
 const GENDER_OPTIONS = [
@@ -54,6 +55,7 @@ function Settings({
   const [passwordVisibility, setPasswordVisibility] = useState(false);
 
   const [passwords, setPasswords] = useState({ oldPassword: "", newPassword: "", newPasswordConfirm: "" });
+  const navigate = useNavigate();
 
   const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -340,6 +342,53 @@ function Settings({
           </DialogContent>
         </ModalDialog>
       </Modal>
+
+      {/* ── Verify Account Section ── */}
+      {(() => {
+        const user = userValue as User;
+        const { resendTokenVerification, resendTokenVerificationData } = useUsers();
+        const [sent, setSent] = useState(false);
+        if (user?.isVerified) return null;
+        return (
+          <>
+            <Divider />
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <WarningAmber sx={{ color: "warning.400", fontSize: 20 }} />
+                <Typography level="title-md" sx={{ color: "warning.400" }}>Email not verified</Typography>
+              </Box>
+              <Typography level="body-sm" textColor="neutral.400">
+                Verify your email to unlock full access. We'll send a code plus a one-click verify link.
+              </Typography>
+              {sent ? (
+                <Typography level="body-sm" sx={{ color: "success.400" }}>
+                  ✓ Verification email sent! Check your inbox.
+                </Typography>
+              ) : (
+                <Button
+                  sx={{ width: "fit-content" }}
+                  startDecorator={<Mail />}
+                  loading={resendTokenVerificationData?.isLoading}
+                  onClick={async () => {
+                    await resendTokenVerification();
+                    setSent(true);
+                  }}
+                >
+                  Send verification email
+                </Button>
+              )}
+              <Button
+                variant="outlined"
+                color="neutral"
+                sx={{ width: "fit-content" }}
+                onClick={() => navigate("/auth/verify")}
+              >
+                Enter verification code
+              </Button>
+            </Box>
+          </>
+        );
+      })()}
 
       {/* ── PIN Lock Section ── */}
       {(() => {

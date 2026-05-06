@@ -17,10 +17,11 @@ import {
 } from "@mui/joy";
 import { ResponseType, User } from "../../user";
 import { deviceId, formatTimeAgo, smartText } from "../../utilities/defaults";
-import { Check, Delete, DevicesOther, Help, Lock, LockOpen } from "@mui/icons-material";
-import { useState } from "react";
+import { Check, Delete, DevicesOther, Help, Lock, LockOpen, QrCode2, CheckCircleOutline } from "@mui/icons-material";
+import { useState, useRef } from "react";
 import DeviceCard from "../../components/cards/DeviceCard";
 import { useUsers } from "../../context/Users";
+import { qrAPI } from "../../service/api/smb/qr.api.service";
 
 function Devices({ myselfData }: { myselfData: ResponseType | null }) {
   const {
@@ -76,6 +77,34 @@ function Devices({ myselfData }: { myselfData: ResponseType | null }) {
     await getMyself();
   };
 
+  // QR scan state
+  const [qrScanInput, setQrScanInput] = useState("");
+  const [qrApproving, setQrApproving] = useState(false);
+  const [qrApproveResult, setQrApproveResult] = useState<{ ok: boolean; msg: string } | null>(null);
+
+  const handleQRApprove = async () => {
+    const token = qrScanInput.trim().replace(/.*\/qr-approve\//, "");
+    if (!token) return;
+    setQrApproving(true);
+    try {
+      const res = await qrAPI.approve(token);
+      setQrApproveResult({ ok: true, msg: res.success ? "Device approved! The other screen will log in now." : "Invalid or expired QR code." });
+      setQrScanInput("");
+    } catch (err: any) {
+      setQrApproveResult({ ok: false, msg: err?.response?.data?.message || "Invalid or expired QR code." });
+    } finally {
+      setQrApproving(false);
+    }
+  };
+
+  // Approve pending device directly (no email)
+  const handleApproveDeviceDirectly = async (pendingDeviceId: string) => {
+    try {
+      await qrAPI.approveDevice(pendingDeviceId);
+      await getMyself();
+    } catch { /* silent */ }
+  };
+
   const activeDevices = user?.devices?.filter((d) => d.isActive) || [];
   const inactiveDevices = user?.devices?.filter((d) => !d.isActive) || [];
 
@@ -122,10 +151,57 @@ function Devices({ myselfData }: { myselfData: ResponseType | null }) {
             </Tooltip>
           </Box>
           {inactiveDevices.map((device) => (
-            <DeviceCard key={device.deviceId} device={device} setDeviceIdModal={setDetailDeviceId} />
+            <Box key={device.deviceId} sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
+              <Box sx={{ flex: 1 }}>
+                <DeviceCard device={device} setDeviceIdModal={setDetailDeviceId} />
+              </Box>
+              <Button
+                size="sm"
+                color="success"
+                variant="soft"
+                startDecorator={<CheckCircleOutline sx={{ fontSize: 16 }} />}
+                onClick={() => handleApproveDeviceDirectly(device.deviceId)}
+              >
+                Approve
+              </Button>
+            </Box>
           ))}
         </>
       )}
+
+      {/* QR Login Scanner */}
+      <Divider />
+      <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          <QrCode2 sx={{ fontSize: 18 }} />
+          <Typography level="title-sm">Scan QR Code</Typography>
+        </Box>
+        <Typography level="body-sm" textColor="neutral.400">
+          Paste or type the QR code URL from another device's login screen to approve it.
+        </Typography>
+        <Box sx={{ display: "flex", gap: 1 }}>
+          <Input
+            placeholder="Paste QR code URL or token..."
+            value={qrScanInput}
+            onChange={(e) => { setQrScanInput(e.target.value); setQrApproveResult(null); }}
+            onKeyDown={(e) => e.key === "Enter" && handleQRApprove()}
+            sx={{ flex: 1 }}
+          />
+          <Button
+            loading={qrApproving}
+            disabled={!qrScanInput.trim()}
+            onClick={handleQRApprove}
+            color="success"
+          >
+            Approve
+          </Button>
+        </Box>
+        {qrApproveResult && (
+          <Typography level="body-sm" sx={{ color: qrApproveResult.ok ? "success.400" : "danger.400" }}>
+            {qrApproveResult.msg}
+          </Typography>
+        )}
+      </Box>
 
       {/* ── Device Detail Modal ── */}
       <Modal open={!!detailDeviceId} onClose={() => { setDetailDeviceId(""); setActivateStep("prompt"); setActivateCode(""); }}>

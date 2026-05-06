@@ -52,7 +52,7 @@ function CollectionDetail() {
   if (loading) {
     return (
       <Container>
-        <Box sx={{ py: 4 }}>
+        <Box sx={{ padding: "100px 0px", display: "flex", flexDirection: "column", gap: "28px", minHeight: "100vh" }}>
           <Skeleton variant="text" width={200} height={40} sx={{ mb: 3 }} />
           <Box sx={{ display: "flex", gap: 3, flexWrap: "wrap" }}>
             {Array.from({ length: 6 }).map((_, i) => (
@@ -85,7 +85,7 @@ function CollectionDetail() {
 
   return (
     <Container>
-      <Box sx={{ py: 4 }}>
+      <Box sx={{ padding: "100px 0px", display: "flex", flexDirection: "column", gap: "28px", minHeight: "100vh" }}>
         <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 4 }}>
           <IconButton
             variant="outlined"

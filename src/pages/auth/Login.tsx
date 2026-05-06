@@ -1,19 +1,21 @@
-import { Lock, Mail, Visibility, VisibilityOff } from "@mui/icons-material";
+import { Lock, Mail, Visibility, VisibilityOff, QrCode2 } from "@mui/icons-material";
 import {
-  Box, Button, Card, Divider, FormControl, FormHelperText,
-  FormLabel, IconButton, Input, Link, useColorScheme,
+  Box, Button, Card, Chip, CircularProgress, Divider, FormControl,
+  FormHelperText, FormLabel, IconButton, Input, Link, Tab, TabList,
+  TabPanel, Tabs, Typography, useColorScheme,
 } from "@mui/joy";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { GoogleUserResponse, Location, UserLogin } from "../../user";
 import {
-  backdropLoading, deviceId, deviceName, deviceType,
-  isValidEmail,
+  backdropLoading, deviceId, deviceName, deviceType, isValidEmail,
 } from "../../utilities/defaults";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useGoogleLogin } from "@react-oauth/google";
 import { useUsers } from "../../context/Users";
 import { useOC } from "../../context/OC";
 import axios from "axios";
+import { qrAPI } from "../../service/api/smb/qr.api.service";
+import QRCodeDisplay from "../../components/utils/QRCodeDisplay";
 
 const GoogleIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 48 48">
@@ -24,26 +26,122 @@ const GoogleIcon = () => (
   </svg>
 );
 
+// ── QR Login Panel ────────────────────────────────────────────────────────────
+function QRLoginPanel() {
+  const [qrToken, setQrToken] = useState<string | null>(null);
+  const [status, setStatus] = useState<"idle" | "pending" | "approved" | "expired">("idle");
+  const [timeLeft, setTimeLeft] = useState(180);
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const navigate = useNavigate();
+
+  const qrUrl = qrToken ? `${window.location.origin}/qr-approve/${qrToken}` : null;
+
+  const startQR = useCallback(async () => {
+    setStatus("pending");
+    setTimeLeft(180);
+    try {
+      const data = await qrAPI.generate();
+      setQrToken(data.token);
+    } catch {
+      setStatus("idle");
+    }
+  }, []);
+
+  useEffect(() => { startQR(); }, [startQR]);
+
+  // Poll for approval
+  useEffect(() => {
+    if (!qrToken || status !== "pending") return;
+    pollRef.current = setInterval(async () => {
+      try {
+        const res = await qrAPI.poll(qrToken);
+        if (res.status === "approved") {
+          setStatus("approved");
+          clearInterval(pollRef.current!);
+          clearInterval(timerRef.current!);
+          setTimeout(() => navigate("/"), 800);
+        } else if (res.status === "expired") {
+          setStatus("expired");
+          clearInterval(pollRef.current!);
+          clearInterval(timerRef.current!);
+        }
+      } catch { /* silent */ }
+    }, 2000);
+    timerRef.current = setInterval(() => {
+      setTimeLeft((t) => {
+        if (t <= 1) {
+          setStatus("expired");
+          clearInterval(pollRef.current!);
+          clearInterval(timerRef.current!);
+          return 0;
+        }
+        return t - 1;
+      });
+    }, 1000);
+    return () => { clearInterval(pollRef.current!); clearInterval(timerRef.current!); };
+  }, [qrToken, status, navigate]);
+
+  if (status === "approved") return (
+    <Box sx={{ textAlign: "center", py: 4 }}>
+      <Typography level="h4" sx={{ color: "rgb(100,220,120)" }}>✓ Logged in!</Typography>
+      <Typography level="body-sm" sx={{ color: "text.tertiary", mt: 1 }}>Redirecting...</Typography>
+    </Box>
+  );
+
+  if (status === "expired") return (
+    <Box sx={{ textAlign: "center", py: 4, display: "flex", flexDirection: "column", gap: 2, alignItems: "center" }}>
+      <Typography level="body-md" sx={{ color: "text.tertiary" }}>QR code expired.</Typography>
+      <Button onClick={() => { setQrToken(null); startQR(); }}>Generate new QR code</Button>
+    </Box>
+  );
+
+  return (
+    <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
+      <Typography level="body-sm" sx={{ color: "text.tertiary", textAlign: "center" }}>
+        Scan this QR code with an active device that's already logged in.
+      </Typography>
+      {qrToken && qrUrl ? (
+        <Box sx={{ p: 2, background: "white", borderRadius: "md", display: "inline-block" }}>
+          <QRCodeDisplay value={qrUrl} size={180} />
+        </Box>
+      ) : (
+        <CircularProgress />
+      )}
+      <Chip size="sm" variant="soft" color={timeLeft < 30 ? "danger" : "neutral"}>
+        Expires in {Math.floor(timeLeft / 60)}:{String(timeLeft % 60).padStart(2, "0")}
+      </Chip>
+      <Typography level="body-xs" sx={{ color: "text.tertiary", textAlign: "center" }}>
+        Go to <strong>Settings → Devices</strong> on an active device and tap <strong>Scan QR</strong>.
+      </Typography>
+    </Box>
+  );
+}
+
+// ── Main Login Page ───────────────────────────────────────────────────────────
 function Login() {
   const [passwordVisibility, setPasswordVisibility] = useState(false);
-  const [userValue, setUserValue] = useState<UserLogin>({
-    email: "", password: "",
-    deviceId: deviceId(), deviceName: deviceName(), deviceType: deviceType(),
-    deviceLocation: {} as Location,
-  });
+  const [activeTab, setActiveTab] = useState(0);
 
   const { login, loginData, registerData } = useUsers();
   const { myselfData } = useUsers();
-  const { locationData } = useOC(); // location is auto-fetched by OCProvider
+  const { locationData } = useOC();
   const { colorScheme } = useColorScheme();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
+  // Pre-fill email from ?hint= (Switch Account flow)
+  const emailHint = searchParams.get("hint") || "";
+  const [userValue, setUserValue] = useState<UserLogin>({
+    email: emailHint, password: "",
+    deviceId: deviceId(), deviceName: deviceName(), deviceType: deviceType(),
+    deviceLocation: {} as Location,
+  });
   const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setUserValue((prev) => ({ ...prev, [name]: name === "email" ? value.toLowerCase() : value }));
   };
 
-  // Keep deviceLocation in sync with auto-detected location
   useEffect(() => {
     setUserValue((prev) => ({ ...prev, deviceLocation: locationData.data }));
   }, [locationData.data]);
@@ -60,59 +158,74 @@ function Login() {
       const userData: GoogleUserResponse = userInfo.data;
       const loc = locationData.data;
       login(
-        { email: userData.email, password: userData.sub, deviceId: deviceId(), deviceName: deviceName(), deviceType: deviceType(), deviceLocation: loc },
+        { email: userData.email, password: userData.sub, deviceName: deviceName(), deviceType: deviceType(), deviceId: deviceId(), deviceLocation: loc },
         "google",
-        { email: userData.email, password: userData.sub, firstname: userData.given_name, lastname: userData.family_name, isVerified: userData.email_verified, profilePic: userData.picture, deviceName: deviceName(), deviceType: deviceType(), deviceId: deviceId(), loginType: "google", deviceLocation: loc }
+        { email: userData.email, password: userData.sub, firstname: userData.given_name, lastname: userData.family_name, isVerified: userData.email_verified, profilePic: userData.picture, deviceName: deviceName(), deviceType: deviceType(), deviceId: deviceId(), loginType: "google", deviceLocation: loc },
       );
     },
-    onError: (err) => console.log(err),
+    onError: () => console.error("Google login failed"),
   });
 
   return (
-    <form onSubmit={(e) => { e.preventDefault(); login(userValue, "email"); }}>
+    <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100vh" }}>
       {backdropLoading(loginData?.isLoading || registerData?.isLoading, colorScheme)}
-      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh" }}>
-        <Card sx={{ padding: "50px", borderRadius: "10px", gap: "20px" }}>
-          <FormLabel sx={{ fontSize: "20px" }}>Sign in</FormLabel>
-          <Box gap={1} display="flex" flexDirection="column">
-            <FormControl>
-              <FormLabel>Email</FormLabel>
-              <Input name="email" onChange={handleInput} value={userValue.email} placeholder="Your email" startDecorator={<Mail />} />
-            </FormControl>
-            <FormControl>
-              <FormLabel>Password</FormLabel>
-              <Input
-                name="password" onChange={handleInput} value={userValue.password}
-                type={passwordVisibility ? "text" : "password"} placeholder="Your Password"
-                startDecorator={<Lock />}
-                endDecorator={
-                  <IconButton onClick={() => setPasswordVisibility(!passwordVisibility)}>
-                    {passwordVisibility ? <VisibilityOff /> : <Visibility />}
-                  </IconButton>
-                }
-              />
-            </FormControl>
-          </Box>
-          <Button
-            type="submit"
-            disabled={!isValidEmail(userValue.email) || !userValue.password.trim() || loginData?.isLoading || registerData?.isLoading}
-            sx={{ background: "rgb(255,216,77)", color: "black", ":hover": { background: "rgb(255,216,77)", opacity: 0.8 } }}
-          >
-            {loginData?.isLoading || registerData?.isLoading ? "Loading..." : "Sign in"}
-          </Button>
-          <FormHelperText>
-            Don't have an account? <Link onClick={() => navigate("/auth/register")}>Create one</Link>
-          </FormHelperText>
-          <FormHelperText>
-            <Link onClick={() => navigate("/auth/forgot-password")}>Forgot your password?</Link>
-          </FormHelperText>
-          <Divider>or</Divider>
-          <Button onClick={() => googleLogin()} startDecorator={<GoogleIcon />} variant="soft" color="neutral">
-            Sign in with Google
-          </Button>
-        </Card>
-      </Box>
-    </form>
+      <Card sx={{ padding: "40px", borderRadius: "12px", gap: "20px", width: "100%", maxWidth: 420 }}>
+        <Tabs value={activeTab} onChange={(_, v) => setActiveTab(v as number)}>
+          <TabList>
+            <Tab sx={{ flex: 1 }}>Sign in</Tab>
+            <Tab sx={{ flex: 1 }}><QrCode2 sx={{ fontSize: 18, mr: 0.5 }} />QR Login</Tab>
+          </TabList>
+
+          {/* Email/Password tab */}
+          <TabPanel value={0} sx={{ p: 0, pt: 2 }}>
+            <form onSubmit={(e) => { e.preventDefault(); login(userValue, "email"); }}>
+              <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                <FormControl>
+                  <FormLabel>Email</FormLabel>
+                  <Input name="email" onChange={handleInput} value={userValue.email} placeholder="Your email" startDecorator={<Mail />} />
+                </FormControl>
+                <FormControl>
+                  <FormLabel>Password</FormLabel>
+                  <Input
+                    name="password" onChange={handleInput} value={userValue.password}
+                    type={passwordVisibility ? "text" : "password"} placeholder="Your Password"
+                    startDecorator={<Lock />}
+                    endDecorator={
+                      <IconButton onClick={() => setPasswordVisibility(!passwordVisibility)}>
+                        {passwordVisibility ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    }
+                  />
+                </FormControl>
+                <Button
+                  type="submit"
+                  disabled={!isValidEmail(userValue.email) || !userValue.password.trim() || loginData?.isLoading || registerData?.isLoading}
+                  sx={{ background: "rgb(255,216,77)", color: "black", ":hover": { background: "rgb(255,216,77)", opacity: 0.8 } }}
+                >
+                  {loginData?.isLoading || registerData?.isLoading ? "Loading..." : "Sign in"}
+                </Button>
+                <FormHelperText>
+                  Don't have an account? <Link onClick={() => navigate("/auth/register")}>Create one</Link>
+                </FormHelperText>
+                <FormHelperText>
+                  <Link onClick={() => navigate("/auth/forgot-password")}>Forgot your password?</Link>
+                </FormHelperText>
+                <Divider>or</Divider>
+                <Button onClick={() => googleLogin()} startDecorator={<GoogleIcon />} variant="soft" color="neutral">
+                  Sign in with Google
+                </Button>
+              </Box>
+            </form>
+          </TabPanel>
+
+          {/* QR Login tab */}
+          <TabPanel value={1} sx={{ p: 0, pt: 2 }}>
+            {activeTab === 1 && <QRLoginPanel />}
+          </TabPanel>
+        </Tabs>
+      </Card>
+    </Box>
   );
 }
+
 export default Login;
