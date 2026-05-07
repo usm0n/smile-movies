@@ -64,10 +64,9 @@ function BecauseYouWatched() {
   ) : logoPath ? (
     <Box
       component="img"
-      src={`https://image.tmdb.org/t/p/w200${logoPath}`}
+      src={`https://image.tmdb.org/t/p/original${logoPath}`}
       sx={{
-        height: {lg: "60px", md: "50px", xs: "40px"},
-        width: "auto",
+        maxWidth: { xs: "170px", sm: "260px" },
         ml: 1,
         verticalAlign: "middle",
         filter: "drop-shadow(0 0 4px rgba(0,0,0,0.5))",

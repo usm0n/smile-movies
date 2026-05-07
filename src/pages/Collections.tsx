@@ -26,7 +26,7 @@ function Collections() {
   const { isAuthenticated } = useUsers();
 
   useEffect(() => {
-    if (!isAuthenticated) return;
+    if (!isAuthenticated) { setLoading(false); return; }
     collectionsAPI
       .getAll()
       .then((d) => setCollections(d.collections))

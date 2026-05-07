@@ -44,11 +44,11 @@ const LOCAL_ROUTE_PROGRESS_PREFIX = "watch-progress:";
 const LOCAL_RECENT_PROGRESS_PREFIX = "recent-progress:";
 const PROVIDER_PARAM_KEY = "provider";
 const SERVER_PARAM_KEY = "server";
-const PROVIDER_OPTIONS: ProviderId[] = ["showbox", "vixsrc", "anikai"];
+const PROVIDER_OPTIONS: ProviderId[] = ["vixsrc", "showbox", "anikai"];
 
 const parseProviderFromQuery = (value: string | null): ProviderId => {
   if (value === "anikai") return "anikai";
-  return value === "vixsrc" ? "vixsrc" : "showbox";
+  return value === "showbox" ? "showbox" : "vixsrc";
 };
 
 const getProviderLabel = (provider: ProviderId) => {

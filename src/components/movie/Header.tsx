@@ -8,9 +8,12 @@ import {
   CardContent,
   CardCover,
   Dropdown,
+  Input,
   Menu,
   MenuButton,
   MenuItem,
+  Modal,
+  ModalDialog,
   Typography,
 } from "@mui/joy";
 import {
@@ -91,6 +94,8 @@ function Header({
   const [collections, setCollections] = useState<Collection[]>([]);
   const [collectionsMenuOpen, setCollectionsMenuOpen] = useState(false);
   const [addingToList, setAddingToList] = useState<string | null>(null);
+  const [newListModalOpen, setNewListModalOpen] = useState(false);
+  const [newListName, setNewListName] = useState("");
 
   const loadCollections = async () => {
     if (!isLoggedIn) return;
@@ -115,12 +120,18 @@ function Header({
     }
   };
 
-  const createListAndAdd = async () => {
-    const name = prompt("New list name:");
-    if (!name?.trim()) return;
+  const createListAndAdd = () => {
+    setNewListName("");
+    setNewListModalOpen(true);
+    setCollectionsMenuOpen(false);
+  };
+
+  const confirmCreateListAndAdd = async () => {
+    if (!newListName.trim()) return;
     setAddingToList("new");
+    setNewListModalOpen(false);
     try {
-      const created = await collectionsAPI.create(name.trim());
+      const created = await collectionsAPI.create(newListName.trim());
       await collectionsAPI.addItem(created.collection.id, {
         id: String(movieId),
         type: movieType as "movie" | "tv",
@@ -130,7 +141,6 @@ function Header({
       setCollections((prev) => [...prev, created.collection]);
     } catch { /* silent */ } finally {
       setAddingToList(null);
-      setCollectionsMenuOpen(false);
     }
   };
   const [isOverviewExpanded, setIsOverviewExpanded] = useState(false);
@@ -955,6 +965,29 @@ function Header({
             : undefined
         }
       />
+
+      {/* Create new list modal */}
+      <Modal open={newListModalOpen} onClose={() => setNewListModalOpen(false)}>
+        <ModalDialog sx={{ maxWidth: 360 }}>
+          <Typography level="title-md" sx={{ mb: 1.5 }}>Create new list</Typography>
+          <Input
+            autoFocus
+            placeholder="List name..."
+            value={newListName}
+            onChange={(e) => setNewListName(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && confirmCreateListAndAdd()}
+            sx={{ mb: 2 }}
+          />
+          <Box sx={{ display: "flex", gap: 1 }}>
+            <Button fullWidth onClick={confirmCreateListAndAdd} disabled={!newListName.trim()} loading={addingToList === "new"}>
+              Create & Add
+            </Button>
+            <Button fullWidth variant="outlined" color="neutral" onClick={() => setNewListModalOpen(false)}>
+              Cancel
+            </Button>
+          </Box>
+        </ModalDialog>
+      </Modal>
     </>
   );
 }

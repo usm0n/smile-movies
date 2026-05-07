@@ -20,7 +20,7 @@ import {
   Typography,
 } from "@mui/joy";
 import { ResponseType, User } from "../../user";
-import { Edit, Lock, LockOpen, Mail, WarningAmber, Visibility, VisibilityOff } from "@mui/icons-material";
+import { Edit, Lock, LockOpen, Mail, Visibility, VisibilityOff, WarningRounded } from "@mui/icons-material";
 import { isValidEmail } from "../../utilities/defaults";
 import React, { useState } from "react";
 import toast from "react-hot-toast";
@@ -49,10 +49,13 @@ function Settings({
   myselfData: ResponseType | null;
   updateMyself: (user: User) => void;
 }) {
-  const { changePassword } = useUsers() as any;
+  const { changePassword, resendTokenVerification, resendTokenVerificationData } = useUsers() as any;
   const [emailModal, setEmailModal] = useState(false);
   const [passwordModal, setPasswordModal] = useState(false);
   const [passwordVisibility, setPasswordVisibility] = useState(false);
+  const [verifySent, setVerifySent] = useState(false);
+  const [pinModal, setPinModal] = useState<"setup" | "change" | null>(null);
+  const pinEnabled = userValue?.accountPin?.enabled;
 
   const [passwords, setPasswords] = useState({ oldPassword: "", newPassword: "", newPasswordConfirm: "" });
   const navigate = useNavigate();
@@ -344,101 +347,89 @@ function Settings({
       </Modal>
 
       {/* ── Verify Account Section ── */}
-      {(() => {
-        const user = userValue as User;
-        const { resendTokenVerification, resendTokenVerificationData } = useUsers();
-        const [sent, setSent] = useState(false);
-        if (user?.isVerified) return null;
-        return (
-          <>
-            <Divider />
-            <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                <WarningAmber sx={{ color: "warning.400", fontSize: 20 }} />
-                <Typography level="title-md" sx={{ color: "warning.400" }}>Email not verified</Typography>
-              </Box>
-              <Typography level="body-sm" textColor="neutral.400">
-                Verify your email to unlock full access. We'll send a code plus a one-click verify link.
-              </Typography>
-              {sent ? (
-                <Typography level="body-sm" sx={{ color: "success.400" }}>
-                  ✓ Verification email sent! Check your inbox.
-                </Typography>
-              ) : (
-                <Button
-                  sx={{ width: "fit-content" }}
-                  startDecorator={<Mail />}
-                  loading={resendTokenVerificationData?.isLoading}
-                  onClick={async () => {
-                    await resendTokenVerification();
-                    setSent(true);
-                  }}
-                >
-                  Send verification email
-                </Button>
-              )}
-              <Button
-                variant="outlined"
-                color="neutral"
-                sx={{ width: "fit-content" }}
-                onClick={() => navigate("/auth/verify")}
-              >
-                Enter verification code
-              </Button>
+      {!userValue?.isVerified && (
+        <>
+          <Divider />
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <WarningRounded sx={{ color: "warning.400", fontSize: 20 }} />
+              <Typography level="title-md" sx={{ color: "warning.400" }}>Email not verified</Typography>
             </Box>
-          </>
-        );
-      })()}
+            <Typography level="body-sm" textColor="neutral.400">
+              Verify your email to unlock full access. We'll send a code plus a one-click verify link.
+            </Typography>
+            {verifySent ? (
+              <Typography level="body-sm" sx={{ color: "success.400" }}>
+                ✓ Verification email sent! Check your inbox.
+              </Typography>
+            ) : (
+              <Button
+                sx={{ width: "fit-content" }}
+                startDecorator={<Mail />}
+                loading={resendTokenVerificationData?.isLoading}
+                onClick={async () => { await resendTokenVerification(); setVerifySent(true); }}
+              >
+                Send verification email
+              </Button>
+            )}
+            <Button
+              variant="outlined"
+              color="neutral"
+              sx={{ width: "fit-content" }}
+              onClick={() => navigate("/auth/verify-email")}
+            >
+              Enter verification code
+            </Button>
+          </Box>
+        </>
+      )}
 
       {/* ── PIN Lock Section ── */}
-      {(() => {
-        const [pinModal, setPinModal] = useState<"setup" | "change" | null>(null);
-        const user = userValue as User;
-        const pinEnabled = user?.accountPin?.enabled;
-        return (
-          <>
-            <Divider />
-            <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-              <Typography level="title-md">Account PIN Lock</Typography>
-              <Typography level="body-sm" textColor="neutral.400">
-                {pinEnabled
-                  ? "Your account is protected with a PIN. The PIN is shared across all your devices, but each device's lock timer is set separately in the Devices tab."
-                  : "Set up a 4-digit PIN to lock your account when you step away. You can configure per-device lock timing in the Devices tab."}
-              </Typography>
-              <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", mt: 0.5 }}>
-                {pinEnabled ? (
-                  <>
-                    <Button startDecorator={<Lock />} variant="outlined" color="neutral" onClick={() => setPinModal("change")}>
-                      Change PIN
-                    </Button>
-                    <Button startDecorator={<LockOpen />} color="danger" variant="outlined"
-                      onClick={async () => {
-                        const { profilesAPI } = await import("../../service/api/smb/profiles.api.service");
-                        await profilesAPI.disablePin();
-                        toast.success("PIN disabled");
-                        window.location.reload();
-                      }}>
-                      Disable PIN
-                    </Button>
-                  </>
-                ) : (
-                  <Button startDecorator={<Lock />} variant="solid" onClick={() => setPinModal("setup")}>
-                    Set up PIN Lock
-                  </Button>
-                )}
-              </Box>
-            </Box>
-            {pinModal && (
-              <PinLockModal
-                open
-                mode={pinModal}
-                onSuccess={() => { setPinModal(null); toast.success("PIN saved!"); window.location.reload(); }}
-                onCancel={() => setPinModal(null)}
-              />
+      <>
+        <Divider />
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+          <Typography level="title-md">Account PIN Lock</Typography>
+          <Typography level="body-sm" textColor="neutral.400">
+            {pinEnabled
+              ? "Your account is protected with a PIN. The PIN is shared across all your devices, but each device's lock timer is set separately in the Devices tab."
+              : "Set up a 4-digit PIN to lock your account when you step away. You can configure per-device lock timing in the Devices tab."}
+          </Typography>
+          <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", mt: 0.5 }}>
+            {pinEnabled ? (
+              <>
+                <Button startDecorator={<Lock />} variant="outlined" color="neutral" onClick={() => setPinModal("change")}>
+                  Change PIN
+                </Button>
+                <Button
+                  startDecorator={<LockOpen />}
+                  color="danger"
+                  variant="outlined"
+                  onClick={async () => {
+                    const { profilesAPI } = await import("../../service/api/smb/profiles.api.service");
+                    await profilesAPI.disablePin();
+                    toast.success("PIN disabled");
+                    window.location.reload();
+                  }}
+                >
+                  Disable PIN
+                </Button>
+              </>
+            ) : (
+              <Button startDecorator={<Lock />} variant="solid" onClick={() => setPinModal("setup")}>
+                Set up PIN Lock
+              </Button>
             )}
-          </>
-        );
-      })()}
+          </Box>
+        </Box>
+        {pinModal && (
+          <PinLockModal
+            open
+            mode={pinModal}
+            onSuccess={() => { setPinModal(null); toast.success("PIN saved!"); window.location.reload(); }}
+            onCancel={() => setPinModal(null)}
+          />
+        )}
+      </>
     </Card>
   );
 }

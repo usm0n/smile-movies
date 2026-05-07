@@ -25,12 +25,14 @@ function CollectionDetail() {
   useEffect(() => {
     if (!collectionId) return;
     collectionsAPI
-      .getAll()
-      .then((d) => {
-        const found = d.collections.find((c) => c.id === collectionId);
-        setCollection(found || null);
-      })
-      .catch(() => {})
+      .getById(collectionId)
+      .then((d) => setCollection(d.collection))
+      .catch(() =>
+        collectionsAPI.getAll().then((d) => {
+          const found = d.collections.find((c) => c.id === collectionId);
+          setCollection(found || null);
+        }).catch(() => {})
+      )
       .finally(() => setLoading(false));
   }, [collectionId]);
 

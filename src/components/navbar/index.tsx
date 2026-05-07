@@ -40,7 +40,7 @@ import {
   Tooltip,
   Typography,
 } from "@mui/joy";
-import React, { useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useUsers } from "../../context/Users";
 import { User } from "../../user";
@@ -49,6 +49,7 @@ import { useTMDB } from "../../context/TMDB";
 import { images, movieDetails, searchMulti, tvDetails } from "../../tmdb-res";
 import PinLockModal from "../../components/account/PinLockModal";
 import { savedAccountsManager, SavedAccount } from "../../utilities/savedAccounts";
+import { pinLockStore, DEVICE_ID_KEY } from "../../utilities/pinLockStore";
 
 const DETAIL_PAGE_REGEX = /^\/(movie|tv)\/([^/]+)$/;
 
@@ -63,6 +64,7 @@ const Navbar: React.FC = () => {
   const [searchVisibility, setSearchVisibility] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [pinModalMode, setPinModalMode] = useState<"setup" | "verify" | "change" | null>(null);
+  // Initialize from persisted store so lock survives page refresh
   const [isLocked, setIsLocked] = useState(false);
   const [showSwitchAccounts, setShowSwitchAccounts] = useState(false);
   const [savedAccounts, setSavedAccounts] = useState<SavedAccount[]>([]);
@@ -81,6 +83,33 @@ const Navbar: React.FC = () => {
   const location = useLocation();
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const user = myselfData?.data as User;
+
+  // Enforce persisted lock state on mount and when user/device data loads
+  useEffect(() => {
+    if (!isAuthenticated || !user) return;
+    const currentDeviceId = typeof window !== "undefined"
+      ? window.localStorage.getItem(DEVICE_ID_KEY) || ""
+      : "";
+    const currentDevice = user.devices?.find((d: any) => d.deviceId === currentDeviceId);
+    const requirePassword = currentDevice?.requirePassword || "never";
+    if (user.accountPin?.enabled && pinLockStore.isLocked(requirePassword)) {
+      setIsLocked(true);
+    }
+
+    // When user leaves the tab/app, record the lock timestamp so timer works on return
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "hidden" && user.accountPin?.enabled && requirePassword !== "never") {
+        pinLockStore.lock();
+      }
+      if (document.visibilityState === "visible" && user.accountPin?.enabled) {
+        if (pinLockStore.isLocked(requirePassword)) {
+          setIsLocked(true);
+        }
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
+  }, [isAuthenticated, user?.id]);
 
   const detailMatch = location.pathname.match(DETAIL_PAGE_REGEX);
   const detailType = detailMatch?.[1] as "movie" | "tv" | undefined;
@@ -260,7 +289,7 @@ const Navbar: React.FC = () => {
             <Divider />
             {/* PIN lock */}
             {user?.accountPin?.enabled ? (
-              <MenuItem onClick={() => { setIsLocked(true); }}>
+              <MenuItem onClick={() => { pinLockStore.lock(); setIsLocked(true); }}>
                 <Lock sx={{ fontSize: 18, mr: 1 }} />
                 <ListItemContent>Lock Account</ListItemContent>
               </MenuItem>
@@ -731,7 +760,10 @@ const Navbar: React.FC = () => {
           mode={pinModalMode}
           onSuccess={() => {
             setPinModalMode(null);
-            if (pinModalMode === "verify") setIsLocked(false);
+            if (pinModalMode === "verify") {
+              pinLockStore.unlock();
+              setIsLocked(false);
+            }
           }}
           onCancel={() => setPinModalMode(null)}
         />
