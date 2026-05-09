@@ -230,6 +230,33 @@ function Watch() {
         : "",
     [activeSource?.url, availableStream?.masterPlaylistUrl, sessionBaseReady],
   );
+
+  // Offline playback — load from Cache API when ?offline=1
+  const offlineParam = searchParams.get("offline") === "1";
+  const [offlineBlobUrl, setOfflineBlobUrl] = useState("");
+  const offlineBlobUrlRef = useRef("");
+  useEffect(() => {
+    if (!offlineParam || !movieId || !movieType) return;
+    const CACHE_NAME = "smile-offline-v1";
+    const cacheKey = movieType === "tv"
+      ? `tv-${movieId}-s${seasonId || 1}e${episodeId || 1}`
+      : `movie-${movieId}`;
+    caches.open(CACHE_NAME).then(async (cache) => {
+      const res = await cache.match(cacheKey);
+      if (res) {
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        offlineBlobUrlRef.current = url;
+        setOfflineBlobUrl(url);
+      }
+    }).catch(() => {});
+    return () => {
+      if (offlineBlobUrlRef.current) {
+        URL.revokeObjectURL(offlineBlobUrlRef.current);
+        offlineBlobUrlRef.current = "";
+      }
+    };
+  }, [offlineParam, movieId, movieType, seasonId, episodeId]);
   const playbackSourceFormat: ProviderSourceFormat = useMemo(
     () =>
       activeSource?.format
@@ -1249,9 +1276,9 @@ function Watch() {
       ) : null}
       <PlaybackSurface
         playerRef={playerRef}
-        stream={playbackStream}
-        sourceUrl={playbackSourceUrl}
-        sourceFormat={playbackSourceFormat}
+        stream={offlineParam ? null : playbackStream}
+        sourceUrl={offlineParam && offlineBlobUrl ? offlineBlobUrl : playbackSourceUrl}
+        sourceFormat={offlineParam ? "mp4" : playbackSourceFormat}
         poster={backdropPoster}
         title={mediaTitle}
         onLoadedMetadata={handlePlayerLoadedMetadata}

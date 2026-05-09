@@ -2,7 +2,7 @@ import {
   Box, Button, Input, Modal, ModalDialog, Typography,
 } from "@mui/joy";
 import { LockOutlined, CheckCircleOutline } from "@mui/icons-material";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { profilesAPI } from "../../service/api/smb/profiles.api.service";
 
 type Mode = "setup" | "verify" | "forgot_request" | "forgot_confirm" | "change";
@@ -22,6 +22,18 @@ function PinLockModal({ open, mode: initialMode, onSuccess, onCancel }: Props) {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
+
+  // Sync mode when prop changes (e.g. opening modal for different purpose)
+  useEffect(() => {
+    if (open) {
+      setMode(initialMode);
+      setPin("");
+      setConfirmPin("");
+      setResetCode("");
+      setError("");
+      setDone(false);
+    }
+  }, [open, initialMode]);
 
   const resetState = () => { setPin(""); setConfirmPin(""); setResetCode(""); setError(""); };
 

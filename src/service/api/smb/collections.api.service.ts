@@ -20,6 +20,10 @@ export const collectionsAPI = {
     const r = await smbV1API.get("/collections");
     return r.data;
   },
+  getById: async (collectionId: string): Promise<{ collection: Collection }> => {
+    const r = await smbV1API.get(`/collections/${collectionId}`);
+    return r.data;
+  },
   create: async (name: string): Promise<{ collection: Collection }> => {
     const r = await smbV1API.post("/collections", { name });
     return r.data;

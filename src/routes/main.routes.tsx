@@ -186,6 +186,8 @@ export const mainRoutes = [
     element: <AIAssistant />,
   },
   {
+  },
+  {
     path: "/collections",
     element: <Collections />,
   },

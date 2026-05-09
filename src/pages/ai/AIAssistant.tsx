@@ -40,10 +40,10 @@ import { isLoggedIn } from "../../utilities/defaults";
 import NotLoggedIn from "../../components/utils/NotLoggedIn";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { tmdb } from "../../service/api/tmdb/tmdb.api.service";
+import { tmdbAPI } from "../../service/api/api";
 import EventMC from "../../components/cards/EventMC";
 import { collectionsAPI } from "../../service/api/smb/collections.api.service";
 import { useUsers } from "../../context/Users";
-import { tmdbAPI } from "../../service/api/api";
 
 const SUGGESTIONS = [
   "Recommend me something like Interstellar",
@@ -75,17 +75,14 @@ type UIChatMessage = ChatMessage & {
   id: string;
   relatedMedia?: ResolvedMedia[];
   resolvingMedia?: boolean;
-  listActions?: import("../../service/api/ai/ai.api.service").ListAction[];
+  listActions?: ListAction[];
 };
 
 const makeMessageId = () =>
   `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 
 const normalizeTitle = (value: string) =>
-  value
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, " ")
-    .trim();
+  value.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
 
 const extractBoldTitles = (content: string): string[] =>
   Array.from(
@@ -123,8 +120,7 @@ const pickBestMediaMatch = (
   const pool = mediaFiltered.length ? mediaFiltered : candidates;
   const normalized = normalizeTitle(title);
   const exactMatch = pool.find(
-    (result) =>
-      normalizeTitle(result.title || result.name || "") === normalized,
+    (result) => normalizeTitle(result.title || result.name || "") === normalized,
   );
   if (exactMatch) return exactMatch;
 
@@ -175,9 +171,7 @@ const mapStatusError = (error: unknown): string => {
     return "SmileAI is temporarily unavailable. Please try again in a moment.";
   }
 
-  return (
-    apiError?.data?.message || "Something went wrong while talking to SmileAI."
-  );
+  return apiError?.data?.message || "Something went wrong while talking to SmileAI.";
 };
 
 const toUiMessage = (message: ChatMessage): UIChatMessage => ({
@@ -211,66 +205,56 @@ function AIAssistant() {
   } | null>(null);
   const [syncingHistory, setSyncingHistory] = useState(false);
   // Track which list actions have been executed (by msgId+index)
-  const [executedListActions, setExecutedListActions] = useState<Set<string>>(
-    new Set(),
-  );
-  const [executingListAction, setExecutingListAction] = useState<string | null>(
-    null,
-  );
+  const [executedListActions, setExecutedListActions] = useState<Set<string>>(new Set());
+  const [executingListAction, setExecutingListAction] = useState<string | null>(null);
 
   const { isAuthenticated } = useUsers();
 
-  const handleListAction = useCallback(
-    async (action: ListAction, actionKey: string) => {
-      if (!isAuthenticated) return;
-      setExecutingListAction(actionKey);
-      try {
-        // Resolve TMDB ID if not provided by AI
-        let resolvedId = String(action.tmdbId || "");
-        let resolvedPoster = "";
-        if (!action.tmdbId) {
-          try {
-            const searchEndpoint =
-              action.mediaType === "movie"
-                ? `/search/movie?query=${encodeURIComponent(action.title)}&page=1`
-                : `/search/tv?query=${encodeURIComponent(action.title)}&page=1`;
-            const res = await tmdbAPI.get(searchEndpoint);
-            const first = res.data?.results?.[0];
-            if (first) {
-              resolvedId = String(first.id);
-              resolvedPoster = first.poster_path || "";
-            }
-          } catch {
-            /* use title as fallback id */
+  const handleListAction = useCallback(async (action: ListAction, actionKey: string) => {
+    if (!isAuthenticated) return;
+    setExecutingListAction(actionKey);
+    try {
+      // Resolve TMDB ID if not provided by AI
+      let resolvedId = String(action.tmdbId || "");
+      let resolvedPoster = "";
+      if (!action.tmdbId) {
+        try {
+          const searchEndpoint = action.mediaType === "movie"
+            ? `/search/movie?query=${encodeURIComponent(action.title)}&page=1`
+            : `/search/tv?query=${encodeURIComponent(action.title)}&page=1`;
+          const res = await tmdbAPI.get(searchEndpoint);
+          const first = res.data?.results?.[0];
+          if (first) {
+            resolvedId = String(first.id);
+            resolvedPoster = first.poster_path || "";
           }
-        }
-
-        if (!resolvedId) resolvedId = action.title;
-
-        const allLists = await collectionsAPI.getAll();
-        const existing = allLists.collections.find(
-          (c) => c.name.toLowerCase() === action.listName.toLowerCase(),
-        );
-        let collectionId = existing?.id;
-        if (!collectionId) {
-          const created = await collectionsAPI.create(action.listName);
-          collectionId = created.collection.id;
-        }
-        await collectionsAPI.addItem(collectionId, {
-          id: resolvedId,
-          type: action.mediaType,
-          title: action.title,
-          poster: resolvedPoster,
-        });
-        setExecutedListActions((prev) => new Set([...prev, actionKey]));
-      } catch {
-        // silently fail — user can do it manually
-      } finally {
-        setExecutingListAction(null);
+        } catch { /* use title as fallback id */ }
       }
-    },
-    [isAuthenticated],
-  );
+
+      if (!resolvedId) resolvedId = action.title;
+
+      const allLists = await collectionsAPI.getAll();
+      const existing = allLists.collections.find(
+        (c) => c.name.toLowerCase() === action.listName.toLowerCase(),
+      );
+      let collectionId = existing?.id;
+      if (!collectionId) {
+        const created = await collectionsAPI.create(action.listName);
+        collectionId = created.collection.id;
+      }
+      await collectionsAPI.addItem(collectionId, {
+        id: resolvedId,
+        type: action.mediaType,
+        title: action.title,
+        poster: resolvedPoster,
+      });
+      setExecutedListActions((prev) => new Set([...prev, actionKey]));
+    } catch {
+      // silently fail — user can do it manually
+    } finally {
+      setExecutingListAction(null);
+    }
+  }, [isAuthenticated]);
 
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const shouldAutoScrollRef = useRef(true);
@@ -280,6 +264,7 @@ function AIAssistant() {
 
   // Auto-send logic — defined after startNewChat and sendMessage are available (see below)
   const autoPromptRef = useRef(false);
+  const pendingPromptRef = useRef<string | null>(null);
 
   const scrollMessagesToBottom = useCallback(
     (behavior: ScrollBehavior = "smooth") => {
@@ -367,8 +352,7 @@ function AIAssistant() {
                 id: bestMatch.id,
                 mediaType: (bestMatch.media_type ||
                   ("name" in bestMatch ? "tv" : "movie")) as "movie" | "tv",
-                title:
-                  bestMatch.title || bestMatch.name || recommendation.title,
+                title: bestMatch.title || bestMatch.name || recommendation.title,
                 posterPath: bestMatch.poster_path,
                 reason: recommendation.reason,
               } as ResolvedMedia;
@@ -379,11 +363,7 @@ function AIAssistant() {
         setMessages((prev) =>
           prev.map((message) =>
             message.id === messageId
-              ? {
-                  ...message,
-                  relatedMedia: resolvedMedia,
-                  resolvingMedia: false,
-                }
+              ? { ...message, relatedMedia: resolvedMedia, resolvingMedia: false }
               : message,
           ),
         );
@@ -465,6 +445,41 @@ function AIAssistant() {
     setHistoryDrawerOpen(false);
   }, []);
 
+  // Auto-send a prompt from ?prompt= URL param — always opens a NEW session
+  // Split into two effects: (1) capture param early, (2) send once sendMessage is available
+  useEffect(() => {
+    const promptParam = searchParams.get("prompt");
+    if (!promptParam || autoPromptRef.current) return;
+    autoPromptRef.current = true;
+    pendingPromptRef.current = promptParam;
+    startNewChat();
+    const next = new URLSearchParams(searchParams);
+    next.delete("prompt");
+    setSearchParams(next, { replace: true });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
+
+  const loadHistoryOnMount = useCallback(async () => {
+    setLoadingHistory(true);
+    try {
+      const response = await aiService.listHistory();
+      const historySessions = response.sessions || [];
+      setSessions(historySessions);
+
+      if (historySessions[0]?.sessionId) {
+        await openSession(historySessions[0].sessionId);
+      }
+    } catch (error) {
+      setChatError(mapStatusError(error));
+    } finally {
+      setLoadingHistory(false);
+    }
+  }, [openSession]);
+
+  useEffect(() => {
+    void loadHistoryOnMount();
+  }, [loadHistoryOnMount]);
+
   const sendChat = useCallback(
     async (
       payloadMessages: ChatMessage[],
@@ -529,10 +544,7 @@ function AIAssistant() {
 
   const sendMessage = useCallback(
     async (textOrOptions?: string | { overrideInput?: string }) => {
-      const overrideInput =
-        typeof textOrOptions === "object"
-          ? textOrOptions?.overrideInput
-          : textOrOptions;
+      const overrideInput = typeof textOrOptions === "object" ? textOrOptions?.overrideInput : textOrOptions;
       const userText = (overrideInput || input).trim();
       if (!userText || loading || loadingSession) return;
 
@@ -549,63 +561,23 @@ function AIAssistant() {
       setMessages(nextMessages);
 
       await sendChat(
-        nextMessages.map(
-          ({ id, role, content, createdAtMs, recommendations }) => ({
-            id,
-            role,
-            content,
-            createdAtMs,
-            recommendations,
-          }),
-        ),
+        nextMessages.map(({ id, role, content, createdAtMs, recommendations }) => ({
+          id,
+          role,
+          content,
+          createdAtMs,
+          recommendations,
+        })),
         activeSessionId,
       );
     },
     [activeSessionId, input, loading, loadingSession, messages, sendChat],
   );
 
-  // Auto-send a prompt from ?prompt= URL param — always opens a NEW session
-  useEffect(() => {
-    const promptParam = searchParams.get("prompt");
-    if (!promptParam || autoPromptRef.current || loadingHistory) return;
-    autoPromptRef.current = true;
-    startNewChat();
-    const next = new URLSearchParams(searchParams);
-    next.delete("prompt");
-    setSearchParams(next, { replace: true });
-    setTimeout(() => {
-      void sendMessage({ overrideInput: promptParam });
-    }, 150);
-  }, [searchParams, loadingHistory, startNewChat, sendMessage]);
-
-  const loadHistoryOnMount = useCallback(async () => {
-    setLoadingHistory(true);
-    try {
-      const response = await aiService.listHistory();
-      const historySessions = response.sessions || [];
-      setSessions(historySessions);
-
-      if (historySessions[0]?.sessionId) {
-        await openSession(historySessions[0].sessionId);
-      }
-    } catch (error) {
-      setChatError(mapStatusError(error));
-    } finally {
-      setLoadingHistory(false);
-    }
-  }, [openSession]);
-
-  useEffect(() => {
-    void loadHistoryOnMount();
-  }, [loadHistoryOnMount]);
-
   const retryLastRequest = useCallback(async () => {
     if (!lastAttemptedPayload || loading) return;
 
-    await sendChat(
-      lastAttemptedPayload.messages,
-      lastAttemptedPayload.sessionId,
-    );
+    await sendChat(lastAttemptedPayload.messages, lastAttemptedPayload.sessionId);
   }, [lastAttemptedPayload, loading, sendChat]);
 
   const regenerateLastAssistant = useCallback(async () => {
@@ -618,15 +590,13 @@ function AIAssistant() {
     shouldAutoScrollRef.current = true;
     setMessages(withoutLastAssistant);
     await sendChat(
-      withoutLastAssistant.map(
-        ({ id, role, content, createdAtMs, recommendations }) => ({
-          id,
-          role,
-          content,
-          createdAtMs,
-          recommendations,
-        }),
-      ),
+      withoutLastAssistant.map(({ id, role, content, createdAtMs, recommendations }) => ({
+        id,
+        role,
+        content,
+        createdAtMs,
+        recommendations,
+      })),
       activeSessionId,
       { replaceLastAssistant: true },
     );
@@ -636,9 +606,7 @@ function AIAssistant() {
     async (sessionId: string) => {
       try {
         await aiService.deleteHistorySession(sessionId);
-        const nextSessions = sessions.filter(
-          (session) => session.sessionId !== sessionId,
-        );
+        const nextSessions = sessions.filter((session) => session.sessionId !== sessionId);
         setSessions(nextSessions);
 
         if (activeSessionId === sessionId) {
@@ -670,14 +638,21 @@ function AIAssistant() {
     }
   }, [startNewChat]);
 
+  // Second part of auto-prompt: fire the pending prompt now that sendMessage is stable
+  useEffect(() => {
+    if (!pendingPromptRef.current || loadingHistory || loading) return;
+    const prompt = pendingPromptRef.current;
+    pendingPromptRef.current = null;
+    void sendMessage({ overrideInput: prompt });
+  // sendMessage identity is stable (useCallback) so this won't loop
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loadingHistory, loading]);
+
   const copyMessage = useCallback(async (message: UIChatMessage) => {
     try {
       await navigator.clipboard.writeText(message.content);
       setCopiedMessageId(message.id);
-      setTimeout(
-        () => setCopiedMessageId((id) => (id === message.id ? null : id)),
-        1400,
-      );
+      setTimeout(() => setCopiedMessageId((id) => (id === message.id ? null : id)), 1400);
     } catch {
       setChatError("Copy failed. Please select and copy the text manually.");
     }
@@ -813,9 +788,7 @@ function AIAssistant() {
                         : "rgba(9,16,32,0.6)",
                   }}
                 >
-                  <Box
-                    sx={{ display: "flex", alignItems: "flex-start", gap: 0.4 }}
-                  >
+                  <Box sx={{ display: "flex", alignItems: "flex-start", gap: 0.4 }}>
                     <ListItemButton
                       onClick={() => void openSession(session.sessionId)}
                       sx={{
@@ -843,16 +816,10 @@ function AIAssistant() {
                             minHeight: 30,
                           }}
                         >
-                          {session.lastAssistantPreview ||
-                            "No assistant response yet"}
+                          {session.lastAssistantPreview || "No assistant response yet"}
                         </Typography>
-                        <Typography
-                          level="body-xs"
-                          textColor="neutral.500"
-                          sx={{ mt: 0.5 }}
-                        >
-                          {session.messageCount} messages ·{" "}
-                          {formatSessionDate(session.updatedAtMs)}
+                        <Typography level="body-xs" textColor="neutral.500" sx={{ mt: 0.5 }}>
+                          {session.messageCount} messages · {formatSessionDate(session.updatedAtMs)}
                         </Typography>
                       </ListItemContent>
                     </ListItemButton>
@@ -882,14 +849,7 @@ function AIAssistant() {
         </Box>
       </Box>
     ),
-    [
-      activeSessionId,
-      clearAllHistory,
-      deleteSession,
-      openSession,
-      sessions,
-      startNewChat,
-    ],
+    [activeSessionId, clearAllHistory, deleteSession, openSession, sessions, startNewChat],
   );
 
   if (!isLoggedIn) return <NotLoggedIn type="page" />;
@@ -949,8 +909,7 @@ function AIAssistant() {
               width: 44,
               height: 44,
               borderRadius: "50%",
-              background:
-                "linear-gradient(135deg, rgb(255,216,77), rgb(255,160,0))",
+              background: "linear-gradient(135deg, rgb(255,216,77), rgb(255,160,0))",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -960,9 +919,7 @@ function AIAssistant() {
             <AutoAwesomeIcon sx={{ color: "black", fontSize: 22 }} />
           </Box>
           <Box sx={{ flex: 1 }}>
-            <Typography level="h4" fontWeight={700}>
-              SmileAI
-            </Typography>
+            <Typography level="h4" fontWeight={700}>SmileAI</Typography>
             <Typography level="body-xs" textColor="neutral.400">
               Your personal movie and TV assistant
             </Typography>
@@ -1029,25 +986,11 @@ function AIAssistant() {
           )}
 
           {!loadingHistory && !loadingSession && messages.length === 0 && (
-            <Box
-              sx={{ display: "flex", flexDirection: "column", gap: 3, pt: 2 }}
-            >
-              <Typography
-                level="body-md"
-                textColor="neutral.400"
-                textAlign="center"
-              >
-                Ask me anything — find movies by description, get
-                recommendations, or check if something is family-safe.
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 3, pt: 2 }}>
+              <Typography level="body-md" textColor="neutral.400" textAlign="center">
+                Ask me anything — find movies by description, get recommendations, or check if something is family-safe.
               </Typography>
-              <Box
-                sx={{
-                  display: "flex",
-                  flexWrap: "wrap",
-                  gap: 1,
-                  justifyContent: "center",
-                }}
-              >
+              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, justifyContent: "center" }}>
                 {SUGGESTIONS.map((suggestion) => (
                   <Sheet
                     key={suggestion}
@@ -1076,245 +1019,214 @@ function AIAssistant() {
             </Box>
           )}
 
-          {!loadingHistory &&
-            !loadingSession &&
-            messages.map((msg, index) => {
-              const isLastAssistant =
-                msg.role === "assistant" && index === messages.length - 1;
+          {!loadingHistory && !loadingSession && messages.map((msg, index) => {
+            const isLastAssistant =
+              msg.role === "assistant" && index === messages.length - 1;
 
-              return (
+            return (
+              <Box
+                key={msg.id}
+                sx={{
+                  display: "flex",
+                  flexDirection: msg.role === "user" ? "row-reverse" : "row",
+                  gap: 1.5,
+                  alignItems: "flex-start",
+                }}
+              >
                 <Box
-                  key={msg.id}
                   sx={{
+                    width: 34,
+                    height: 34,
+                    borderRadius: "50%",
+                    flexShrink: 0,
                     display: "flex",
-                    flexDirection: msg.role === "user" ? "row-reverse" : "row",
-                    gap: 1.5,
-                    alignItems: "flex-start",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    background:
+                      msg.role === "user"
+                        ? "rgba(255,255,255,0.1)"
+                        : "linear-gradient(135deg, rgb(255,216,77), rgb(255,160,0))",
                   }}
                 >
-                  <Box
-                    sx={{
-                      width: 34,
-                      height: 34,
-                      borderRadius: "50%",
-                      flexShrink: 0,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      background:
-                        msg.role === "user"
-                          ? "rgba(255,255,255,0.1)"
-                          : "linear-gradient(135deg, rgb(255,216,77), rgb(255,160,0))",
-                    }}
+                  {msg.role === "user" ? (
+                    <PersonIcon sx={{ fontSize: 18 }} />
+                  ) : (
+                    <AutoAwesomeIcon sx={{ fontSize: 18, color: "black" }} />
+                  )}
+                </Box>
+                <Card
+                  sx={{
+                    maxWidth: msg.role === "assistant" ? "88%" : "80%",
+                    px: 2,
+                    py: 1.5,
+                    borderRadius:
+                      msg.role === "user"
+                        ? "16px 4px 16px 16px"
+                        : "4px 16px 16px 16px",
+                    background:
+                      msg.role === "user"
+                        ? "rgba(255,216,77,0.12)"
+                        : "rgba(9,16,32,0.78)",
+                    border: "1px solid",
+                    borderColor:
+                      msg.role === "user"
+                        ? "rgba(255,216,77,0.25)"
+                        : "rgba(96, 183, 255, 0.12)",
+                    backdropFilter: "blur(18px)",
+                    boxShadow:
+                      msg.role === "assistant"
+                        ? "0 12px 48px rgba(0, 0, 0, 0.22)"
+                        : "none",
+                  }}
+                >
+                  <Typography
+                    level="body-sm"
+                    sx={{ lineHeight: 1.75, whiteSpace: "pre-wrap" }}
                   >
-                    {msg.role === "user" ? (
-                      <PersonIcon sx={{ fontSize: 18 }} />
-                    ) : (
-                      <AutoAwesomeIcon sx={{ fontSize: 18, color: "black" }} />
-                    )}
-                  </Box>
-                  <Card
-                    sx={{
-                      maxWidth: msg.role === "assistant" ? "88%" : "80%",
-                      px: 2,
-                      py: 1.5,
-                      borderRadius:
-                        msg.role === "user"
-                          ? "16px 4px 16px 16px"
-                          : "4px 16px 16px 16px",
-                      background:
-                        msg.role === "user"
-                          ? "rgba(255,216,77,0.12)"
-                          : "rgba(9,16,32,0.78)",
-                      border: "1px solid",
-                      borderColor:
-                        msg.role === "user"
-                          ? "rgba(255,216,77,0.25)"
-                          : "rgba(96, 183, 255, 0.12)",
-                      backdropFilter: "blur(18px)",
-                      boxShadow:
-                        msg.role === "assistant"
-                          ? "0 12px 48px rgba(0, 0, 0, 0.22)"
-                          : "none",
-                    }}
-                  >
-                    <Typography
-                      level="body-sm"
-                      sx={{ lineHeight: 1.75, whiteSpace: "pre-wrap" }}
-                    >
-                      {renderMessage(msg.content)}
-                    </Typography>
+                    {renderMessage(msg.content)}
+                  </Typography>
 
-                    {msg.role === "assistant" ? (
-                      <Box
-                        sx={{
-                          mt: 1,
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "space-between",
-                          gap: 1,
-                        }}
-                      >
-                        <Typography level="body-xs" textColor="neutral.400">
-                          {msg.createdAtMs
-                            ? formatSessionDate(msg.createdAtMs)
-                            : ""}
-                        </Typography>
-                        <Box sx={{ display: "flex", gap: 0.5 }}>
-                          <Tooltip
-                            title={
-                              copiedMessageId === msg.id
-                                ? "Copied"
-                                : "Copy response"
-                            }
+                  {msg.role === "assistant" ? (
+                    <Box
+                      sx={{
+                        mt: 1,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        gap: 1,
+                      }}
+                    >
+                      <Typography level="body-xs" textColor="neutral.400">
+                        {msg.createdAtMs
+                          ? formatSessionDate(msg.createdAtMs)
+                          : ""}
+                      </Typography>
+                      <Box sx={{ display: "flex", gap: 0.5 }}>
+                        <Tooltip
+                          title={
+                            copiedMessageId === msg.id ? "Copied" : "Copy response"
+                          }
+                        >
+                          <IconButton
+                            size="sm"
+                            onClick={() => void copyMessage(msg)}
                           >
+                            <ContentCopyRoundedIcon sx={{ fontSize: 16 }} />
+                          </IconButton>
+                        </Tooltip>
+                        {isLastAssistant ? (
+                          <Tooltip title="Regenerate response">
                             <IconButton
                               size="sm"
-                              onClick={() => void copyMessage(msg)}
+                              disabled={loading}
+                              onClick={() => void regenerateLastAssistant()}
                             >
-                              <ContentCopyRoundedIcon sx={{ fontSize: 16 }} />
+                              <RefreshRoundedIcon sx={{ fontSize: 16 }} />
                             </IconButton>
                           </Tooltip>
-                          {isLastAssistant ? (
-                            <Tooltip title="Regenerate response">
-                              <IconButton
-                                size="sm"
-                                disabled={loading}
-                                onClick={() => void regenerateLastAssistant()}
-                              >
-                                <RefreshRoundedIcon sx={{ fontSize: 16 }} />
-                              </IconButton>
-                            </Tooltip>
-                          ) : null}
-                        </Box>
+                        ) : null}
                       </Box>
-                    ) : null}
+                    </Box>
+                  ) : null}
 
-                    {msg.role === "assistant" && !!msg.relatedMedia?.length && (
-                      <Divider>Quick picks from this reply</Divider>
-                    )}
+                  {msg.role === "assistant" && !!msg.relatedMedia?.length && (
+                    <Divider>
+                      Quick picks from this reply
+                    </Divider>
+                  )}
 
-                    {msg.role === "assistant" && msg.resolvingMedia && (
-                      <Typography
-                        level="body-xs"
-                        textColor="neutral.400"
-                        sx={{ mt: 1.5 }}
-                      >
-                        Pulling matching titles from the catalog...
-                      </Typography>
-                    )}
+                  {msg.role === "assistant" && msg.resolvingMedia && (
+                    <Typography level="body-xs" textColor="neutral.400" sx={{ mt: 1.5 }}>
+                      Pulling matching titles from the catalog...
+                    </Typography>
+                  )}
 
-                    {msg.role === "assistant" && !!msg.relatedMedia?.length && (
+                  {msg.role === "assistant" && !!msg.relatedMedia?.length && (
+                    <Box sx={{ mt: 2.2, display: "flex", flexDirection: "column", gap: 1.2 }}>
                       <Box
                         sx={{
-                          mt: 2.2,
                           display: "flex",
-                          flexDirection: "column",
-                          gap: 1.2,
+                          flexWrap: "wrap",
+                          gap: "10px",
                         }}
                       >
-                        <Box
-                          sx={{
-                            display: "flex",
-                            flexWrap: "wrap",
-                            gap: "10px",
-                          }}
-                        >
-                          {msg.relatedMedia.map((media) => (
-                            <Box
-                              key={`${msg.id}-${media.mediaType}-${media.id}`}
-                              sx={{
-                                width: "250px",
-                                display: "flex",
-                                flexDirection: "column",
-                                gap: 0.8,
-                                "@media (max-width: 800px)": {
-                                  width: "200px",
-                                },
-                              }}
-                            >
-                              <EventMC
-                                eventId={media.id}
-                                eventPoster={media.posterPath}
-                                eventTitle={media.title}
-                                eventType={media.mediaType}
-                              />
-                              {media.reason ? (
-                                <Typography
-                                  level="body-xs"
-                                  textColor="neutral.400"
-                                  sx={{ px: 0.4, lineHeight: 1.5 }}
-                                >
-                                  {media.reason}
-                                </Typography>
-                              ) : null}
-                            </Box>
-                          ))}
-                        </Box>
-                      </Box>
-                    )}
-
-                    {/* List action suggestions */}
-                    {msg.role === "assistant" &&
-                      msg.listActions &&
-                      msg.listActions.length > 0 && (
-                        <Box
-                          sx={{
-                            mt: 1.5,
-                            display: "flex",
-                            flexWrap: "wrap",
-                            gap: 1,
-                          }}
-                        >
-                          {msg.listActions.map((action, idx) => {
-                            const actionKey = `${msg.id}-${idx}`;
-                            const done = executedListActions.has(actionKey);
-                            const busy = executingListAction === actionKey;
-                            return (
-                              <Chip
-                                key={actionKey}
-                                size="sm"
-                                variant={done ? "solid" : "outlined"}
-                                color={done ? "success" : "neutral"}
-                                startDecorator={
-                                  busy ? (
-                                    <CircularProgress
-                                      size="sm"
-                                      sx={{ "--CircularProgress-size": "14px" }}
-                                    />
-                                  ) : done ? (
-                                    <CheckCircleOutlineIcon
-                                      sx={{ fontSize: 14 }}
-                                    />
-                                  ) : (
-                                    <PlaylistAddIcon sx={{ fontSize: 14 }} />
-                                  )
-                                }
-                                onClick={() =>
-                                  !done &&
-                                  !busy &&
-                                  handleListAction(action, actionKey)
-                                }
-                                sx={{
-                                  cursor: done ? "default" : "pointer",
-                                  fontSize: "0.75rem",
-                                  py: 0.5,
-                                }}
+                        {msg.relatedMedia.map((media) => (
+                          <Box
+                            key={`${msg.id}-${media.mediaType}-${media.id}`}
+                            sx={{
+                              width: "250px",
+                              display: "flex",
+                              flexDirection: "column",
+                              gap: 0.8,
+                              "@media (max-width: 800px)": {
+                                width: "200px",
+                              },
+                            }}
+                          >
+                            <EventMC
+                              eventId={media.id}
+                              eventPoster={media.posterPath}
+                              eventTitle={media.title}
+                              eventType={media.mediaType}
+                            />
+                            {media.reason ? (
+                              <Typography
+                                level="body-xs"
+                                textColor="neutral.400"
+                                sx={{ px: 0.4, lineHeight: 1.5 }}
                               >
-                                {done
-                                  ? `Added to "${action.listName}"`
-                                  : action.action === "create_and_add"
-                                    ? `Create "${action.listName}" & add ${action.title}`
-                                    : `Add ${action.title} → "${action.listName}"`}
-                              </Chip>
-                            );
-                          })}
-                        </Box>
-                      )}
-                  </Card>
-                </Box>
-              );
-            })}
+                                {media.reason}
+                              </Typography>
+                            ) : null}
+                          </Box>
+                        ))}
+                      </Box>
+                    </Box>
+                  )}
+
+                  {/* List action suggestions */}
+                  {msg.role === "assistant" && msg.listActions && msg.listActions.length > 0 && (
+                    <Box sx={{ mt: 1.5, display: "flex", flexWrap: "wrap", gap: 1 }}>
+                      {msg.listActions.map((action, idx) => {
+                        const actionKey = `${msg.id}-${idx}`;
+                        const done = executedListActions.has(actionKey);
+                        const busy = executingListAction === actionKey;
+                        return (
+                          <Chip
+                            key={actionKey}
+                            size="sm"
+                            variant={done ? "solid" : "outlined"}
+                            color={done ? "success" : "neutral"}
+                            startDecorator={
+                              busy ? (
+                                <CircularProgress size="sm" sx={{ "--CircularProgress-size": "14px" }} />
+                              ) : done ? (
+                                <CheckCircleOutlineIcon sx={{ fontSize: 14 }} />
+                              ) : (
+                                <PlaylistAddIcon sx={{ fontSize: 14 }} />
+                              )
+                            }
+                            onClick={() => !done && !busy && handleListAction(action, actionKey)}
+                            sx={{
+                              cursor: done ? "default" : "pointer",
+                              fontSize: "0.75rem",
+                              py: 0.5,
+                            }}
+                          >
+                            {done
+                              ? `Added to "${action.listName}"`
+                              : action.action === "create_and_add"
+                              ? `Create "${action.listName}" & add ${action.title}`
+                              : `Add ${action.title} → "${action.listName}"`}
+                          </Chip>
+                        );
+                      })}
+                    </Box>
+                  )}
+                </Card>
+              </Box>
+            );
+          })}
 
           {loading && (
             <Box sx={{ display: "flex", gap: 1.5, alignItems: "flex-start" }}>
@@ -1327,8 +1239,7 @@ function AIAssistant() {
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  background:
-                    "linear-gradient(135deg, rgb(255,216,77), rgb(255,160,0))",
+                  background: "linear-gradient(135deg, rgb(255,216,77), rgb(255,160,0))",
                 }}
               >
                 <AutoAwesomeIcon sx={{ fontSize: 18, color: "black" }} />
@@ -1342,14 +1253,7 @@ function AIAssistant() {
                   border: "1px solid rgba(96, 183, 255, 0.12)",
                 }}
               >
-                <Box
-                  sx={{
-                    display: "flex",
-                    gap: 0.6,
-                    alignItems: "center",
-                    height: 20,
-                  }}
-                >
+                <Box sx={{ display: "flex", gap: 0.6, alignItems: "center", height: 20 }}>
                   {[0, 1, 2].map((i) => (
                     <Box
                       key={i}
@@ -1361,10 +1265,7 @@ function AIAssistant() {
                         animation: "bounce 1.2s infinite",
                         animationDelay: `${i * 0.2}s`,
                         "@keyframes bounce": {
-                          "0%, 80%, 100%": {
-                            transform: "scale(0.6)",
-                            opacity: 0.4,
-                          },
+                          "0%, 80%, 100%": { transform: "scale(0.6)", opacity: 0.4 },
                           "40%": { transform: "scale(1)", opacity: 1 },
                         },
                       }}
@@ -1424,15 +1325,10 @@ function AIAssistant() {
         </Box>
       </Box>
 
-      <Drawer
-        open={historyDrawerOpen}
-        onClose={() => setHistoryDrawerOpen(false)}
-      >
+      <Drawer open={historyDrawerOpen} onClose={() => setHistoryDrawerOpen(false)}>
         <Box sx={{ p: 1, width: "min(82vw, 300px)", pt: 2, height: "100%" }}>
           <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1.2 }}>
-            <HistoryRoundedIcon
-              sx={{ color: "rgb(96,183,255)", fontSize: 18 }}
-            />
+            <HistoryRoundedIcon sx={{ color: "rgb(96,183,255)", fontSize: 18 }} />
             <Typography level="title-sm">Chat History</Typography>
           </Box>
           {sessionList}

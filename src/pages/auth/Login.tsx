@@ -102,9 +102,7 @@ function QRLoginPanel() {
         Scan this QR code with an active device that's already logged in.
       </Typography>
       {qrToken && qrUrl ? (
-        <Box sx={{ p: 2, background: "white", borderRadius: "md", display: "inline-block" }}>
-          <QRCodeDisplay value={qrUrl} size={180} />
-        </Box>
+        <QRCodeDisplay value={qrUrl} size={180} />
       ) : (
         <CircularProgress />
       )}
