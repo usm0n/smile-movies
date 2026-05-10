@@ -511,20 +511,20 @@ function Watch() {
   }, [episodeId, seasonId, tvSeasonsDetailsArr?.episodes, tvSeriesDetailsDataArr?.seasons]);
 
   // Autoplay countdown logic
-  const startAutoplay = useCallback((nextPath: string) => {
-    setAutoplayNextPath(nextPath);
-    setAutoplayCountdown(10);
-    autoplayTimerRef.current = setInterval(() => {
-      setAutoplayCountdown((prev) => {
-        if (prev === null || prev <= 1) {
-          clearInterval(autoplayTimerRef.current!);
-          navigate(nextPath);
-          return null;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-  }, [navigate]);
+  // const startAutoplay = useCallback((nextPath: string) => {
+  //   setAutoplayNextPath(nextPath);
+  //   setAutoplayCountdown(10);
+  //   autoplayTimerRef.current = setInterval(() => {
+  //     setAutoplayCountdown((prev) => {
+  //       if (prev === null || prev <= 1) {
+  //         clearInterval(autoplayTimerRef.current!);
+  //         navigate(nextPath);
+  //         return null;
+  //       }
+  //       return prev - 1;
+  //     });
+  //   }, 1000);
+  // }, [navigate]);
 
   const cancelAutoplay = useCallback(() => {
     if (autoplayTimerRef.current) clearInterval(autoplayTimerRef.current);
@@ -688,21 +688,21 @@ function Watch() {
 
     writeStoredRecentProgress(recentProgressStorageKey, payload);
 
-    if (shouldAutoComplete && !playbackSessionRef.current.completionHandled) {
-      playbackSessionRef.current.completionHandled = true;
-      await flushRecentProgress({ force: true, payload });
-      if (!ratingItem) {
-        setIsRatingOpen(true);
-      }
-      // Start autoplay countdown for TV episodes
-      if (movieType === "tv") {
-        const next = getNextEpisodeForSeries();
-        if (next.nextSeason && next.nextEpisode && movieId) {
-          const nextPath = `/tv/${movieId}/${next.nextSeason}/${next.nextEpisode}/watch`;
-          startAutoplay(nextPath);
-        }
-      }
-    }
+    // if (shouldAutoComplete && !playbackSessionRef.current.completionHandled) {
+    //   playbackSessionRef.current.completionHandled = true;
+    //   await flushRecentProgress({ force: true, payload });
+    //   if (!ratingItem) {
+    //     setIsRatingOpen(true);
+    //   }
+    //   // Start autoplay countdown for TV episodes
+    //   if (movieType === "tv") {
+    //     const next = getNextEpisodeForSeries();
+    //     if (next.nextSeason && next.nextEpisode && movieId) {
+    //       const nextPath = `/tv/${movieId}/${next.nextSeason}/${next.nextEpisode}/watch`;
+    //       // startAutoplay(nextPath);
+    //     }
+    //   }
+    // }
   }, [episodeId, fallbackDurationMinutes, flushRecentProgress, getNextEpisodeForSeries, mediaPoster, mediaTitle, movieId, movieType, ratingItem, recentProgressStorageKey, routeProgressStorageKey, seasonId, sessionBaseReady]);
 
   const episodeChange = (nextPath: string) => {
