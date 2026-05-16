@@ -1,6 +1,6 @@
 import { Box, LinearProgress, Typography } from "@mui/joy";
 import { useEffect, useMemo, useRef, useState } from "react";
-import WebTorrent, { type WebTorrentFile } from "webtorrent";
+import WebTorrent, { type WebTorrentFile } from "webtorrent/dist/webtorrent.min.js";
 
 const WEBRTC_TRACKERS = [
   "wss://tracker.btorrent.xyz",

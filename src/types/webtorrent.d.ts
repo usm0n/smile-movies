@@ -1,4 +1,4 @@
-declare module "webtorrent" {
+declare module "webtorrent/dist/webtorrent.min.js" {
   import type { EventEmitter } from "events";
 
   type AppendToCallback = (error?: Error) => void;
