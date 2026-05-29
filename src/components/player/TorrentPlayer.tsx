@@ -1,6 +1,7 @@
 import { Box, LinearProgress, Typography } from "@mui/joy";
 import { useEffect, useMemo, useRef, useState } from "react";
 import WebTorrent, { type WebTorrentFile } from "webtorrent/dist/webtorrent.min.js";
+import type { TorrentioStreamMetadata } from "../../hooks/useTorrentio";
 
 const WEBRTC_TRACKERS = [
   "wss://tracker.btorrent.xyz",
@@ -9,7 +10,9 @@ const WEBRTC_TRACKERS = [
 ];
 
 type TorrentPlayerProps = {
-  infoHash: string;
+  stream?: TorrentioStreamMetadata | null;
+  torrentIdentifier?: string;
+  infoHash?: string;
 };
 
 type TorrentStatus = "idle" | "connecting" | "downloading" | "ready" | "error";
@@ -26,25 +29,72 @@ const bytesPerSecondLabel = (bytesPerSecond: number) => {
   return `${Math.round(bytesPerSecond)} B/s`;
 };
 
+const normalizeInfoHash = (value: string) => value.trim().replace(/^urn:btih:/i, "").replace(/^btih:/i, "");
+
+const BARE_INFO_HASH_PATTERN = /^(?:urn:btih:|btih:)?[a-z0-9]{32,40}$/i;
+
+const isMagnetUri = (value: string) => value.trim().toLowerCase().startsWith("magnet:?");
+
+const isBareInfoHash = (value: string) => BARE_INFO_HASH_PATTERN.test(value.trim());
+
+const ensureWebRtcTrackers = (magnetUri: string) => {
+  const normalizedMagnetUri = magnetUri.trim();
+  const queryStartIndex = normalizedMagnetUri.indexOf("?");
+
+  if (queryStartIndex < 0) {
+    return normalizedMagnetUri;
+  }
+
+  const prefix = normalizedMagnetUri.slice(0, queryStartIndex);
+  const query = normalizedMagnetUri.slice(queryStartIndex + 1);
+  const params = new URLSearchParams(query);
+  const existingTrackers = new Set(params.getAll("tr").map((tracker) => tracker.trim().toLowerCase()));
+
+  WEBRTC_TRACKERS.forEach((tracker) => {
+    if (!existingTrackers.has(tracker.toLowerCase())) {
+      params.append("tr", tracker);
+    }
+  });
+
+  return `${prefix}?${params.toString()}`;
+};
+
 const createMagnetUri = (infoHash: string) => {
-  const normalizedInfoHash = infoHash.trim();
+  const normalizedInfoHash = normalizeInfoHash(infoHash);
   const trackers = WEBRTC_TRACKERS.map((tracker) => `tr=${encodeURIComponent(tracker)}`).join("&");
 
   return `magnet:?xt=urn:btih:${encodeURIComponent(normalizedInfoHash)}&${trackers}`;
 };
 
-function TorrentPlayer({ infoHash }: TorrentPlayerProps) {
+const resolveTorrentIdentifier = ({ stream, torrentIdentifier, infoHash }: TorrentPlayerProps) => {
+  const preferredIdentifier = String(stream?.url || torrentIdentifier || stream?.infoHash || infoHash || "").trim();
+
+  if (!preferredIdentifier) {
+    return "";
+  }
+
+  if (isMagnetUri(preferredIdentifier)) {
+    return ensureWebRtcTrackers(preferredIdentifier);
+  }
+
+  return isBareInfoHash(preferredIdentifier) ? createMagnetUri(preferredIdentifier) : preferredIdentifier;
+};
+
+function TorrentPlayer({ stream = null, torrentIdentifier = "", infoHash = "" }: TorrentPlayerProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [status, setStatus] = useState<TorrentStatus>("idle");
   const [progress, setProgress] = useState(0);
   const [downloadSpeed, setDownloadSpeed] = useState(0);
   const [error, setError] = useState("");
 
-  const magnetUri = useMemo(() => (infoHash ? createMagnetUri(infoHash) : ""), [infoHash]);
+  const torrentId = useMemo(
+    () => resolveTorrentIdentifier({ stream, torrentIdentifier, infoHash }),
+    [infoHash, stream, torrentIdentifier],
+  );
 
   useEffect(() => {
     const container = containerRef.current;
-    if (!container || !magnetUri) {
+    if (!container || !torrentId) {
       setStatus("idle");
       return;
     }
@@ -70,7 +120,7 @@ function TorrentPlayer({ infoHash }: TorrentPlayerProps) {
 
     client.on("error", handleClientError);
 
-    const torrent = client.add(magnetUri, (addedTorrent) => {
+    const torrent = client.add(torrentId, (addedTorrent) => {
       const videoFile = addedTorrent.files.find((file: WebTorrentFile) => /\.(mp4|webm)$/i.test(file.name));
 
       if (!videoFile) {
@@ -105,7 +155,7 @@ function TorrentPlayer({ infoHash }: TorrentPlayerProps) {
       container.replaceChildren();
       client.destroy();
     };
-  }, [magnetUri]);
+  }, [torrentId]);
 
   const isLoading = status === "connecting" || status === "downloading";
 

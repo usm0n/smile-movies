@@ -20,6 +20,7 @@ type TorrentioResponse = {
 
 export type TorrentioStreamMetadata = {
   infoHash: string;
+  url?: string;
   seeds: number;
   title: string;
   filename: string;
@@ -90,9 +91,9 @@ export const selectBestTorrentioStream = (
   const candidates = streams
     .filter(isPlayableVideoStream)
     .map((stream) => ({
-      stream,
       infoHash: extractInfoHash(stream),
       seeds: extractSeeds(stream),
+      url: stream.url?.trim() || undefined,
       filename: getStreamFilename(stream),
       title: String(stream.title || stream.name || stream.behaviorHints?.filename || "Torrentio stream"),
     }))
@@ -106,6 +107,7 @@ export const selectBestTorrentioStream = (
 
   return {
     infoHash: best.infoHash,
+    url: best.url,
     seeds: best.seeds,
     title: best.title,
     filename: best.filename,
