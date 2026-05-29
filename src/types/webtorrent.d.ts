@@ -5,6 +5,7 @@ declare module "webtorrent/dist/webtorrent.min.js" {
 
   export type WebTorrentFile = {
     name: string;
+    length?: number;
     appendTo: (
       rootElement: HTMLElement,
       options?: {

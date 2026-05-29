@@ -1,5 +1,5 @@
 import { Box, LinearProgress, Typography } from "@mui/joy";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type MutableRefObject } from "react";
 import WebTorrent, { type WebTorrentFile } from "webtorrent/dist/webtorrent.min.js";
 import type { TorrentioStreamMetadata } from "../../hooks/useTorrentio";
 
@@ -17,6 +17,16 @@ type TorrentPlayerProps = {
   stream?: TorrentioStreamMetadata | null;
   torrentIdentifier?: string;
   infoHash?: string;
+  playerRef?: MutableRefObject<HTMLVideoElement | null>;
+  poster?: string;
+  title?: string;
+  reloadToken?: number;
+  onLoadedMetadata?: () => void;
+  onTimeUpdate?: () => void;
+  onPause?: () => void;
+  onEnded?: () => void;
+  onPlaybackError?: (message: string) => void;
+  onPlaybackReady?: () => void;
 };
 
 type TorrentStatus = "idle" | "connecting" | "downloading" | "ready" | "error";
@@ -36,6 +46,8 @@ const bytesPerSecondLabel = (bytesPerSecond: number) => {
 const normalizeInfoHash = (value: string) => value.trim().replace(/^urn:btih:/i, "").replace(/^btih:/i, "");
 
 const BARE_INFO_HASH_PATTERN = /^(?:urn:btih:|btih:)?[a-z0-9]{32,40}$/i;
+
+const PLAYABLE_VIDEO_PATTERN = /\.(mp4|webm)$/i;
 
 const isMagnetUri = (value: string) => value.trim().toLowerCase().startsWith("magnet:?");
 
@@ -84,7 +96,27 @@ const resolveTorrentIdentifier = ({ stream, torrentIdentifier, infoHash }: Torre
   return isBareInfoHash(preferredIdentifier) ? createMagnetUri(preferredIdentifier) : preferredIdentifier;
 };
 
-function TorrentPlayer({ stream = null, torrentIdentifier = "", infoHash = "" }: TorrentPlayerProps) {
+const selectPlayableVideoFile = (files: WebTorrentFile[]) => {
+  const playableFiles = files.filter((file) => PLAYABLE_VIDEO_PATTERN.test(file.name));
+
+  return playableFiles.sort((a, b) => Number(b.length || 0) - Number(a.length || 0))[0] || null;
+};
+
+function TorrentPlayer({
+  stream = null,
+  torrentIdentifier = "",
+  infoHash = "",
+  playerRef,
+  poster = "",
+  title = "",
+  reloadToken = 0,
+  onLoadedMetadata,
+  onTimeUpdate,
+  onPause,
+  onEnded,
+  onPlaybackError,
+  onPlaybackReady,
+}: TorrentPlayerProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [status, setStatus] = useState<TorrentStatus>("idle");
   const [progress, setProgress] = useState(0);
@@ -100,6 +132,7 @@ function TorrentPlayer({ stream = null, torrentIdentifier = "", infoHash = "" }:
     const container = containerRef.current;
     if (!container || !torrentId) {
       setStatus("idle");
+      if (playerRef) playerRef.current = null;
       return;
     }
 
@@ -107,9 +140,12 @@ function TorrentPlayer({ stream = null, torrentIdentifier = "", infoHash = "" }:
     let hasUsefulTorrentActivity = false;
     let noPeersTimeout: ReturnType<typeof window.setTimeout> | null = null;
     let latestTrackerWarning = "";
+    let activeVideoElement: HTMLVideoElement | null = null;
+    let cleanupVideoListeners = () => {};
     const client = new WebTorrent();
 
     container.replaceChildren();
+    if (playerRef) playerRef.current = null;
     setStatus("connecting");
     setProgress(0);
     setDownloadSpeed(0);
@@ -125,8 +161,10 @@ function TorrentPlayer({ stream = null, torrentIdentifier = "", infoHash = "" }:
     const handleError = (torrentError: Error) => {
       if (!isMounted) return;
       clearNoPeersTimeout();
-      setError(torrentError.message || "Unable to load this torrent.");
+      const errorMessage = torrentError.message || "Unable to load this torrent.";
+      setError(errorMessage);
       setStatus("error");
+      onPlaybackError?.(errorMessage);
     };
 
     const handleNoWebRtcPeers = () => {
@@ -147,10 +185,54 @@ function TorrentPlayer({ stream = null, torrentIdentifier = "", infoHash = "" }:
 
     client.on("error", handleClientError);
 
+    const attachVideoElement = () => {
+      const videoElement = containerRef.current?.querySelector("video") as HTMLVideoElement | null;
+      if (!videoElement || !isMounted) return;
+
+      activeVideoElement = videoElement;
+      activeVideoElement.controls = true;
+      activeVideoElement.autoplay = true;
+      activeVideoElement.playsInline = true;
+      if (poster) activeVideoElement.poster = poster;
+      if (title) activeVideoElement.title = title;
+      if (playerRef) playerRef.current = activeVideoElement;
+
+      const handleLoadedMetadata = () => onLoadedMetadata?.();
+      const handleTimeUpdate = () => onTimeUpdate?.();
+      const handlePause = () => onPause?.();
+      const handleEnded = () => onEnded?.();
+      const handleReady = () => {
+        clearNoPeersTimeout();
+        onPlaybackReady?.();
+      };
+      const handleVideoError = () => {
+        const videoErrorMessage = activeVideoElement?.error?.message || "Unable to play this torrent video.";
+        handleError(new Error(videoErrorMessage));
+      };
+
+      activeVideoElement.addEventListener("loadedmetadata", handleLoadedMetadata);
+      activeVideoElement.addEventListener("timeupdate", handleTimeUpdate);
+      activeVideoElement.addEventListener("pause", handlePause);
+      activeVideoElement.addEventListener("ended", handleEnded);
+      activeVideoElement.addEventListener("canplay", handleReady);
+      activeVideoElement.addEventListener("play", handleReady);
+      activeVideoElement.addEventListener("error", handleVideoError);
+
+      cleanupVideoListeners = () => {
+        activeVideoElement?.removeEventListener("loadedmetadata", handleLoadedMetadata);
+        activeVideoElement?.removeEventListener("timeupdate", handleTimeUpdate);
+        activeVideoElement?.removeEventListener("pause", handlePause);
+        activeVideoElement?.removeEventListener("ended", handleEnded);
+        activeVideoElement?.removeEventListener("canplay", handleReady);
+        activeVideoElement?.removeEventListener("play", handleReady);
+        activeVideoElement?.removeEventListener("error", handleVideoError);
+      };
+    };
+
     const torrent = client.add(torrentId, (addedTorrent) => {
       markUsefulTorrentActivity();
 
-      const videoFile = addedTorrent.files.find((file: WebTorrentFile) => /\.(mp4|webm)$/i.test(file.name));
+      const videoFile = selectPlayableVideoFile(addedTorrent.files);
 
       if (!videoFile) {
         handleError(new Error("No .mp4 or .webm file was found in this torrent."));
@@ -166,8 +248,10 @@ function TorrentPlayer({ stream = null, torrentIdentifier = "", infoHash = "" }:
         }
 
         if (!isMounted) return;
+        attachVideoElement();
         clearNoPeersTimeout();
         setStatus("ready");
+        onPlaybackReady?.();
       });
     });
 
@@ -193,10 +277,14 @@ function TorrentPlayer({ stream = null, torrentIdentifier = "", infoHash = "" }:
     return () => {
       isMounted = false;
       clearNoPeersTimeout();
+      cleanupVideoListeners();
+      if (playerRef && playerRef.current === activeVideoElement) {
+        playerRef.current = null;
+      }
       container.replaceChildren();
       client.destroy();
     };
-  }, [torrentId]);
+  }, [onEnded, onLoadedMetadata, onPause, onPlaybackError, onPlaybackReady, onTimeUpdate, playerRef, poster, reloadToken, title, torrentId]);
 
   const isLoading = status === "connecting" || status === "downloading";
 
