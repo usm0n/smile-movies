@@ -9,6 +9,10 @@ const WEBRTC_TRACKERS = [
   "wss://tracker.fastcast.nz",
 ];
 
+const NO_WEBRTC_PEERS_TIMEOUT_MS = 20_000;
+const NO_WEBRTC_PEERS_MESSAGE =
+  "No WebRTC peers were found for this torrent. Try another stream or check back later.";
+
 type TorrentPlayerProps = {
   stream?: TorrentioStreamMetadata | null;
   torrentIdentifier?: string;
@@ -100,6 +104,9 @@ function TorrentPlayer({ stream = null, torrentIdentifier = "", infoHash = "" }:
     }
 
     let isMounted = true;
+    let hasUsefulTorrentActivity = false;
+    let noPeersTimeout: ReturnType<typeof window.setTimeout> | null = null;
+    let latestTrackerWarning = "";
     const client = new WebTorrent();
 
     container.replaceChildren();
@@ -108,10 +115,30 @@ function TorrentPlayer({ stream = null, torrentIdentifier = "", infoHash = "" }:
     setDownloadSpeed(0);
     setError("");
 
+    const clearNoPeersTimeout = () => {
+      if (noPeersTimeout) {
+        window.clearTimeout(noPeersTimeout);
+        noPeersTimeout = null;
+      }
+    };
+
     const handleError = (torrentError: Error) => {
       if (!isMounted) return;
+      clearNoPeersTimeout();
       setError(torrentError.message || "Unable to load this torrent.");
       setStatus("error");
+    };
+
+    const handleNoWebRtcPeers = () => {
+      if (!isMounted || hasUsefulTorrentActivity) return;
+
+      const trackerWarningContext = latestTrackerWarning ? " Tracker connection warnings were reported." : "";
+      handleError(new Error(`${NO_WEBRTC_PEERS_MESSAGE}${trackerWarningContext}`));
+    };
+
+    const markUsefulTorrentActivity = () => {
+      hasUsefulTorrentActivity = true;
+      clearNoPeersTimeout();
     };
 
     const handleClientError = (torrentError: unknown) => {
@@ -121,6 +148,8 @@ function TorrentPlayer({ stream = null, torrentIdentifier = "", infoHash = "" }:
     client.on("error", handleClientError);
 
     const torrent = client.add(torrentId, (addedTorrent) => {
+      markUsefulTorrentActivity();
+
       const videoFile = addedTorrent.files.find((file: WebTorrentFile) => /\.(mp4|webm)$/i.test(file.name));
 
       if (!videoFile) {
@@ -137,21 +166,33 @@ function TorrentPlayer({ stream = null, torrentIdentifier = "", infoHash = "" }:
         }
 
         if (!isMounted) return;
+        clearNoPeersTimeout();
         setStatus("ready");
       });
     });
 
+    noPeersTimeout = window.setTimeout(handleNoWebRtcPeers, NO_WEBRTC_PEERS_TIMEOUT_MS);
+
+    torrent.once("metadata", markUsefulTorrentActivity);
+    torrent.once("wire", markUsefulTorrentActivity);
+
     torrent.on("download", () => {
       if (!isMounted) return;
+      markUsefulTorrentActivity();
       setStatus((currentStatus) => (currentStatus === "ready" ? currentStatus : "downloading"));
       setProgress(Math.round(torrent.progress * 1000) / 10);
       setDownloadSpeed(torrent.downloadSpeed);
     });
 
+    torrent.on("noPeers", handleNoWebRtcPeers);
+    torrent.on("warning", (torrentWarning: unknown) => {
+      latestTrackerWarning = torrentWarning instanceof Error ? torrentWarning.message : String(torrentWarning);
+    });
     torrent.on("error", handleClientError);
 
     return () => {
       isMounted = false;
+      clearNoPeersTimeout();
       container.replaceChildren();
       client.destroy();
     };
