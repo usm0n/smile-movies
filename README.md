@@ -42,3 +42,21 @@ MIT License. See [`LICENSE`](./LICENSE) for details.
 ---
 
 Made with ❤️ for film lovers, by Usmon.
+
+## Torrent playback in development
+
+The in-browser TorrentPlayer can only connect to WebRTC torrent peers. A Torrentio result can show many seeders and still fail in a browser when those seeders are regular BitTorrent TCP/UDP peers instead of WebRTC peers.
+
+For reliable local playback, run the included HTTP torrent bridge in a separate terminal:
+
+```bash
+npm run torrent:server
+```
+
+Then start the Vite app with the bridge URL available to the frontend:
+
+```bash
+VITE_TORRENT_STREAM_BASE_URL=http://127.0.0.1:8787 npm run dev
+```
+
+The bridge downloads through the normal Node/WebTorrent engine and exposes a ranged HTTP video endpoint to the browser, so the watch page can play it with a standard `<video>` element.
