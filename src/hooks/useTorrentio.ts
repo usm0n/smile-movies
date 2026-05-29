@@ -114,7 +114,13 @@ export const selectBestTorrentioStream = (
   };
 };
 
-function useTorrentio(tmdbId?: string | number | null, type?: TorrentioMediaType | null): UseTorrentioState {
+function useTorrentio(
+  tmdbId?: string | number | null,
+  type?: TorrentioMediaType | null,
+  season?: string | number | null,
+  episode?: string | number | null,
+  refreshKey = 0,
+): UseTorrentioState {
   const [stream, setStream] = useState<TorrentioStreamMetadata | null>(null);
   const [imdbId, setImdbId] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -122,9 +128,15 @@ function useTorrentio(tmdbId?: string | number | null, type?: TorrentioMediaType
 
   const normalizedTmdbId = useMemo(() => String(tmdbId || "").trim(), [tmdbId]);
   const normalizedType = type === "tv" ? "tv" : type === "movie" ? "movie" : "";
+  const normalizedSeason = useMemo(() => String(season || "").trim(), [season]);
+  const normalizedEpisode = useMemo(() => String(episode || "").trim(), [episode]);
 
   useEffect(() => {
-    if (!normalizedTmdbId || !normalizedType) {
+    if (
+      !normalizedTmdbId ||
+      !normalizedType ||
+      (normalizedType === "tv" && (!normalizedSeason || !normalizedEpisode))
+    ) {
       setStream(null);
       setImdbId("");
       setIsLoading(false);
@@ -153,7 +165,12 @@ function useTorrentio(tmdbId?: string | number | null, type?: TorrentioMediaType
 
       setImdbId(resolvedImdbId);
 
-      const response = await fetch(`https://torrentio.strem.fun/stream/${normalizedType}/${resolvedImdbId}.json`, {
+      const torrentioType = normalizedType === "tv" ? "series" : "movie";
+      const torrentioId = normalizedType === "tv"
+        ? `${resolvedImdbId}:${normalizedSeason}:${normalizedEpisode}`
+        : resolvedImdbId;
+
+      const response = await fetch(`https://torrentio.strem.fun/stream/${torrentioType}/${torrentioId}.json`, {
         signal: controller.signal,
       });
 
@@ -189,7 +206,7 @@ function useTorrentio(tmdbId?: string | number | null, type?: TorrentioMediaType
       isCancelled = true;
       controller.abort();
     };
-  }, [normalizedTmdbId, normalizedType]);
+  }, [normalizedEpisode, normalizedSeason, normalizedTmdbId, normalizedType, refreshKey]);
 
   return {
     stream,
