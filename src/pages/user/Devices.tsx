@@ -18,7 +18,7 @@ import {
 import { ResponseType, User } from "../../user";
 import { deviceId, formatTimeAgo, smartText } from "../../utilities/defaults";
 import { Check, Delete, DevicesOther, Help, Lock, LockOpen, QrCode2, CheckCircleOutline } from "@mui/icons-material";
-import { useState, useRef } from "react";
+import { useState } from "react";
 import DeviceCard from "../../components/cards/DeviceCard";
 import { useUsers } from "../../context/Users";
 import { qrAPI } from "../../service/api/smb/qr.api.service";
