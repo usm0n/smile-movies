@@ -7,8 +7,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview",
-    "torrent:server": "node scripts/torrent-stream-server.mjs"
+    "preview": "vite preview"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
@@ -28,8 +27,7 @@
     "react-hot-toast": "^2.6.0",
     "react-router-dom": "^7.6.0",
     "swiper": "^11.2.2",
-    "vidstack": "^0.6.15",
-    "webtorrent": "^2.8.5"
+    "vidstack": "^0.6.15"
   },
   "devDependencies": {
     "@eslint/js": "^9.17.0",

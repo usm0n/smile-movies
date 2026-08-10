@@ -27,7 +27,6 @@ import { useStream } from "../../context/Stream";
 import { useUsers } from "../../context/Users";
 import { User } from "../../user";
 import PlaybackSurface from "../../components/player/PlaybackSurface";
-import TorrentPlayer from "../../components/player/TorrentPlayer";
 import { playbackAPI } from "../../service/api/smb/playback.api.service";
 import RatingDialog from "../../components/library/RatingDialog";
 import { ProviderId, ProviderSourceFormat } from "../../types/providers";
@@ -35,7 +34,6 @@ import DownloadButton from "../../components/player/DownloadButton";
 import { copyToClipboard } from "../../utilities/defaults";
 import { watchPartyAPI } from "../../service/api/smb/watchparty.api.service";
 import toast from "react-hot-toast";
-import useTorrentio from "../../hooks/useTorrentio";
 
 const AUTO_SAVE_INTERVAL_MS = 60000;
 const MIN_PROGRESS_DELTA_MINUTES = 1;
@@ -46,17 +44,15 @@ const LOCAL_ROUTE_PROGRESS_PREFIX = "watch-progress:";
 const LOCAL_RECENT_PROGRESS_PREFIX = "recent-progress:";
 const PROVIDER_PARAM_KEY = "provider";
 const SERVER_PARAM_KEY = "server";
-const PROVIDER_OPTIONS: ProviderId[] = ["vixsrc", "showbox", "anikai", "torrentio"];
+const PROVIDER_OPTIONS: ProviderId[] = ["vixsrc", "showbox", "anikai"];
 
 const parseProviderFromQuery = (value: string | null): ProviderId => {
   if (value === "anikai") return "anikai";
-  if (value === "torrentio" || value === "torrentplayer") return "torrentio";
   return value === "showbox" ? "showbox" : "vixsrc";
 };
 
 const getProviderLabel = (provider: ProviderId) => {
   if (provider === "anikai") return "Anikai";
-  if (provider === "torrentio") return "TorrentPlayer";
   return provider === "showbox" ? "ShowBox" : "Vixsrc";
 };
 
@@ -214,26 +210,13 @@ function Watch() {
   // Clip sharing
   const [clipCopied, setClipCopied] = useState(false);
   const selectedProvider = parseProviderFromQuery(searchParams.get(PROVIDER_PARAM_KEY));
-  const isTorrentProvider = selectedProvider === "torrentio";
-  const isTorrentPlayback = isTorrentProvider && searchParams.get("offline") !== "1";
-  const torrentioData = useTorrentio(
-    isTorrentPlayback ? movieId : null,
-    isTorrentPlayback && (movieType === "movie" || movieType === "tv") ? movieType : null,
-    seasonId,
-    episodeId,
-    playerReloadToken,
-  );
   const versionParam = searchParams.get("version") as "sub" | "dub" | null;
   const version = versionParam === "dub" ? "dub" : "sub";
   const selectedServerFromQuery = String(searchParams.get(SERVER_PARAM_KEY) || "").trim();
-  const availableStream = isTorrentProvider ? null : getStreamData.data?.stream || null;
-  const resolvedProvider = isTorrentProvider ? selectedProvider : getStreamData.data?.resolvedProvider || selectedProvider;
-  const providerNotice = isTorrentProvider
-    ? torrentioData.stream
-      ? `TorrentPlayer selected: ${torrentioData.stream.filename || torrentioData.stream.title}`
-      : ""
-    : String(getStreamData.data?.message || "").trim();
-  const availableSources = isTorrentProvider ? [] : availableStream?.sources || [];
+  const availableStream = getStreamData.data?.stream || null;
+  const resolvedProvider = getStreamData.data?.resolvedProvider || selectedProvider;
+  const providerNotice = String(getStreamData.data?.message || "").trim();
+  const availableSources = availableStream?.sources || [];
   const activeSource =
     availableSources.find((source) => source.id === selectedServerFromQuery) ||
     availableSources.find((source) => source.active) ||
@@ -247,16 +230,7 @@ function Watch() {
         : "",
     [activeSource?.url, availableStream?.masterPlaylistUrl, sessionBaseReady],
   );
-  const torrentPlaybackSourceUrl = useMemo(
-    () =>
-      sessionBaseReady && torrentioData.stream?.infoHash
-        ? `torrent:${torrentioData.stream.infoHash}`
-        : "",
-    [sessionBaseReady, torrentioData.stream?.infoHash],
-  );
-  const playbackSourceUrl = isTorrentPlayback
-    ? torrentPlaybackSourceUrl
-    : providerPlaybackSourceUrl;
+  const playbackSourceUrl = providerPlaybackSourceUrl;
 
   // Offline playback — load from Cache API when ?offline=1
   const offlineParam = searchParams.get("offline") === "1";
@@ -291,23 +265,18 @@ function Watch() {
         : inferFormatFromUrl(providerPlaybackSourceUrl),
     [activeSource?.format, providerPlaybackSourceUrl],
   );
-  const isPreparingPlayback = isTorrentPlayback ? torrentioData.isLoading : getStreamData.isLoading;
-  const isPlaybackUnavailable = isTorrentPlayback
-    ? !isPreparingPlayback && sessionBaseReady && !torrentioData.stream
-    : !isPreparingPlayback &&
-      sessionBaseReady &&
-      !getStreamData.isAvailable &&
-      getStreamData.provider === selectedProvider;
+  const isPreparingPlayback = getStreamData.isLoading;
+  const isPlaybackUnavailable =
+    !isPreparingPlayback &&
+    sessionBaseReady &&
+    !getStreamData.isAvailable &&
+    getStreamData.provider === selectedProvider;
   const activeSourceIndex = activeSource
     ? availableSources.findIndex((source) => source.id === activeSource.id)
     : -1;
   const nextSourceOption =
     activeSourceIndex >= 0 ? availableSources[activeSourceIndex + 1] || null : null;
-  const serverLabel = isTorrentProvider
-    ? torrentioData.stream
-      ? `${torrentioData.stream.seeds.toLocaleString()} seeds`
-      : "Torrent metadata"
-    : activeSource?.name || "No server selected";
+  const serverLabel = activeSource?.name || "No server selected";
   const failoverContextKey = `${selectedProvider}:${movieType || ""}:${movieId || ""}:${seasonId || 0}:${episodeId || 0}`;
   const autoFailoverStateRef = useRef({
     contextKey: "",
@@ -315,9 +284,7 @@ function Watch() {
   });
   const centerErrorMessage = String(
     isPlaybackUnavailable
-      ? isTorrentPlayback
-        ? torrentioData.error || "Unable to load a TorrentPlayer stream for this title."
-        : getStreamData.errorMessage || "Unable to load stream for this provider/server."
+      ? getStreamData.errorMessage || "Unable to load stream for this provider/server."
       : lastPlaybackError,
   ).trim();
 
@@ -477,16 +444,14 @@ function Watch() {
       season: seasonId ? parseInt(seasonId) : 0,
       episode: episodeId ? parseInt(episodeId) : 0,
       title: mediaTitle,
-      playerKind: isTorrentProvider ? "torrentplayer" : "provider_modern",
-      sourceType: isTorrentProvider ? "torrent_stream" : "provider_stream",
-      fallbackReason: isTorrentProvider
-        ? `provider:torrentio;infoHash:${torrentioData.infoHash || "pending"}`
-        : `provider:${selectedProvider};server:${activeSource?.id || "default"}`,
+      playerKind: "provider_modern",
+      sourceType: "provider_stream",
+      fallbackReason: `provider:${selectedProvider};server:${activeSource?.id || "default"}`,
       lastPosition: progressMinutes,
       duration: resolvedDuration,
       completionRatio,
     };
-  }, [activeSource?.id, episodeId, fallbackDurationMinutes, isTorrentProvider, mediaTitle, movieId, movieType, seasonId, selectedProvider, torrentioData.infoHash]);
+  }, [activeSource?.id, episodeId, fallbackDurationMinutes, mediaTitle, movieId, movieType, seasonId, selectedProvider]);
 
   const syncPlaybackTelemetry = useCallback(async (
     progressMinutes: number,
@@ -756,9 +721,7 @@ function Watch() {
     if (movieType === "movie") {
       movie(movieId);
       movieImages(movieId);
-      if (!isTorrentProvider) {
-        getStream(selectedProvider, "movie", movieId, undefined, undefined, selectedProvider === "anikai" ? version : undefined);
-      }
+      getStream(selectedProvider, "movie", movieId, undefined, undefined, selectedProvider === "anikai" ? version : undefined);
       return;
     }
 
@@ -767,10 +730,10 @@ function Watch() {
     if (seasonId) {
       tvSeasonsDetails(movieId, parseInt(seasonId));
     }
-    if (seasonId && episodeId && !isTorrentProvider) {
+    if (seasonId && episodeId) {
       getStream(selectedProvider, "tv", movieId, seasonId, episodeId, selectedProvider === "anikai" ? version : undefined);
     }
-  }, [episodeId, isTorrentProvider, movieId, movieType, seasonId, selectedProvider, version]);
+  }, [episodeId, movieId, movieType, seasonId, selectedProvider, version]);
 
   useEffect(() => {
     if (!sessionBaseReady) return;
@@ -940,7 +903,7 @@ function Watch() {
   }, [getPlayerDurationMinutes, persistProgress]);
 
   const requestStream = () => {
-    if (!movieId || !movieType || isTorrentProvider) return;
+    if (!movieId || !movieType) return;
 
     if (movieType === "movie") {
       void getStream(selectedProvider, "movie", movieId, undefined, undefined, selectedProvider === "anikai" ? version : undefined);
@@ -981,11 +944,6 @@ function Watch() {
 
   const retryCurrentServer = () => {
     setLastPlaybackError("");
-
-    if (isTorrentProvider) {
-      setPlayerReloadToken((value) => value + 1);
-      return;
-    }
 
     if (selectedProvider === "showbox") {
       autoFailoverStateRef.current = {
@@ -1210,18 +1168,12 @@ function Watch() {
         <Select
           size="sm"
           value={activeSource?.id || null}
-          placeholder={isTorrentProvider
-            ? torrentioData.stream
-              ? "Best Torrentio stream"
-              : "Finding torrent"
-            : availableSources.length
-              ? "Select server"
-              : "No servers yet"}
+          placeholder={availableSources.length ? "Select server" : "No servers yet"}
           onChange={(_e, value) => {
             if (!value) return;
             setServerInQuery(String(value));
           }}
-          disabled={isTorrentProvider || !availableSources.length}
+          disabled={!availableSources.length}
           sx={{
             minWidth: { xs: "200px", sm: "260px" },
             maxWidth: "100%",
@@ -1323,22 +1275,7 @@ function Watch() {
           </Select>
         </Box>
       ) : null}
-      {isTorrentPlayback ? (
-        <TorrentPlayer
-          stream={torrentioData.stream}
-          playerRef={playerRef}
-          poster={backdropPoster}
-          title={mediaTitle}
-          onLoadedMetadata={handlePlayerLoadedMetadata}
-          onTimeUpdate={handlePlayerTimeUpdate}
-          onPause={handlePlayerPause}
-          onEnded={handlePlayerEnded}
-          onPlaybackError={handlePlaybackError}
-          onPlaybackReady={handlePlaybackReady}
-          reloadToken={playerReloadToken}
-        />
-      ) : (
-        <PlaybackSurface
+      <PlaybackSurface
           playerRef={playerRef}
           stream={offlineParam ? null : playbackStream}
           sourceUrl={offlineParam && offlineBlobUrl ? offlineBlobUrl : providerPlaybackSourceUrl}
@@ -1353,7 +1290,6 @@ function Watch() {
           onPlaybackReady={handlePlaybackReady}
           reloadToken={playerReloadToken}
         />
-      )}
       {centerErrorMessage ? (
         <Box
           sx={{

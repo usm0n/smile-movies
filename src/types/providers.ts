@@ -1,6 +1,6 @@
 export type VixsrcMediaType = "movie" | "tv";
 export type VixsrcAvailabilityMatch = "movie" | "tv" | "episode" | null;
-export type ProviderId = "vixsrc" | "showbox" | "anikai" | "torrentio";
+export type ProviderId = "vixsrc" | "showbox" | "anikai";
 export type AnimeMode = "sub" | "dub";
 export type ProviderSourceFormat = "hls" | "mp4" | "unknown";
 
