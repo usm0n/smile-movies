@@ -1,4 +1,4 @@
-import { imdbAPI, tmdbAPI } from "../api";
+import { smbV1API, tmdbAPI } from "../api";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -20,6 +20,9 @@ export interface ImdbEpisode {
 export interface ImdbTitle {
   id: string;
   primaryTitle: string;
+  originalTitle?: string;
+  startYear?: number;
+  type?: string;
   rating?: ImdbRating;
 }
 
@@ -29,12 +32,14 @@ export interface ImdbParentsGuideReview {
 }
 
 export interface ImdbParentsGuideSeverity {
-  severityLevel: string;
+  severityLevel: string; // "NONE" | "MILD" | "MODERATE" | "SEVERE"
   voteCount: number;
 }
 
 export interface ImdbParentsGuideEntry {
   category: string; // "SEXUAL_CONTENT" | "VIOLENCE" | "PROFANITY" | "ALCOHOL_DRUGS" | "FRIGHTENING_INTENSE_SCENES"
+  severity?: string;
+  totalVoteCount?: number;
   severityBreakdowns: ImdbParentsGuideSeverity[];
   reviews: ImdbParentsGuideReview[];
 }
@@ -79,6 +84,10 @@ async function batchedAll<T>(
 }
 
 // ── API calls ────────────────────────────────────────────────────────────────
+//
+// IMDb data is served by our own backend (`/api/v1/imdb/*`), which reads it
+// from IMDb upstream. The previous third-party host (api.imdbapi.dev) was shut
+// down, and IMDb's own endpoint cannot be called directly from the browser.
 
 /** Resolve a TMDB ID to an IMDb tt-ID via TMDB's external_ids endpoint */
 export async function resolveImdbId(
@@ -96,7 +105,7 @@ export async function resolveImdbId(
 /** Fetch IMDb title details (includes aggregate rating) */
 export async function fetchImdbTitle(imdbId: string): Promise<ImdbTitle | null> {
   try {
-    const res = await imdbAPI.get(`/titles/${imdbId}`);
+    const res = await smbV1API.get(`/imdb/titles/${imdbId}`);
     return res.data as ImdbTitle;
   } catch {
     return null;
@@ -104,31 +113,18 @@ export async function fetchImdbTitle(imdbId: string): Promise<ImdbTitle | null> 
 }
 
 /**
- * Fetch all episodes for a given season, handling pagination.
- * Uses retry logic to handle transient API errors.
+ * Fetch all episodes for a given season.
+ * Pagination is handled server-side; retries cover transient API errors.
  */
 export async function fetchImdbEpisodesBySeason(
   imdbId: string,
   season: number
 ): Promise<ImdbEpisode[]> {
   return withRetry(async () => {
-    const episodes: ImdbEpisode[] = [];
-    let pageToken: string | undefined;
-
-    do {
-      const params: Record<string, string | number> = {
-        season: String(season),
-        pageSize: 50,
-      };
-      if (pageToken) params.pageToken = pageToken;
-
-      const res = await imdbAPI.get(`/titles/${imdbId}/episodes`, { params });
-      const data = res.data;
-      if (data?.episodes?.length) episodes.push(...data.episodes);
-      pageToken = data?.nextPageToken;
-    } while (pageToken);
-
-    return episodes;
+    const res = await smbV1API.get(`/imdb/titles/${imdbId}/episodes`, {
+      params: { season },
+    });
+    return (res.data?.episodes ?? []) as ImdbEpisode[];
   });
 }
 
@@ -164,6 +160,6 @@ export async function fetchAllSeasonsBatched(
 export async function fetchImdbParentalGuide(
   imdbId: string
 ): Promise<ImdbParentsGuideEntry[]> {
-  const res = await imdbAPI.get(`/titles/${imdbId}/parentsGuide`);
+  const res = await smbV1API.get(`/imdb/titles/${imdbId}/parentsGuide`);
   return (res.data?.parentsGuide ?? []) as ImdbParentsGuideEntry[];
 }
