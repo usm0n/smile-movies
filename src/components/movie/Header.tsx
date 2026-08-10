@@ -105,7 +105,7 @@ function Header({
     } catch { /* silent */ }
   };
 
-  const addToList = async (collectionId: string, collectionName: string) => {
+  const addToList = async (collectionId: string) => {
     setAddingToList(collectionId);
     try {
       await collectionsAPI.addItem(collectionId, {
@@ -646,7 +646,7 @@ function Header({
                           {collections.map((col) => (
                             <MenuItem
                               key={col.id}
-                              onClick={() => addToList(col.id, col.name)}
+                              onClick={() => addToList(col.id)}
                               disabled={addingToList === col.id}
                             >
                               <PlaylistAdd sx={{ fontSize: 18 }} />

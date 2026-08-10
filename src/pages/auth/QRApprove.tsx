@@ -7,7 +7,7 @@ import { useUsers } from "../../context/Users";
 
 function QRApprove() {
   const { token } = useParams<{ token: string }>();
-  const { isAuthenticated, myselfData } = useUsers();
+  const { isAuthenticated } = useUsers();
   const [status, setStatus] = useState<"idle" | "loading" | "done" | "error">("idle");
   const [message, setMessage] = useState("");
   const navigate = useNavigate();
