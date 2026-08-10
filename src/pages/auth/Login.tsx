@@ -54,6 +54,7 @@ function QRLoginPanel() {
   useEffect(() => {
     if (!qrToken || status !== "pending") return;
     pollRef.current = setInterval(async () => {
+      if (document.visibilityState !== "visible") return;
       try {
         const res = await qrAPI.poll(qrToken);
         if (res.status === "approved") {
@@ -67,7 +68,7 @@ function QRLoginPanel() {
           clearInterval(timerRef.current!);
         }
       } catch { /* silent */ }
-    }, 2000);
+    }, 4000);
     timerRef.current = setInterval(() => {
       setTimeLeft((t) => {
         if (t <= 1) {

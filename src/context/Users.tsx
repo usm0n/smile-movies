@@ -8,6 +8,8 @@ import {
   setIsLoggedIn,
 } from "../utilities/defaults";
 
+const LAST_LOGIN_HEARTBEAT_MS = 15 * 60 * 1000;
+
 const UsersContext = createContext({
   usersData: null as userType.ResponseType | null,
   userByIdData: null as userType.ResponseType | null,
@@ -925,9 +927,13 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
 
       setIsVerified(!!user?.isVerified);
 
+      // "Last seen" only needs coarse resolution. A 60s heartbeat meant every
+      // open tab burned an API call plus a Firestore write every minute, all
+      // day long — by far the cheapest usage win available.
       intervalId = setInterval(() => {
+        if (document.visibilityState !== "visible") return;
         users?.lastLogin(deviceId());
-      }, 60000);
+      }, LAST_LOGIN_HEARTBEAT_MS);
     }
 
     return () => {

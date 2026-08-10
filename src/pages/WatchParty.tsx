@@ -13,7 +13,7 @@ import { User } from "../user";
 import toast from "react-hot-toast";
 import { copyToClipboard } from "../utilities/defaults";
 
-const POLL_INTERVAL_MS = 3000;
+const POLL_INTERVAL_MS = 6000;
 const MAX_RETRIES = 3;
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -84,10 +84,12 @@ function WatchPartyPage() {
     return () => { if (code && joinedRef.current) watchPartyAPI.leave(code).catch(() => {}); };
   }, [code]);
 
-  // Poll
+  // Poll — skipped while the tab is in the background, where nobody is reading
+  // the chat anyway and each tick would still cost an invocation + a read.
   useEffect(() => {
     if (!code || loading || pageError) return;
     const interval = setInterval(async () => {
+      if (document.visibilityState !== "visible") return;
       try {
         setParty(await watchPartyAPI.get(code));
       } catch (err: any) {
