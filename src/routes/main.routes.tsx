@@ -1,32 +1,41 @@
-import NotFound from "../components/utils/NotFound";
+import { lazy } from "react";
 import HomeLayout from "../layouts/HomeLayout";
-import ForgotPassword from "../pages/auth/forgot-password";
-import Login from "../pages/auth/Login";
-import QRApprove from "../pages/auth/QRApprove";
-import Register from "../pages/auth/Register";
-import ResetPassword from "../pages/auth/ResetPassword";
-import VerifyEmail from "../pages/auth/VerifyEmail";
-import AdminDashboard from "../pages/admin/AdminDashboard";
-import AboutPage from "../pages/public/AboutPage";
-import ContactPage from "../pages/public/ContactPage";
-import DownloadPage from "../pages/public/DownloadPage";
-import LegalDocumentPage from "../pages/public/LegalDocumentPage";
-import UnsubscribePage from "../pages/public/UnsubscribePage";
-import Discover from "../pages/Discover";
-import Movie from "../pages/movie/Movie";
-import Person from "../pages/person/Person";
-import PublicProfilePage from "../pages/profile/PublicProfilePage";
-import Search from "../pages/search/Search";
-import TVSeries from "../pages/tv/TVSeries";
-import Settings from "../pages/user";
-import Watch from "../pages/video/Watch";
-import Watchlist from "../pages/Watchlist";
-import AIAssistant from "../pages/ai/AIAssistant";
-import TVRatings from "../pages/tv/TVRatings";
-import Collections from "../pages/Collections";
-import CollectionDetail from "../pages/CollectionDetail";
-import Downloads from "../pages/Downloads";
-import WatchParty from "../pages/WatchParty";
+
+/**
+ * Only the landing page is eager — it is what a cold visit renders, so pulling
+ * it into a chunk would just add a round trip before first paint.
+ *
+ * Everything else is lazy. The heavy tails are the player (vidstack), the admin
+ * dashboard, and the watch party, none of which a browsing user ever touches.
+ */
+const NotFound = lazy(() => import("../components/utils/NotFound"));
+const ForgotPassword = lazy(() => import("../pages/auth/forgot-password"));
+const Login = lazy(() => import("../pages/auth/Login"));
+const QRApprove = lazy(() => import("../pages/auth/QRApprove"));
+const Register = lazy(() => import("../pages/auth/Register"));
+const ResetPassword = lazy(() => import("../pages/auth/ResetPassword"));
+const VerifyEmail = lazy(() => import("../pages/auth/VerifyEmail"));
+const AdminDashboard = lazy(() => import("../pages/admin/AdminDashboard"));
+const AboutPage = lazy(() => import("../pages/public/AboutPage"));
+const ContactPage = lazy(() => import("../pages/public/ContactPage"));
+const DownloadPage = lazy(() => import("../pages/public/DownloadPage"));
+const LegalDocumentPage = lazy(() => import("../pages/public/LegalDocumentPage"));
+const UnsubscribePage = lazy(() => import("../pages/public/UnsubscribePage"));
+const Discover = lazy(() => import("../pages/Discover"));
+const Movie = lazy(() => import("../pages/movie/Movie"));
+const Person = lazy(() => import("../pages/person/Person"));
+const PublicProfilePage = lazy(() => import("../pages/profile/PublicProfilePage"));
+const Search = lazy(() => import("../pages/search/Search"));
+const TVSeries = lazy(() => import("../pages/tv/TVSeries"));
+const Settings = lazy(() => import("../pages/user"));
+const Watch = lazy(() => import("../pages/video/Watch"));
+const Watchlist = lazy(() => import("../pages/Watchlist"));
+const AIAssistant = lazy(() => import("../pages/ai/AIAssistant"));
+const TVRatings = lazy(() => import("../pages/tv/TVRatings"));
+const Collections = lazy(() => import("../pages/Collections"));
+const CollectionDetail = lazy(() => import("../pages/CollectionDetail"));
+const Downloads = lazy(() => import("../pages/Downloads"));
+const WatchParty = lazy(() => import("../pages/WatchParty"));
 
 export const mainRoutes = [
   {

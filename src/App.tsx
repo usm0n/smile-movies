@@ -8,7 +8,8 @@ import CommandMenu from "./components/ui/CommandMenu";
 import { Box, useColorScheme } from "@mui/joy";
 import NotVerified from "./components/utils/NotVerified";
 import { useLocation } from "react-router-dom";
-import { useEffect } from "react";
+import { Suspense, useEffect } from "react";
+import RouteFallback from "./components/utils/RouteFallback";
 
 function App() {
   const { setMode } = useColorScheme();
@@ -25,11 +26,13 @@ function App() {
       <Navbar />
       <CommandMenu />
       <Box component="main" sx={{ flex: 1 }}>
-        <Routes>
-          {mainRoutes?.map((route, index) => (
-            <Route key={index} path={route.path} element={route.element} />
-          ))}
-        </Routes>
+        <Suspense fallback={<RouteFallback />}>
+          <Routes>
+            {mainRoutes?.map((route, index) => (
+              <Route key={index} path={route.path} element={route.element} />
+            ))}
+          </Routes>
+        </Suspense>
       </Box>
       {!isWatchPage && <AppFooter />}
     </Box>

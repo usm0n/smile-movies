@@ -18,6 +18,8 @@ import {
   Home as HomeIcon,
   AdminPanelSettingsRounded,
   Person as PersonIcon,
+  PhoneIphone,
+  type IconProps,
 } from "../ui/icons";
 import highLogo from "../../assets/images/logo-1000.png";
 import {
@@ -37,7 +39,7 @@ import {
   Stack,
   Typography,
 } from "@mui/joy";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, type ComponentType } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useUsers } from "../../context/Users";
 import { User } from "../../user";
@@ -53,11 +55,55 @@ import Dialog from "../ui/Dialog";
 
 const DETAIL_PAGE_REGEX = /^\/(movie|tv)\/([^/]+)$/;
 
-const NAV_LINKS = [
-  { label: "Browse", to: "/browse" },
+// "/" and "/browse" render the same page, so only one of them is presented as a
+// destination — /browse stays routable for old links and bookmarks.
+type NavLink = { label: string; to: string; exact?: boolean };
+
+const NAV_LINKS: NavLink[] = [
+  { label: "Home", to: "/", exact: true },
   { label: "Discover", to: "/discover" },
   { label: "SmileAI", to: "/ai" },
 ];
+
+// Library destinations used to live only inside the avatar menu. They are the
+// primary return destinations, so signed-in users get them in the nav itself.
+const LIBRARY_NAV_LINKS: NavLink[] = [
+  { label: "Watchlist", to: "/watchlist" },
+  { label: "My Lists", to: "/collections" },
+];
+
+const DRAWER_SECTIONS: {
+  title?: string;
+  links: (NavLink & { icon: ComponentType<IconProps> })[];
+}[] = [
+  {
+    links: [
+      { label: "Home", to: "/", icon: HomeIcon, exact: true },
+      { label: "Discover", to: "/discover", icon: Compass },
+      { label: "SmileAI", to: "/ai", icon: AutoAwesome },
+    ],
+  },
+  {
+    title: "Library",
+    links: [
+      { label: "Watchlist", to: "/watchlist", icon: Bookmark },
+      { label: "My Lists", to: "/collections", icon: Layers },
+      { label: "Downloads", to: "/downloads", icon: Download },
+    ],
+  },
+  {
+    title: "App",
+    links: [
+      { label: "Settings", to: "/user/settings", icon: SettingsIcon },
+      { label: "Get the app", to: "/download", icon: PhoneIphone },
+    ],
+  },
+];
+
+const isRouteActive = (pathname: string, to: string, exact?: boolean) =>
+  exact || to === "/"
+    ? pathname === to || (to === "/" && pathname === "/browse")
+    : pathname === to || pathname.startsWith(`${to}/`);
 
 const getPreferredLogoPath = (imageData?: images | null) =>
   imageData?.logos?.find((logo) => logo.iso_639_1 === "en")?.file_path ||
@@ -174,9 +220,14 @@ const Navbar: React.FC = () => {
     setDrawerOpen(false);
   };
 
+  const navLinks = useMemo(
+    () => (isAuthenticated ? [...NAV_LINKS, ...LIBRARY_NAV_LINKS] : NAV_LINKS),
+    [isAuthenticated],
+  );
+
+  // Watchlist / My Lists / SmileAI moved into the nav proper, so this menu is
+  // only account-scoped destinations now.
   const menuLinks = [
-    { label: "Watchlist", to: "/watchlist", icon: Bookmark },
-    { label: "My Lists", to: "/collections", icon: Layers },
     { label: "Downloads", to: "/downloads", icon: Download },
     { label: "Settings", to: "/user/settings", icon: SettingsIcon },
   ];
@@ -253,10 +304,6 @@ const Navbar: React.FC = () => {
               <ListItemContent>{link.label}</ListItemContent>
             </MenuItem>
           ))}
-          <MenuItem onClick={() => navigate("/ai")}>
-            <AutoAwesome sx={{ fontSize: 16 }} />
-            <ListItemContent>What to watch?</ListItemContent>
-          </MenuItem>
 
           <Divider sx={{ my: 0.5 }} />
 
@@ -370,16 +417,23 @@ const Navbar: React.FC = () => {
             <>
               <Typography
                 aria-hidden
-                sx={{ color: "neutral.600", fontSize: 20, lineHeight: 1, mx: 0.25 }}
+                sx={{
+                  color: "neutral.600",
+                  fontSize: 20,
+                  lineHeight: 1,
+                  mx: 0.25,
+                  // Hidden at md, where the primary nav takes the space.
+                  display: { xs: "block", md: "none", lg: "block" },
+                }}
               >
                 /
               </Typography>
               <Box
                 sx={{
                   minWidth: 0,
-                  display: "flex",
+                  display: { xs: "flex", md: "none", lg: "flex" },
                   alignItems: "center",
-                  maxWidth: { xs: "34vw", sm: "42vw", md: 280 },
+                  maxWidth: { xs: "34vw", sm: "42vw", lg: 220 },
                 }}
               >
                 {detailData.logoPath ? (
@@ -417,43 +471,47 @@ const Navbar: React.FC = () => {
           )}
         </Box>
 
-        {!isDetailPage && (
-          <Box
-            component="nav"
-            sx={{ display: { xs: "none", md: "flex" }, alignItems: "center", gap: 0.5 }}
-          >
-            {NAV_LINKS.map((link) => {
-              const active = location.pathname === link.to;
-              return (
-                <Box
-                  key={link.to}
-                  component="button"
-                  type="button"
-                  onClick={() => navigate(link.to)}
-                  sx={{
-                    border: "none",
-                    background: "transparent",
-                    cursor: "pointer",
-                    fontFamily: "body",
-                    fontSize: "0.875rem",
-                    fontWeight: 500,
-                    px: 1.25,
-                    py: 0.75,
-                    borderRadius: "6px",
-                    color: active ? "text.primary" : "text.secondary",
-                    transition: "color 150ms ease, background-color 150ms ease",
-                    "&:hover": {
-                      color: "text.primary",
-                      backgroundColor: "background.level1",
-                    },
-                  }}
-                >
-                  {link.label}
-                </Box>
-              );
-            })}
-          </Box>
-        )}
+        {/*
+          Primary nav stays mounted on detail pages too — previously it was
+          hidden there, leaving the logo as the only way out of /movie/:id.
+        */}
+        <Box
+          component="nav"
+          sx={{ display: { xs: "none", md: "flex" }, alignItems: "center", gap: 0.5 }}
+        >
+          {navLinks.map((link) => {
+            const active = isRouteActive(location.pathname, link.to, link.exact);
+            return (
+              <Box
+                key={link.to}
+                component="button"
+                type="button"
+                aria-current={active ? "page" : undefined}
+                onClick={() => navigate(link.to)}
+                sx={{
+                  border: "none",
+                  background: "transparent",
+                  cursor: "pointer",
+                  fontFamily: "body",
+                  fontSize: "0.875rem",
+                  fontWeight: 500,
+                  px: 1.25,
+                  py: 0.75,
+                  borderRadius: "6px",
+                  color: active ? "text.primary" : "text.secondary",
+                  backgroundColor: active ? "background.level1" : "transparent",
+                  transition: "color 150ms ease, background-color 150ms ease",
+                  "&:hover": {
+                    color: "text.primary",
+                    backgroundColor: "background.level1",
+                  },
+                }}
+              >
+                {link.label}
+              </Box>
+            );
+          })}
+        </Box>
 
         <Box sx={{ flex: 1 }} />
 
@@ -594,27 +652,64 @@ const Navbar: React.FC = () => {
             </Button>
           )}
 
-          <List sx={{ mt: 2, "--ListItem-paddingY": "10px" }}>
-            {[
-              { label: "Home", to: "/", icon: HomeIcon },
-              { label: "Browse", to: "/browse", icon: Layers },
-              { label: "Discover", to: "/discover", icon: Compass },
-              { label: "SmileAI", to: "/ai", icon: AutoAwesome },
-              { label: "Watchlist", to: "/watchlist", icon: Bookmark },
-              { label: "My Lists", to: "/collections", icon: Layers },
-              { label: "Downloads", to: "/downloads", icon: Download },
-              { label: "Get the app", to: "/download", icon: Download },
-            ].map((link) => (
-              <ListItemButton
-                key={`${link.label}-${link.to}`}
-                onClick={() => navigateTo(link.to)}
-                sx={{ gap: 1.5, fontSize: "0.9375rem" }}
+          {/*
+            Grouped by intent: browse the catalogue, then your own library.
+            "Browse" is gone as a separate entry (it renders the same page as
+            Home), and the icons no longer collide — "Downloads" (offline
+            titles) and "Get the app" previously shared the download icon.
+          */}
+          {DRAWER_SECTIONS.map((section, sectionIndex) => (
+            <Box key={section.title ?? sectionIndex}>
+              {section.title && (
+                <Typography
+                  level="body-xs"
+                  sx={{
+                    mt: sectionIndex === 0 ? 2 : 1.5,
+                    px: 1,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.06em",
+                    fontWeight: 500,
+                    color: "text.tertiary",
+                  }}
+                >
+                  {section.title}
+                </Typography>
+              )}
+              <List
+                sx={{
+                  mt: section.title ? 0.5 : 2,
+                  "--ListItem-paddingY": "10px",
+                  "--ListItem-radius": "8px",
+                }}
               >
-                <link.icon sx={{ fontSize: 17, color: "text.tertiary" }} />
-                {link.label}
-              </ListItemButton>
-            ))}
-          </List>
+                {section.links.map((link) => {
+                  const active = isRouteActive(location.pathname, link.to, link.exact);
+                  return (
+                    <ListItemButton
+                      key={`${link.label}-${link.to}`}
+                      selected={active}
+                      aria-current={active ? "page" : undefined}
+                      onClick={() => navigateTo(link.to)}
+                      sx={{
+                        gap: 1.5,
+                        fontSize: "0.9375rem",
+                        fontWeight: active ? 600 : 400,
+                        color: active ? "text.primary" : "text.secondary",
+                      }}
+                    >
+                      <link.icon
+                        sx={{
+                          fontSize: 17,
+                          color: active ? "text.primary" : "text.tertiary",
+                        }}
+                      />
+                      {link.label}
+                    </ListItemButton>
+                  );
+                })}
+              </List>
+            </Box>
+          ))}
 
           {isAuthenticated && (
             <>

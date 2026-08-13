@@ -11,10 +11,6 @@ export const copyToClipboard = (text: string) => {
   navigator.clipboard.writeText(text);
 };
 
-export const redirect = (url: string) => {
-  window.location.href = url;
-};
-
 export const isValidEmail = (email: string) =>
   /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|.(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/.test(
     email,
@@ -110,24 +106,6 @@ export const deviceType = (): string => {
     return "unknown";
   }
 };
-export const deviceBrowser = () => {
-  const ua = navigator.userAgent;
-  let browser = "Unknown";
-
-  if (ua.indexOf("Chrome") > -1) {
-    browser = "Chrome";
-  } else if (ua.indexOf("Firefox") > -1) {
-    browser = "Firefox";
-  } else if (ua.indexOf("Safari") > -1) {
-    browser = "Safari";
-  } else if (ua.indexOf("MSIE") > -1 || ua.indexOf("Trident") > -1) {
-    browser = "Internet Explorer";
-  } else if (ua.indexOf("Opera") > -1 || ua.indexOf("OPR") > -1) {
-    browser = "Opera";
-  }
-
-  return browser;
-};
 const DEVICE_ID_STORAGE_KEY = "smile_device_id";
 
 const generateDeviceId = (): string => {
@@ -187,12 +165,3 @@ export function formatTimeAgo(dateString: string): string {
     return dateString;
   }
 }
-
-export const trackEvent = (
-  action: string,
-  params: Record<string, any> = {},
-) => {
-  if (typeof window !== "undefined" && (window as any).gtag) {
-    (window as any).gtag("event", action, params);
-  }
-};

@@ -112,7 +112,7 @@ function Downloads() {
             title="No downloads yet"
             description="Use the download button on any movie or episode page to save it for offline viewing."
             action={
-              <Button variant="outlined" color="neutral" onClick={() => navigate("/browse")}>
+              <Button variant="outlined" color="neutral" onClick={() => navigate("/discover")}>
                 Browse titles
               </Button>
             }

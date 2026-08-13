@@ -1,5 +1,5 @@
 import axios from "axios";
-import toast from "react-hot-toast";
+import { toast } from "../../components/ui/toast";
 import { deviceId, isLoggedIn } from "../../utilities/defaults";
 
 export const smbAPI = axios.create({

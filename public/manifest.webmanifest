@@ -4,9 +4,26 @@
   "description": "Web-first movie and TV discovery with SmileAI, watch tracking, and installable PWA support.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#050913",
-  "theme_color": "#050913",
+  "background_color": "#000000",
+  "theme_color": "#000000",
   "orientation": "portrait-primary",
+  "shortcuts": [
+    {
+      "name": "Watchlist",
+      "short_name": "Watchlist",
+      "url": "/watchlist"
+    },
+    {
+      "name": "Discover",
+      "short_name": "Discover",
+      "url": "/discover"
+    },
+    {
+      "name": "Downloads",
+      "short_name": "Downloads",
+      "url": "/downloads"
+    }
+  ],
   "icons": [
     {
       "src": "/icons/logo-192.png",

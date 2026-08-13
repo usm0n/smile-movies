@@ -6,10 +6,10 @@ const columns = [
   {
     title: "Product",
     links: [
-      { label: "Browse", to: "/browse" },
+      { label: "Home", to: "/" },
       { label: "Discover", to: "/discover" },
       { label: "SmileAI", to: "/ai" },
-      { label: "Download", to: "/download" },
+      { label: "Get the app", to: "/download" },
     ],
   },
   {

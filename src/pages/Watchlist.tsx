@@ -141,7 +141,7 @@ function Watchlist() {
                 }
                 action={
                   !search ? (
-                    <Button variant="outlined" color="neutral" onClick={() => navigate("/browse")}>
+                    <Button variant="outlined" color="neutral" onClick={() => navigate("/discover")}>
                       Browse titles
                     </Button>
                   ) : undefined

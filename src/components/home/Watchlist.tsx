@@ -128,7 +128,7 @@ function Watchlist() {
           title="No library activity yet"
           description="Add something to your watchlist, start watching, or rate a title to begin."
           action={
-            <Button variant="outlined" color="neutral" onClick={() => navigate("/browse")}>
+            <Button variant="outlined" color="neutral" onClick={() => navigate("/discover")}>
               Browse titles
             </Button>
           }
