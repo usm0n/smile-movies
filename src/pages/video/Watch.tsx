@@ -1,13 +1,12 @@
-import { ArrowBackIos, ContentCut, Link as LinkIcon, People, SkipNext, Close } from "../../components/ui/icons";
 import {
-  Box,
-  Button,
-  IconButton,
-  LinearProgress,
-  Option,
-  Select,
-  Typography,
-  } from "@mui/joy";
+  ArrowBackIos,
+  Close,
+  ContentCut,
+  Link as LinkIcon,
+  People,
+  SkipNext,
+} from "../../components/ui/icons";
+import { Box, Button, IconButton, LinearProgress, Typography } from "@mui/joy";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useTMDB } from "../../context/TMDB";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -21,11 +20,17 @@ import { User } from "../../user";
 import PlaybackSurface from "../../components/player/PlaybackSurface";
 import { playbackAPI } from "../../service/api/smb/playback.api.service";
 import RatingDialog from "../../components/library/RatingDialog";
-import { ProviderId, ProviderSourceFormat } from "../../types/providers";
+import { AnimeMode, ProviderId, ProviderSourceFormat } from "../../types/providers";
 import DownloadButton from "../../components/player/DownloadButton";
 import { copyToClipboard } from "../../utilities/defaults";
 import { watchPartyAPI } from "../../service/api/smb/watchparty.api.service";
 import { toast } from "../../components/ui/toast";
+import WatchSidePanel, {
+  ProviderOption,
+  WatchPanelTab,
+} from "../../components/player/WatchSidePanel";
+import { isAnimeTitle } from "../../utilities/anime";
+import { buildSubtitleOffsetKey } from "../../utilities/subtitlePrefs";
 
 const AUTO_SAVE_INTERVAL_MS = 60000;
 const MIN_PROGRESS_DELTA_MINUTES = 1;
@@ -37,14 +42,25 @@ const LOCAL_RECENT_PROGRESS_PREFIX = "recent-progress:";
 const PROVIDER_PARAM_KEY = "provider";
 const SERVER_PARAM_KEY = "server";
 const PROVIDER_OPTIONS: ProviderId[] = ["vixsrc", "showbox", "anikai"];
+const DEFAULT_PROVIDER: ProviderId = "vixsrc";
+const ANIME_PROVIDER: ProviderId = "anikai";
 
-const parseProviderFromQuery = (value: string | null): ProviderId => {
-  if (value === "anikai") return "anikai";
-  return value === "showbox" ? "showbox" : "vixsrc";
+const PROVIDER_DESCRIPTIONS: Record<ProviderId, string> = {
+  vixsrc: "Broad catalogue, multi-quality HLS",
+  showbox: "Direct files, several mirrors",
+  anikai: "Anime only — subbed and dubbed",
+};
+
+/** Returns the provider the URL explicitly asks for, or null when it says nothing. */
+const parseProviderFromQuery = (value: string | null): ProviderId | null => {
+  const normalized = String(value || "").trim().toLowerCase();
+  return (PROVIDER_OPTIONS as string[]).includes(normalized)
+    ? (normalized as ProviderId)
+    : null;
 };
 
 const getProviderLabel = (provider: ProviderId) => {
-  if (provider === "anikai") return "Anikai";
+  if (provider === "anikai") return "AnimeKai";
   return provider === "showbox" ? "ShowBox" : "Vixsrc";
 };
 
@@ -200,9 +216,31 @@ function Watch() {
   const autoplayTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   // Clip sharing
   const [clipCopied, setClipCopied] = useState(false);
-  const selectedProvider = parseProviderFromQuery(searchParams.get(PROVIDER_PARAM_KEY));
-  const versionParam = searchParams.get("version") as "sub" | "dub" | null;
-  const version = versionParam === "dub" ? "dub" : "sub";
+  // Episodes / sources sheet
+  const [panelTab, setPanelTab] = useState<WatchPanelTab>(
+    movieType === "tv" ? "episodes" : "sources",
+  );
+  const [isPanelOpen, setIsPanelOpen] = useState(false);
+  /**
+   * Provider selection.
+   *
+   * A provider in the URL is always the viewer's own choice and wins. With
+   * nothing in the URL we pick for them: AnimeKai for anime (it is the only
+   * provider that carries it, and it carries subbed *and* dubbed), Vixsrc for
+   * everything else. The choice waits for TMDB details to land, because
+   * guessing "not anime" from an empty response would send anime titles to the
+   * wrong provider and then visibly switch under them.
+   */
+  const explicitProvider = parseProviderFromQuery(searchParams.get(PROVIDER_PARAM_KEY));
+  const mediaDetails =
+    movieType === "tv" ? tvSeriesDetailsDataArr : movieDetailsDataArr;
+  const areDetailsReady = Boolean(mediaDetails?.id);
+  const isAnime = areDetailsReady && isAnimeTitle(movieType, mediaDetails);
+  const autoProvider: ProviderId = isAnime ? ANIME_PROVIDER : DEFAULT_PROVIDER;
+  const selectedProvider = explicitProvider || autoProvider;
+  const isProviderResolved = Boolean(explicitProvider) || areDetailsReady;
+  const versionParam = searchParams.get("version") as AnimeMode | null;
+  const version: AnimeMode = versionParam === "dub" ? "dub" : "sub";
   const selectedServerFromQuery = String(searchParams.get(SERVER_PARAM_KEY) || "").trim();
   const availableStream = getStreamData.data?.stream || null;
   const resolvedProvider = getStreamData.data?.resolvedProvider || selectedProvider;
@@ -267,12 +305,17 @@ function Watch() {
     : -1;
   const nextSourceOption =
     activeSourceIndex >= 0 ? availableSources[activeSourceIndex + 1] || null : null;
-  const serverLabel = activeSource?.name || "No server selected";
   const failoverContextKey = `${selectedProvider}:${movieType || ""}:${movieId || ""}:${seasonId || 0}:${episodeId || 0}`;
   const autoFailoverStateRef = useRef({
     contextKey: "",
     used: false,
   });
+  /** Guards the one automatic AnimeKai → Vixsrc hop per title/episode. */
+  const animeFallbackRef = useRef({
+    contextKey: "",
+    used: false,
+  });
+  const [autoProviderNotice, setAutoProviderNotice] = useState("");
   const centerErrorMessage = String(
     isPlaybackUnavailable
       ? getStreamData.errorMessage || "Unable to load stream for this provider/server."
@@ -280,12 +323,12 @@ function Watch() {
   ).trim();
 
   useEffect(() => {
-    const currentProvider = searchParams.get(PROVIDER_PARAM_KEY);
-    if (currentProvider === selectedProvider) return;
+    if (!isProviderResolved) return;
+    if (searchParams.get(PROVIDER_PARAM_KEY) === selectedProvider) return;
     const nextParams = new URLSearchParams(searchParams);
     nextParams.set(PROVIDER_PARAM_KEY, selectedProvider);
     setSearchParams(nextParams, { replace: true });
-  }, [searchParams, selectedProvider, setSearchParams]);
+  }, [isProviderResolved, searchParams, selectedProvider, setSearchParams]);
 
   useEffect(() => {
     if (!availableSources.length || !activeSource?.id) return;
@@ -314,6 +357,21 @@ function Watch() {
     };
     setLastPlaybackError("");
   }, [failoverContextKey]);
+
+  // The provider's own note ("served a different mirror", …) used to sit in a
+  // bar over the video; it is a passing remark, so it passes by.
+  useEffect(() => {
+    if (!providerNotice) return;
+    toast.message(providerNotice);
+  }, [providerNotice]);
+
+  const mediaContextKey = `${movieType || ""}:${movieId || ""}:${seasonId || 0}:${episodeId || 0}`;
+
+  useEffect(() => {
+    if (animeFallbackRef.current.contextKey === mediaContextKey) return;
+    animeFallbackRef.current = { contextKey: mediaContextKey, used: false };
+    setAutoProviderNotice("");
+  }, [mediaContextKey]);
 
   useEffect(() => {
     setSessionBaseProgress(0);
@@ -712,7 +770,6 @@ function Watch() {
     if (movieType === "movie") {
       movie(movieId);
       movieImages(movieId);
-      getStream(selectedProvider, "movie", movieId, undefined, undefined, selectedProvider === "anikai" ? version : undefined);
       return;
     }
 
@@ -721,10 +778,30 @@ function Watch() {
     if (seasonId) {
       tvSeasonsDetails(movieId, parseInt(seasonId));
     }
-    if (seasonId && episodeId) {
-      getStream(selectedProvider, "tv", movieId, seasonId, episodeId, selectedProvider === "anikai" ? version : undefined);
+  }, [movieId, movieType, seasonId]);
+
+  useEffect(() => {
+    if (!movieId || !movieType || !isProviderResolved) return;
+
+    const animeVersion = selectedProvider === ANIME_PROVIDER ? version : undefined;
+
+    if (movieType === "movie") {
+      getStream(selectedProvider, "movie", movieId, undefined, undefined, animeVersion);
+      return;
     }
-  }, [episodeId, movieId, movieType, seasonId, selectedProvider, version]);
+
+    if (seasonId && episodeId) {
+      getStream(selectedProvider, "tv", movieId, seasonId, episodeId, animeVersion);
+    }
+  }, [
+    episodeId,
+    isProviderResolved,
+    movieId,
+    movieType,
+    seasonId,
+    selectedProvider,
+    version,
+  ]);
 
   useEffect(() => {
     if (!sessionBaseReady) return;
@@ -983,10 +1060,31 @@ function Watch() {
 
   useEffect(() => {
     if (!isPlaybackUnavailable) return;
+
+    // AnimeKai was our guess, not the viewer's — when it comes back empty we
+    // quietly fall back rather than showing them an error they didn't ask for.
+    if (
+      !explicitProvider &&
+      selectedProvider === ANIME_PROVIDER &&
+      !animeFallbackRef.current.used
+    ) {
+      animeFallbackRef.current.used = true;
+      const fallbackMessage = `AnimeKai had no stream for this title, so ${getProviderLabel(DEFAULT_PROVIDER)} is playing instead.`;
+      setAutoProviderNotice(fallbackMessage);
+      toast.message(fallbackMessage);
+      setProviderInQuery(DEFAULT_PROVIDER);
+      return;
+    }
+
     setLastPlaybackError(
       String(getStreamData.errorMessage || "Unable to load stream for this provider/server."),
     );
-  }, [getStreamData.errorMessage, isPlaybackUnavailable]);
+  }, [
+    explicitProvider,
+    getStreamData.errorMessage,
+    isPlaybackUnavailable,
+    selectedProvider,
+  ]);
 
   useEffect(() => {
     playbackReadyRef.current = false;
@@ -1010,6 +1108,119 @@ function Watch() {
     playerReloadToken,
     sessionBaseReady,
   ]);
+
+  const openPanel = (tab: WatchPanelTab) => {
+    setPanelTab(tab);
+    setIsPanelOpen(true);
+  };
+
+  const providerOptions: ProviderOption[] = PROVIDER_OPTIONS.map((providerOption) => ({
+    id: providerOption,
+    label: getProviderLabel(providerOption),
+    description: PROVIDER_DESCRIPTIONS[providerOption],
+    recommended: isAnime
+      ? providerOption === ANIME_PROVIDER
+      : providerOption === DEFAULT_PROVIDER,
+  }));
+  const nextEpisodeMeta =
+    movieType === "tv" ? getNextEpisodeForSeries() : { nextSeason: 0, nextEpisode: 0 };
+  const hasNextEpisode = Boolean(
+    nextEpisodeMeta.nextSeason && nextEpisodeMeta.nextEpisode,
+  );
+  const chromeSubtitle =
+    movieType === "tv"
+      ? [
+        `S${Number(seasonId || 1)} · E${Number(episodeId || 1)}`,
+        activeEpisodeData?.name,
+      ]
+        .filter(Boolean)
+        .join(" · ")
+      : [
+        movieDetailsDataArr?.release_date?.slice(0, 4),
+        fallbackDurationMinutes ? `${fallbackDurationMinutes} min` : "",
+      ]
+        .filter(Boolean)
+        .join(" · ");
+  const subtitleOffsetKey = buildSubtitleOffsetKey({
+    mediaType: movieType,
+    mediaId: movieId,
+    season: seasonId,
+    episode: episodeId,
+  });
+  const sourcesLabel = `${getProviderLabel(resolvedProvider)}${
+    activeSource?.name ? ` · ${activeSource.name}` : ""
+  }`;
+  /** Shared by the top-bar actions so they read on top of the picture. */
+  const playerActionStyles = {
+    color: "#ededed",
+    borderColor: "rgba(255,255,255,0.16)",
+    backgroundColor: "rgba(10,10,10,0.55)",
+    backdropFilter: "blur(8px)",
+    "&:hover": {
+      backgroundColor: "rgba(26,26,26,0.85)",
+      borderColor: "rgba(255,255,255,0.28)",
+      color: "#ffffff",
+    },
+  } as const;
+  const errorOverlay = (
+    <Box
+      sx={{
+        position: "absolute",
+        inset: 0,
+        zIndex: 10,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        pointerEvents: "none",
+      }}
+    >
+      <Box
+        sx={{
+          width: "min(480px, calc(100% - 32px))",
+          px: 3,
+          py: 2.5,
+          borderRadius: "12px",
+          border: "1px solid #1f1f1f",
+          background: "rgba(10,10,10,0.92)",
+          backdropFilter: "blur(14px)",
+          textAlign: "center",
+          pointerEvents: "auto",
+        }}
+      >
+        <Typography level="h4" sx={{ mb: 1 }}>
+          Playback error
+        </Typography>
+        <Typography level="body-md" sx={{ mb: 1.5 }}>
+          {centerErrorMessage}
+        </Typography>
+        <Typography level="body-xs" sx={{ mb: 2 }}>
+          {sourcesLabel}
+        </Typography>
+        <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", justifyContent: "center" }}>
+          <Button size="sm" onClick={retryCurrentServer}>
+            Retry
+          </Button>
+          {availableSources.length > 1 ? (
+            <Button
+              size="sm"
+              variant="outlined"
+              color="neutral"
+              onClick={() => openPanel("sources")}
+            >
+              Change source
+            </Button>
+          ) : null}
+          <DownloadButton
+            streamUrl={playbackSourceUrl}
+            title={mediaTitle}
+            cacheKey={movieType === "tv"
+              ? `tv-${movieId}-s${seasonId}e${episodeId}`
+              : `movie-${movieId}`}
+          />
+        </Box>
+      </Box>
+    </Box>
+  );
 
   if (isIncorrect) {
     return <NotFound />;
@@ -1050,311 +1261,180 @@ function Watch() {
           } on Smile Movies`}
         />
       </Helmet>
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          gap: 1,
-          padding: "0 10px",
-          position: "absolute",
-          top: 0,
-          left: 0,
-          zIndex: 1001,
-          width: "100%",
-          minHeight: "52px",
-          borderBottom: "1px solid rgba(255, 255, 255, 0.08)",
-          background: "rgba(0, 0, 0, 0.72)",
-          backdropFilter: "blur(12px)",
-        }}
-      >
-        <IconButton
-          aria-label="Back to details"
-          onClick={() => navigate(`/${movieType}/${movieId}`)}
-        >
-          <ArrowBackIos sx={{ fontSize: 18 }} />
-        </IconButton>
-        <Button
-          size="sm"
-          variant="plain"
-          startDecorator={<People sx={{ fontSize: 15 }} />}
-          sx={{ color: "#a1a1a1", ml: 1, display: { xs: "none", sm: "flex" } }}
-          onClick={async () => {
-            try {
-              const r = await watchPartyAPI.create({
-                mediaType: movieType || "movie",
-                mediaId: movieId || "",
-                ...(seasonId && { season: Number(seasonId) }),
-                ...(episodeId && { episode: Number(episodeId) }),
-              });
-              navigate(`/party/${r.code}`);
-            } catch {
-              toast.error("Could not create watch party.");
+      <PlaybackSurface
+        playerRef={playerRef}
+        stream={offlineParam ? null : playbackStream}
+        sourceUrl={offlineParam && offlineBlobUrl ? offlineBlobUrl : providerPlaybackSourceUrl}
+        sourceFormat={offlineParam ? "mp4" : playbackSourceFormat}
+        poster={backdropPoster}
+        title={mediaTitle}
+        onLoadedMetadata={handlePlayerLoadedMetadata}
+        onTimeUpdate={handlePlayerTimeUpdate}
+        onPause={handlePlayerPause}
+        onEnded={handlePlayerEnded}
+        onPlaybackError={handlePlaybackError}
+        onPlaybackReady={handlePlaybackReady}
+        reloadToken={playerReloadToken}
+        subtitleOffsetKey={subtitleOffsetKey}
+        chrome={{
+          title: mediaTitle || "Preparing stream",
+          subtitle: chromeSubtitle,
+          onBack: () => navigate(`/${movieType}/${movieId}`),
+          sourcesLabel,
+          onOpenSources: () => openPanel("sources"),
+          ...(movieType === "tv"
+            ? { onOpenEpisodes: () => openPanel("episodes") }
+            : {}),
+          ...(hasNextEpisode
+            ? {
+              onNextEpisode: () =>
+                episodeChange(
+                  `/${movieType}/${movieId}/${nextEpisodeMeta.nextSeason}/${nextEpisodeMeta.nextEpisode}/watch`,
+                ),
             }
-          }}
-        >
-          Watch together
-        </Button>
-        <Box sx={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center" }}>
-          {mediaLogo ? (
-            <Box
-              component="img"
-              src={`https://image.tmdb.org/t/p/original${mediaLogo}`}
-              alt={mediaTitle || "Title logo"}
-              sx={{
-                width: "auto",
-                maxWidth: { xs: "170px", sm: "260px" },
-                height: { xs: "28px", sm: "34px" },
-                objectFit: "contain",
-                objectPosition: "left center",
-                filter: "drop-shadow(0 2px 8px rgba(0,0,0,0.8))",
-              }}
-            />
-          ) : (
-            <Typography level="title-lg" sx={{ minWidth: 0 }}>
-              {(movieType === "movie"
-                ? movieDetailsDataArr?.title
-                : tvSeriesDetailsDataArr?.name) || "Preparing stream"}
-            </Typography>
-          )}
-        </Box>
-      </Box>
-      <Box
-        sx={{
-          position: "absolute",
-          top: { xs: "66px", sm: "62px" },
-          left: "50%",
-          transform: "translateX(-50%)",
-          zIndex: 1001,
-          display: "flex",
-          gap: 1,
-          alignItems: "center",
-          justifyContent: "center",
-          width: "min(calc(100% - 20px), 560px)",
-          px: 1,
-          py: 1,
-          borderRadius: "8px",
-          background: "rgba(10, 10, 10, 0.82)",
-          border: "1px solid rgba(255, 255, 255, 0.1)",
-          backdropFilter: "blur(12px)",
-          boxShadow: "0 8px 24px rgba(0, 0, 0, 0.5)",
+            : {}),
+          topRight: (
+            <>
+              <IconButton
+                aria-label="Copy a link that starts here"
+                variant="plain"
+                onClick={shareCurrentTime}
+                sx={playerActionStyles}
+              >
+                {clipCopied ? (
+                  <LinkIcon sx={{ fontSize: 18 }} />
+                ) : (
+                  <ContentCut sx={{ fontSize: 18 }} />
+                )}
+              </IconButton>
+              <Button
+                size="sm"
+                variant="outlined"
+                color="neutral"
+                startDecorator={<People sx={{ fontSize: 15 }} />}
+                sx={{
+                  ...playerActionStyles,
+                  display: { xs: "none", sm: "inline-flex" },
+                }}
+                onClick={async () => {
+                  try {
+                    const r = await watchPartyAPI.create({
+                      mediaType: movieType || "movie",
+                      mediaId: movieId || "",
+                      ...(seasonId && { season: Number(seasonId) }),
+                      ...(episodeId && { episode: Number(episodeId) }),
+                    });
+                    navigate(`/party/${r.code}`);
+                  } catch {
+                    toast.error("Could not create watch party.");
+                  }
+                }}
+              >
+                Watch together
+              </Button>
+            </>
+          ),
         }}
-      >
-        <Select
-          size="sm"
-          value={selectedProvider}
-          onChange={(_e, value) => {
-            if (!value) return;
-            const nextProvider = parseProviderFromQuery(String(value));
-            if (nextProvider === selectedProvider) return;
-            setProviderInQuery(nextProvider);
-          }}
-          sx={{
-            minWidth: { xs: "130px", sm: "150px" },
-          }}
-        >
-          {PROVIDER_OPTIONS.map((providerOption) => (
-            <Option key={providerOption} value={providerOption}>
-              {getProviderLabel(providerOption)}
-            </Option>
-          ))}
-        </Select>
-        <Select
-          size="sm"
-          value={activeSource?.id || null}
-          placeholder={availableSources.length ? "Select server" : "No servers yet"}
-          onChange={(_e, value) => {
-            if (!value) return;
-            setServerInQuery(String(value));
-          }}
-          disabled={!availableSources.length}
-          sx={{
-            minWidth: { xs: "200px", sm: "260px" },
-            maxWidth: "100%",
-            background: "rgba(255,255,255,0.05)",
-          }}
-        >
-          {availableSources.map((source) => (
-            <Option key={source.id} value={source.id}>
-              {source.name}
-            </Option>
-          ))}
-        </Select>
-        {selectedProvider === "anikai" && (
-          <Select
-            size="sm"
-            value={version}
-            onChange={(_e, value) => {
-              if (value) {
+        overlay={
+          <>
+            <WatchSidePanel
+              open={isPanelOpen}
+              tab={panelTab}
+              onTabChange={setPanelTab}
+              onClose={() => setIsPanelOpen(false)}
+              showEpisodes={movieType === "tv"}
+              seasons={(tvSeriesDetailsDataArr?.seasons || []).filter(
+                (season) => season?.season_number !== 0,
+              )}
+              episodes={tvSeasonsDetailsArr?.episodes || []}
+              isEpisodesLoading={Boolean(tvSeasonsDetailsData?.isLoading)}
+              currentSeason={Number(seasonId || 1)}
+              currentEpisode={Number(episodeId || 1)}
+              onSeasonChange={(season) => {
+                episodeChange(`/${movieType}/${movieId}/${season}/1/watch`);
+                setIsPanelOpen(false);
+              }}
+              onEpisodeSelect={(episode) => {
+                episodeChange(`/${movieType}/${movieId}/${seasonId}/${episode}/watch`);
+                setIsPanelOpen(false);
+              }}
+              providers={providerOptions}
+              selectedProvider={selectedProvider}
+              onProviderChange={(provider) => {
+                if (provider === selectedProvider) return;
+                setProviderInQuery(provider);
+              }}
+              sources={availableSources}
+              activeSourceId={activeSource?.id || ""}
+              onSourceChange={setServerInQuery}
+              isSourcesLoading={isPreparingPlayback}
+              showVersion={selectedProvider === ANIME_PROVIDER}
+              version={version}
+              onVersionChange={(nextVersion) => {
                 setSearchParams((prev) => {
                   const next = new URLSearchParams(prev);
-                  next.set("version", String(value));
+                  next.set("version", nextVersion);
                   return next;
                 });
-              }
-            }}
-            sx={{
-              minWidth: { xs: "80px", sm: "100px" },
-              background: "rgba(255,255,255,0.05)",
-            }}
-          >
-            <Option value="sub">Sub</Option>
-            <Option value="dub">Dub</Option>
-          </Select>
-        )}
-      </Box>
-      {movieType === "tv" ? (
+              }}
+              notice={providerNotice || autoProviderNotice}
+            />
+            {centerErrorMessage ? errorOverlay : null}
+          </>
+        }
+      />
+      {!playbackSourceUrl ? (
         <Box
           sx={{
             position: "absolute",
-            top: { xs: "126px", sm: "118px" },
-            left: "50%",
-            transform: "translateX(-50%)",
+            top: 0,
+            left: 0,
+            right: 0,
             zIndex: 1001,
             display: "flex",
+            alignItems: "center",
             gap: 1,
-            flexWrap: "wrap",
-            alignItems: "center",
-            justifyContent: "center",
-            width: "min(calc(100% - 20px), 700px)",
-            px: 1,
-            py: 1,
-            borderRadius: "8px",
-            background: "rgba(10, 10, 10, 0.82)",
-            border: "1px solid rgba(255,255,255,0.1)",
-            backdropFilter: "blur(12px)",
-            boxShadow: "0 12px 40px rgba(0, 0, 0, 0.24)",
+            px: 1.5,
+            py: 1.5,
+            background:
+              "linear-gradient(to bottom, rgba(0,0,0,0.85) 0%, transparent 100%)",
           }}
         >
-          <Select
-            size="sm"
-            value={parseInt(seasonId || "1")}
-            defaultValue={parseInt(seasonId || "1")}
-            onChange={(_e, value) => {
-              if (!value) return;
-              episodeChange(`/${movieType}/${movieId}/${value}/1/watch`);
-            }}
-            sx={{
-              minWidth: { xs: "140px", sm: "180px" },
-              background: "rgba(255,255,255,0.05)",
-            }}
+          <IconButton
+            aria-label="Back to details"
+            variant="plain"
+            onClick={() => navigate(`/${movieType}/${movieId}`)}
+            sx={playerActionStyles}
           >
-            {tvSeriesDetailsDataArr?.seasons
-              ?.filter((season) => season?.season_number !== 0)
-              .map((season) => (
-                <Option key={season?.id} value={season?.season_number}>
-                  {season?.name}
-                </Option>
-              ))}
-          </Select>
-          <Select
-            size="sm"
-            onChange={(_e, value) => {
-              if (!value) return;
-              episodeChange(`/${movieType}/${movieId}/${seasonId}/${value}/watch`);
-            }}
-            defaultValue={parseInt(episodeId || "1")}
-            value={parseInt(episodeId || "1")}
-            sx={{
-              minWidth: { xs: "220px", sm: "380px" },
-              maxWidth: "100%",
-              background: "rgba(255,255,255,0.05)",
-            }}
-          >
-            {tvSeasonsDetailsArr?.episodes?.map((episode) => (
-              <Option key={episode?.id} value={episode?.episode_number}>
-                E{episode?.episode_number}: {episode?.name}
-              </Option>
-            ))}
-          </Select>
-        </Box>
-      ) : null}
-      <PlaybackSurface
-          playerRef={playerRef}
-          stream={offlineParam ? null : playbackStream}
-          sourceUrl={offlineParam && offlineBlobUrl ? offlineBlobUrl : providerPlaybackSourceUrl}
-          sourceFormat={offlineParam ? "mp4" : playbackSourceFormat}
-          poster={backdropPoster}
-          title={mediaTitle}
-          onLoadedMetadata={handlePlayerLoadedMetadata}
-          onTimeUpdate={handlePlayerTimeUpdate}
-          onPause={handlePlayerPause}
-          onEnded={handlePlayerEnded}
-          onPlaybackError={handlePlaybackError}
-          onPlaybackReady={handlePlaybackReady}
-          reloadToken={playerReloadToken}
-        />
-      {centerErrorMessage ? (
-        <Box
-          sx={{
-            position: "absolute",
-            inset: 0,
-            zIndex: 1000,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            pointerEvents: "none",
-          }}
-        >
-          <Box
-            sx={{
-              width: "min(560px, calc(100% - 32px))",
-              px: 2,
-              py: 2,
-              borderRadius: "14px",
-              border: "1px solid rgba(255,255,255,0.16)",
-              background: "rgba(8,8,8,0.74)",
-              backdropFilter: "blur(14px)",
-              textAlign: "center",
-              pointerEvents: "auto",
-            }}
-          >
-            <Typography level="h4" sx={{ mb: 1 }}>
-              Playback error
-            </Typography>
-            <Typography level="body-md" sx={{ color: "neutral.300", mb: 2 }}>
-              {centerErrorMessage}
-            </Typography>
-            <Typography level="body-sm" sx={{ color: "neutral.400", mb: 2 }}>
-              Provider: {getProviderLabel(resolvedProvider)} | Server: {serverLabel}
-            </Typography>
-            <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", justifyContent: "center" }}>
-              <Button size="md" variant="solid" color="warning" onClick={retryCurrentServer}>
-                Retry
-              </Button>
-              <DownloadButton
-                streamUrl={playbackSourceUrl}
-                title={mediaTitle}
-                cacheKey={movieType === "tv"
-                  ? `tv-${movieId}-s${seasonId}e${episodeId}`
-                  : `movie-${movieId}`}
+            <ArrowBackIos sx={{ fontSize: 18 }} />
+          </IconButton>
+          <Box sx={{ minWidth: 0 }}>
+            {mediaLogo ? (
+              <Box
+                component="img"
+                src={`https://image.tmdb.org/t/p/original${mediaLogo}`}
+                alt={mediaTitle || "Title logo"}
+                sx={{
+                  width: "auto",
+                  maxWidth: { xs: "170px", sm: "260px" },
+                  height: { xs: "26px", sm: "30px" },
+                  objectFit: "contain",
+                  objectPosition: "left center",
+                  filter: "drop-shadow(0 2px 8px rgba(0,0,0,0.8))",
+                }}
               />
-            </Box>
+            ) : (
+              <Typography level="title-md" sx={{ color: "#ffffff" }}>
+                {mediaTitle || "Preparing stream"}
+              </Typography>
+            )}
+            {chromeSubtitle ? (
+              <Typography level="body-xs">{chromeSubtitle}</Typography>
+            ) : null}
           </Box>
         </Box>
       ) : null}
-      {providerNotice && playbackSourceUrl ? (
-        <Box
-          sx={{
-            position: "absolute",
-            left: "50%",
-            bottom: { xs: "18px", md: "26px" },
-            transform: "translateX(-50%)",
-            zIndex: 1001,
-            width: "min(680px, calc(100% - 24px))",
-            px: 2,
-            py: 1.25,
-            borderRadius: "8px",
-            border: "1px solid rgba(255,255,255,0.1)",
-            background: "rgba(12,12,12,0.72)",
-            backdropFilter: "blur(12px)",
-            textAlign: "center",
-          }}
-        >
-          <Typography level="body-sm" sx={{ color: "warning.200" }}>
-            {providerNotice}
-          </Typography>
-        </Box>
-      ) : null}
+      {!playbackSourceUrl && centerErrorMessage ? errorOverlay : null}
       {!playbackSourceUrl && !centerErrorMessage ? (
         <Box
           sx={{
@@ -1372,11 +1452,15 @@ function Watch() {
             <Typography level="h4" sx={{ mt: 2 }}>
               {sessionBaseReady ? "Preparing your stream" : "Restoring your watch session"}
             </Typography>
-            {isFetching ? (
-              <Typography level="body-sm" sx={{ mt: 1, color: "neutral.400" }}>
-                Loading episode details in the background.
-              </Typography>
-            ) : null}
+            <Typography level="body-sm" sx={{ mt: 1 }}>
+              {isFetching
+                ? "Loading episode details in the background."
+                : `${getProviderLabel(selectedProvider)}${
+                  isAnime && selectedProvider === ANIME_PROVIDER
+                    ? " — picked automatically for anime"
+                    : ""
+                }`}
+            </Typography>
           </Box>
         </Box>
       ) : null}
@@ -1404,42 +1488,41 @@ function Watch() {
             }
             : undefined
         }
-      />\n
-      {/* Autoplay countdown overlay */}
+      />
       {autoplayCountdown !== null && (
         <Box
           sx={{
             position: "fixed",
-            bottom: 90,
+            bottom: 110,
             right: 32,
             zIndex: 9999,
-            background: "rgba(0,0,0,0.88)",
-            borderRadius: "lg",
-            p: 3,
+            background: "rgba(10,10,10,0.94)",
+            borderRadius: "12px",
+            border: "1px solid #1f1f1f",
+            p: 2.5,
             display: "flex",
             flexDirection: "column",
             gap: 1.5,
             minWidth: 300,
-            border: "1px solid rgba(255,255,255,0.1)",
             backdropFilter: "blur(12px)",
           }}
         >
           <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <Typography level="body-sm" sx={{ color: "rgba(255,255,255,0.6)" }}>
-              Up next
-            </Typography>
-            <IconButton aria-label="Cancel autoplay" size="sm" variant="plain" sx={{ color: "white" }} onClick={cancelAutoplay}>
-              <Close fontSize="small" />
+            <Typography level="body-xs">Up next</Typography>
+            <IconButton
+              aria-label="Cancel autoplay"
+              size="sm"
+              variant="plain"
+              onClick={cancelAutoplay}
+            >
+              <Close sx={{ fontSize: 16 }} />
             </IconButton>
           </Box>
-          <Typography level="title-md" sx={{ color: "white" }}>
-            Next episode
-          </Typography>
+          <Typography level="title-md">Next episode</Typography>
           <Box sx={{ display: "flex", gap: 1.5, mt: 0.5 }}>
             <Button
               size="sm"
-              startDecorator={<SkipNext />}
-              sx={{ background: "white", color: "black", "&:hover": { background: "rgba(255,255,255,0.9)" } }}
+              startDecorator={<SkipNext sx={{ fontSize: 16 }} />}
               onClick={() => {
                 cancelAutoplay();
                 navigate(autoplayNextPath);
@@ -1447,55 +1530,13 @@ function Watch() {
             >
               Play now
             </Button>
-            <Button
-              size="sm"
-              variant="outlined"
-              color="neutral"
-              sx={{ color: "white", borderColor: "rgba(255,255,255,0.3)" }}
-              onClick={cancelAutoplay}
-            >
+            <Button size="sm" variant="outlined" color="neutral" onClick={cancelAutoplay}>
               Cancel ({autoplayCountdown}s)
             </Button>
           </Box>
-          <LinearProgress
-            determinate
-            value={((10 - autoplayCountdown) / 10) * 100}
-            sx={{
-              mt: 0.5,
-              "--LinearProgress-progressColor": "#ededed",
-              "--LinearProgress-trackColor": "rgba(255,255,255,0.15)",
-            }}
-          />
+          <LinearProgress determinate value={((10 - autoplayCountdown) / 10) * 100} />
         </Box>
       )}
-
-      {/* Clip share button */}
-      <Box
-        sx={{
-          position: "fixed",
-          bottom: 32,
-          right: 32,
-          zIndex: 9998,
-          display: "flex",
-          gap: 1,
-        }}
-      >
-        <Button
-          size="sm"
-          variant="soft"
-          color="neutral"
-          startDecorator={clipCopied ? <LinkIcon /> : <ContentCut />}
-          onClick={shareCurrentTime}
-          sx={{
-            background: "rgba(0,0,0,0.65)",
-            backdropFilter: "blur(8px)",
-            color: clipCopied ? "#ededed" : "white",
-            border: "1px solid rgba(255,255,255,0.1)",
-          }}
-        >
-          {clipCopied ? "Link copied!" : "Share from here"}
-        </Button>
-      </Box>
     </Box>
   );
 }

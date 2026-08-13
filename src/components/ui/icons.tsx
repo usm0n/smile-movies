@@ -115,9 +115,19 @@ export const StarBorder = icon(L.Star);
 export const Popcorn = icon(L.Popcorn);
 export const Compass = icon(L.Compass);
 export const Fullscreen = icon(L.Maximize);
+export const FullscreenExit = icon(L.Minimize);
+export const PictureInPicture = icon(L.PictureInPicture2);
 export const VolumeUp = icon(L.Volume2);
+export const VolumeDown = icon(L.Volume1);
 export const VolumeOff = icon(L.VolumeX);
 export const Subtitles = icon(L.Captions);
+export const SubtitlesOff = icon(L.CaptionsOff);
+export const Replay10 = icon(L.RotateCcw);
+export const Forward10 = icon(L.RotateCw);
+export const ListVideo = icon(L.ListVideo);
+export const Server = icon(L.Server);
+export const Gauge = icon(L.Gauge);
+export const Sliders = icon(L.SlidersHorizontal);
 
 /* ── People & account ────────────────────────────────────────────────────── */
 export const Person = icon(L.User);

@@ -1,12 +1,33 @@
-import { useEffect, useMemo, useRef } from "react";
+import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Box } from "@mui/joy";
-import { MediaCommunitySkin, MediaOutlet, MediaPlayer } from "@vidstack/react";
+import { MediaOutlet, MediaPlayer } from "@vidstack/react";
 import "vidstack/styles/defaults.css";
-import "vidstack/styles/community-skin/video.css";
 import {
   ProviderSourceFormat,
   VixsrcPlaybackStream,
 } from "../../types/providers";
+import PlayerChrome, { PlayerChromeProps } from "./PlayerChrome";
+import {
+  DEFAULT_SUBTITLE_APPEARANCE,
+  SubtitleAppearance,
+  clampSubtitleOffset,
+  readSubtitleAppearance,
+  readSubtitleOffset,
+  writeSubtitleAppearance,
+  writeSubtitleOffset,
+} from "../../utilities/subtitlePrefs";
+
+type ChromeOptions = Omit<
+  PlayerChromeProps,
+  "subtitleOffset" | "onSubtitleOffsetChange" | "appearance" | "onAppearanceChange"
+>;
+
+type CueLike = { startTime: number; endTime: number };
+type TrackLike = {
+  cues?: ReadonlyArray<CueLike>;
+  addEventListener: (type: string, listener: () => void) => void;
+  removeEventListener: (type: string, listener: () => void) => void;
+};
 
 function PlaybackSurface({
   playerRef,
@@ -22,6 +43,9 @@ function PlaybackSurface({
   onPlaybackError,
   onPlaybackReady,
   reloadToken,
+  chrome,
+  overlay,
+  subtitleOffsetKey,
 }: {
   playerRef: React.MutableRefObject<any>;
   stream: VixsrcPlaybackStream | null;
@@ -36,6 +60,12 @@ function PlaybackSurface({
   onPlaybackError?: (message: string) => void;
   onPlaybackReady?: () => void;
   reloadToken?: number;
+  /** Everything the custom skin needs that only the page knows about. */
+  chrome: ChromeOptions;
+  /** Rendered inside `<media-player>` so it survives fullscreen. */
+  overlay?: ReactNode;
+  /** localStorage key the subtitle delay is remembered under. */
+  subtitleOffsetKey: string;
 }) {
   const playbackReadyRef = useRef(false);
 
@@ -76,6 +106,106 @@ function PlaybackSurface({
     }
     return "application/x-mpegurl";
   }, [sourceFormat, sourceUrl]);
+
+  const [subtitleOffset, setSubtitleOffset] = useState(0);
+  const [appearance, setAppearance] = useState<SubtitleAppearance>(
+    DEFAULT_SUBTITLE_APPEARANCE,
+  );
+  /**
+   * How much shift is already baked into each track's cues. Offsets are applied
+   * by moving the cues themselves, so re-applying has to be a delta against
+   * what was applied last time rather than the absolute value.
+   */
+  const appliedOffsetsRef = useRef(new WeakMap<object, number>());
+
+  useEffect(() => {
+    setSubtitleOffset(readSubtitleOffset(subtitleOffsetKey));
+  }, [subtitleOffsetKey]);
+
+  useEffect(() => {
+    setAppearance(readSubtitleAppearance());
+  }, []);
+
+  const handleSubtitleOffsetChange = useCallback(
+    (value: number) => {
+      const offset = clampSubtitleOffset(value);
+      setSubtitleOffset(offset);
+      writeSubtitleOffset(subtitleOffsetKey, offset);
+    },
+    [subtitleOffsetKey],
+  );
+
+  const handleAppearanceChange = useCallback((value: SubtitleAppearance) => {
+    setAppearance(value);
+    writeSubtitleAppearance(value);
+  }, []);
+
+  /**
+   * Community subtitles are cut against one particular release; the stream a
+   * provider hands us is usually a different one, which is why a track can be
+   * the right language and the right episode and still drift a second or two.
+   * Shifting the parsed cues fixes it for whatever the viewer is actually
+   * watching, without waiting on the source to publish a better file.
+   */
+  useEffect(() => {
+    const player = playerRef.current;
+    const trackList = player?.textTracks;
+    if (!trackList) return;
+
+    const applyToTrack = (track: TrackLike) => {
+      const cues = track?.cues;
+      if (!cues?.length) return;
+
+      const applied = appliedOffsetsRef.current.get(track as object) || 0;
+      const delta = subtitleOffset - applied;
+      if (!delta) return;
+
+      cues.forEach((cue) => {
+        const start = Math.max(0, cue.startTime + delta);
+        const end = Math.max(start, cue.endTime + delta);
+        cue.startTime = start;
+        cue.endTime = end;
+      });
+      appliedOffsetsRef.current.set(track as object, subtitleOffset);
+    };
+
+    const applyToAll = () => {
+      for (const track of trackList as Iterable<TrackLike>) {
+        applyToTrack(track);
+      }
+    };
+
+    // Cues only exist once a track has been fetched and parsed, so tracks are
+    // shifted both now and as each one finishes loading.
+    const trackLoadListeners = new Map<TrackLike, () => void>();
+    const watchTrack = (track: TrackLike) => {
+      if (trackLoadListeners.has(track)) return;
+      const listener = () => applyToTrack(track);
+      trackLoadListeners.set(track, listener);
+      track.addEventListener("load", listener);
+    };
+
+    for (const track of trackList as Iterable<TrackLike>) {
+      watchTrack(track);
+    }
+    applyToAll();
+
+    const handleTrackAdded = (event: Event) => {
+      const track = (event as CustomEvent<TrackLike>).detail;
+      if (!track) return;
+      watchTrack(track);
+      applyToTrack(track);
+    };
+
+    trackList.addEventListener("add", handleTrackAdded);
+
+    return () => {
+      trackList.removeEventListener("add", handleTrackAdded);
+      trackLoadListeners.forEach((listener, track) => {
+        track.removeEventListener("load", listener);
+      });
+    };
+  }, [playerRef, sourceUrl, reloadToken, subtitleOffset]);
 
   const onLoadedMetadataRef = useRef(onLoadedMetadata);
   const onTimeUpdateRef = useRef(onTimeUpdate);
@@ -200,21 +330,33 @@ function PlaybackSurface({
         position: "absolute",
         inset: 0,
         background: "black",
-        display: "flex",
-        alignItems: { xs: "center", md: "stretch" },
-        justifyContent: { xs: "center", md: "stretch" },
-        pt: { xs: "56px", md: 0 },
-        pb: { xs: "16px", md: 0 },
         "& media-player": {
           width: "100%",
           height: "100%",
           backgroundColor: "black",
+          fontFamily: "var(--smile-fontFamily-body)",
         },
-        "@media (max-width: 700px)": {
-          "& media-player": {
-            height: "auto",
-            maxHeight: "calc(100svh - 96px)",
-          },
+        // The player fills the viewport, so the video is letterboxed inside it
+        // rather than the page scrolling around a 16:9 box.
+        "& media-outlet": {
+          width: "100%",
+          height: "100%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        },
+        "& media-outlet video": {
+          width: "100%",
+          height: "100%",
+          objectFit: "contain",
+        },
+        // Captions ride above the control bar while it is visible.
+        "& media-captions": {
+          transition: "transform 200ms ease",
+          transform: "translateY(-56px)",
+        },
+        "& media-player[data-user-idle]:not([data-paused]) media-captions": {
+          transform: "translateY(0)",
         },
       }}
     >
@@ -227,25 +369,31 @@ function PlaybackSurface({
           type: sourceMimeType,
         }}
         textTracks={subtitleTracks}
+        thumbnails={stream?.thumbnailTrackUrl || undefined}
         poster={poster}
         load="eager"
-        aspectRatio={16 / 9}
         streamType="on-demand"
         viewType="video"
+        keyTarget="document"
         crossorigin
         playsinline
         preferNativeHLS={sourceMimeType.includes("mpegurl") ? false : undefined}
-        style={{
-          "--video-border-radius": "0px",
-          "--video-border": "none",
-          "--video-font-family":
-            "\"IBM Plex Sans\", \"Segoe UI\", sans-serif",
-          "--video-controls-color": "#f8fafc",
-          "--video-brand": "#ededed",
-        } as React.CSSProperties}
+        style={
+          {
+            "--media-border-radius": "0px",
+            "--media-focus-ring": "0 0 0 3px #0070f3",
+          } as React.CSSProperties
+        }
       >
         <MediaOutlet />
-        <MediaCommunitySkin />
+        <PlayerChrome
+          {...chrome}
+          subtitleOffset={subtitleOffset}
+          onSubtitleOffsetChange={handleSubtitleOffsetChange}
+          appearance={appearance}
+          onAppearanceChange={handleAppearanceChange}
+        />
+        {overlay}
       </MediaPlayer>
     </Box>
   );
