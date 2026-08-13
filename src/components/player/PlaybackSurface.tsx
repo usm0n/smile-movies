@@ -119,12 +119,18 @@ function PlaybackSurface({
     const markReady = () => {
       playbackReadyRef.current = true;
     };
-    const handleWaitingEvent = () => {
-      // waiting/stalled during bootstrap can hang indefinitely on bad HLS retries.
-      // we only escalate if initial readiness never happened.
-      if (!playbackReadyRef.current) {
-        onPlaybackErrorRef.current?.("Stream is taking too long to start.");
-      }
+    /**
+     * Buffering is not failure. A `waiting` before the first frame is the
+     * normal state of a phone on cellular — AnimeKai ships ~2.4MB for 4.7s of
+     * video, so the opening segments take real time on LTE — and treating the
+     * first one as fatal reported "Playback error" for streams that were
+     * loading fine. Only a lack of *progress* is evidence of a hung stream, so
+     * we watch the gap between progress events instead of the events
+     * themselves.
+     */
+    let lastProgressAt = Date.now();
+    const markProgress = () => {
+      lastProgressAt = Date.now();
     };
     const handleErrorEvent = (event: Event) => {
       const customEvent = event as CustomEvent<{ message?: string }>;
@@ -134,11 +140,17 @@ function PlaybackSurface({
       onPlaybackErrorRef.current?.(fallbackMessage);
     };
 
-    const bootstrapTimeout = window.setTimeout(() => {
-      if (!playbackReadyRef.current) {
-        onPlaybackErrorRef.current?.("Stream timeout: provider did not return playable media.");
-      }
-    }, 20000);
+    // A dead provider still fails, but only after it has genuinely gone quiet
+    // for this long — not merely because startup was slow.
+    const stallTimeout = window.setInterval(() => {
+      if (playbackReadyRef.current) return;
+      if (Date.now() - lastProgressAt < 30000) return;
+
+      window.clearInterval(stallTimeout);
+      onPlaybackErrorRef.current?.(
+        "Stream timeout: provider did not return playable media.",
+      );
+    }, 2000);
 
     player.addEventListener("loaded-metadata", handleLoadedMetadataEvent);
     player.addEventListener("time-update", handleTimeUpdateEvent);
@@ -148,13 +160,17 @@ function PlaybackSurface({
     player.addEventListener("play", handlePlayEvent);
     player.addEventListener("can-play", markReady);
     player.addEventListener("play", markReady);
-    player.addEventListener("waiting", handleWaitingEvent);
-    player.addEventListener("stalled", handleWaitingEvent);
+    player.addEventListener("progress", markProgress);
+    player.addEventListener("loaded-metadata", markProgress);
+    player.addEventListener("loaded-data", markProgress);
+    player.addEventListener("time-update", markProgress);
+    player.addEventListener("can-play", markProgress);
+    player.addEventListener("play", markProgress);
     player.addEventListener("error", handleErrorEvent);
     player.addEventListener("stream-error", handleErrorEvent);
 
     return () => {
-      window.clearTimeout(bootstrapTimeout);
+      window.clearInterval(stallTimeout);
       player.removeEventListener("loaded-metadata", handleLoadedMetadataEvent);
       player.removeEventListener("time-update", handleTimeUpdateEvent);
       player.removeEventListener("pause", handlePauseEvent);
@@ -163,8 +179,12 @@ function PlaybackSurface({
       player.removeEventListener("play", handlePlayEvent);
       player.removeEventListener("can-play", markReady);
       player.removeEventListener("play", markReady);
-      player.removeEventListener("waiting", handleWaitingEvent);
-      player.removeEventListener("stalled", handleWaitingEvent);
+      player.removeEventListener("progress", markProgress);
+      player.removeEventListener("loaded-metadata", markProgress);
+      player.removeEventListener("loaded-data", markProgress);
+      player.removeEventListener("time-update", markProgress);
+      player.removeEventListener("can-play", markProgress);
+      player.removeEventListener("play", markProgress);
       player.removeEventListener("error", handleErrorEvent);
       player.removeEventListener("stream-error", handleErrorEvent);
     };
