@@ -1,6 +1,6 @@
 import { Box, Chip, CircularProgress, Tooltip, Typography } from "@mui/joy";
 import { useEffect, useState } from "react";
-import StarIcon from "@mui/icons-material/Star";
+import { Star as StarIcon } from "../ui/icons";
 import { resolveImdbId, fetchImdbTitle } from "../../service/api/imdb/imdb.api.service";
 
 interface IMDbRatingProps {
@@ -58,7 +58,6 @@ function IMDbRating({ mediaId, mediaType }: IMDbRatingProps) {
           color: "white",
           fontWeight: 700,
           fontSize: 14,
-          backdropFilter: "blur(8px)",
           cursor: "default",
           "&:hover": { backgroundColor: "rgba(0,0,0,0.7)" },
         }}

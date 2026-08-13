@@ -11,7 +11,7 @@ import {
   Typography,
 } from "@mui/joy";
 import { PrivacySettings as PrivacySettingsType, User } from "../../user";
-import { WarningRounded } from "@mui/icons-material";
+import { WarningRounded } from "../../components/ui/icons";
 import { useState } from "react";
 
 function PrivacySettings({

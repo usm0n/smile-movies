@@ -3,9 +3,7 @@ import {
   IconButton, Modal, ModalClose, ModalDialog, Typography,
 } from "@mui/joy";
 import { useState } from "react";
-import FamilyRestroomIcon from "@mui/icons-material/FamilyRestroom";
-import VisibilityIcon from "@mui/icons-material/Visibility";
-import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
+import { FamilyRestroom as FamilyRestroomIcon, Visibility as VisibilityIcon, VisibilityOff as VisibilityOffIcon } from "../ui/icons";
 import {
   resolveImdbId,
   fetchImdbParentalGuide,
@@ -144,7 +142,7 @@ function CategoryBlock({ entry }: { entry: ImdbParentsGuideEntry }) {
                       size="sm" variant="soft" color="warning"
                       startDecorator={<VisibilityIcon sx={{ fontSize: 13 }} />}
                       onClick={() => toggleSpoiler(idx)}
-                      sx={{ flexShrink: 0, fontSize: 11, py: 0.3, px: 1, borderRadius: 20 }}
+                      sx={{ flexShrink: 0, fontSize: 11, py: 0.3, px: 1, borderRadius: "8px" }}
                     >
                       Spoiler
                     </Button>
@@ -227,7 +225,7 @@ function ParentalGuide({ mediaId, mediaType, imdbId, title, year, variant = "but
 
   const trigger =
     variant === "icon" ? (
-      <IconButton
+      <IconButton aria-label="Parental guide"
         onClick={fetchGuide}
         size="sm"
         variant="soft"
@@ -244,7 +242,7 @@ function ParentalGuide({ mediaId, mediaType, imdbId, title, year, variant = "but
         color="danger"
         startDecorator={<FamilyRestroomIcon />}
         size="sm"
-        sx={{ borderRadius: 20 }}
+        sx={{ borderRadius: "8px" }}
       >
         Parental Guide
       </Button>

@@ -1,7 +1,7 @@
 import { Button, CircularProgress, Tooltip } from "@mui/joy";
-import { Download, DownloadDone, DeleteOutline } from "@mui/icons-material";
+import { Download, DownloadDone, DeleteOutline } from "../ui/icons";
 import { useEffect, useState } from "react";
-import toast from "react-hot-toast";
+import { toast } from "../ui/toast";
 
 const CACHE_NAME = "smile-offline-v1";
 

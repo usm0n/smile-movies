@@ -1,5 +1,3 @@
-import { Box, CircularProgress } from "@mui/joy";
-
 export let isLoggedIn = false;
 export const setIsLoggedIn = (value: boolean) => {
   isLoggedIn = value;
@@ -20,27 +18,6 @@ export const redirect = (url: string) => {
 export const isValidEmail = (email: string) =>
   /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|.(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/.test(
     email,
-  );
-
-export const backdropLoading = (open: boolean | undefined, theme: any) =>
-  open && (
-    <Box>
-      <Box
-        sx={{
-          zIndex: 999999999,
-          position: "absolute",
-          display: "flex",
-          width: "100%",
-          height: "100vh",
-          alignItems: "center",
-          justifyContent: "center",
-          background:
-            theme === "dark" ? "rgb(0, 0, 0, 0.5)" : "rgb(255, 255, 255, 0.5)",
-        }}
-      >
-        <CircularProgress value={80} variant="plain" />
-      </Box>
-    </Box>
   );
 
 export const minuteToHour = (minute: string | number) => {

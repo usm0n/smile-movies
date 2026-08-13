@@ -36,7 +36,7 @@ function Trailers({ movieVideos }: { movieVideos: videos }) {
                 title={video.name}
                 style={{
                   border: "none",
-                  borderRadius: "10px",
+                  borderRadius: "8px",
                 }}
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                 allowFullScreen

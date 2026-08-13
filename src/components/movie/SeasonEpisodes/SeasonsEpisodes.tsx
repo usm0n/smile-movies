@@ -3,7 +3,7 @@ import { tvDetails, tvSeasonsDetails } from "../../../tmdb-res";
 import EpisodeCard from "../../cards/EpisodeCard";
 import EpisodeCardSkeleton from "../../cards/skeleton/EpisodeCardSkeleton";
 import { useNavigate } from "react-router-dom";
-import BarChartIcon from "@mui/icons-material/BarChart";
+import { BarChart as BarChartIcon } from "../../ui/icons";
 import { useEffect, useRef, useState } from "react";
 import { resolveImdbId, fetchImdbEpisodesBySeason, ImdbEpisode } from "../../../service/api/imdb/imdb.api.service";
 import { useUsers } from "../../../context/Users";
@@ -84,7 +84,7 @@ function SeasonsEpisodes({
           size="sm"
           startDecorator={<BarChartIcon />}
           onClick={() => navigate(`/tv/${tvData?.id}/ratings`)}
-          sx={{ borderRadius: 20 }}
+          sx={{ borderRadius: "8px" }}
         >
           Episode Ratings
         </Button>
@@ -93,6 +93,8 @@ function SeasonsEpisodes({
       <Box
         sx={{
           display: "flex", width: "100%", overflowX: "auto", gap: 1, pb: 1,
+          alignItems: "stretch", scrollSnapType: "x proximity",
+          "& > *": { scrollSnapAlign: "start" },
           "&::-webkit-scrollbar": { height: 4 },
           "&::-webkit-scrollbar-thumb": { borderRadius: 4, background: "rgba(255,255,255,0.15)" },
         }}

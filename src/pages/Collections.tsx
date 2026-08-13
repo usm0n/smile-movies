@@ -1,15 +1,12 @@
-import {
-  Box,
-  Button,
-  Card,
-  IconButton,
-  Input,
-  Modal,
-  ModalDialog,
-  Skeleton,
-  Typography,
-} from "@mui/joy";
-import { Add, Delete } from "@mui/icons-material";
+import { Box, Input, Typography } from "@mui/joy";
+import { Add, Delete, Layers } from "../components/ui/icons";
+import Button from "../components/ui/Button";
+import IconButton from "../components/ui/IconButton";
+import Dialog from "../components/ui/Dialog";
+import Field from "../components/ui/Field";
+import EmptyState from "../components/ui/EmptyState";
+import PageHeader from "../components/ui/PageHeader";
+import { Shimmer } from "../components/ui/Skeleton";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { collectionsAPI, Collection } from "../service/api/smb/collections.api.service";
@@ -56,53 +53,52 @@ function Collections() {
 
   return (
     <Container>
-      <Box sx={{ padding: "100px 0px", display: "flex", flexDirection: "column", gap: "28px", minHeight: "100vh" }}>
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            mb: 4,
-          }}
-        >
-          <Typography level="h2">My Lists</Typography>
-          <Button
-            startDecorator={<Add />}
-            onClick={() => setCreating(true)}
-          >
-            New List
-          </Button>
-        </Box>
+      <Box
+        sx={{
+          pt: "calc(var(--sm-nav-height) + 48px)",
+          pb: 8,
+          display: "flex",
+          flexDirection: "column",
+          gap: 3,
+          minHeight: "100vh",
+        }}
+      >
+        <PageHeader
+          title="My lists"
+          description="Group titles however you like — a marathon, a watch party, a maybe pile."
+          actions={
+            <Button startDecorator={<Add sx={{ fontSize: 16 }} />} onClick={() => setCreating(true)}>
+              New list
+            </Button>
+          }
+        />
 
-        {/* Create list dialog */}
-        <Modal open={creating} onClose={() => setCreating(false)}>
-          <ModalDialog sx={{ maxWidth: 400 }}>
-            <Typography level="h4" sx={{ mb: 2 }}>
-              Create a new list
-            </Typography>
+        <Dialog
+          open={creating}
+          onClose={() => setCreating(false)}
+          title="Create a new list"
+          width={400}
+          actions={
+            <>
+              <Button variant="outlined" color="neutral" onClick={() => setCreating(false)}>
+                Cancel
+              </Button>
+              <Button onClick={create} loading={saving} disabled={!newName.trim()}>
+                Create list
+              </Button>
+            </>
+          }
+        >
+          <Field label="List name">
             <Input
               autoFocus
-              placeholder="List name..."
+              placeholder="e.g. Weekend marathon"
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && create()}
-              sx={{ mb: 2 }}
             />
-            <Box sx={{ display: "flex", gap: 1 }}>
-              <Button fullWidth onClick={create} loading={saving}>
-                Create
-              </Button>
-              <Button
-                fullWidth
-                variant="outlined"
-                color="neutral"
-                onClick={() => setCreating(false)}
-              >
-                Cancel
-              </Button>
-            </Box>
-          </ModalDialog>
-        </Modal>
+          </Field>
+        </Dialog>
 
         {loading ? (
           <Box
@@ -113,30 +109,20 @@ function Collections() {
             }}
           >
             {Array.from({ length: 6 }).map((_, i) => (
-              <Skeleton key={i} variant="rectangular" height={200} sx={{ borderRadius: "md" }} />
+              <Shimmer key={i} height={190} radius={12} />
             ))}
           </Box>
         ) : collections.length === 0 ? (
-          <Box
-            sx={{
-              textAlign: "center",
-              py: 10,
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              gap: 2,
-            }}
-          >
-            <Typography level="h3" sx={{ color: "text.tertiary" }}>
-              No lists yet
-            </Typography>
-            <Typography level="body-md" sx={{ color: "text.tertiary", mb: 1 }}>
-              Create lists to organise movies and shows you want to watch.
-            </Typography>
-            <Button startDecorator={<Add />} onClick={() => setCreating(true)}>
-              Create your first list
-            </Button>
-          </Box>
+          <EmptyState
+            icon={Layers}
+            title="No lists yet"
+            description="Lists are a tidy way to organise the movies and shows you want to watch."
+            action={
+              <Button startDecorator={<Add sx={{ fontSize: 16 }} />} onClick={() => setCreating(true)}>
+                Create your first list
+              </Button>
+            }
+          />
         ) : (
           <Box
             sx={{
@@ -146,16 +132,18 @@ function Collections() {
             }}
           >
             {collections.map((col) => (
-              <Card
+              <Box
                 key={col.id}
                 onClick={() => navigate(`/collections/${col.id}`)}
                 sx={{
                   cursor: "pointer",
-                  transition: "transform 0.2s, box-shadow 0.2s",
-                  "&:hover": {
-                    transform: "scale(1.02)",
-                    boxShadow: "md",
-                  },
+                  p: 1.5,
+                  border: "1px solid",
+                  borderColor: "neutral.outlinedBorder",
+                  borderRadius: "lg",
+                  backgroundColor: "background.surface",
+                  transition: "border-color 150ms ease, background-color 150ms ease",
+                  "&:hover": { borderColor: "#333", backgroundColor: "background.level1" },
                 }}
               >
                 {/* Poster grid preview */}
@@ -165,10 +153,12 @@ function Collections() {
                       display: "grid",
                       gridTemplateColumns: "1fr 1fr",
                       gap: "2px",
-                      borderRadius: "sm",
+                      borderRadius: "8px",
                       overflow: "hidden",
                       mb: 1.5,
-                      height: 120,
+                      height: 132,
+                      border: "1px solid",
+                      borderColor: "neutral.outlinedBorder",
                     }}
                   >
                     {col.items.slice(0, 4).map((item, i) => (
@@ -211,18 +201,18 @@ function Collections() {
                 ) : (
                   <Box
                     sx={{
-                      height: 120,
-                      borderRadius: "sm",
-                      background: "rgba(255,255,255,0.05)",
+                      height: 132,
+                      borderRadius: "8px",
+                      backgroundColor: "background.level1",
+                      border: "1px dashed",
+                      borderColor: "neutral.outlinedBorder",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
                       mb: 1.5,
                     }}
                   >
-                    <Typography level="body-sm" sx={{ color: "text.tertiary" }}>
-                      Empty
-                    </Typography>
+                    <Typography level="body-xs">Empty list</Typography>
                   </Box>
                 )}
 
@@ -237,20 +227,20 @@ function Collections() {
                     <Typography level="title-md" noWrap sx={{ maxWidth: 160 }}>
                       {col.name}
                     </Typography>
-                    <Typography level="body-xs" sx={{ color: "text.tertiary" }}>
+                    <Typography level="body-xs">
                       {col.items.length} title{col.items.length !== 1 ? "s" : ""}
                     </Typography>
                   </Box>
                   <IconButton
+                    label={`Delete ${col.name}`}
                     size="sm"
                     color="danger"
-                    variant="plain"
                     onClick={(e) => remove(col.id, e)}
                   >
-                    <Delete fontSize="small" />
+                    <Delete sx={{ fontSize: 16 }} />
                   </IconButton>
                 </Box>
-              </Card>
+              </Box>
             ))}
           </Box>
         )}

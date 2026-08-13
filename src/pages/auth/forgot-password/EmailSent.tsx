@@ -1,38 +1,54 @@
-import { Box, Card, Link, Typography, useColorScheme } from "@mui/joy";
-import MarkEmailUnreadIcon from '@mui/icons-material/MarkEmailUnread';
+import { Box, Typography } from "@mui/joy";
+import { MarkEmailReadRounded } from "../../../components/ui/icons";
 import { useUsers } from "../../../context/Users";
-import { backdropLoading } from "../../../utilities/defaults";
+import AuthCard from "../../../components/auth/AuthCard";
+import Button from "../../../components/ui/Button";
 
 function EmailSent() {
-    const email = sessionStorage.getItem("forgot-password")
-    const { resendForgotPasswordData, resendForgotPasswordToken } = useUsers()
-    const { colorScheme } = useColorScheme()
-    return (
-        <>
-            {backdropLoading(resendForgotPasswordData?.isLoading, colorScheme)}
-            <Box
-                sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    height: "100vh",
-                }}
-            >
-                <Card
-                    sx={{
-                        padding: "20px",
-                        borderRadius: "10px",
-                        gap: "20px",
-                    }}
-                >
-                    <MarkEmailUnreadIcon sx={{ fontSize: "40px", margin: "0 auto" }} />
-                    <Typography sx={{ fontSize: "20px" }}>Verification link has been sent to your email <Link>{email}</Link></Typography>
-                    <Link sx={{ margin: "0 auto" }} disabled={resendForgotPasswordData?.isLoading} onClick={() => resendForgotPasswordToken(email!)}>Resend verification link to your email</Link>
-                    {/* <Typography color="success" sx={{ margin: "0 auto" }}>{resendForgotPasswordData?.data && `Resent your verification link to your email`}</Typography> */}
-                </Card>
-            </Box>
-        </>
-    )
+  const email = sessionStorage.getItem("forgot-password");
+  const { resendForgotPasswordData, resendForgotPasswordToken } = useUsers();
+
+  return (
+    <AuthCard title="Check your email" description={`We sent a reset link to ${email}.`}>
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          textAlign: "center",
+          gap: 2,
+        }}
+      >
+        <Box
+          sx={{
+            display: "grid",
+            placeItems: "center",
+            width: 44,
+            height: 44,
+            borderRadius: "md",
+            border: "1px solid",
+            borderColor: "neutral.outlinedBorder",
+            backgroundColor: "background.level1",
+            color: "text.secondary",
+          }}
+        >
+          <MarkEmailReadRounded sx={{ fontSize: 20 }} />
+        </Box>
+        <Typography level="body-sm">
+          The link expires shortly. If it doesn't arrive, check your spam folder.
+        </Typography>
+        <Button
+          variant="outlined"
+          color="neutral"
+          fullWidth
+          loading={resendForgotPasswordData?.isLoading}
+          onClick={() => resendForgotPasswordToken(email!)}
+        >
+          Resend link
+        </Button>
+      </Box>
+    </AuthCard>
+  );
 }
 
-export default EmailSent
+export default EmailSent;

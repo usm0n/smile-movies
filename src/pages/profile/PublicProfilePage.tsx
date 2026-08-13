@@ -1,8 +1,8 @@
+import { Shimmer } from "../../components/ui/Skeleton";
 import {
   Avatar,
   Box,
   Card,
-  CircularProgress,
   Divider,
   Stack,
   Tab,
@@ -234,14 +234,14 @@ function PublicProfilePage() {
       description="Public profiles can now share watchlist, recently watched activity, ratings, and reviews when the user chooses to make them visible."
     >
       {loading ? (
-        <CircularProgress />
+        <Shimmer height={96} radius={8} />
       ) : !profile ? (
-        <Card sx={{ p: 3, borderRadius: 24 }}>
+        <Card sx={{ p: 3, borderRadius: "8px" }}>
           <Typography>Profile not found.</Typography>
         </Card>
       ) : (
         <Stack spacing={3}>
-          <Card sx={{ p: 3, borderRadius: 28 }}>
+          <Card sx={{ p: 3, borderRadius: "8px" }}>
             <Stack direction={{ xs: "column", md: "row" }} spacing={2.5} sx={{ alignItems: { md: "center" } }}>
               <Avatar src={profile.avatar} sx={{ width: 92, height: 92 }}>
                 {profile.displayName.slice(0, 1)}
@@ -276,7 +276,7 @@ function PublicProfilePage() {
 
             <TabPanel value="overview" sx={{ px: 0 }}>
               <Stack spacing={2}>
-                <Card sx={{ p: 3, borderRadius: 24 }}>
+                <Card sx={{ p: 3, borderRadius: "8px" }}>
                   <Typography level="body-md" textColor="neutral.300">
                     This profile shares only the sections the user has chosen to make public.
                   </Typography>
@@ -310,7 +310,7 @@ function PublicProfilePage() {
                 </Card>
 
                 {profile.visibility.watchlist ? (
-                  <Card sx={{ p: 3, borderRadius: 24 }}>
+                  <Card sx={{ p: 3, borderRadius: "8px" }}>
                     <Typography level="title-lg" sx={{ mb: 2 }}>
                       Watchlist Preview
                     </Typography>
@@ -322,7 +322,7 @@ function PublicProfilePage() {
                 ) : null}
 
                 {profile.visibility.recentlyWatched ? (
-                  <Card sx={{ p: 3, borderRadius: 24 }}>
+                  <Card sx={{ p: 3, borderRadius: "8px" }}>
                     <Typography level="title-lg" sx={{ mb: 2 }}>
                       Recently Watched Preview
                     </Typography>
@@ -334,7 +334,7 @@ function PublicProfilePage() {
                 ) : null}
 
                 {profile.visibility.ratings ? (
-                  <Card sx={{ p: 3, borderRadius: 24 }}>
+                  <Card sx={{ p: 3, borderRadius: "8px" }}>
                     <Typography level="title-lg" sx={{ mb: 2 }}>
                       Ratings Preview
                     </Typography>
@@ -348,9 +348,9 @@ function PublicProfilePage() {
             </TabPanel>
 
             <TabPanel value="watchlist" sx={{ px: 0 }}>
-              <Card sx={{ p: 3, borderRadius: 24 }}>
+              <Card sx={{ p: 3, borderRadius: "8px" }}>
                 {sectionLoading ? (
-                  <CircularProgress />
+                  <Shimmer height={96} radius={8} />
                 ) : profile.visibility.watchlist ? (
                   <MediaGrid
                     items={watchlist.length ? watchlist : profile.watchlist || []}
@@ -365,9 +365,9 @@ function PublicProfilePage() {
             </TabPanel>
 
             <TabPanel value="recently-watched" sx={{ px: 0 }}>
-              <Card sx={{ p: 3, borderRadius: 24 }}>
+              <Card sx={{ p: 3, borderRadius: "8px" }}>
                 {sectionLoading ? (
-                  <CircularProgress />
+                  <Shimmer height={96} radius={8} />
                 ) : profile.visibility.recentlyWatched ? (
                   <RecentlyWatchedGrid
                     items={
@@ -386,9 +386,9 @@ function PublicProfilePage() {
             </TabPanel>
 
             <TabPanel value="ratings" sx={{ px: 0 }}>
-              <Card sx={{ p: 3, borderRadius: 24 }}>
+              <Card sx={{ p: 3, borderRadius: "8px" }}>
                 {sectionLoading ? (
-                  <CircularProgress />
+                  <Shimmer height={96} radius={8} />
                 ) : profile.visibility.ratings ? (
                   <RatingsGrid
                     items={ratings.length ? ratings : profile.ratings || []}
@@ -403,9 +403,9 @@ function PublicProfilePage() {
             </TabPanel>
 
             <TabPanel value="reviews" sx={{ px: 0 }}>
-              <Card sx={{ p: 3, borderRadius: 24 }}>
+              <Card sx={{ p: 3, borderRadius: "8px" }}>
                 {sectionLoading ? (
-                  <CircularProgress />
+                  <Shimmer height={96} radius={8} />
                 ) : reviews.length ? (
                   <Stack spacing={2}>
                     {reviews.map((review) => (

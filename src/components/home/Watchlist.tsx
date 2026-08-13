@@ -1,6 +1,5 @@
-import { ArrowForwardIos, BookmarkAdd, History } from "@mui/icons-material";
-import { Box, Button, Link, Typography } from "@mui/joy";
-import type { ReactNode } from "react";
+import { ArrowForwardIos, Bookmark, History } from "../ui/icons";
+import { Box, Typography } from "@mui/joy";
 import { isLoggedIn } from "../../utilities/defaults";
 import { useUsers } from "../../context/Users";
 import { User } from "../../user";
@@ -8,6 +7,8 @@ import { useNavigate } from "react-router-dom";
 import EventMCS from "../cards/skeleton/EventMC";
 import EventMC from "../cards/EventMC";
 import { sortLibraryItems } from "../../utilities/savedMedia";
+import Button from "../ui/Button";
+import EmptyState from "../ui/EmptyState";
 
 function Watchlist() {
   const {
@@ -22,26 +23,25 @@ function Watchlist() {
   const watchlist = sortLibraryItems(user.watchlist || [], "recent");
   const recentlyWatched = sortLibraryItems(user.recentlyWatched || [], "recent");
 
+  const isLoading =
+    myselfData?.isLoading ||
+    removeFromWatchlistData?.isLoading ||
+    addToWatchlistData?.isLoading;
+
   const renderRow = (
     title: string,
     items: any[],
-    icon?: ReactNode,
-    emptyText?: string,
+    emptyText: string,
     allowDelete = false,
   ) => (
-    <Box sx={{ display: "flex", flexDirection: "column", gap: 1.4 }}>
-      <Typography level="h2" startDecorator={icon}>
+    <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+      <Typography level="h3" sx={{ fontSize: { xs: "1.125rem", md: "1.25rem" } }}>
         {title}
       </Typography>
       {items.length ? (
         <Box
-          sx={{
-            display: "flex",
-            flexDirection: "row",
-            overflow: "scroll",
-            gap: 2,
-            width: "100%",
-          }}
+          className="no-scrollbar"
+          sx={{ display: "flex", gap: 2, overflowX: "auto", pb: 0.5 }}
         >
           {items.map((item) => (
             <EventMC
@@ -63,21 +63,13 @@ function Watchlist() {
           ))}
         </Box>
       ) : (
-        <Typography level="body-md" textColor="neutral.400">
-          {emptyText}
-        </Typography>
+        <Typography level="body-sm">{emptyText}</Typography>
       )}
     </Box>
   );
 
   return (
-    <Box
-      sx={{
-        display: "flex",
-        flexDirection: "column",
-        gap: 4,
-      }}
-    >
+    <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
       <Box
         sx={{
           display: "flex",
@@ -87,131 +79,61 @@ function Watchlist() {
           flexWrap: "wrap",
         }}
       >
-        <Typography
-          onClick={() => {
-            navigate(`/watchlist`);
-          }}
-          endDecorator={<ArrowForwardIos />}
-          level="h1"
-          sx={{
-            "@media (max-width: 800px)": {
-              fontSize: "25px",
-            },
-            ":hover": {
-              cursor: "pointer",
-              opacity: 0.8,
-              transition: "all 0.2s ease-in-out",
-              textDecoration: "underline",
-            },
-          }}
-        >
-          Your Library
+        <Typography level="h3" sx={{ fontSize: { xs: "1.25rem", md: "1.5rem" } }}>
+          Your library
         </Typography>
         {isLoggedIn && (
-          <Button variant="soft" onClick={() => navigate("/watchlist")}>
+          <Button
+            size="sm"
+            variant="outlined"
+            color="neutral"
+            endDecorator={<ArrowForwardIos sx={{ fontSize: 13 }} />}
+            onClick={() => navigate("/watchlist")}
+          >
             Open library
           </Button>
         )}
       </Box>
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "stretch",
-          gap: 3,
-          width: "100%",
-          margin: "0 auto",
-        }}
-      >
-        {isLoggedIn ? (
-          myselfData?.isLoading ||
-          removeFromWatchlistData?.isLoading ||
-          addToWatchlistData?.isLoading ? (
-            <Box
-              sx={{
-                display: "flex",
-                flexDirection: "row",
-                overflow: "scroll",
-                gap: 2,
-                width: "100%",
-              }}
-            >
-              <EventMCS />
-              <EventMCS />
-              <EventMCS />
-              <EventMCS />
-            </Box>
-          ) : user.watchlist?.length > 0 || recentlyWatched.length > 0 ? (
-            <>
-              {renderRow(
-                "Watchlist",
-                watchlist.slice(0, 8),
-                <BookmarkAdd />,
-                "Add a few titles and your watchlist will show up here.",
-                true,
-              )}
-              {renderRow(
-                "Recently Watched",
-                recentlyWatched.slice(0, 8),
-                <History />,
-                "Start watching something and your recent progress will appear here.",
-              )}
-            </>
-          ) : (
-            <>
-              <BookmarkAdd sx={{ fontSize: "50px", mx: "auto" }} />
-              <Typography level="h2" textAlign="center">
-                There&apos;s no library activity yet
-              </Typography>
-              <Typography level="body-md" textAlign="center">
-                Add something to your watchlist, start watching, or rate a title to begin.
-              </Typography>
-            </>
-          )
-        ) : (
-          <>
-            <BookmarkAdd sx={{ fontSize: "50px", margin: "0 auto" }} />
-            <Typography level="h2" textAlign="center">
-              <Link
-                onClick={() => navigate("/auth/login")}
-                sx={{
-                  color: "rgb(255, 216, 77)",
-                  ":hover": {
-                    cursor: "pointer",
-                    opacity: 0.8,
-                    transition: "all 0.2s ease-in-out",
-                    textDecoration: "underline",
-                  },
-                }}
-              >
-                Sign in
-              </Link>{" "}
-              to access your library
-            </Typography>
-            <Typography level="body-md" textAlign="center">
-              Track what you plan to watch, what you recently watched, and how you rated it.
-            </Typography>
-            <Button
-              onClick={() => navigate("/auth/login")}
-              sx={{
-                borderRadius: "50px",
-                padding: "10px 50px",
-                backgroundColor: "rgb(255, 216, 77)",
-                color: "black",
-                width: "fit-content",
-                margin: "0 auto",
-                ":hover": {
-                  backgroundColor: "rgb(255, 216, 77)",
-                  opacity: 0.8,
-                  transition: "all 0.2s ease-in-out",
-                },
-              }}
-            >
-              Sign In
+
+      {!isLoggedIn ? (
+        <EmptyState
+          icon={Bookmark}
+          title="Sign in to build your library"
+          description="Track what you plan to watch, what you recently watched, and how you rated it."
+          action={<Button onClick={() => navigate("/auth/login")}>Sign In</Button>}
+        />
+      ) : isLoading ? (
+        <Box className="no-scrollbar" sx={{ display: "flex", gap: 2, overflowX: "auto" }}>
+          {Array.from({ length: 6 }).map((_, index) => (
+            <EventMCS key={index} />
+          ))}
+        </Box>
+      ) : user.watchlist?.length > 0 || recentlyWatched.length > 0 ? (
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 4 }}>
+          {renderRow(
+            "Watchlist",
+            watchlist.slice(0, 8),
+            "Add a few titles and your watchlist will show up here.",
+            true,
+          )}
+          {renderRow(
+            "Recently watched",
+            recentlyWatched.slice(0, 8),
+            "Start watching something and your recent progress will appear here.",
+          )}
+        </Box>
+      ) : (
+        <EmptyState
+          icon={History}
+          title="No library activity yet"
+          description="Add something to your watchlist, start watching, or rate a title to begin."
+          action={
+            <Button variant="outlined" color="neutral" onClick={() => navigate("/browse")}>
+              Browse titles
             </Button>
-          </>
-        )}
-      </Box>
+          }
+        />
+      )}
     </Box>
   );
 }

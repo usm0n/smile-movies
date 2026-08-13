@@ -12,8 +12,8 @@ import {
 import { useParams } from "react-router-dom";
 import NotFound from "../../components/utils/NotFound";
 // import MovieSC from "../../components/movie/MovieSkeleton";
-import { backdropLoading } from "../../utilities/defaults";
-import { Box, Divider, useColorScheme } from "@mui/joy";
+import { Box, Divider } from "@mui/joy";
+import { DetailSkeleton, RowSkeleton } from "../../components/ui/Skeleton";
 import Header from "../../components/movie/Header";
 import Container from "../../utilities/Container";
 import Trailers from "../../components/movie/Trailers";
@@ -38,7 +38,6 @@ function Movie() {
     movieVideos,
     movieVideosData,
   } = useTMDB();
-  const { colorScheme } = useColorScheme();
   const [eventRelatedType, setEventRelatedType] = useState("recommendations");
 
   const movieData = movieDetailsData?.data as movieDetails & tvDetails;
@@ -77,8 +76,11 @@ function Movie() {
   return movieDetailsData?.isIncorrect ? (
     <NotFound />
   ) : isFetching ? (
-    <Box width={"100%"} height={"100vh"}>
-      {backdropLoading(true, colorScheme)}
+    <Box sx={{ pt: "calc(var(--sm-nav-height) + 24px)" }}>
+      <Container>
+        <DetailSkeleton />
+        <RowSkeleton count={6} />
+      </Container>
     </Box>
   ) : (
     <Box

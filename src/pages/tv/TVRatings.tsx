@@ -3,8 +3,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { tvDetails } from "../../tmdb-res";
 import { useTMDB } from "../../context/TMDB";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import StarIcon from "@mui/icons-material/Star";
+import { ArrowBack as ArrowBackIcon, Star as StarIcon } from "../../components/ui/icons";
 import {
   resolveImdbId,
   fetchAllSeasonsBatched,
@@ -153,7 +152,7 @@ function TVRatings() {
       </Box>
 
       {/* ── Legend ── */}
-      <Box sx={{ display: "flex", gap: 1.5, mb: 3, flexWrap: "wrap", alignItems: "center", p: 1.5, borderRadius: "10px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
+      <Box sx={{ display: "flex", gap: 1.5, mb: 3, flexWrap: "wrap", alignItems: "center", p: 1.5, borderRadius: "8px", backgroundColor: "background.surface", border: "1px solid", borderColor: "neutral.outlinedBorder" }}>
         {LEGEND.map((item) => {
           const c = TIER_COLORS[item.tier];
           return (

@@ -10,8 +10,8 @@ import {
 } from "../../tmdb-res";
 import { useParams } from "react-router-dom";
 import NotFound from "../../components/utils/NotFound";
-import { backdropLoading } from "../../utilities/defaults";
-import { Box, Divider, useColorScheme } from "@mui/joy";
+import { Box, Divider } from "@mui/joy";
+import { DetailSkeleton, RowSkeleton } from "../../components/ui/Skeleton";
 import Header from "../../components/movie/Header";
 import SeasonsEpisodes from "../../components/movie/SeasonEpisodes/SeasonsEpisodes";
 import Container from "../../utilities/Container";
@@ -39,7 +39,6 @@ function TVSeries() {
     tvSeriesSimilar,
     tvSeriesSimilarData,
   } = useTMDB();
-  const { colorScheme } = useColorScheme();
   const [currentSeason, setCurrentSeason] = useState(1);
   const [eventRelatedType, setEventRelatedType] = useState("recommendations");
 
@@ -85,8 +84,11 @@ function TVSeries() {
   return tvSeriesDetailsData?.isIncorrect ? (
     <NotFound />
   ) : isFetching ? (
-    <Box width={"100%"} height={"100vh"}>
-      {backdropLoading(true, colorScheme)}
+    <Box sx={{ pt: "calc(var(--sm-nav-height) + 24px)" }}>
+      <Container>
+        <DetailSkeleton />
+        <RowSkeleton count={6} />
+      </Container>
     </Box>
   ) : (
     <Box

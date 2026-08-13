@@ -1,5 +1,5 @@
 import { Box, Button, IconButton, Snackbar, Typography } from "@mui/joy";
-import { Close, DevicesOther, CheckCircle, WarningRounded } from "@mui/icons-material";
+import { Close, DevicesOther, CheckCircle, WarningRounded } from "../ui/icons";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUsers } from "../../context/Users";

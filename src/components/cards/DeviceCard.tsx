@@ -1,10 +1,4 @@
-import {
-  DeviceUnknown,
-  LaptopMac,
-  PhoneIphone,
-  TabletMac,
-  Tv,
-} from "@mui/icons-material";
+import { DeviceUnknown, LaptopMac, PhoneIphone, TabletMac, Tv } from "../ui/icons";
 import { Box, Card, Typography } from "@mui/joy";
 import { formatTimeAgo, smartText } from "../../utilities/defaults";
 import { Device } from "../../user";

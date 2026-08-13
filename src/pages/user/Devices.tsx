@@ -17,7 +17,7 @@ import {
 } from "@mui/joy";
 import { ResponseType, User } from "../../user";
 import { deviceId, formatTimeAgo, smartText } from "../../utilities/defaults";
-import { Check, Delete, DevicesOther, Help, Lock, LockOpen, QrCode2, CheckCircleOutline } from "@mui/icons-material";
+import { Check, Delete, DevicesOther, Help, Lock, LockOpen, QrCode2, CheckCircleOutline } from "../../components/ui/icons";
 import { useState } from "react";
 import DeviceCard from "../../components/cards/DeviceCard";
 import { useUsers } from "../../context/Users";

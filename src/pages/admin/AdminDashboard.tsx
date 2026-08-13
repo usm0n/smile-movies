@@ -1,18 +1,10 @@
-import {
-  AdminPanelSettingsRounded,
-  ArrowForwardRounded,
-  ContentCopyRounded,
-  KeyRounded,
-  MarkEmailReadRounded,
-  ShieldRounded,
-  VerifiedRounded,
-} from "@mui/icons-material";
+import { AdminPanelSettingsRounded, ArrowForwardRounded, ContentCopyRounded, KeyRounded, MarkEmailReadRounded, ShieldRounded, VerifiedRounded } from "../../components/ui/icons";
+import { Shimmer } from "../../components/ui/Skeleton";
 import {
   Box,
   Button,
   Card,
   Chip,
-  CircularProgress,
   Divider,
   Input,
   Stack,
@@ -24,7 +16,7 @@ import {
 } from "@mui/joy";
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import toast from "react-hot-toast";
+import { toast } from "../../components/ui/toast";
 import PublicPageShell from "../../components/public/PublicPageShell";
 import { useUsers } from "../../context/Users";
 import { adminAPI } from "../../service/api/smb/admin.api.service";
@@ -134,7 +126,7 @@ function AdminDashboard() {
   if (!authResolved || myselfData?.isLoading) {
     return (
       <Box sx={{ display: "grid", placeItems: "center", minHeight: "100vh" }}>
-        <CircularProgress />
+        <Shimmer width={220} height={12} />
       </Box>
     );
   }
@@ -150,7 +142,7 @@ function AdminDashboard() {
         title="Admin access required."
         description="This area is reserved for Smile Movies administrators while admin-first tooling is rolling out."
       >
-        <Card sx={{ p: 3, borderRadius: 24 }}>
+        <Card sx={{ p: 3, borderRadius: "8px" }}>
           <Typography level="title-lg" sx={{ mb: 1 }}>
             You do not have admin access yet.
           </Typography>
@@ -247,7 +239,10 @@ function AdminDashboard() {
 
         <TabPanel value={0} sx={{ px: 0 }}>
           {loading ? (
-            <CircularProgress />
+            <Stack spacing={2}>
+              <Shimmer height={96} radius={12} />
+              <Shimmer height={200} radius={12} />
+            </Stack>
           ) : (
             <Stack spacing={2.5}>
               <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
@@ -278,20 +273,33 @@ function AdminDashboard() {
                     sx={{
                       flex: 1,
                       p: 2.25,
-                      borderRadius: 24,
-                      border: "1px solid rgba(255,255,255,0.08)",
-                      background: "rgba(255,255,255,0.025)",
+                      gap: 0.5,
+                      borderColor: "neutral.outlinedBorder",
+                      backgroundColor: "background.surface",
                     }}
                   >
-                    <Box sx={{ color: "rgb(255,216,77)", mb: 1 }}>{item.icon}</Box>
-                    <Typography level="body-sm" textColor="neutral.400">{item.label}</Typography>
-                    <Typography level="h2">{item.value}</Typography>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 1,
+                        color: "text.tertiary",
+                      }}
+                    >
+                      {item.icon}
+                      <Typography level="body-sm">{item.label}</Typography>
+                    </Box>
+                    <Typography
+                      sx={{ fontSize: "1.75rem", fontWeight: 600, letterSpacing: "-0.03em" }}
+                    >
+                      {item.value}
+                    </Typography>
                   </Card>
                 ))}
               </Stack>
 
               <Stack direction={{ xs: "column", lg: "row" }} spacing={2}>
-                <Card sx={{ flex: 1, p: 2.5, borderRadius: 24 }}>
+                <Card sx={{ flex: 1, p: 2.5, borderRadius: "8px" }}>
                   <Typography level="title-lg" sx={{ mb: 1.5 }}>
                     Notification foundation
                   </Typography>
@@ -306,7 +314,7 @@ function AdminDashboard() {
                   </Stack>
                 </Card>
 
-                <Card sx={{ flex: 1, p: 2.5, borderRadius: 24 }}>
+                <Card sx={{ flex: 1, p: 2.5, borderRadius: "8px" }}>
                   <Typography level="title-lg" sx={{ mb: 1.5 }}>
                     Recent admin activity
                   </Typography>
@@ -332,7 +340,7 @@ function AdminDashboard() {
         </TabPanel>
 
         <TabPanel value={1} sx={{ px: 0 }}>
-          <Card sx={{ p: 2.5, borderRadius: 24 }}>
+          <Card sx={{ p: 2.5, borderRadius: "8px" }}>
             <Stack direction={{ xs: "column", md: "row" }} spacing={1.5} sx={{ justifyContent: "space-between", mb: 2 }}>
               <Box>
                 <Typography level="title-lg">Users</Typography>
@@ -350,7 +358,7 @@ function AdminDashboard() {
 
             <Stack spacing={1.5}>
               {filteredUsers.map((user) => (
-                <Card key={user.id} sx={{ p: 2, borderRadius: 20, background: "rgba(255,255,255,0.02)" }}>
+                <Card key={user.id} sx={{ p: 2, borderColor: "neutral.outlinedBorder", backgroundColor: "background.surface" }}>
                   <Stack direction={{ xs: "column", lg: "row" }} spacing={2} sx={{ justifyContent: "space-between" }}>
                     <Box sx={{ minWidth: 0 }}>
                       <Typography level="title-md">
@@ -417,13 +425,13 @@ function AdminDashboard() {
         </TabPanel>
 
         <TabPanel value={2} sx={{ px: 0 }}>
-          <Card sx={{ p: 2.5, borderRadius: 24 }}>
+          <Card sx={{ p: 2.5, borderRadius: "8px" }}>
             <Typography level="title-lg" sx={{ mb: 2 }}>
               Review Moderation
             </Typography>
             <Stack spacing={1.5}>
               {moderationItems.length ? moderationItems.map((item) => (
-                <Card key={item.id} sx={{ p: 2, borderRadius: 20, background: "rgba(255,255,255,0.02)" }}>
+                <Card key={item.id} sx={{ p: 2, borderColor: "neutral.outlinedBorder", backgroundColor: "background.surface" }}>
                   <Stack direction={{ xs: "column", md: "row" }} spacing={2} sx={{ justifyContent: "space-between" }}>
                     <Box>
                       <Typography level="title-sm">{item.title}</Typography>
@@ -470,12 +478,12 @@ function AdminDashboard() {
         </TabPanel>
 
         <TabPanel value={3} sx={{ px: 0 }}>
-          <Card sx={{ p: 2.5, borderRadius: 24 }}>
+          <Card sx={{ p: 2.5, borderRadius: "8px" }}>
             <Typography level="title-lg" sx={{ mb: 2 }}>
               Notification Monitoring
             </Typography>
             {!notifications ? (
-              <CircularProgress size="sm" />
+              <Shimmer height={72} radius={8} />
             ) : (
               <Stack spacing={2}>
                 <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
@@ -536,7 +544,7 @@ function AdminDashboard() {
                       Scheduler endpoint: {notifications.queue.schedules.systemEndpoint}
                     </Typography>
                   </Stack>
-                  <Card sx={{ mt: 2, p: 1.75, borderRadius: 18, background: "rgba(255,255,255,0.02)" }}>
+                  <Card sx={{ mt: 2, p: 1.75, borderRadius: "8px", backgroundColor: "background.level1" }}>
                     <Typography level="title-sm" sx={{ mb: 0.75 }}>
                       How to use it
                     </Typography>
@@ -672,7 +680,7 @@ function AdminDashboard() {
                   </Typography>
                   <Stack spacing={1}>
                     {notifications.jobRuns.length ? notifications.jobRuns.map((job) => (
-                      <Card key={`${job.jobType}-${job.startedAt}`} sx={{ p: 1.5, borderRadius: 18, background: "rgba(255,255,255,0.02)" }}>
+                      <Card key={`${job.jobType}-${job.startedAt}`} sx={{ p: 1.5, borderRadius: "8px", backgroundColor: "background.level1" }}>
                         <Stack direction="row" spacing={1} sx={{ justifyContent: "space-between", alignItems: "center", mb: 0.5 }}>
                           <Typography level="title-sm">{job.jobType}</Typography>
                           <Chip
@@ -710,13 +718,13 @@ function AdminDashboard() {
         </TabPanel>
 
         <TabPanel value={4} sx={{ px: 0 }}>
-          <Card sx={{ p: 2.5, borderRadius: 24 }}>
+          <Card sx={{ p: 2.5, borderRadius: "8px" }}>
             <Typography level="title-lg" sx={{ mb: 2 }}>
               Release Management
             </Typography>
             <Stack spacing={1.5}>
               {releases.map((release) => (
-                <Card key={release.platform} sx={{ p: 2, borderRadius: 20, background: "rgba(255,255,255,0.02)" }}>
+                <Card key={release.platform} sx={{ p: 2, borderColor: "neutral.outlinedBorder", backgroundColor: "background.surface" }}>
                   <Stack direction={{ xs: "column", md: "row" }} spacing={2} sx={{ justifyContent: "space-between" }}>
                     <Box>
                       <Typography level="title-md">{release.name}</Typography>

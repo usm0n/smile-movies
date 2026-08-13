@@ -1,11 +1,15 @@
-import { Box, ButtonGroup, Chip, IconButton, Option, Select, Typography } from "@mui/joy";
+import { Box, Option, Select, Typography } from "@mui/joy";
+import SegmentedControl from "../../components/ui/SegmentedControl";
+import Badge from "../../components/ui/Badge";
+import EmptyState from "../../components/ui/EmptyState";
+import PageHeader from "../../components/ui/PageHeader";
 import { useTMDB } from "../../context/TMDB";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import type { Movie, searchMovie, searchPerson, searchTV } from "../../tmdb-res";
 import EventMC from "../../components/cards/EventMC";
 import EventMCS from "../../components/cards/skeleton/EventMC";
-import AutoGraphIcon from "@mui/icons-material/AutoGraph";
+import { Search as SearchIcon } from "../../components/ui/icons";
 import Pagination from "../../components/navigation/Pagination";
 
 type SearchSort = "popularity" | "rating" | "release" | "title";
@@ -160,61 +164,38 @@ function Search() {
   return (
     <Box
       sx={{
-        width: "90%",
-        padding: "100px 0px",
-        margin: "0 auto",
+        width: "100%",
+        maxWidth: "var(--sm-page-max)",
+        mx: "auto",
+        px: { xs: 2, sm: 3, md: 4 },
+        pt: "calc(var(--sm-nav-height) + 48px)",
+        pb: 8,
         display: "flex",
         flexDirection: "column",
-        gap: "40px",
+        gap: 3,
         minHeight: "100vh",
       }}
     >
-      <Typography
-        level="h1"
-        fontWeight={700}
-        sx={{ "@media (max-width: 768px)": { fontSize: "30px" } }}
-      >
-        Search Results for:{" "}
-        <Typography fontWeight={400} textColor={"neutral.300"}>
-          {decodedQuery}
-        </Typography>
-      </Typography>
+      <PageHeader
+        overline="Search"
+        title={decodedQuery}
+        description={
+          isLoading ? "Searching…" : `${totalResults} result${totalResults === 1 ? "" : "s"} found`
+        }
+      />
 
       <Box sx={{ display: "flex", gap: 1.5, flexWrap: "wrap", alignItems: "center" }}>
-        <ButtonGroup>
-        <IconButton
-          onClick={() => setType("all")}
-          color={type === "all" ? "primary" : "neutral"}
-          variant={type === "all" ? "solid" : "outlined"}
-          sx={{ padding: "0 20px" }}
-        >
-          All
-        </IconButton>
-        <IconButton
-          onClick={() => setType("movie")}
-          color={type === "movie" ? "primary" : "neutral"}
-          variant={type === "movie" ? "solid" : "outlined"}
-          sx={{ padding: "0 20px" }}
-        >
-          Movies
-        </IconButton>
-        <IconButton
-          onClick={() => setType("tv")}
-          color={type === "tv" ? "primary" : "neutral"}
-          variant={type === "tv" ? "solid" : "outlined"}
-          sx={{ padding: "0 20px" }}
-        >
-          TV shows
-        </IconButton>
-        <IconButton
-          onClick={() => setType("person")}
-          color={type === "person" ? "primary" : "neutral"}
-          variant={type === "person" ? "solid" : "outlined"}
-          sx={{ padding: "0 20px" }}
-        >
-          People
-        </IconButton>
-        </ButtonGroup>
+        <SegmentedControl
+          ariaLabel="Result type"
+          value={type}
+          onChange={(value) => setType(value as typeof type)}
+          segments={[
+            { value: "all", label: "All" },
+            { value: "movie", label: "Movies" },
+            { value: "tv", label: "TV shows" },
+            { value: "person", label: "People" },
+          ]}
+        />
         <Select
           value={sortBy}
           onChange={(_, value) => setSortBy((value || "popularity") as SearchSort)}
@@ -253,70 +234,40 @@ function Search() {
       </Box>
 
       {!isLoading && filteredResults.length > 0 && (
-        <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
-          <Chip
-            sx={{
-              background: "rgba(96, 183, 255, 0.1)",
-              border: "1px solid rgba(96, 183, 255, 0.24)",
-              color: "rgb(96, 183, 255)",
-            }}
-          >
-            Showing {filteredResults.length} of {totalResults} results
-          </Chip>
-          <Chip
-            sx={{
-              background: "rgba(255,255,255,0.04)",
-              border: "1px solid rgba(255,255,255,0.08)",
-            }}
-          >
-            Movies: {movieCount}
-          </Chip>
-          <Chip
-            sx={{
-              background: "rgba(255,255,255,0.04)",
-              border: "1px solid rgba(255,255,255,0.08)",
-            }}
-          >
-            TV shows: {tvCount}
-          </Chip>
-          <Chip
-            sx={{
-              background: "rgba(255,255,255,0.04)",
-              border: "1px solid rgba(255,255,255,0.08)",
-            }}
-          >
-            People: {peopleCount}
-          </Chip>
+        <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", alignItems: "center" }}>
+          <Badge tone="contrast">
+            {filteredResults.length} of {totalResults}
+          </Badge>
+          <Badge>Movies {movieCount}</Badge>
+          <Badge>TV {tvCount}</Badge>
+          <Badge>People {peopleCount}</Badge>
+          <Typography level="body-xs" sx={{ ml: 0.5 }}>
+            {sortBy === "popularity"
+              ? "Sorted by popularity"
+              : sortBy === "rating"
+                ? "Sorted by rating"
+                : sortBy === "release"
+                  ? "Sorted by newest release"
+                  : "Sorted alphabetically"}
+          </Typography>
         </Box>
       )}
-      {!isLoading && filteredResults.length > 0 && (
-        <Typography>{totalResults} results found</Typography>
-      )}
-      {!isLoading && filteredResults.length > 0 && (
-        <Typography
-          startDecorator={<AutoGraphIcon sx={{ color: "neutral.300" }} />}
-        >
-          {sortBy === "popularity"
-            ? "Sorted by popularity"
-            : sortBy === "rating"
-              ? "Sorted by rating"
-              : sortBy === "release"
-                ? "Sorted by newest release"
-                : "Sorted alphabetically"}
-        </Typography>
+
+      {!filteredResults.length && !isLoading && (
+        <EmptyState
+          icon={SearchIcon}
+          title="No results found"
+          description={`Nothing matched "${decodedQuery}" with these filters. Try a different spelling or clear the filters.`}
+        />
       )}
 
       <Box
-        display={"flex"}
-        flexWrap={"wrap"}
-        justifyContent={"center"}
-        gap={"10px"}
+        sx={{
+          display: "grid",
+          gap: 2.5,
+          gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))",
+        }}
       >
-        {!filteredResults.length && !isLoading && (
-          <Typography textColor={"neutral.300"} level="h2" fontWeight={700}>
-            No Results Found
-          </Typography>
-        )}
 
         {!isLoading ? (
           filteredResults.map((result) => (
@@ -344,14 +295,15 @@ function Search() {
           </>
         )}
 
-        {filteredResults.length > 0 && (
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            whereTo={`/search/${query}`}
-          />
-        )}
       </Box>
+
+      {filteredResults.length > 0 && (
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          whereTo={`/search/${query}`}
+        />
+      )}
     </Box>
   );
 }

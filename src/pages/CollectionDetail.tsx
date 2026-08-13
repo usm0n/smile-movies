@@ -5,7 +5,7 @@ import {
   Skeleton,
   Typography,
 } from "@mui/joy";
-import { ArrowBackIos } from "@mui/icons-material";
+import { ArrowBackIos } from "../components/ui/icons";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
@@ -54,7 +54,7 @@ function CollectionDetail() {
   if (loading) {
     return (
       <Container>
-        <Box sx={{ padding: "100px 0px", display: "flex", flexDirection: "column", gap: "28px", minHeight: "100vh" }}>
+        <Box sx={{ pt: "calc(var(--sm-nav-height) + 48px)", pb: 8, display: "flex", flexDirection: "column", gap: 3, minHeight: "100vh" }}>
           <Skeleton variant="text" width={200} height={40} sx={{ mb: 3 }} />
           <Box sx={{ display: "flex", gap: 3, flexWrap: "wrap" }}>
             {Array.from({ length: 6 }).map((_, i) => (
@@ -87,9 +87,9 @@ function CollectionDetail() {
 
   return (
     <Container>
-      <Box sx={{ padding: "100px 0px", display: "flex", flexDirection: "column", gap: "28px", minHeight: "100vh" }}>
+      <Box sx={{ pt: "calc(var(--sm-nav-height) + 48px)", pb: 8, display: "flex", flexDirection: "column", gap: 3, minHeight: "100vh" }}>
         <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 4 }}>
-          <IconButton
+          <IconButton aria-label="Back to lists"
             variant="outlined"
             onClick={() => navigate("/collections")}
           >

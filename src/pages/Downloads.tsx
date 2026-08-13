@@ -1,16 +1,14 @@
-import {
-  Box,
-  Button,
-  Card,
-  IconButton,
-  Tooltip,
-  Typography,
-} from "@mui/joy";
-import { Delete, PlayArrow, Download as DownloadIcon } from "@mui/icons-material";
+import { Box, Card, Typography } from "@mui/joy";
+import Button from "../components/ui/Button";
+import IconButton from "../components/ui/IconButton";
+import EmptyState from "../components/ui/EmptyState";
+import PageHeader from "../components/ui/PageHeader";
+import { Shimmer } from "../components/ui/Skeleton";
+import { Delete, PlayArrow, Download as DownloadIcon } from "../components/ui/icons";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Container from "../utilities/Container";
-import toast from "react-hot-toast";
+import { toast } from "../components/ui/toast";
 
 const CACHE_NAME = "smile-offline-v1";
 
@@ -81,49 +79,44 @@ function Downloads() {
 
   return (
     <Container>
-      <Box sx={{ padding: "100px 0px", display: "flex", flexDirection: "column", gap: "28px", minHeight: "100vh" }}>
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            gap: 2,
-            mb: 4,
-          }}
-        >
-          <DownloadIcon sx={{ fontSize: 32, color: "rgb(255,220,92)" }} />
-          <Typography level="h2">Downloads</Typography>
-        </Box>
+      <Box
+        sx={{
+          pt: "calc(var(--sm-nav-height) + 48px)",
+          pb: 8,
+          display: "flex",
+          flexDirection: "column",
+          gap: 3,
+          minHeight: "100vh",
+        }}
+      >
+        <PageHeader
+          title="Downloads"
+          description="Saved for offline playback on this device. MP4 sources only."
+        />
 
         {loading ? (
-          <Typography sx={{ color: "text.tertiary" }}>
-            Loading downloads...
-          </Typography>
-        ) : items.length === 0 ? (
           <Box
             sx={{
-              textAlign: "center",
-              py: 10,
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
               gap: 2,
             }}
           >
-            <DownloadIcon sx={{ fontSize: 64, color: "text.tertiary", mb: 1 }} />
-            <Typography level="h3" sx={{ color: "text.tertiary" }}>
-              No downloads yet
-            </Typography>
-            <Typography
-              level="body-md"
-              sx={{ color: "text.tertiary", maxWidth: 400 }}
-            >
-              Use the Download button on any movie or episode page to save
-              content for offline viewing. MP4 sources only.
-            </Typography>
-            <Button variant="outlined" onClick={() => navigate("/")}>
-              Browse titles
-            </Button>
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Shimmer key={i} height={112} radius={12} />
+            ))}
           </Box>
+        ) : items.length === 0 ? (
+          <EmptyState
+            icon={DownloadIcon}
+            title="No downloads yet"
+            description="Use the download button on any movie or episode page to save it for offline viewing."
+            action={
+              <Button variant="outlined" color="neutral" onClick={() => navigate("/browse")}>
+                Browse titles
+              </Button>
+            }
+          />
         ) : (
           <Box
             sx={{
@@ -133,7 +126,7 @@ function Downloads() {
             }}
           >
             {items.map((entry) => (
-              <Card key={entry.cacheKey} variant="outlined">
+              <Card key={entry.cacheKey} variant="outlined" sx={{ gap: 1 }}>
                 <Box
                   sx={{
                     display: "flex",
@@ -157,24 +150,23 @@ function Downloads() {
                       Available offline
                     </Typography>
                   </Box>
-                  <Tooltip title="Delete download">
-                    <IconButton
-                      size="sm"
-                      color="danger"
-                      variant="plain"
-                      onClick={() => remove(entry)}
-                    >
-                      <Delete />
-                    </IconButton>
-                  </Tooltip>
+                  <IconButton
+                    label="Delete download"
+                    tooltip
+                    size="sm"
+                    color="danger"
+                    onClick={() => remove(entry)}
+                  >
+                    <Delete sx={{ fontSize: 16 }} />
+                  </IconButton>
                 </Box>
                 <Button
-                  startDecorator={<PlayArrow />}
+                  startDecorator={<PlayArrow sx={{ fontSize: 15 }} />}
                   size="sm"
-                  sx={{ mt: 1 }}
+                  fullWidth
                   onClick={() => playOffline(entry)}
                 >
-                  Play
+                  Play offline
                 </Button>
               </Card>
             ))}

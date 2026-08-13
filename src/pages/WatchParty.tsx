@@ -2,15 +2,13 @@ import {
   Box, Button, Chip, CircularProgress, Divider, IconButton, Input,
   Modal, ModalDialog, Tab, TabList, TabPanel, Tabs, Tooltip, Typography,
 } from "@mui/joy";
-import {
-  ContentCopy, People, Send, ArrowBackIos, Chat, PersonOutline,
-} from "@mui/icons-material";
+import { ContentCopy, People, Send, ArrowBackIos, Chat, PersonOutline } from "../components/ui/icons";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { watchPartyAPI, WatchParty, WatchPartyMessage } from "../service/api/smb/watchparty.api.service";
 import { useUsers } from "../context/Users";
 import { User } from "../user";
-import toast from "react-hot-toast";
+import { toast } from "../components/ui/toast";
 import { copyToClipboard } from "../utilities/defaults";
 
 const POLL_INTERVAL_MS = 6000;
@@ -95,7 +93,7 @@ function WatchPartyPage() {
       } catch (err: any) {
         if (err?.response?.status === 404) {
           clearInterval(interval);
-          toast("The watch party has ended.");
+          toast.message("The watch party has ended.");
           navigate("/");
         }
       }
@@ -124,8 +122,8 @@ function WatchPartyPage() {
     return (
       <Modal open onClose={() => navigate("/")}>
         <ModalDialog sx={{ maxWidth: 360, textAlign: "center", p: 4, display: "flex", flexDirection: "column", gap: 2, alignItems: "center" }}>
-          <Box sx={{ width: 52, height: 52, borderRadius: "50%", background: "rgba(255,220,92,0.15)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <PersonOutline sx={{ color: "rgb(255,220,92)", fontSize: 28 }} />
+          <Box sx={{ width: 52, height: 52, borderRadius: "50%", background: "rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <PersonOutline sx={{ color: "#ededed", fontSize: 28 }} />
           </Box>
           <Typography level="h4">Join the party</Typography>
           <Typography level="body-sm" sx={{ color: "text.tertiary" }}>What should everyone call you?</Typography>
@@ -216,7 +214,7 @@ function WatchPartyPage() {
                 return (
                   <Box key={i} sx={{ display: "flex", flexDirection: "column", alignItems: isMine ? "flex-end" : "flex-start" }}>
                     {!isMine && <Typography level="body-xs" sx={{ color: "rgba(255,255,255,0.4)", mb: 0.3 }}>{msg.displayName || "Guest"}</Typography>}
-                    <Box sx={{ background: isMine ? "rgb(255,220,92)" : "rgba(255,255,255,0.1)", color: isMine ? "black" : "white", borderRadius: isMine ? "16px 16px 4px 16px" : "16px 16px 16px 4px", px: 1.5, py: 0.75, maxWidth: "85%", wordBreak: "break-word" }}>
+                    <Box sx={{ background: isMine ? "#ededed" : "rgba(255,255,255,0.1)", color: isMine ? "black" : "white", borderRadius: isMine ? "16px 16px 4px 16px" : "16px 16px 16px 4px", px: 1.5, py: 0.75, maxWidth: "85%", wordBreak: "break-word" }}>
                       <Typography level="body-sm">{msg.text}</Typography>
                     </Box>
                     <Typography level="body-xs" sx={{ color: "rgba(255,255,255,0.25)", mt: 0.3 }}>
@@ -250,8 +248,8 @@ function WatchPartyPage() {
                   const isMe = uid === myUid || name === displayName;
                   return (
                     <Box key={i} sx={{ display: "flex", alignItems: "center", gap: 1.5, py: 0.5 }}>
-                      <Box sx={{ width: 32, height: 32, borderRadius: "50%", background: "rgba(255,220,92,0.2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                        <Typography level="body-sm" sx={{ color: "rgb(255,220,92)", fontWeight: 700 }}>{name.slice(0, 1).toUpperCase()}</Typography>
+                      <Box sx={{ width: 32, height: 32, borderRadius: "50%", background: "rgba(255,255,255,0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        <Typography level="body-sm" sx={{ color: "#ededed", fontWeight: 700 }}>{name.slice(0, 1).toUpperCase()}</Typography>
                       </Box>
                       <Typography level="body-sm" sx={{ color: "white", flex: 1 }}>{name}{isMe ? " (you)" : ""}</Typography>
                       {uid === party.hostUid && <Chip size="sm" variant="solid" color="warning">Host</Chip>}

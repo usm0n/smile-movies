@@ -1,4 +1,4 @@
-import { CheckCircleRounded, DownloadRounded, LaunchRounded, UpdateRounded } from "@mui/icons-material";
+import { CheckCircleRounded, DownloadRounded, LaunchRounded, UpdateRounded } from "../../components/ui/icons";
 import { Box, Button, Card, Chip, CircularProgress, Divider, Grid, Link, Stack, Typography } from "@mui/joy";
 import { useEffect, useState } from "react";
 import InstallAppButton from "../../components/public/InstallAppButton";
@@ -39,7 +39,7 @@ function DownloadPage() {
       <Card
         sx={{
           p: 3,
-          borderRadius: 28,
+          borderRadius: "8px",
           mb: 4,
           border: "1px solid rgba(255,255,255,0.08)",
           background:
@@ -89,9 +89,9 @@ function DownloadPage() {
               sx={{
                 height: "100%",
                 p: 2.5,
-                borderRadius: 24,
+                borderRadius: "8px",
                 border: "1px solid rgba(255,255,255,0.08)",
-                background: "rgba(255,255,255,0.025)",
+                backgroundColor: "background.surface",
               }}
             >
               <Stack direction="row" spacing={1} sx={{ justifyContent: "space-between", alignItems: "center", mb: 1 }}>
@@ -123,7 +123,7 @@ function DownloadPage() {
                     key={asset.label}
                     sx={{
                       p: 1.25,
-                      borderRadius: 18,
+                      borderRadius: "8px",
                       background: "rgba(255,255,255,0.04)",
                       border: "1px solid rgba(255,255,255,0.05)",
                     }}
@@ -183,9 +183,9 @@ function DownloadPage() {
       <Card
         sx={{
           p: 3,
-          borderRadius: 24,
+          borderRadius: "8px",
           border: "1px solid rgba(255,255,255,0.08)",
-          background: "rgba(255,255,255,0.025)",
+          backgroundColor: "background.surface",
         }}
       >
         <Typography level="title-lg" sx={{ mb: 1 }}>Need help installing?</Typography>

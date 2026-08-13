@@ -1,15 +1,16 @@
-import { AspectRatio, Box, Typography, useColorScheme } from "@mui/joy";
+import { AspectRatio, Box, Typography } from "@mui/joy";
 import { useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { useTMDB } from "../../context/TMDB";
-import { ageCount, backdropLoading, ymdToDmy } from "../../utilities/defaults";
+import { ageCount, ymdToDmy } from "../../utilities/defaults";
+import { DetailSkeleton, RowSkeleton } from "../../components/ui/Skeleton";
 import NotFound from "../../components/utils/NotFound";
 import {
   peopleCombinedCredits,
   peopleDetails,
   peopleImages,
 } from "../../tmdb-res";
-import PersonIcon from "@mui/icons-material/Person";
+import { Person as PersonIcon } from "../../components/ui/icons";
 import { useState } from "react";
 import { Button } from "@mui/joy";
 import EventMC from "../../components/cards/EventMC";
@@ -25,7 +26,6 @@ function Person() {
     peopleImagesData,
   } = useTMDB();
   const [isExpanded, setIsExpanded] = useState(false);
-  const colorScheme = useColorScheme();
 
   const peopleDetailsDataArr = peopleDetailsData?.data as peopleDetails;
   const peopleImagesDataArr = peopleImagesData?.data as peopleImages;
@@ -50,16 +50,32 @@ function Person() {
   return isIncorrect ? (
     <NotFound />
   ) : isLoading ? (
-    backdropLoading(isLoading, colorScheme)
+    <Box
+      sx={{
+        maxWidth: "var(--sm-page-max)",
+        mx: "auto",
+        px: { xs: 2, sm: 3, md: 4 },
+        pt: "calc(var(--sm-nav-height) + 48px)",
+        display: "flex",
+        flexDirection: "column",
+        gap: 5,
+      }}
+    >
+      <DetailSkeleton />
+      <RowSkeleton count={6} />
+    </Box>
   ) : (
     <Box
       sx={{
-        padding: "100px 0",
-        width: "90%",
-        margin: "0 auto",
+        width: "100%",
+        maxWidth: "var(--sm-page-max)",
+        mx: "auto",
+        px: { xs: 2, sm: 3, md: 4 },
+        pt: "calc(var(--sm-nav-height) + 48px)",
+        pb: 8,
         display: "flex",
         flexDirection: "column",
-        gap: "70px",
+        gap: 6,
       }}
     >
       <Box

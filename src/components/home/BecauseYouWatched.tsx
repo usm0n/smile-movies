@@ -1,4 +1,5 @@
-import { Box, Skeleton, Typography } from "@mui/joy";
+import { Box, Typography } from "@mui/joy";
+import { Shimmer } from "../ui/Skeleton";
 import { useEffect, useState } from "react";
 import { useUsers } from "../../context/Users";
 import { User } from "../../user";
@@ -55,28 +56,20 @@ function BecauseYouWatched() {
   const logoLoading = logoData?.isLoading;
 
   const seedTitleDisplay = logoLoading ? (
-    <Skeleton
-      variant="rectangular"
-      width={120}
-      height={30}
-      sx={{ display: "inline-block", verticalAlign: "middle", ml: 1 }}
-    />
+    <Shimmer width={110} height={22} sx={{ display: "inline-block", verticalAlign: "middle" }} />
   ) : logoPath ? (
     <Box
       component="img"
       src={`https://image.tmdb.org/t/p/original${logoPath}`}
       sx={{
-        maxWidth: { xs: "170px", sm: "260px" },
-        ml: 1,
+        maxWidth: { xs: "130px", sm: "190px" },
+        maxHeight: 26,
+        objectFit: "contain",
         verticalAlign: "middle",
-        filter: "drop-shadow(0 0 4px rgba(0,0,0,0.5))",
       }}
     />
   ) : (
-    <Typography
-      component="span"
-      sx={{ color: "white", fontStyle: "italic", ml: 1 }}
-    >
+    <Typography component="span" sx={{ color: "text.primary" }}>
       {seed?.title}
     </Typography>
   );
@@ -84,43 +77,26 @@ function BecauseYouWatched() {
   if (!loading && !results.length) return null;
 
   return (
-    <Box sx={{ mb: 5 }}>
+    <Box>
       <Typography
-        level="h1"
+        level="h3"
         sx={{
           display: "flex",
           alignItems: "center",
           flexWrap: "wrap",
-          mb: 3,
-          gap: 2,
-          color: "rgb(255, 216, 77)",
-          "@media (max-width: 700px)": { fontSize: "25px" },
+          gap: 1,
+          mb: 2,
+          fontSize: { xs: "1.25rem", md: "1.5rem" },
         }}
       >
         Because you watched {seedTitleDisplay}
       </Typography>
       <Box
-        sx={{
-          display: "flex",
-          gap: 3,
-          overflowX: "scroll",
-          pb: 1,
-          paddingRight: "24px",
-          scrollbarColor: "transparent",
-          scrollbarWidth: "thin",
-          maskImage: "linear-gradient(to right, black 95%, transparent 100%)",
-          WebkitMaskImage:
-            "linear-gradient(to right, black 95%, transparent 100%)",
-        }}
+        className="no-scrollbar"
+        sx={{ display: "flex", gap: 2, overflowX: "auto", pb: 0.5 }}
       >
         {loading ? (
-          <>
-            <EventMCS />
-            <EventMCS />
-            <EventMCS />
-            <EventMCS />
-            <EventMCS />
-          </>
+          Array.from({ length: 7 }).map((_, index) => <EventMCS key={index} />)
         ) : (
           results.map((item: any) => (
             <EventMC

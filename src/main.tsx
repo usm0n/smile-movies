@@ -1,29 +1,33 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
+import "@fontsource-variable/geist";
+import "@fontsource-variable/geist-mono";
 import "./index.css";
 import App from "./App.tsx";
 import { TMDBProvider } from "./context/TMDB.tsx";
 import UsersProvider from "./context/Users.tsx";
 import { BrowserRouter } from "react-router-dom";
-import { CssVarsProvider } from "@mui/joy";
+import { CssBaseline, CssVarsProvider } from "@mui/joy";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import OCProvider from "./context/OC.tsx";
 import { StreamProvider } from "./context/Stream.tsx";
-import { Toaster } from "react-hot-toast";
 import { registerServiceWorker } from "./pwa/registerServiceWorker.ts";
+import theme from "./theme";
+import { Toaster } from "./components/ui/toast.tsx";
 
 registerServiceWorker();
 
 createRoot(document.getElementById("root")!).render(
   <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
-    <CssVarsProvider defaultMode="dark">
+    <CssVarsProvider theme={theme} defaultMode="dark" modeStorageKey="smile-mode">
+      <CssBaseline />
       <BrowserRouter>
         <StreamProvider>
           <OCProvider>
             <UsersProvider>
               <TMDBProvider>
                 <StrictMode>
-                  <Toaster position="bottom-center"/>
+                  <Toaster />
                   <App />
                 </StrictMode>
               </TMDBProvider>

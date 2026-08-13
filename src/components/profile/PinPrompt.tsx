@@ -1,5 +1,5 @@
 import { Box, Button, Input, Modal, ModalDialog, Typography } from "@mui/joy";
-import { LockOutlined } from "@mui/icons-material";
+import { LockOutlined } from "../ui/icons";
 import { useState } from "react";
 import { smbV1API } from "../../service/api/api";
 
@@ -53,14 +53,14 @@ function PinPrompt({ profileId, profileName, onSuccess, onCancel }: Props) {
             width: 56,
             height: 56,
             borderRadius: "50%",
-            background: "rgba(255,220,92,0.15)",
+            background: "rgba(255,255,255,0.06)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             mb: 1,
           }}
         >
-          <LockOutlined sx={{ color: "rgb(255,220,92)", fontSize: 28 }} />
+          <LockOutlined sx={{ color: "#ededed", fontSize: 28 }} />
         </Box>
         <Typography level="h4">Enter PIN</Typography>
         <Typography level="body-sm" sx={{ color: "text.tertiary" }}>

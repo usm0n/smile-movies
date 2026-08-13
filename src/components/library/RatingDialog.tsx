@@ -1,4 +1,4 @@
-import { Star, StarBorder } from "@mui/icons-material";
+import { Star, StarBorder } from "../ui/icons";
 import {
   Box,
   Button,
@@ -101,10 +101,10 @@ function RatingDialog({
           width: "min(92vw, 520px)",
           px: { xs: 2.5, sm: 3.5 },
           py: { xs: 2.5, sm: 3.25 },
-          borderRadius: "6px",
-          border: "1px solid rgba(255,255,255,0.08)",
-          background: "#1f1f1f",
-          boxShadow: "0 30px 90px rgba(0,0,0,0.55)",
+          borderRadius: "12px",
+          border: "1px solid",
+          borderColor: "neutral.outlinedBorder",
+          backgroundColor: "background.surface",
         }}
       >
         <ModalClose />
@@ -127,7 +127,7 @@ function RatingDialog({
               <Star
                 sx={{
                   fontSize: 112,
-                  color: previewRating ? "#5799ef" : "rgba(255,255,255,0.18)",
+                  color: previewRating ? "#ffffff" : "rgba(255,255,255,0.14)",
                   filter: previewRating ? "drop-shadow(0 12px 24px rgba(87, 153, 239, 0.22))" : "none",
                   transition: "color 160ms ease, filter 160ms ease",
                 }}
@@ -162,7 +162,7 @@ function RatingDialog({
               <Typography
                 level="body-sm"
                 sx={{
-                  color: "#f5c518",
+                  color: "#ededed",
                   letterSpacing: "0.14em",
                   fontWeight: 800,
                   textTransform: "uppercase",
@@ -226,7 +226,7 @@ function RatingDialog({
                       width: { xs: 34, sm: 40 },
                       height: { xs: 34, sm: 40 },
                       borderRadius: "999px",
-                      color: isActive ? "#5799ef" : "rgba(255,255,255,0.38)",
+                      color: isActive ? "#ffffff" : "rgba(255,255,255,0.35)",
                       transition: "transform 140ms ease, color 140ms ease",
                       "&:hover": {
                         background: "transparent",
@@ -277,13 +277,13 @@ function RatingDialog({
               width: "min(100%, 300px)",
               minHeight: 52,
               borderRadius: "999px",
-              background: "#f5c518",
+              background: "#ffffff",
               color: "#121212",
               fontWeight: 800,
               fontSize: "1.1rem",
               boxShadow: "none",
               "&:hover": {
-                background: "#ffd54a",
+                background: "#ffffff",
               },
             }}
           >
@@ -315,7 +315,7 @@ function RatingDialog({
                 color: "rgba(255,115,115,0.9)",
                 "&:hover": {
                   background: "transparent",
-                  color: "rgb(255,145,145)",
+                  color: "#ff6369",
                 },
               }}
             >

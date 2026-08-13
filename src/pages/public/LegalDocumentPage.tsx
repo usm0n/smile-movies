@@ -36,7 +36,7 @@ function LegalDocumentPage({ forcedSlug }: { forcedSlug?: string }) {
       <Card
         sx={{
           p: { xs: 2.5, md: 3.5 },
-          borderRadius: 28,
+          borderRadius: "8px",
           border: "1px solid rgba(255,255,255,0.08)",
           background:
             "linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.015))",

@@ -1,8 +1,7 @@
 import { Box, CircularProgress, Chip, Tooltip, Typography } from "@mui/joy";
 import { useEffect, useState } from "react";
 import { aiService, MatchScoreResult } from "../../service/api/ai/ai.api.service";
-import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
-import WarningAmberIcon from "@mui/icons-material/WarningAmber";
+import { AutoAwesome as AutoAwesomeIcon, WarningAmber as WarningAmberIcon } from "../ui/icons";
 import { isLoggedIn } from "../../utilities/defaults";
 
 interface MatchScoreProps {

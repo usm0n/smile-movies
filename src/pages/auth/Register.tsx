@@ -1,36 +1,22 @@
-import {
-  Lock,
-  Mail,
-  Person,
-  Visibility,
-  VisibilityOff,
-  ArrowBack,
-  ArrowForward,
-  CheckCircle,
-} from "@mui/icons-material";
+import { Lock, Mail, Person, Visibility, VisibilityOff, ArrowBack, ArrowForward } from "../../components/ui/icons";
 import {
   Box,
-  Button,
-  Card,
   Divider,
   FormControl,
   FormHelperText,
   FormLabel,
-  IconButton,
   Input,
   Link,
   Option,
   Select,
-  Step,
-  StepIndicator,
-  Stepper,
+  Switch,
   Typography,
-  useColorScheme,
 } from "@mui/joy";
+import Button from "../../components/ui/Button";
+import IconButton from "../../components/ui/IconButton";
 import { useEffect, useState } from "react";
 import { GoogleUserResponse, UserRegister } from "../../user";
 import {
-  backdropLoading,
   deviceId,
   deviceName,
   deviceType,
@@ -49,7 +35,7 @@ import {
 } from "../../utilities/notificationPreferences";
 
 const GoogleIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 48 48">
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 48 48">
     <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z" />
     <path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z" />
     <path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z" />
@@ -91,7 +77,6 @@ function Register() {
 
   const { login, loginData, registerData, register, myselfData } = useUsers();
   const { locationData } = useOC();
-  const { colorScheme } = useColorScheme();
   const navigate = useNavigate();
 
   const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -132,47 +117,71 @@ function Register() {
 
   const steps = ["Account", "About You", "Preferences", "Welcome"];
 
+  const isBusy = Boolean(loginData?.isLoading || registerData?.isLoading);
+
   return (
-    <>
-      {backdropLoading(loginData?.isLoading || registerData?.isLoading, colorScheme)}
-    <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", marginTop: 6, py: 6, px: 2 }}>
-      <Card sx={{ padding: "30px", borderRadius: "16px", gap: "24px", width: { xs: "100%", sm: 580 } }}>
-        {/* Stepper */}
-        <Stepper sx={{ width: "100%" }}>
+    <Box
+      sx={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        minHeight: "100vh",
+        py: "calc(var(--sm-nav-height) + 32px)",
+        px: 2,
+      }}
+    >
+      <Box sx={{ width: "100%", maxWidth: 520 }}>
+        <Box sx={{ textAlign: "center", mb: 3 }}>
+          <Typography level="h2" sx={{ fontSize: "1.75rem" }}>Create your account</Typography>
+          <Typography level="body-sm" sx={{ mt: 1 }}>
+            Step {step + 1} of {steps.length} · {steps[step]}
+          </Typography>
+        </Box>
+
+        <Box
+          sx={{
+            border: "1px solid",
+            borderColor: "neutral.outlinedBorder",
+            borderRadius: "lg",
+            backgroundColor: "background.surface",
+            p: 3,
+            display: "flex",
+            flexDirection: "column",
+            gap: 3,
+          }}
+        >
+        {/* progress rail */}
+        <Box sx={{ display: "flex", gap: 0.75 }}>
           {steps.map((label, i) => (
-            <Step
+            <Box
               key={label}
-              indicator={
-                <StepIndicator
-                  variant={i <= step ? "solid" : "outlined"}
-                  color={i < step ? "success" : i === step ? "primary" : "neutral"}
-                >
-                  {i < step ? <CheckCircle sx={{ fontSize: 16 }} /> : i + 1}
-                </StepIndicator>
-              }
-            >
-              <Typography level="body-xs" sx={{ display: { xs: "none", sm: "block" } }}>{label}</Typography>
-            </Step>
+              sx={{
+                flex: 1,
+                height: 3,
+                borderRadius: "999px",
+                backgroundColor: i <= step ? "#ffffff" : "background.level2",
+                transition: "background-color 200ms ease",
+              }}
+            />
           ))}
-        </Stepper>
+        </Box>
 
         {/* ─── STEP 0: Account ─── */}
         {step === 0 && (
           <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-            <Typography level="h4" fontWeight={700}>Create your account</Typography>
-            <Box sx={{ display: "flex", gap: 1, flexDirection: { xs: "column", sm: "row" } }}>
+            <Box sx={{ display: "flex", gap: 1.5, flexDirection: { xs: "column", sm: "row" } }}>
               <FormControl required sx={{ flex: 1 }}>
                 <FormLabel>Firstname</FormLabel>
-                <Input name="firstname" value={userValue.firstname} onChange={handleInput} placeholder="John" startDecorator={<Person />} />
+                <Input name="firstname" value={userValue.firstname} onChange={handleInput} placeholder="John" startDecorator={<Person sx={{ fontSize: 16 }} />} />
               </FormControl>
               <FormControl sx={{ flex: 1 }}>
                 <FormLabel>Lastname</FormLabel>
-                <Input name="lastname" value={userValue.lastname} onChange={handleInput} placeholder="Doe" startDecorator={<Person />} />
+                <Input name="lastname" value={userValue.lastname} onChange={handleInput} placeholder="Doe" startDecorator={<Person sx={{ fontSize: 16 }} />} />
               </FormControl>
             </Box>
             <FormControl required>
               <FormLabel>Email</FormLabel>
-              <Input name="email" value={userValue.email} onChange={handleInput} placeholder="user@example.com" startDecorator={<Mail />} />
+              <Input name="email" value={userValue.email} onChange={handleInput} placeholder="user@example.com" startDecorator={<Mail sx={{ fontSize: 16 }} />} />
             </FormControl>
             <FormControl
               required
@@ -183,8 +192,8 @@ function Register() {
                 name="password" value={userValue.password} onChange={handleInput}
                 type={passwordVisibility ? "text" : "password"}
                 placeholder="Min 8 characters"
-                startDecorator={<Lock />}
-                endDecorator={<IconButton onClick={() => setPasswordVisibility(!passwordVisibility)}>{passwordVisibility ? <VisibilityOff /> : <Visibility />}</IconButton>}
+                startDecorator={<Lock sx={{ fontSize: 16 }} />}
+                endDecorator={<IconButton label={passwordVisibility ? "Hide password" : "Show password"} size="sm" onClick={() => setPasswordVisibility(!passwordVisibility)}>{passwordVisibility ? <VisibilityOff sx={{ fontSize: 16 }} /> : <Visibility sx={{ fontSize: 16 }} />}</IconButton>}
               />
               <FormHelperText>
                 {userValue.password.trim() && userValue.password.length < 8 && "Too short"}
@@ -197,21 +206,32 @@ function Register() {
                 name="cpassword" value={cpassword} onChange={(e) => setCpassword(e.target.value)}
                 type={passwordVisibility ? "text" : "password"}
                 placeholder="Repeat your password"
-                startDecorator={<Lock />}
-                endDecorator={<IconButton onClick={() => setPasswordVisibility(!passwordVisibility)}>{passwordVisibility ? <VisibilityOff /> : <Visibility />}</IconButton>}
+                startDecorator={<Lock sx={{ fontSize: 16 }} />}
+                endDecorator={<IconButton label={passwordVisibility ? "Hide password" : "Show password"} size="sm" onClick={() => setPasswordVisibility(!passwordVisibility)}>{passwordVisibility ? <VisibilityOff sx={{ fontSize: 16 }} /> : <Visibility sx={{ fontSize: 16 }} />}</IconButton>}
               />
             </FormControl>
             <Button
-              disabled={!step1Valid || loginData?.isLoading || registerData?.isLoading}
-              endDecorator={<ArrowForward />}
+              size="lg"
+              fullWidth
+              disabled={!step1Valid}
+              loading={isBusy}
+              endDecorator={<ArrowForward sx={{ fontSize: 16 }} />}
               onClick={() => setStep(1)}
-              sx={{ background: "rgb(255,216,77)", color: "black", "&:hover": { background: "rgb(230,195,60)" } }}
             >
               Continue
             </Button>
-            <FormHelperText>Already have an account? <Link onClick={() => navigate("/auth/login")}>Sign in</Link></FormHelperText>
-            <Divider>or</Divider>
-            <Button onClick={() => googleLogin()} startDecorator={<GoogleIcon />} variant="soft" color="neutral">Sign in with Google</Button>
+            <Divider><Typography level="body-xs">or</Typography></Divider>
+            <Button
+              size="lg"
+              fullWidth
+              onClick={() => googleLogin()}
+              startDecorator={<GoogleIcon />}
+              variant="outlined"
+              color="neutral"
+              loading={isBusy}
+            >
+              Continue with Google
+            </Button>
           </Box>
         )}
 
@@ -219,9 +239,9 @@ function Register() {
         {step === 1 && (
           <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
             <Box>
-              <Typography level="h4" fontWeight={700}>Tell us about yourself</Typography>
-              <Typography level="body-sm" textColor="neutral.400">
-                This helps SmileAI give you better recommendations
+              <Typography level="title-lg">Tell us about yourself</Typography>
+              <Typography level="body-sm" sx={{ mt: 0.5 }}>
+                This helps SmileAI give you better recommendations.
               </Typography>
             </Box>
 
@@ -246,12 +266,13 @@ function Register() {
             </FormControl>
 
             <Box sx={{ display: "flex", gap: 1 }}>
-              <Button variant="outlined" color="neutral" startDecorator={<ArrowBack />} onClick={() => setStep(0)} sx={{ flex: 1 }}>Back</Button>
+              <Button size="lg" variant="outlined" color="neutral" startDecorator={<ArrowBack sx={{ fontSize: 16 }} />} onClick={() => setStep(0)} sx={{ flex: 1 }}>Back</Button>
               <Button
+                size="lg"
                 disabled={!step2Valid}
-                endDecorator={<ArrowForward />}
+                endDecorator={<ArrowForward sx={{ fontSize: 16 }} />}
                 onClick={() => setStep(2)}
-                sx={{ flex: 2, background: "rgb(255,216,77)", color: "black", "&:hover": { background: "rgb(230,195,60)" } }}
+                sx={{ flex: 2 }}
               >
                 Continue
               </Button>
@@ -263,23 +284,19 @@ function Register() {
         {step === 2 && (
           <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
             <Box>
-              <Typography level="h4" fontWeight={700}>Preferences</Typography>
-              <Typography level="body-sm" textColor="neutral.400">Customize your experience</Typography>
+              <Typography level="title-lg">Preferences</Typography>
+              <Typography level="body-sm" sx={{ mt: 0.5 }}>Customise your experience.</Typography>
             </Box>
 
             <Typography level="title-sm">Notifications</Typography>
             {notificationToggleOptions.map(({ key, label }) => (
-              <Box key={key} sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <Box key={key} sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 2 }}>
                 <Typography level="body-sm">{label}</Typography>
-                <Button
-                  size="sm"
-                  variant={(userValue.notifications as any)?.[key] ? "solid" : "outlined"}
-                  color={(userValue.notifications as any)?.[key] ? "success" : "neutral"}
-                  onClick={() => setUserValue((prev) => ({ ...prev, notifications: { ...defaultNotificationPreferences, ...prev.notifications!, [key]: !(prev.notifications as any)[key] } }))}
-                  sx={{ minWidth: 60 }}
-                >
-                  {(userValue.notifications as any)?.[key] ? "On" : "Off"}
-                </Button>
+                <Switch
+                  checked={Boolean((userValue.notifications as any)?.[key])}
+                  slotProps={{ input: { "aria-label": label } }}
+                  onChange={() => setUserValue((prev) => ({ ...prev, notifications: { ...defaultNotificationPreferences, ...prev.notifications!, [key]: !(prev.notifications as any)[key] } }))}
+                />
               </Box>
             ))}
 
@@ -313,36 +330,39 @@ function Register() {
               { key: "showRecentlyWatched", label: "Show my recently watched titles" },
               { key: "showRatings", label: "Show my ratings to others" },
             ].map(({ key, label }) => (
-              <Box key={key} sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <Box key={key} sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 2 }}>
                 <Typography level="body-sm">{label}</Typography>
-                <Button
-                  size="sm"
-                  variant={(userValue.privacy as any)?.[key] ? "solid" : "outlined"}
-                  color={(userValue.privacy as any)?.[key] ? "primary" : "neutral"}
-                  onClick={() => setUserValue((prev) => ({ ...prev, privacy: { ...prev.privacy!, [key]: !(prev.privacy as any)[key] } }))}
-                  sx={{ minWidth: 60 }}
-                >
-                  {(userValue.privacy as any)?.[key] ? "On" : "Off"}
-                </Button>
+                <Switch
+                  checked={Boolean((userValue.privacy as any)?.[key])}
+                  slotProps={{ input: { "aria-label": label } }}
+                  onChange={() => setUserValue((prev) => ({ ...prev, privacy: { ...prev.privacy!, [key]: !(prev.privacy as any)[key] } }))}
+                />
               </Box>
             ))}
 
             <Box sx={{ display: "flex", gap: 1, mt: 1 }}>
-              <Button variant="outlined" color="neutral" startDecorator={<ArrowBack />} onClick={() => setStep(1)} sx={{ flex: 1 }}>Back</Button>
+              <Button size="lg" variant="outlined" color="neutral" startDecorator={<ArrowBack sx={{ fontSize: 16 }} />} onClick={() => setStep(1)} sx={{ flex: 1 }}>Back</Button>
               <Button
-                endDecorator={<ArrowForward />}
+                size="lg"
                 onClick={() => register(userValue)}
-                disabled={loginData?.isLoading || registerData?.isLoading}
-                sx={{ flex: 2, background: "rgb(255,216,77)", color: "black", "&:hover": { background: "rgb(230,195,60)" } }}
+                loading={isBusy}
+                sx={{ flex: 2 }}
               >
-                {loginData?.isLoading || registerData?.isLoading ? "Creating account..." : "Create Account"}
+                Create account
               </Button>
             </Box>
           </Box>
         )}
-      </Card>
+        </Box>
+
+        <Typography level="body-sm" sx={{ textAlign: "center", mt: 2.5 }}>
+          Already have an account?{" "}
+          <Link onClick={() => navigate("/auth/login")} sx={{ cursor: "pointer" }}>
+            Sign in
+          </Link>
+        </Typography>
+      </Box>
     </Box>
-    </>
   );
 }
 

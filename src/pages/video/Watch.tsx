@@ -1,11 +1,4 @@
-import {
-  ArrowBackIos,
-  ContentCut,
-  Link as LinkIcon,
-  People,
-  SkipNext,
-  Close,
-} from "@mui/icons-material";
+import { ArrowBackIos, ContentCut, Link as LinkIcon, People, SkipNext, Close } from "../../components/ui/icons";
 import {
   Box,
   Button,
@@ -14,12 +7,11 @@ import {
   Option,
   Select,
   Typography,
-  useColorScheme,
-} from "@mui/joy";
+  } from "@mui/joy";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useTMDB } from "../../context/TMDB";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { backdropLoading, isLoggedIn } from "../../utilities/defaults";
+import { isLoggedIn } from "../../utilities/defaults";
 import NotFound from "../../components/utils/NotFound";
 import { images, movieDetails, tvDetails, tvSeasonsDetails } from "../../tmdb-res";
 import { Helmet } from "react-helmet";
@@ -33,7 +25,7 @@ import { ProviderId, ProviderSourceFormat } from "../../types/providers";
 import DownloadButton from "../../components/player/DownloadButton";
 import { copyToClipboard } from "../../utilities/defaults";
 import { watchPartyAPI } from "../../service/api/smb/watchparty.api.service";
-import toast from "react-hot-toast";
+import { toast } from "../../components/ui/toast";
 
 const AUTO_SAVE_INTERVAL_MS = 60000;
 const MIN_PROGRESS_DELTA_MINUTES = 1;
@@ -119,7 +111,6 @@ function Watch() {
     tvImagesData,
     tvImages,
   } = useTMDB();
-  const { colorScheme } = useColorScheme();
   const { movieId, movieType, seasonId, episodeId, startAt } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
   const { getStreamData, getStream } = useStream();
@@ -1027,7 +1018,7 @@ function Watch() {
   if (!movieId || !movieType) {
     return (
       <Box width={"100%"} height={"100vh"}>
-        {backdropLoading(true, colorScheme)}
+        <Box className="sm-shimmer" sx={{ width: 200, height: 10, borderRadius: "6px" }} />
       </Box>
     );
   }
@@ -1070,20 +1061,23 @@ function Watch() {
           left: 0,
           zIndex: 1001,
           width: "100%",
-          minHeight: "50px",
-          borderBottom: "1px solid rgba(255, 255, 255, 0.1)",
-          background: "rgba(0, 0, 0, 0.6)",
-          backdropFilter: "blur(10px)",
+          minHeight: "52px",
+          borderBottom: "1px solid rgba(255, 255, 255, 0.08)",
+          background: "rgba(0, 0, 0, 0.72)",
+          backdropFilter: "blur(12px)",
         }}
       >
-        <IconButton onClick={() => navigate(`/${movieType}/${movieId}`)}>
-          <ArrowBackIos />
+        <IconButton
+          aria-label="Back to details"
+          onClick={() => navigate(`/${movieType}/${movieId}`)}
+        >
+          <ArrowBackIos sx={{ fontSize: 18 }} />
         </IconButton>
         <Button
           size="sm"
           variant="plain"
-          startDecorator={<People />}
-          sx={{ color: "rgba(255,255,255,0.8)", ml: 1, display: { xs: "none", sm: "flex" } }}
+          startDecorator={<People sx={{ fontSize: 15 }} />}
+          sx={{ color: "#a1a1a1", ml: 1, display: { xs: "none", sm: "flex" } }}
           onClick={async () => {
             try {
               const r = await watchPartyAPI.create({
@@ -1112,7 +1106,7 @@ function Watch() {
                 height: { xs: "28px", sm: "34px" },
                 objectFit: "contain",
                 objectPosition: "left center",
-                filter: "drop-shadow(0 0 12px rgba(0,0,0,0.75))",
+                filter: "drop-shadow(0 2px 8px rgba(0,0,0,0.8))",
               }}
             />
           ) : (
@@ -1138,11 +1132,11 @@ function Watch() {
           width: "min(calc(100% - 20px), 560px)",
           px: 1,
           py: 1,
-          borderRadius: "18px",
-          background: "rgba(8, 8, 8, 0.62)",
-          border: "1px solid rgba(255, 255, 255, 0.12)",
-          backdropFilter: "blur(16px)",
-          boxShadow: "0 12px 40px rgba(0, 0, 0, 0.24)",
+          borderRadius: "8px",
+          background: "rgba(10, 10, 10, 0.82)",
+          border: "1px solid rgba(255, 255, 255, 0.1)",
+          backdropFilter: "blur(12px)",
+          boxShadow: "0 8px 24px rgba(0, 0, 0, 0.5)",
         }}
       >
         <Select
@@ -1156,7 +1150,6 @@ function Watch() {
           }}
           sx={{
             minWidth: { xs: "130px", sm: "150px" },
-            background: "rgba(255,255,255,0.05)",
           }}
         >
           {PROVIDER_OPTIONS.map((providerOption) => (
@@ -1225,10 +1218,10 @@ function Watch() {
             width: "min(calc(100% - 20px), 700px)",
             px: 1,
             py: 1,
-            borderRadius: "18px",
-            background: "rgba(8, 8, 8, 0.62)",
-            border: "1px solid rgba(255, 255, 255, 0.12)",
-            backdropFilter: "blur(16px)",
+            borderRadius: "8px",
+            background: "rgba(10, 10, 10, 0.82)",
+            border: "1px solid rgba(255,255,255,0.1)",
+            backdropFilter: "blur(12px)",
             boxShadow: "0 12px 40px rgba(0, 0, 0, 0.24)",
           }}
         >
@@ -1350,8 +1343,8 @@ function Watch() {
             width: "min(680px, calc(100% - 24px))",
             px: 2,
             py: 1.25,
-            borderRadius: "12px",
-            border: "1px solid rgba(255,255,255,0.12)",
+            borderRadius: "8px",
+            border: "1px solid rgba(255,255,255,0.1)",
             background: "rgba(12,12,12,0.72)",
             backdropFilter: "blur(12px)",
             textAlign: "center",
@@ -1421,7 +1414,7 @@ function Watch() {
             right: 32,
             zIndex: 9999,
             background: "rgba(0,0,0,0.88)",
-            borderRadius: "xl",
+            borderRadius: "lg",
             p: 3,
             display: "flex",
             flexDirection: "column",
@@ -1435,7 +1428,7 @@ function Watch() {
             <Typography level="body-sm" sx={{ color: "rgba(255,255,255,0.6)" }}>
               Up next
             </Typography>
-            <IconButton size="sm" variant="plain" sx={{ color: "white" }} onClick={cancelAutoplay}>
+            <IconButton aria-label="Cancel autoplay" size="sm" variant="plain" sx={{ color: "white" }} onClick={cancelAutoplay}>
               <Close fontSize="small" />
             </IconButton>
           </Box>
@@ -1469,7 +1462,7 @@ function Watch() {
             value={((10 - autoplayCountdown) / 10) * 100}
             sx={{
               mt: 0.5,
-              "--LinearProgress-progressColor": "rgb(255,220,92)",
+              "--LinearProgress-progressColor": "#ededed",
               "--LinearProgress-trackColor": "rgba(255,255,255,0.15)",
             }}
           />
@@ -1496,8 +1489,8 @@ function Watch() {
           sx={{
             background: "rgba(0,0,0,0.65)",
             backdropFilter: "blur(8px)",
-            color: clipCopied ? "rgb(255,220,92)" : "white",
-            border: "1px solid rgba(255,255,255,0.12)",
+            color: clipCopied ? "#ededed" : "white",
+            border: "1px solid rgba(255,255,255,0.1)",
           }}
         >
           {clipCopied ? "Link copied!" : "Share from here"}

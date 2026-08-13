@@ -28,9 +28,9 @@ function AboutPage() {
               sx={{
                 height: "100%",
                 p: 2.5,
-                borderRadius: 24,
+                borderRadius: "8px",
                 border: "1px solid rgba(255,255,255,0.08)",
-                background: "rgba(255,255,255,0.025)",
+                backgroundColor: "background.surface",
               }}
             >
               <Typography level="title-lg" sx={{ mb: 1 }}>{item.title}</Typography>

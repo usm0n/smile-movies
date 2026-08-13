@@ -12,7 +12,7 @@ import {
   Typography,
 } from "@mui/joy";
 import { useEffect, useMemo, useState } from "react";
-import toast from "react-hot-toast";
+import { toast } from "../ui/toast";
 import { useUsers } from "../../context/Users";
 import { reviewsAPI } from "../../service/api/smb/reviews.api.service";
 import { ReviewReactionType, ReviewRecord } from "../../types/reviews";
@@ -41,7 +41,7 @@ function ReviewCard({
   const isOwner = currentUser?.id === review.authorUid;
 
   return (
-    <Card sx={{ p: 2, borderRadius: 20, background: "rgba(255,255,255,0.02)" }}>
+    <Card sx={{ p: 2, borderRadius: "8px", backgroundColor: "background.level1" }}>
       <Stack direction="row" spacing={1.5} sx={{ alignItems: "start", justifyContent: "space-between" }}>
         <Stack direction="row" spacing={1.5} sx={{ alignItems: "start" }}>
           <Avatar src={review.authorAvatar}>{review.authorName?.slice(0, 1)}</Avatar>
@@ -234,20 +234,20 @@ function ReviewsSection({
 
       {currentUser ? (
         !currentUser.handle ? (
-          <Card sx={{ p: 2.25, borderRadius: 20 }}>
+          <Card sx={{ p: 2.25, borderRadius: "8px" }}>
             <Typography level="body-sm" textColor="neutral.300">
               Create a public handle in settings before posting reviews.
             </Typography>
           </Card>
         ) : userReview ? (
-          <Card sx={{ p: 2.25, borderRadius: 20 }}>
+          <Card sx={{ p: 2.25, borderRadius: "8px" }}>
             <Typography level="title-sm">You already reviewed this title.</Typography>
             <Typography level="body-sm" textColor="neutral.400">
               You can edit or delete your review below.
             </Typography>
           </Card>
         ) : (
-          <Card sx={{ p: 2.25, borderRadius: 20 }}>
+          <Card sx={{ p: 2.25, borderRadius: "8px" }}>
             <Stack spacing={1.25}>
               <Typography level="title-sm">Write a review</Typography>
               <Input
@@ -298,7 +298,7 @@ function ReviewsSection({
           </Card>
         )
       ) : (
-        <Card sx={{ p: 2.25, borderRadius: 20 }}>
+        <Card sx={{ p: 2.25, borderRadius: "8px" }}>
           <Typography level="body-sm" textColor="neutral.400">
             Sign in to post a review or react to other reviews.
           </Typography>
@@ -319,7 +319,7 @@ function ReviewsSection({
           ))}
         </Stack>
       ) : (
-        <Card sx={{ p: 2.25, borderRadius: 20 }}>
+        <Card sx={{ p: 2.25, borderRadius: "8px" }}>
           <Typography level="body-sm" textColor="neutral.400">
             No reviews yet for this title.
           </Typography>

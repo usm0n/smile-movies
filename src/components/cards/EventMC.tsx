@@ -1,17 +1,10 @@
 import {
   Box,
-  Button,
-  ButtonGroup,
-  Card,
-  CardCover,
-  Chip,
   Dropdown,
   LinearProgress,
   Menu,
   MenuButton,
   MenuItem,
-  Modal,
-  ModalDialog,
   Typography,
 } from "@mui/joy";
 import { useNavigate } from "react-router-dom";
@@ -26,7 +19,7 @@ import {
   Person,
   PlayArrow,
   PlaylistAdd,
-} from "@mui/icons-material";
+} from "../ui/icons";
 import { shareLink } from "../../utilities/defaults";
 import { useUsers } from "../../context/Users";
 import { User } from "../../user";
@@ -37,6 +30,10 @@ import {
   Collection,
 } from "../../service/api/smb/collections.api.service";
 import { useRef, useState } from "react";
+import Button from "../ui/Button";
+import Dialog from "../ui/Dialog";
+import Badge from "../ui/Badge";
+import { TextSkeleton } from "../ui/Skeleton";
 
 function EventMC({
   eventPoster,
@@ -119,9 +116,10 @@ function EventMC({
     if (!isAuthenticated) return;
     setLoadingCollections(true);
     try {
-      const d = await collectionsAPI.getAll();
-      setCollections(d.collections);
+      const data = await collectionsAPI.getAll();
+      setCollections(data.collections);
     } catch {
+      setCollections([]);
     } finally {
       setLoadingCollections(false);
     }
@@ -158,57 +156,74 @@ function EventMC({
     },
   });
   const hasResumeProgress = Number(eventCurrentTime || 0) > 0;
+  const progressPercent =
+    eventCurrentTime && eventDuration ? (eventCurrentTime / eventDuration) * 100 : 0;
+
+  const typeLabel =
+    eventType === "movie" ? "Movie" : eventType === "tv" ? "TV" : "Person";
 
   return (
     <Box
       onClick={() => navigate(`/${eventType}/${eventId}`)}
-      key={eventId}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
+      sx={{
+        width: { xs: 150, sm: 176 },
+        flexShrink: 0,
+        cursor: "pointer",
+        "&:hover .sm-poster": {
+          borderColor: "#333",
+          transform: "translateY(-2px)",
+        },
+        "&:hover .sm-card-actions": { opacity: 1 },
+      }}
     >
-      <Card
+      <Box
+        className="sm-poster"
         sx={{
-          cursor: "pointer",
-          minHeight: "400px",
-          width: "250px",
-          background: "transparent",
-          "@media (max-width: 800px)": {
-            margin: "0 auto",
-            width: "200px",
-            minHeight: "300px",
-          },
-          ":hover": {
-            transition: "transform 0.2s ease-in-out",
-            transform: "scale(1.03)",
-          },
+          position: "relative",
+          width: "100%",
+          aspectRatio: eventType === "person" ? "1 / 1.35" : "2 / 3",
+          borderRadius: "8px",
+          overflow: "hidden",
+          border: "1px solid",
+          borderColor: "neutral.outlinedBorder",
+          backgroundColor: "background.level1",
+          transition: "border-color 150ms ease, transform 150ms ease",
+          "& img": { width: "100%", height: "100%", objectFit: "cover" },
         }}
       >
-        <CardCover>
-          {eventPoster ? (
-            BlurImage({
-              highQualitySrc: `https://image.tmdb.org/t/p/w500${eventPoster}`,
-              lowQualitySrc: `https://image.tmdb.org/t/p/w185${eventPoster}`,
-            })
-          ) : eventType === "movie" || eventType === "tv" ? (
-            <Movie />
-          ) : (
-            <Person />
-          )}
-        </CardCover>
-
-        {/* Trailer overlay on hover */}
-        {showTrailer && trailerKey && (
+        {eventPoster ? (
+          BlurImage({
+            highQualitySrc: `https://image.tmdb.org/t/p/w500${eventPoster}`,
+            lowQualitySrc: `https://image.tmdb.org/t/p/w185${eventPoster}`,
+          })
+        ) : (
           <Box
             sx={{
-              position: "absolute",
-              inset: 0,
-              zIndex: 10,
-              borderRadius: "inherit",
-              overflow: "hidden",
+              display: "grid",
+              placeItems: "center",
+              width: "100%",
+              height: "100%",
+              color: "text.tertiary",
             }}
+          >
+            {eventType === "person" ? (
+              <Person sx={{ fontSize: 28 }} />
+            ) : (
+              <Movie sx={{ fontSize: 28 }} />
+            )}
+          </Box>
+        )}
+
+        {/* Trailer preview on sustained hover */}
+        {showTrailer && trailerKey && (
+          <Box
+            sx={{ position: "absolute", inset: 0, zIndex: 4 }}
             onClick={(e) => e.stopPropagation()}
           >
             <iframe
+              title="Trailer preview"
               src={`https://www.youtube.com/embed/${trailerKey}?autoplay=1&mute=1&controls=0&modestbranding=1&loop=1&playlist=${trailerKey}`}
               style={{
                 width: "100%",
@@ -221,39 +236,69 @@ function EventMC({
           </Box>
         )}
 
-        {/* Menu — top right */}
+        {eventType === "tv" && eventSeason && eventEpisode ? (
+          <Badge
+            tone="neutral"
+            mono
+            sx={{
+              position: "absolute",
+              top: 6,
+              left: 6,
+              zIndex: 3,
+              backgroundColor: "rgba(0,0,0,0.75)",
+              borderColor: "rgba(255,255,255,0.14)",
+              color: "#ededed",
+            }}
+          >
+            S{eventSeason}·E{eventEpisode}
+          </Badge>
+        ) : null}
+
         <Box
-          sx={{ position: "absolute", top: 0, right: 0, zIndex: 3, padding: 1 }}
+          className="sm-card-actions"
+          sx={{
+            position: "absolute",
+            top: 4,
+            right: 4,
+            zIndex: 5,
+            opacity: { xs: 1, md: 0 },
+            transition: "opacity 150ms ease",
+          }}
         >
           <Dropdown>
             <MenuButton
+              aria-label="More actions"
               onClick={(e) => e.stopPropagation()}
-              sx={{ background: "transparent", border: "none" }}
+              slotProps={{
+                root: {
+                  sx: {
+                    minHeight: 28,
+                    minWidth: 28,
+                    p: 0,
+                    borderRadius: "6px",
+                    border: "1px solid rgba(255,255,255,0.14)",
+                    backgroundColor: "rgba(0,0,0,0.7)",
+                    color: "#ededed",
+                    "&:hover": { backgroundColor: "rgba(0,0,0,0.85)" },
+                  },
+                },
+              }}
             >
-              <MoreVert />
+              <MoreVert sx={{ fontSize: 16 }} />
             </MenuButton>
-            <Menu onClick={(e) => e.stopPropagation()}>
+            <Menu placement="bottom-end" onClick={(e) => e.stopPropagation()}>
               <MenuItem
                 onClick={() =>
                   shareLink(`https://smile-movies.uz/${eventType}/${eventId}`)
                 }
               >
-                <IosShare /> Share this{" "}
-                {eventType === "movie"
-                  ? "Movie"
-                  : eventType === "tv"
-                    ? "TV show"
-                    : "Person"}
+                <IosShare sx={{ fontSize: 16 }} /> Share
               </MenuItem>
               {eventType !== "person" && (
                 <>
                   <MenuItem onClick={() => navigate(playbackTarget.route)}>
-                    <PlayArrow />{" "}
-                    {hasResumeProgress
-                      ? "Resume"
-                      : eventType === "movie"
-                        ? "Watch now"
-                        : "Play now"}
+                    <PlayArrow sx={{ fontSize: 16 }} />
+                    {hasResumeProgress ? "Resume" : "Play now"}
                   </MenuItem>
                   <MenuItem
                     onClick={() => {
@@ -269,24 +314,22 @@ function EventMC({
                       );
                     }}
                     disabled={
-                      addToWatchlistData?.isLoading ||
-                      removeFromWatchlistData?.isLoading
+                      addToWatchlistData?.isLoading || removeFromWatchlistData?.isLoading
                     }
                   >
-                    {watchlistItem ? <Check /> : <Add />}
-                    {watchlistItem
-                      ? "Remove from watchlist"
-                      : "Add to watchlist"}
+                    {watchlistItem ? (
+                      <Check sx={{ fontSize: 16 }} />
+                    ) : (
+                      <Add sx={{ fontSize: 16 }} />
+                    )}
+                    {watchlistItem ? "Remove from watchlist" : "Add to watchlist"}
                   </MenuItem>
                   <MenuItem onClick={openCollections}>
-                    <PlaylistAdd /> Add to list
+                    <PlaylistAdd sx={{ fontSize: 16 }} /> Add to list
                   </MenuItem>
                   {eventDelete && (
-                    <MenuItem
-                      color="danger"
-                      onClick={() => eventDelete(eventId)}
-                    >
-                      <DeleteOutline /> Delete
+                    <MenuItem color="danger" onClick={() => eventDelete(eventId)}>
+                      <DeleteOutline sx={{ fontSize: 16 }} /> Remove
                     </MenuItem>
                   )}
                 </>
@@ -295,91 +338,85 @@ function EventMC({
           </Dropdown>
         </Box>
 
-        {/* Continue watching button */}
         {(hasResumeProgress || (eventNextSeason && eventNextEpisode)) && (
-          <ButtonGroup
-            orientation="vertical"
-            sx={{ position: "absolute", zIndex: 3, bottom: 30, width: "90%" }}
+          <Box
+            sx={{
+              position: "absolute",
+              left: 8,
+              right: 8,
+              bottom: hasResumeProgress ? 14 : 8,
+              zIndex: 3,
+            }}
           >
             <Button
-              sx={{
-                width: "100%",
-                backgroundColor: "rgba(255,255,255,1)",
-                color: "black",
-                gap: 1,
-                border: "none",
-                ":hover": {
-                  backgroundColor: "rgba(255,255,255,1)",
-                  opacity: 0.9,
-                },
-              }}
+              size="sm"
+              fullWidth
+              startDecorator={<PlayArrow sx={{ fontSize: 14 }} />}
               onClick={(e) => {
                 e.stopPropagation();
                 navigate(playbackTarget.route);
               }}
+              sx={{ fontSize: "0.75rem", minHeight: 28 }}
             >
-              <PlayArrow sx={{ color: "black" }} />
               {hasResumeProgress
-                ? `Continue ${eventType === "movie" ? "" : `S${eventSeason}:E${eventEpisode}`}`.trim()
-                : `Next ${eventType === "movie" ? "" : `S${eventNextSeason}:E${eventNextEpisode}`}`.trim()}
+                ? `Resume${eventType === "movie" ? "" : ` S${eventSeason}:E${eventEpisode}`}`
+                : `Next${eventType === "movie" ? "" : ` S${eventNextSeason}:E${eventNextEpisode}`}`}
             </Button>
-          </ButtonGroup>
+          </Box>
         )}
 
         {hasResumeProgress && (
           <LinearProgress
+            aria-label="Watch progress"
             sx={{
               position: "absolute",
+              left: 0,
+              right: 0,
+              bottom: 0,
               zIndex: 2,
-              bottom: 10,
-              width: "90%",
-              color: "rgb(255,220,92)",
+              borderRadius: 0,
+              "--LinearProgress-radius": "0px",
               "--LinearProgress-thickness": "3px",
+              backgroundColor: "rgba(255,255,255,0.16)",
+              color: "#ffffff",
             }}
             determinate
-            value={
-              eventCurrentTime && eventDuration
-                ? (eventCurrentTime / eventDuration) * 100
-                : 0
-            }
+            value={progressPercent}
           />
         )}
+      </Box>
 
-        {eventType === "tv" && eventSeason && eventEpisode ? (
-          <Chip
+      <Box sx={{ mt: 1.25, minWidth: 0 }}>
+        {eventTitle && (
+          <Typography
+            level="title-sm"
             sx={{
-              padding: "0px 15px",
-              position: "absolute",
-              zIndex: 3,
-              top: 8,
-              right: 8,
-              backgroundColor: "rgba(0,0,0,0.6)",
-              color: "white",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
             }}
           >
-            <Typography level="body-sm">
-              S{eventSeason}-E{eventEpisode}
-            </Typography>
-          </Chip>
-        ) : null}
-      </Card>
-
-      {/* Add to list modal */}
-      <Modal open={collectionsOpen} onClose={() => setCollectionsOpen(false)}>
-        <ModalDialog
-          sx={{ maxWidth: 360 }}
-          onClick={(e) => e.stopPropagation()}
-        >
-          <Typography level="title-md" sx={{ mb: 2 }}>
-            Add "{eventTitle}" to a list
+            {eventTitle}
           </Typography>
+        )}
+        <Typography level="body-xs" sx={{ mt: 0.25 }}>
+          {hasResumeProgress ? `${Math.round(progressPercent)}% watched` : typeLabel}
+        </Typography>
+      </Box>
+
+      <Dialog
+        open={collectionsOpen}
+        onClose={() => setCollectionsOpen(false)}
+        title="Add to a list"
+        description={eventTitle}
+        width={400}
+      >
+        <Box onClick={(e) => e.stopPropagation()}>
           {loadingCollections ? (
-            <Typography level="body-sm" sx={{ color: "text.tertiary" }}>
-              Loading lists...
-            </Typography>
+            <TextSkeleton lines={3} />
           ) : collections.length === 0 ? (
-            <Typography level="body-sm" sx={{ color: "text.tertiary" }}>
-              You have no lists yet. Create one from My Lists page.
+            <Typography level="body-sm">
+              You have no lists yet. Create one from the My Lists page.
             </Typography>
           ) : (
             <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
@@ -393,26 +430,15 @@ function EventMC({
                   sx={{ justifyContent: "flex-start" }}
                 >
                   {col.name}
-                  <Typography
-                    level="body-xs"
-                    sx={{ color: "text.tertiary", ml: "auto" }}
-                  >
+                  <Typography level="body-xs" sx={{ ml: "auto" }}>
                     {col.items.length} titles
                   </Typography>
                 </Button>
               ))}
             </Box>
           )}
-          <Button
-            variant="plain"
-            color="neutral"
-            onClick={() => setCollectionsOpen(false)}
-            sx={{ mt: 1 }}
-          >
-            Cancel
-          </Button>
-        </ModalDialog>
-      </Modal>
+        </Box>
+      </Dialog>
     </Box>
   );
 }

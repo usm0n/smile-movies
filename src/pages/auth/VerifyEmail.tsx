@@ -1,33 +1,17 @@
-import {
-  Box,
-  Button,
-  CircularProgress,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Divider,
-  FormControl,
-  FormHelperText,
-  FormLabel,
-  IconButton,
-  Input,
-  Link,
-  Modal,
-  ModalClose,
-  ModalDialog,
-  Snackbar,
-  Typography,
-  useColorScheme,
-} from "@mui/joy";
+import { Box, Input, Link, Typography } from "@mui/joy";
+import Button from "../../components/ui/Button";
+import IconButton from "../../components/ui/IconButton";
+import Dialog from "../../components/ui/Dialog";
+import Field from "../../components/ui/Field";
+import EmptyState from "../../components/ui/EmptyState";
+import AuthCard from "../../components/auth/AuthCard";
+import { toast } from "../../components/ui/toast";
 import { useEffect, useState } from "react";
 import { useUsers } from "../../context/Users";
 import { Message, User } from "../../user";
-import { Check, Edit, Email } from "@mui/icons-material";
+import { CheckCircle, Edit, Email, Person } from "../../components/ui/icons";
 import { useNavigate } from "react-router-dom";
-import {
-  backdropLoading,
-  isValidEmail,
-} from "../../utilities/defaults";
+import { isValidEmail } from "../../utilities/defaults";
 
 function VerifyEmail() {
   const {
@@ -41,9 +25,7 @@ function VerifyEmail() {
     updateMyself,
     updatedMyselfData,
   } = useUsers();
-  const { colorScheme } = useColorScheme();
   const [otp, setOtp] = useState<string>("");
-  const [openRVC, setOpenRVC] = useState<boolean>(false);
   const [openChangeEmail, setOpenChangeEmail] = useState<boolean>(false);
   const [newEmail, setNewEmail] = useState<string>("");
   const currentUser = myselfData?.data as User | undefined;
@@ -74,7 +56,7 @@ function VerifyEmail() {
 
   useEffect(() => {
     if (resendTokenVerificationData?.data) {
-      setOpenRVC(true);
+      toast.success(`New code sent to ${currentUser?.email}`);
     }
   }, [resendTokenVerificationData]);
 
@@ -101,28 +83,23 @@ function VerifyEmail() {
   }, [currentUser?.email]);
 
   if (!authResolved) {
-    return backdropLoading(true, colorScheme);
+    return (
+      <Box sx={{ minHeight: "100vh", display: "grid", placeItems: "center" }}>
+        <Box className="sm-shimmer" sx={{ width: 220, height: 12, borderRadius: "6px" }} />
+      </Box>
+    );
   }
 
   if (!isAuthenticated) {
     return (
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          minHeight: "100vh",
-          px: 2,
-        }}
-      >
-        <Box sx={{ textAlign: "center", maxWidth: 420 }}>
-          <Typography level="h2" sx={{ mb: 1 }}>
-            Sign in to verify your email
-          </Typography>
-          <Typography level="body-md" textColor="neutral.400" sx={{ mb: 2 }}>
-            Your verification code is tied to your active session.
-          </Typography>
-          <Button onClick={() => navigate("/auth/login")}>Go to sign in</Button>
+      <Box sx={{ minHeight: "100vh", display: "grid", placeItems: "center", px: 2 }}>
+        <Box sx={{ width: "100%", maxWidth: 440 }}>
+          <EmptyState
+            icon={Person}
+            title="Sign in to verify your email"
+            description="Your verification code is tied to your active session."
+            action={<Button onClick={() => navigate("/auth/login")}>Sign In</Button>}
+          />
         </Box>
       </Box>
     );
@@ -130,204 +107,142 @@ function VerifyEmail() {
 
   if (currentUser?.isVerified) {
     return (
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          minHeight: "100vh",
-          px: 2,
-        }}
-      >
-        <Box sx={{ textAlign: "center", maxWidth: 420 }}>
-          <Typography level="h2" sx={{ mb: 1 }}>
-            Email already verified
-          </Typography>
-          <Typography level="body-md" textColor="neutral.400" sx={{ mb: 2 }}>
-            Your account is ready. Redirecting you back to the app.
-          </Typography>
-          <Button onClick={() => navigate("/")}>Go home</Button>
+      <Box sx={{ minHeight: "100vh", display: "grid", placeItems: "center", px: 2 }}>
+        <Box sx={{ width: "100%", maxWidth: 440 }}>
+          <EmptyState
+            icon={CheckCircle}
+            title="Email already verified"
+            description="Your account is ready. Redirecting you back to the app."
+            action={<Button onClick={() => navigate("/")}>Go home</Button>}
+          />
         </Box>
       </Box>
     );
   }
 
   return (
-    <Box
-      sx={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        height: "100vh",
-      }}
+    <AuthCard
+      title="Verify your email"
+      description="Enter the 6-digit code we sent to your inbox."
     >
-      {backdropLoading(myselfData?.isLoading, colorScheme)}
-      <Modal open={openChangeEmail} onClose={() => setOpenChangeEmail(false)}>
-        <ModalDialog>
-          <ModalClose />
-          <DialogTitle>Change Email</DialogTitle>
-          <Divider />
-          <DialogContent>
-            <FormControl
-              // color={updatedMyselfData?.isConflict ? "danger" : "neutral"}
-            >
-              <FormLabel>Email</FormLabel>
-              <Input
-                startDecorator={<Email />}
-                type="email"
-                placeholder="Email"
-                value={newEmail}
-                onChange={(e) =>
-                  setNewEmail(e.target.value.toLocaleLowerCase())
-                }
-              />
-              {/* {updatedMyselfData?.isConflict && (
-                <FormHelperText color="danger">
-                  Email already exists
-                </FormHelperText>
-              )} */}
-              <FormHelperText></FormHelperText>
-            </FormControl>
-          </DialogContent>
-          <DialogActions>
-            <Button
-              onClick={() =>
-                updateMyself({ ...(myselfData?.data as User), email: newEmail })
-              }
-              disabled={
-                !newEmail ||
-                newEmail === (myselfData?.data as User)?.email ||
-                !isValidEmail(newEmail) ||
-                updatedMyselfData?.isLoading
-              }
-              sx={{
-                width: "100%",
-              }}
-            >
-              {updatedMyselfData?.isLoading ? "Loading..." : "Change"}
-            </Button>
-          </DialogActions>
-        </ModalDialog>
-      </Modal>
-      <Snackbar
-        startDecorator={<Check />}
-        endDecorator={
-          <IconButton onClick={() => setOpenRVC(false)}>Dismiss</IconButton>
-        }
-        color="success"
-        open={openRVC}
-        onClose={() => setOpenRVC(false)}
-        autoHideDuration={5000}
-      >
-        Verification code sent successfully to{" "}
-        {currentUser?.email}!
-      </Snackbar>
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          textAlign: "center",
-          gap: "1rem",
-          width: "90%",
-        }}
-      >
-        <Typography level="h1">Verify your email</Typography>
-        <Typography level="body-md">
-          We sent you a 6-digit code to your email address{" "}
-        </Typography>
-        <Box sx={{ position: "relative" }}>
+      <Box sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}>
+        <Field label="Email">
           <Input
             disabled
-            startDecorator={<Email />}
+            startDecorator={<Email sx={{ fontSize: 16 }} />}
             value={currentUser?.email}
+            endDecorator={
+              <IconButton
+                label="Change email"
+                size="sm"
+                onClick={() => setOpenChangeEmail(true)}
+              >
+                <Edit sx={{ fontSize: 15 }} />
+              </IconButton>
+            }
           />
-          <IconButton
-            onClick={() => setOpenChangeEmail(true)}
-            sx={{
-              position: "absolute",
-              right: "0",
-              top: "0",
-            }}
-          >
-            <Edit />
-          </IconButton>
-        </Box>
-        <Box
-          sx={{
-            display: "flex",
-            gap: "8px",
-            justifyContent: "center",
-            margin: "2rem auto",
-            width: "90%",
-          }}
-        >
+        </Field>
+
+        <Box sx={{ display: "flex", gap: 1, justifyContent: "space-between" }}>
           {[...Array(6)].map((_, index) => (
             <Input
-              color={
-                verifyData?.isError
-                  ? "danger"
-                  : verifySuccess
-                    ? "success"
-                    : "neutral"
-              }
+              color={verifyData?.isError ? "danger" : verifySuccess ? "success" : "neutral"}
               disabled={verifyData?.isLoading}
               key={index}
               type="text"
+              aria-label={`Digit ${index + 1}`}
               slotProps={{
                 input: {
                   maxLength: 1,
+                  style: { textAlign: "center", padding: 0 },
                 },
               }}
               value={otp[index] || ""}
               sx={{
-                width: "40px",
-                height: "40px",
+                width: 46,
+                height: 52,
+                fontFamily: "code",
+                fontSize: "1.125rem",
+                "& input": { textAlign: "center" },
               }}
-              onChange={(e) => {
-                handleInputChange(e, index);
-              }}
+              onChange={(e) => handleInputChange(e, index)}
               onKeyDown={(e) => {
-                if (
-                  e.key === "Backspace" &&
-                  !e.currentTarget.value &&
-                  index > 0
-                ) {
+                if (e.key === "Backspace" && !e.currentTarget.value && index > 0) {
                   (
                     e.currentTarget.parentElement?.previousElementSibling?.querySelector(
-                      "input"
+                      "input",
                     ) as HTMLInputElement
                   )?.focus();
                 }
               }}
             />
-          ))}{" "}
+          ))}
         </Box>
+
         {verifyErrorMessage && (
-          <Typography level="body-sm" color="danger">
+          <Typography level="body-sm" sx={{ color: "danger.plainColor" }}>
             {verifyErrorMessage}
           </Typography>
         )}
         {verifySuccess && (
-          <Typography level="body-sm" color="success">
-            Verification successful. Redirecting you home.
+          <Typography level="body-sm" sx={{ color: "success.plainColor" }}>
+            Verified. Taking you home…
           </Typography>
         )}
-        <Link
-          startDecorator={
-            resendTokenVerificationData?.isLoading && (
-              <CircularProgress value={80} variant="plain" size="sm" />
-            )
-          }
-          onClick={() => resendTokenVerification()}
-          disabled={resendTokenVerificationData?.isLoading}
-          level="body-md"
-        >
-          Didn't receive the code? Send another one
-        </Link>
+
+        <Typography level="body-sm" sx={{ textAlign: "center" }}>
+          Didn't get it?{" "}
+          <Link
+            onClick={() => resendTokenVerification()}
+            disabled={resendTokenVerificationData?.isLoading}
+            sx={{ cursor: "pointer" }}
+          >
+            Send another code
+          </Link>
+        </Typography>
       </Box>
-    </Box>
+
+      <Dialog
+        open={openChangeEmail}
+        onClose={() => setOpenChangeEmail(false)}
+        title="Change email"
+        description="We'll send a fresh verification code to the new address."
+        actions={
+          <>
+            <Button
+              variant="outlined"
+              color="neutral"
+              onClick={() => setOpenChangeEmail(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={() =>
+                updateMyself({ ...(myselfData?.data as User), email: newEmail })
+              }
+              loading={updatedMyselfData?.isLoading}
+              disabled={
+                !newEmail ||
+                newEmail === (myselfData?.data as User)?.email ||
+                !isValidEmail(newEmail)
+              }
+            >
+              Update email
+            </Button>
+          </>
+        }
+      >
+        <Field label="New email">
+          <Input
+            startDecorator={<Email sx={{ fontSize: 16 }} />}
+            type="email"
+            placeholder="you@example.com"
+            value={newEmail}
+            onChange={(e) => setNewEmail(e.target.value.toLocaleLowerCase())}
+          />
+        </Field>
+      </Dialog>
+    </AuthCard>
   );
 }
 

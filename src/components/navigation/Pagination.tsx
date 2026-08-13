@@ -1,9 +1,13 @@
-import { Box, Button, IconButton, Typography } from "@mui/joy";
-import KeyboardArrowLeftIcon from "@mui/icons-material/KeyboardArrowLeft";
-import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
-import KeyboardDoubleArrowLeftIcon from "@mui/icons-material/KeyboardDoubleArrowLeft";
-import KeyboardDoubleArrowRightIcon from "@mui/icons-material/KeyboardDoubleArrowRight";
+import { Box, Typography } from "@mui/joy";
+import {
+  KeyboardArrowLeft,
+  KeyboardArrowRight,
+  KeyboardDoubleArrowLeft,
+  KeyboardDoubleArrowRight,
+} from "../ui/icons";
 import { useNavigate } from "react-router-dom";
+import Button from "../ui/Button";
+import IconButton from "../ui/IconButton";
 
 function Pagination({
   currentPage,
@@ -15,6 +19,9 @@ function Pagination({
   whereTo: string;
 }) {
   const navigate = useNavigate();
+  const lastPage = totalPages || 1;
+  const pageCount = Math.min(5, Math.max(1, lastPage - Math.max(0, currentPage - 3)));
+
   return (
     <Box
       sx={{
@@ -22,41 +29,49 @@ function Pagination({
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
-        gap: 1,
+        gap: 0.75,
         mt: 4,
         flexWrap: "wrap",
       }}
     >
       <IconButton
+        label="First page"
         variant="outlined"
         disabled={currentPage === 1}
         onClick={() => navigate(`${whereTo}/1`)}
         size="sm"
       >
-        <KeyboardDoubleArrowLeftIcon />
+        <KeyboardDoubleArrowLeft sx={{ fontSize: 16 }} />
       </IconButton>
       <IconButton
+        label="Previous page"
         variant="outlined"
         disabled={currentPage === 1}
         onClick={() => navigate(`${whereTo}/${currentPage - 1}`)}
         size="sm"
       >
-        <KeyboardArrowLeftIcon />
+        <KeyboardArrowLeft sx={{ fontSize: 16 }} />
       </IconButton>
 
-      <Box sx={{ display: "flex", gap: 0.5, alignItems: "center" }}>
-        {Array.from({
-          length: Math.min(5, Math.max(1, (totalPages || 1) - Math.max(0, currentPage - 3))),
-        }).map((_, i) => {
+      <Box sx={{ display: "flex", gap: 0.5, alignItems: "center", mx: 0.5 }}>
+        {Array.from({ length: pageCount }).map((_, i) => {
           const pageNum = Math.max(1, currentPage - 2) + i;
+          const active = currentPage === pageNum;
           return (
             <Button
               key={pageNum}
-              variant={currentPage === pageNum ? "solid" : "outlined"}
-              color={currentPage === pageNum ? "primary" : "neutral"}
+              aria-current={active ? "page" : undefined}
+              variant={active ? "solid" : "outlined"}
+              color="neutral"
               size="sm"
               onClick={() => navigate(`${whereTo}/${pageNum}`)}
-              sx={{ minWidth: "32px" }}
+              sx={{
+                minWidth: 32,
+                px: 0,
+                ...(active
+                  ? { backgroundColor: "#ffffff", color: "#000000" }
+                  : { color: "text.secondary" }),
+              }}
             >
               {pageNum}
             </Button>
@@ -64,26 +79,28 @@ function Pagination({
         })}
       </Box>
 
-      <Typography level="body-sm" sx={{ mx: 1, whiteSpace: "nowrap" }}>
-        {currentPage} / {totalPages || 1}
-      </Typography>
-
       <IconButton
+        label="Next page"
         variant="outlined"
-        disabled={currentPage === (totalPages || 1)}
+        disabled={currentPage === lastPage}
         onClick={() => navigate(`${whereTo}/${currentPage + 1}`)}
         size="sm"
       >
-        <KeyboardArrowRightIcon />
+        <KeyboardArrowRight sx={{ fontSize: 16 }} />
       </IconButton>
       <IconButton
+        label="Last page"
         variant="outlined"
-        disabled={currentPage === (totalPages || 1)}
-        onClick={() => navigate(`${whereTo}/${totalPages || 1}`)}
+        disabled={currentPage === lastPage}
+        onClick={() => navigate(`${whereTo}/${lastPage}`)}
         size="sm"
       >
-        <KeyboardDoubleArrowRightIcon />
+        <KeyboardDoubleArrowRight sx={{ fontSize: 16 }} />
       </IconButton>
+
+      <Typography level="body-xs" sx={{ ml: 1, whiteSpace: "nowrap" }}>
+        Page {currentPage} of {lastPage}
+      </Typography>
     </Box>
   );
 }

@@ -23,19 +23,7 @@ import {
   aiService,
   ChatMessage,
 } from "../../service/api/ai/ai.api.service";
-import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
-import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
-import SendIcon from "@mui/icons-material/Send";
-import PersonIcon from "@mui/icons-material/Person";
-import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
-import RefreshRoundedIcon from "@mui/icons-material/RefreshRounded";
-import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
-import AddRoundedIcon from "@mui/icons-material/AddRounded";
-import MenuRoundedIcon from "@mui/icons-material/MenuRounded";
-import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
-import ReplayRoundedIcon from "@mui/icons-material/ReplayRounded";
-import PlaylistAddIcon from "@mui/icons-material/PlaylistAdd";
-import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
+import { AutoAwesome as AutoAwesomeIcon, SearchRounded as SearchRoundedIcon, Send as SendIcon, Person as PersonIcon, ContentCopyRounded as ContentCopyRoundedIcon, RefreshRounded as RefreshRoundedIcon, DeleteOutlineRounded as DeleteOutlineRoundedIcon, AddRounded as AddRoundedIcon, MenuRounded as MenuRoundedIcon, HistoryRounded as HistoryRoundedIcon, ReplayRounded as ReplayRoundedIcon, PlaylistAdd as PlaylistAddIcon, CheckCircleOutline as CheckCircleOutlineIcon } from "../../components/ui/icons";
 import { isLoggedIn } from "../../utilities/defaults";
 import NotLoggedIn from "../../components/utils/NotLoggedIn";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -684,7 +672,7 @@ function AIAssistant() {
               padding: 0,
               margin: 0,
               cursor: "pointer",
-              color: "rgb(96, 183, 255)",
+              color: "#ededed",
               fontWeight: 700,
               textDecoration: "none",
               transition: "all 0.15s ease",
@@ -697,16 +685,16 @@ function AIAssistant() {
           >
             {part}
           </Box>
-          <IconButton
+          <IconButton aria-label={`Search for ${part}`}
             size="sm"
             onClick={() => goToSearch(part)}
             sx={{
               "--IconButton-size": "22px",
-              background: "rgba(96, 183, 255, 0.12)",
-              color: "rgb(96, 183, 255)",
-              border: "1px solid rgba(96, 183, 255, 0.2)",
+              background: "rgba(255,255,255,0.06)",
+              color: "#ededed",
+              border: "1px solid rgba(255,255,255,0.06)",
               "&:hover": {
-                background: "rgba(96, 183, 255, 0.2)",
+                background: "rgba(255,255,255,0.06)",
               },
             }}
           >
@@ -731,7 +719,7 @@ function AIAssistant() {
             New Chat
           </Button>
           <Tooltip title="Clear all history">
-            <IconButton
+            <IconButton aria-label="Clear all chat history"
               color="neutral"
               variant="outlined"
               onClick={clearAllHistory}
@@ -780,12 +768,12 @@ function AIAssistant() {
                     border: "1px solid",
                     borderColor:
                       activeSessionId === session.sessionId
-                        ? "rgba(96,183,255,0.4)"
+                        ? "rgba(255,255,255,0.06)"
                         : "rgba(255,255,255,0.08)",
                     background:
                       activeSessionId === session.sessionId
-                        ? "rgba(96,183,255,0.08)"
-                        : "rgba(9,16,32,0.6)",
+                        ? "rgba(255,255,255,0.06)"
+                        : "#0a0a0a",
                   }}
                 >
                   <Box sx={{ display: "flex", alignItems: "flex-start", gap: 0.4 }}>
@@ -824,7 +812,7 @@ function AIAssistant() {
                       </ListItemContent>
                     </ListItemButton>
                     <Tooltip title="Delete conversation">
-                      <IconButton
+                      <IconButton aria-label="Delete chat"
                         size="sm"
                         color="neutral"
                         variant="plain"
@@ -872,10 +860,9 @@ function AIAssistant() {
         sx={{
           width: 300,
           p: 1.2,
-          borderRadius: 14,
+          borderRadius: "8px",
           border: "1px solid rgba(255,255,255,0.08)",
           background: "rgba(7, 13, 25, 0.75)",
-          backdropFilter: "blur(16px)",
           display: { xs: "none", md: "block" },
           maxHeight: "calc(100vh - 110px)",
           position: "sticky",
@@ -906,25 +893,24 @@ function AIAssistant() {
         <Box sx={{ py: 3, display: "flex", alignItems: "center", gap: 1.5 }}>
           <Box
             sx={{
-              width: 44,
-              height: 44,
-              borderRadius: "50%",
-              background: "linear-gradient(135deg, rgb(255,216,77), rgb(255,160,0))",
+              width: 36,
+              height: 36,
+              borderRadius: "8px",
+              border: "1px solid",
+              borderColor: "neutral.outlinedBorder",
+              backgroundColor: "background.level1",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              boxShadow: "0 0 24px rgba(255, 191, 0, 0.25)",
             }}
           >
-            <AutoAwesomeIcon sx={{ color: "black", fontSize: 22 }} />
+            <AutoAwesomeIcon sx={{ fontSize: 18, color: "text.primary" }} />
           </Box>
           <Box sx={{ flex: 1 }}>
-            <Typography level="h4" fontWeight={700}>SmileAI</Typography>
-            <Typography level="body-xs" textColor="neutral.400">
-              Your personal movie and TV assistant
-            </Typography>
+            <Typography level="title-lg">SmileAI</Typography>
+            <Typography level="body-xs">Your movie and TV assistant</Typography>
           </Box>
-          <IconButton
+          <IconButton aria-label="Open chat history"
             onClick={() => setHistoryDrawerOpen(true)}
             sx={{ display: { xs: "inline-flex", md: "none" } }}
           >
@@ -998,17 +984,17 @@ function AIAssistant() {
                     sx={{
                       px: 2,
                       py: 1,
-                      borderRadius: 20,
+                      borderRadius: "8px",
                       border: "1px solid",
-                      borderColor: "rgba(96, 183, 255, 0.18)",
+                      borderColor: "rgba(255,255,255,0.06)",
                       background: "rgba(255,255,255,0.03)",
                       cursor: "pointer",
                       fontSize: 13,
                       transition: "all 0.15s",
                       "&:hover": {
-                        borderColor: "rgb(96, 183, 255)",
-                        color: "rgb(96, 183, 255)",
-                        boxShadow: "0 0 24px rgba(96, 183, 255, 0.14)",
+                        borderColor: "#333333",
+                        color: "#ededed",
+                        boxShadow: "0 0 24px rgba(255,255,255,0.06)",
                       },
                     }}
                   >
@@ -1035,23 +1021,23 @@ function AIAssistant() {
               >
                 <Box
                   sx={{
-                    width: 34,
-                    height: 34,
-                    borderRadius: "50%",
+                    width: 28,
+                    height: 28,
+                    borderRadius: "6px",
                     flexShrink: 0,
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    background:
-                      msg.role === "user"
-                        ? "rgba(255,255,255,0.1)"
-                        : "linear-gradient(135deg, rgb(255,216,77), rgb(255,160,0))",
+                    border: "1px solid",
+                    borderColor: "neutral.outlinedBorder",
+                    backgroundColor: "background.level1",
+                    color: "text.secondary",
                   }}
                 >
                   {msg.role === "user" ? (
-                    <PersonIcon sx={{ fontSize: 18 }} />
+                    <PersonIcon sx={{ fontSize: 15 }} />
                   ) : (
-                    <AutoAwesomeIcon sx={{ fontSize: 18, color: "black" }} />
+                    <AutoAwesomeIcon sx={{ fontSize: 15 }} />
                   )}
                 </Box>
                 <Card
@@ -1065,14 +1051,13 @@ function AIAssistant() {
                         : "4px 16px 16px 16px",
                     background:
                       msg.role === "user"
-                        ? "rgba(255,216,77,0.12)"
-                        : "rgba(9,16,32,0.78)",
+                        ? "rgba(255,255,255,0.06)"
+                        : "#0a0a0a",
                     border: "1px solid",
                     borderColor:
                       msg.role === "user"
-                        ? "rgba(255,216,77,0.25)"
-                        : "rgba(96, 183, 255, 0.12)",
-                    backdropFilter: "blur(18px)",
+                        ? "rgba(255,255,255,0.14)"
+                        : "rgba(255,255,255,0.06)",
                     boxShadow:
                       msg.role === "assistant"
                         ? "0 12px 48px rgba(0, 0, 0, 0.22)"
@@ -1107,7 +1092,7 @@ function AIAssistant() {
                             copiedMessageId === msg.id ? "Copied" : "Copy response"
                           }
                         >
-                          <IconButton
+                          <IconButton aria-label="Copy message"
                             size="sm"
                             onClick={() => void copyMessage(msg)}
                           >
@@ -1116,7 +1101,7 @@ function AIAssistant() {
                         </Tooltip>
                         {isLastAssistant ? (
                           <Tooltip title="Regenerate response">
-                            <IconButton
+                            <IconButton aria-label="Regenerate response"
                               size="sm"
                               disabled={loading}
                               onClick={() => void regenerateLastAssistant()}
@@ -1232,25 +1217,28 @@ function AIAssistant() {
             <Box sx={{ display: "flex", gap: 1.5, alignItems: "flex-start" }}>
               <Box
                 sx={{
-                  width: 34,
-                  height: 34,
-                  borderRadius: "50%",
+                  width: 28,
+                  height: 28,
+                  borderRadius: "6px",
                   flexShrink: 0,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  background: "linear-gradient(135deg, rgb(255,216,77), rgb(255,160,0))",
+                  border: "1px solid",
+                  borderColor: "neutral.outlinedBorder",
+                  backgroundColor: "background.level1",
+                  color: "text.secondary",
                 }}
               >
-                <AutoAwesomeIcon sx={{ fontSize: 18, color: "black" }} />
+                <AutoAwesomeIcon sx={{ fontSize: 15 }} />
               </Box>
               <Card
                 sx={{
                   px: 2,
                   py: 1.5,
                   borderRadius: "4px 16px 16px 16px",
-                  background: "rgba(9,16,32,0.78)",
-                  border: "1px solid rgba(96, 183, 255, 0.12)",
+                  background: "#0a0a0a",
+                  border: "1px solid rgba(255,255,255,0.06)",
                 }}
               >
                 <Box sx={{ display: "flex", gap: 0.6, alignItems: "center", height: 20 }}>
@@ -1258,10 +1246,10 @@ function AIAssistant() {
                     <Box
                       key={i}
                       sx={{
-                        width: 7,
-                        height: 7,
+                        width: 6,
+                        height: 6,
                         borderRadius: "50%",
-                        background: "rgba(96, 183, 255, 0.75)",
+                        background: "#707070",
                         animation: "bounce 1.2s infinite",
                         animationDelay: `${i * 0.2}s`,
                         "@keyframes bounce": {
@@ -1284,7 +1272,8 @@ function AIAssistant() {
             display: "flex",
             gap: 1,
             alignItems: "flex-end",
-            borderTop: "1px solid rgba(255,255,255,0.07)",
+            borderTop: "1px solid",
+            borderColor: "neutral.outlinedBorder",
           }}
         >
           <Textarea
@@ -1302,22 +1291,22 @@ function AIAssistant() {
             disabled={loading || loadingSession}
             sx={{
               flex: 1,
-              "--Textarea-focusedHighlight": "rgb(96, 183, 255)",
-              background: "rgba(9,16,32,0.78)",
-              borderColor: "rgba(96, 183, 255, 0.16)",
+              "--Textarea-focusedHighlight": "#0070f3",
+              background: "#0a0a0a",
+              borderColor: "rgba(255,255,255,0.06)",
             }}
           />
-          <IconButton
+          <IconButton aria-label="Send message"
             onClick={() => void sendMessage()}
             disabled={!input.trim() || loading || loadingSession}
             sx={{
-              background: "rgb(96, 183, 255)",
-              color: "white",
-              "&:hover": { background: "rgb(74, 166, 244)" },
+              background: "#ffffff",
+              color: "#000000",
+              "&:hover": { background: "#e5e5e5" },
               "&:disabled": { opacity: 0.4 },
               borderRadius: 8,
               mb: 0.5,
-              boxShadow: "0 0 24px rgba(96, 183, 255, 0.24)",
+              boxShadow: "0 0 24px rgba(255,255,255,0.06)",
             }}
           >
             <SendIcon />

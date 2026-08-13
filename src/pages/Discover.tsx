@@ -1,12 +1,9 @@
-import {
-  Box,
-  ButtonGroup,
-  Chip,
-  IconButton,
-  Typography,
-  Select,
-  Option,
-} from "@mui/joy";
+import { Box, Select, Option } from "@mui/joy";
+import SegmentedControl from "../components/ui/SegmentedControl";
+import Badge from "../components/ui/Badge";
+import EmptyState from "../components/ui/EmptyState";
+import PageHeader from "../components/ui/PageHeader";
+import { Compass } from "../components/ui/icons";
 import { useTMDB } from "../context/TMDB";
 import { useEffect, useState } from "react";
 import EventMC from "../components/cards/EventMC";
@@ -128,103 +125,37 @@ function Discover() {
   return (
     <Box
       sx={{
-        width: "90%",
-        padding: "100px 0px",
-        margin: "0 auto",
+        width: "100%",
+        maxWidth: "var(--sm-page-max)",
+        mx: "auto",
+        px: { xs: 2, sm: 3, md: 4 },
+        pt: "calc(var(--sm-nav-height) + 48px)",
+        pb: 8,
         display: "flex",
         flexDirection: "column",
-        gap: "40px",
+        gap: 3,
         minHeight: "100vh",
       }}
     >
-      <Box
-        sx={{
-          textAlign: "center",
-          mb: 2,
-        }}
-      >
-        <Typography
-          level="h1"
-          sx={{
-            fontSize: { xs: "2rem", md: "3.5rem" },
-            fontWeight: 700,
-            background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-            backgroundClip: "text",
-            WebkitBackgroundClip: "text",
-            WebkitTextFillColor: "transparent",
-            mb: 1,
-            animation:
-              "slideInBounce 1s cubic-bezier(0.68, -0.55, 0.265, 1.55)",
-            "@keyframes slideInBounce": {
-              "0%": {
-                opacity: 0,
-                transform: "translateY(-50px) scale(0.9)",
-              },
-              "100%": {
-                opacity: 1,
-                transform: "translateY(0) scale(1)",
-              },
-            },
-          }}
-        >
-          Discover Your Next Favorite
-        </Typography>
-        <Typography
-          level="body-lg"
-          sx={{
-            color: "text.secondary",
-            animation: "fadeInUp 0.8s ease-out 0.3s both",
-            "@keyframes fadeInUp": {
-              from: {
-                opacity: 0,
-                transform: "translateY(20px)",
-              },
-              to: {
-                opacity: 1,
-                transform: "translateY(0)",
-              },
-            },
-          }}
-        >
-          Movies & TV Shows Await
-        </Typography>
-      </Box>
-      <Box
-        sx={{
-          display: "flex",
-          gap: 2,
-          justifyContent: "center",
-          flexWrap: "wrap",
-        }}
-      >
-        <ButtonGroup>
-          <IconButton
-            onClick={() => changeType("all")}
-            color={type === "all" ? "primary" : "neutral"}
-            variant={type === "all" ? "solid" : "outlined"}
-            sx={{ padding: "0 20px" }}
-          >
-            All
-          </IconButton>
-          <IconButton
-            onClick={() => changeType("movie")}
-            color={type === "movie" ? "primary" : "neutral"}
-            variant={type === "movie" ? "solid" : "outlined"}
-            sx={{ padding: "0 20px" }}
-          >
-            Movies
-          </IconButton>
-          <IconButton
-            onClick={() => changeType("tv")}
-            color={type === "tv" ? "primary" : "neutral"}
-            variant={type === "tv" ? "solid" : "outlined"}
-            sx={{ padding: "0 20px" }}
-          >
-            TV shows
-          </IconButton>
-        </ButtonGroup>
+      <PageHeader
+        title="Discover"
+        description="Browse everything, then narrow it down by type, year and rating."
+      />
+
+      <Box sx={{ display: "flex", gap: 1.5, flexWrap: "wrap", alignItems: "center" }}>
+        <SegmentedControl
+          ariaLabel="Content type"
+          value={type}
+          onChange={(value) => changeType(value as typeof type)}
+          segments={[
+            { value: "all", label: "All" },
+            { value: "movie", label: "Movies" },
+            { value: "tv", label: "TV shows" },
+          ]}
+        />
 
         <Select
+          size="sm"
           value={sortBy}
           onChange={(_, value) => setSortBy((value || "popularity") as DiscoverSort)}
         >
@@ -234,6 +165,7 @@ function Discover() {
           <Option value="title">Title A-Z</Option>
         </Select>
         <Select
+          size="sm"
           value={yearFilter}
           onChange={(_, value) => setYearFilter((value || "all") as DiscoverYearFilter)}
         >
@@ -244,6 +176,7 @@ function Discover() {
           <Option value="classic">Before 2000</Option>
         </Select>
         <Select
+          size="sm"
           value={ratingFilter}
           onChange={(_, value) => setRatingFilter((value || "all") as DiscoverRatingFilter)}
         >
@@ -254,54 +187,29 @@ function Discover() {
         </Select>
       </Box>
 
-      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
-        <Chip
-          sx={{
-            background: "rgba(96, 183, 255, 0.1)",
-            border: "1px solid rgba(96, 183, 255, 0.24)",
-            color: "rgb(96, 183, 255)",
-          }}
-        >
-          Showing {results.length} titles
-        </Chip>
-        <Chip
-          sx={{
-            background: "rgba(255,255,255,0.04)",
-            border: "1px solid rgba(255,255,255,0.08)",
-          }}
-        >
-          Movies: {movieCount}
-        </Chip>
-        <Chip
-          sx={{
-            background: "rgba(255,255,255,0.04)",
-            border: "1px solid rgba(255,255,255,0.08)",
-          }}
-        >
-          TV shows: {tvCount}
-        </Chip>
-        <Chip
-          sx={{
-            background: "rgba(255, 220, 92, 0.08)",
-            border: "1px solid rgba(255, 220, 92, 0.2)",
-            color: "rgb(255, 220, 92)",
-          }}
-        >
-          Page {currentPage}
-        </Chip>
+      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, alignItems: "center" }}>
+        <Badge tone="contrast">{results.length} titles</Badge>
+        <Badge>Movies {movieCount}</Badge>
+        <Badge>TV {tvCount}</Badge>
+        <Badge mono>Page {currentPage}</Badge>
       </Box>
 
+      {!isLoading && !results.length && (
+        <EmptyState
+          icon={Compass}
+          title="No titles match these filters"
+          description="Loosen the year or rating filter and try again."
+        />
+      )}
+
       <Box
-        display={"flex"}
-        flexWrap={"wrap"}
-        justifyContent={"center"}
-        gap={"10px"}
+        sx={{
+          display: "grid",
+          gap: 2.5,
+          gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))",
+        }}
       >
-        {!isLoading && !results.length ? (
-          <Typography level="h2" textColor="neutral.300" fontWeight={700}>
-            No titles match these filters
-          </Typography>
-        ) : !isLoading ? (
+        {!isLoading ? (
           results.map((result) => (
             <EventMC
               key={result?.id}
@@ -321,12 +229,13 @@ function Discover() {
           </>
         )}
 
-        <Pagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          whereTo={`/discover/${type === "all" ? "all" : type === "tv" ? "TV Shows" : "Movies"}`}
-        />
       </Box>
+
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        whereTo={`/discover/${type === "all" ? "all" : type === "tv" ? "TV Shows" : "Movies"}`}
+      />
     </Box>
   );
 }

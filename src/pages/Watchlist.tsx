@@ -1,18 +1,9 @@
-import {
-  ArrowBackIos,
-  BookmarkAdd,
-  History,
-  Search,
-  Star,
-} from "@mui/icons-material";
-import {
-  Box,
-  Button,
-  Chip,
-  Divider,
-  Input,
-  Typography,
-} from "@mui/joy";
+import { Bookmark, History, Search, Star } from "../components/ui/icons";
+import { Box, Input, Typography } from "@mui/joy";
+import Button from "../components/ui/Button";
+import Badge from "../components/ui/Badge";
+import EmptyState from "../components/ui/EmptyState";
+import PageHeader from "../components/ui/PageHeader";
 import EventMC from "../components/cards/EventMC";
 import EventMCS from "../components/cards/skeleton/EventMC";
 import NotLoggedIn from "../components/utils/NotLoggedIn";
@@ -25,13 +16,22 @@ import { sortLibraryItems } from "../utilities/savedMedia";
 import RatingDialog from "../components/library/RatingDialog";
 
 const CONTAINER_SX = {
-  width: "90%",
-  padding: "100px 0px",
-  margin: "0 auto",
+  width: "100%",
+  maxWidth: "var(--sm-page-max)",
+  mx: "auto",
+  px: { xs: 2, sm: 3, md: 4 },
+  pt: "calc(var(--sm-nav-height) + 48px)",
+  pb: 8,
   display: "flex",
   flexDirection: "column",
-  gap: "28px",
+  gap: 5,
   minHeight: "100vh",
+} as const;
+
+const GRID_SX = {
+  display: "grid",
+  gap: 2.5,
+  gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))",
 } as const;
 
 function Watchlist() {
@@ -84,57 +84,41 @@ function Watchlist() {
 
   return (
     <Box sx={CONTAINER_SX}>
-      <Box sx={{ display: "flex", justifyContent: "space-between", gap: 2, flexWrap: "wrap" }}>
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
-          <Typography
-            startDecorator={
-              <ArrowBackIos
-                sx={{ cursor: "pointer" }}
-                onClick={() => navigate("/")}
-              />
-            }
-            level="h1"
-            sx={{
-              "@media (max-width: 800px)": {
-                fontSize: "25px",
-              },
-            }}
-          >
-            Your Library
-          </Typography>
-          <Typography textColor="neutral.300">
-            Watchlist, recently watched, and ratings now live separately.
-          </Typography>
-        </Box>
-        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1.2 }}>
-          <Chip variant="soft">Watchlist {user.watchlist?.length || 0}</Chip>
-          <Chip variant="soft">Recently watched {user.recentlyWatched?.length || 0}</Chip>
-          <Chip variant="soft">Ratings {user.ratings?.length || 0}</Chip>
-        </Box>
-      </Box>
+      <PageHeader
+        title="Your library"
+        description="Everything you've saved, watched and rated."
+        divider={false}
+        actions={
+          <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
+            <Badge>Watchlist {user.watchlist?.length || 0}</Badge>
+            <Badge>Watched {user.recentlyWatched?.length || 0}</Badge>
+            <Badge>Ratings {user.ratings?.length || 0}</Badge>
+          </Box>
+        }
+      />
 
       <Input
         value={searchQuery}
         onChange={(e) => setSearchQuery(e.target.value)}
-        placeholder="Search your library..."
-        startDecorator={<Search />}
-        sx={{ maxWidth: 420 }}
+        placeholder="Search your library…"
+        startDecorator={<Search sx={{ fontSize: 16 }} />}
+        sx={{ maxWidth: 420, mt: -3 }}
       />
 
       {isLoading ? (
-        <Box display="flex" flexWrap="wrap" justifyContent="center" gap="10px">
-          {Array.from({ length: 8 }).map((_, i) => (
+        <Box sx={GRID_SX}>
+          {Array.from({ length: 10 }).map((_, i) => (
             <EventMCS key={i} />
           ))}
         </Box>
       ) : (
         <>
           <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-            <Typography level="h2" startDecorator={<BookmarkAdd />}>
+            <Typography level="h3" sx={{ fontSize: "1.25rem" }}>
               Watchlist
             </Typography>
             {watchlist.length ? (
-              <Box display="flex" flexWrap="wrap" justifyContent="center" gap="18px">
+              <Box sx={GRID_SX}>
                 {watchlist.map((item) => (
                   <EventMC
                     key={`watchlist-${item.type}-${item.id}`}
@@ -147,20 +131,31 @@ function Watchlist() {
                 ))}
               </Box>
             ) : (
-              <Typography textColor="neutral.400">
-                No watchlist titles match this search.
-              </Typography>
+              <EmptyState
+                icon={Bookmark}
+                title={search ? "No matches" : "Your watchlist is empty"}
+                description={
+                  search
+                    ? "No watchlist titles match this search."
+                    : "Save something you want to watch and it shows up here."
+                }
+                action={
+                  !search ? (
+                    <Button variant="outlined" color="neutral" onClick={() => navigate("/browse")}>
+                      Browse titles
+                    </Button>
+                  ) : undefined
+                }
+              />
             )}
           </Box>
 
-          <Divider />
-
           <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-            <Typography level="h2" startDecorator={<History />}>
-              Recently Watched
+            <Typography level="h3" sx={{ fontSize: "1.25rem" }}>
+              Recently watched
             </Typography>
             {recentlyWatched.length ? (
-              <Box display="flex" flexWrap="wrap" justifyContent="center" gap="18px">
+              <Box sx={GRID_SX}>
                 {recentlyWatched.map((item) => (
                   <EventMC
                     key={`recent-${item.type}-${item.id}`}
@@ -178,32 +173,25 @@ function Watchlist() {
                 ))}
               </Box>
             ) : (
-              <Typography textColor="neutral.400">
-                No recent viewing activity yet.
-              </Typography>
+              <EmptyState
+                icon={History}
+                title="Nothing watched yet"
+                description="Start something and your progress lands here automatically."
+                bare
+              />
             )}
           </Box>
 
-          <Divider />
-
           <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-            <Typography level="h2" startDecorator={<Star />}>
+            <Typography level="h3" sx={{ fontSize: "1.25rem" }}>
               Ratings
             </Typography>
             {ratings.length ? (
-              <Box display="flex" flexWrap="wrap" justifyContent="center" gap="18px">
+              <Box sx={GRID_SX}>
                 {ratings.map((item) => (
                   <Box
                     key={`rating-${item.type}-${item.id}`}
-                    sx={{
-                      width: "250px",
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: 1,
-                      "@media (max-width: 800px)": {
-                        width: "200px",
-                      },
-                    }}
+                    sx={{ display: "flex", flexDirection: "column", gap: 1 }}
                   >
                     <EventMC
                       eventId={item.id}
@@ -219,20 +207,28 @@ function Watchlist() {
                         gap: 1,
                       }}
                     >
-                      <Typography level="body-sm">
+                      <Badge tone="neutral" mono>
                         {item.rating}/10
-                      </Typography>
-                      <Button size="sm" variant="soft" onClick={() => setEditingRating(item)}>
-                        Edit rating
+                      </Badge>
+                      <Button
+                        size="sm"
+                        variant="plain"
+                        color="neutral"
+                        onClick={() => setEditingRating(item)}
+                      >
+                        Edit
                       </Button>
                     </Box>
                   </Box>
                 ))}
               </Box>
             ) : (
-              <Typography textColor="neutral.400">
-                No ratings yet. Finish a title or use the star button on a detail page.
-              </Typography>
+              <EmptyState
+                icon={Star}
+                title="No ratings yet"
+                description="Finish a title, or use the rate button on any detail page."
+                bare
+              />
             )}
           </Box>
         </>

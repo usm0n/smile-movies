@@ -102,7 +102,7 @@ function HomeLayout() {
         myselfData={myselfData as ResponseType}
       />
 
-      <Container>
+      <Container sx={{ mt: { xs: 5, md: 7 } }}>
         <BecauseYouWatched />
         <Watchlist />
         <Event

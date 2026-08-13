@@ -5,6 +5,9 @@ function EpisodeCardSkeleton() {
     <Card
       sx={{
         border: "none",
+        flex: "0 0 270px",
+        width: 270,
+        maxWidth: 270,
       }}
     >
       <Skeleton width={270} height={150} variant="rectangular" />

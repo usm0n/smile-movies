@@ -11,26 +11,13 @@ import "swiper/css/effect-fade";
 import "swiper/css/pagination";
 // @ts-ignore
 import "swiper/css/navigation";
-import {
-  Box,
-  Button,
-  Card,
-  CardContent,
-  CardCover,
-  IconButton,
-  Skeleton,
-  Typography,
-} from "@mui/joy";
+import { Box, Card, CardContent, CardCover, Typography } from "@mui/joy";
+import Button from "../ui/Button";
+import IconButton from "../ui/IconButton";
+import Badge from "../ui/Badge";
 import { useNavigate } from "react-router-dom";
 import { ymdToDmy } from "../../utilities/defaults";
-import {
-  Add,
-  Check,
-  ArrowBackIos,
-  ArrowForwardIos,
-  PlayArrow,
-  AutoAwesome,
-} from "@mui/icons-material";
+import { Add, Check, ArrowBackIos, ArrowForwardIos, PlayArrow, AutoAwesome } from "../ui/icons";
 import { User } from "../../user";
 import { useUsers } from "../../context/Users";
 import { providersAPI } from "../../service/api/smb/providers.api.service";
@@ -290,12 +277,14 @@ const Header = React.memo(
           }}
           sx={{
             width: "100%",
-            height: "100vh",
+            height: "min(82vh, 760px)",
             border: "none",
+            borderRadius: 0,
+            backgroundColor: "background.body",
             overflow: "hidden",
             "@media (max-width: 700px)": {
               height: "auto",
-              minHeight: "100svh",
+              minHeight: "76svh",
             },
             cursor: "pointer",
           }}
@@ -333,7 +322,7 @@ const Header = React.memo(
           <CardCover
             sx={{
               background:
-                "linear-gradient(to top, rgba(0,0,0,0.4), rgba(0,0,0,0) 200px), linear-gradient(to top, rgba(0,0,0,0.8), rgba(0,0,0,0) 150px)",
+                "linear-gradient(180deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.15) 30%, rgba(0,0,0,0.85) 78%, #000 100%), linear-gradient(90deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.2) 55%, rgba(0,0,0,0) 100%)",
             }}
           />
           <CardContent
@@ -345,175 +334,150 @@ const Header = React.memo(
           >
             <Box
               sx={{
-                gap: 2,
+                width: "100%",
+                maxWidth: "var(--sm-page-max)",
+                mx: "auto",
+                px: { xs: 2.5, md: 6 },
+                pb: { xs: 4, md: 7 },
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "flex-start",
-                padding: "70px",
-                "@media (max-width: 700px)": {
-                  padding: "20px 20px 28px",
-                  gap: 2,
-                  alignItems: "center",
-                },
+                gap: 2,
               }}
             >
               {logoLoading ? (
-                <Skeleton variant="rectangular" width={250} height={70} />
+                <Box
+                  className="sm-shimmer"
+                  sx={{ width: 240, height: 56, borderRadius: "8px" }}
+                />
               ) : isActive && logoPath ? (
                 <Box
                   component="img"
+                  alt={details?.name || details?.title}
                   src={`https://image.tmdb.org/t/p/original${logoPath}`}
                   sx={{
                     width: "auto",
-                    maxHeight: "100px",
+                    maxWidth: { xs: "72%", md: 420 },
+                    maxHeight: { xs: 80, md: 110 },
                     objectFit: "contain",
-                    filter: "drop-shadow(0 0 15px rgba(0,0,0,1))",
-                    "@media (max-width: 700px)": {
-                      maxWidth: "100%",
-                      margin: "0 auto",
-                      height: "auto",
-                    },
+                    objectPosition: "left bottom",
                   }}
                 />
               ) : (
-                <Typography
-                  sx={{
-                    textShadow: "0 0 8px rgba(0,0,0,0.7)",
-                  }}
-                  level="h1"
-                >
+                <Typography level="h1" sx={{ maxWidth: 720 }}>
                   {details?.name || details?.title}
                 </Typography>
               )}
-              <Typography
-                color="neutral"
-                sx={{
-                  textShadow: "0 0 8px rgba(0,0,0,0.7)",
-                }}
-                level="body-md"
-              >
-                {details?.media_type === "movie" ? "Movie" : "TV Series"}
-                {" • "}
-                {ymdToDmy(details?.release_date || details?.first_air_date)}
-              </Typography>
-              <Button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  navigate(playbackTarget.route);
-                }}
-                disabled={isReleaseBlocked}
-                startDecorator={<PlayArrow />}
-                sx={{
-                  padding: "15px 0px",
-                  width: "300px",
-                  color: "black",
-                  transition: "all 0.1s ease-in-out",
-                  backgroundColor: "white",
-                  "&:hover": {
-                    backgroundColor: "rgb(255, 255, 255, 0.9)",
-                  },
-                  "&:active": {
-                    backgroundColor: "rgb(255, 255, 255, 0.8)",
-                  },
-                  "@media (max-width: 700px)": {
-                    width: "220px",
-                    padding: "10px 0px",
-                  },
-                }}
-              >
-                {mediaType === "movie"
-                  ? recentItem
-                    ? Number(recentItem.currentTime || 0) > 0
-                      ? "Continue Watching"
-                      : "Watch Again"
-                    : "Watch Now"
-                  : recentItem
-                    ? Number(recentItem.currentTime || 0) > 0
-                      ? `Continue S${recentItem.currentSeason}:E${recentItem.currentEpisode}`
-                      : recentItem.nextSeason && recentItem.nextEpisode
-                        ? `Continue S${recentItem.nextSeason}:E${recentItem.nextEpisode}`
-                        : "Watch Again"
-                    : "Play Now"}
-              </Button>
-              {!isReleaseBlocked && playButtonNote && !availabilityLoading && (
+
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <Badge tone="neutral">
+                  {details?.media_type === "movie" ? "Movie" : "TV Series"}
+                </Badge>
+                <Typography level="body-sm">
+                  {ymdToDmy(details?.release_date || details?.first_air_date)}
+                </Typography>
+              </Box>
+
+              {details?.overview && (
                 <Typography
-                  level="body-sm"
+                  level="body-md"
                   sx={{
-                    minHeight: "20px",
-                    textShadow: "0 0 8px rgba(0,0,0,0.7)",
-                    color: "inherit",
+                    maxWidth: 560,
+                    display: { xs: "none", md: "-webkit-box" },
+                    WebkitLineClamp: 3,
+                    WebkitBoxOrient: "vertical",
+                    overflow: "hidden",
+                    color: "#a1a1a1",
                   }}
                 >
-                  {playButtonNote}
+                  {details.overview}
                 </Typography>
               )}
-              <Button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (watchlistItem) {
-                    void removeFromWatchlist(mediaType, String(details.id));
-                    return;
+
+              <Box
+                sx={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: 1,
+                  mt: 0.5,
+                  width: { xs: "100%", sm: "auto" },
+                }}
+              >
+                <Button
+                  size="lg"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate(playbackTarget.route);
+                  }}
+                  disabled={isReleaseBlocked}
+                  startDecorator={<PlayArrow sx={{ fontSize: 18 }} />}
+                >
+                  {mediaType === "movie"
+                    ? recentItem
+                      ? Number(recentItem.currentTime || 0) > 0
+                        ? "Continue watching"
+                        : "Watch again"
+                      : "Watch now"
+                    : recentItem
+                      ? Number(recentItem.currentTime || 0) > 0
+                        ? `Continue S${recentItem.currentSeason}:E${recentItem.currentEpisode}`
+                        : recentItem.nextSeason && recentItem.nextEpisode
+                          ? `Continue S${recentItem.nextSeason}:E${recentItem.nextEpisode}`
+                          : "Watch again"
+                      : "Play now"}
+                </Button>
+
+                <Button
+                  size="lg"
+                  variant="outlined"
+                  color="neutral"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (watchlistItem) {
+                      void removeFromWatchlist(mediaType, String(details.id));
+                      return;
+                    }
+                    void addToWatchlist(
+                      mediaType,
+                      String(details.id),
+                      details.poster_path || "",
+                      details.name || details.title || "",
+                    );
+                  }}
+                  loading={
+                    addToWatchlistData?.isLoading || removeFromWatchlistData?.isLoading
                   }
-                  void addToWatchlist(
-                    mediaType,
-                    String(details.id),
-                    details.poster_path || "",
-                    details.name || details.title || "",
-                  );
-                }}
-                disabled={
-                  addToWatchlistData?.isLoading ||
-                  removeFromWatchlistData?.isLoading
-                }
-                startDecorator={watchlistItem ? <Check /> : <Add />}
-                variant="solid"
-                sx={{
-                  width: "300px",
-                  padding: "15px 0px",
-                  backgroundColor: watchlistItem
-                    ? "rgb(255, 255, 255, 0.8)"
-                    : "white",
-                  color: watchlistItem ? "black" : "black",
-                  "&:hover": {
-                    backgroundColor: watchlistItem
-                      ? "rgb(255, 255, 255, 0.7)"
-                      : "rgb(255, 255, 255, 0.9)",
-                  },
-                  "&:active": {
-                    backgroundColor: watchlistItem
-                      ? "rgb(255, 255, 255, 0.6)"
-                      : "rgb(255, 255, 255, 0.8)",
-                  },
-                  "@media (max-width: 700px)": {
-                    width: "220px",
-                    padding: "10px 0px",
-                  },
-                }}
-              >
-                {watchlistItem ? "In Watchlist" : "Add to Watchlist"}
-              </Button>
-              <Button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  navigate(`/ai?prompt=${encodeURIComponent("Help me decide what to watch. Ask me a few questions about my mood, genre preferences, and how long I have — then give me personalised picks.")}`);
-                }}
-                startDecorator={<AutoAwesome />}
-                variant="outlined"
-                sx={{
-                  borderRadius: "16px",
-                  borderColor: "rgba(255,255,255,0.3)",
-                  color: "white",
-                  background: "rgba(255,255,255,0.08)",
-                  backdropFilter: "blur(8px)",
-                  "&:hover": {
-                    background: "rgba(255,255,255,0.15)",
-                    borderColor: "rgba(255,220,92,0.6)",
-                    color: "rgb(255,220,92)",
-                  },
-                }}
-              >
-                Not sure? Let AI pick
-              </Button>
+                  startDecorator={
+                    watchlistItem ? (
+                      <Check sx={{ fontSize: 16 }} />
+                    ) : (
+                      <Add sx={{ fontSize: 16 }} />
+                    )
+                  }
+                >
+                  {watchlistItem ? "In watchlist" : "Add to watchlist"}
+                </Button>
+
+                <Button
+                  size="lg"
+                  variant="plain"
+                  color="neutral"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate(
+                      `/ai?prompt=${encodeURIComponent("Help me decide what to watch. Ask me a few questions about my mood, genre preferences, and how long I have — then give me personalised picks.")}`,
+                    );
+                  }}
+                  startDecorator={<AutoAwesome sx={{ fontSize: 16 }} />}
+                  sx={{ display: { xs: "none", md: "inline-flex" } }}
+                >
+                  Let AI pick
+                </Button>
+              </Box>
+
+              {!isReleaseBlocked && playButtonNote && !availabilityLoading && (
+                <Typography level="body-xs">{playButtonNote}</Typography>
+              )}
             </Box>
           </CardContent>
         </Card>
@@ -526,11 +490,11 @@ const Header = React.memo(
           style={
             {
               // @ts-ignore
-              "--swiper-pagination-color": "#FFBA08",
-              "--swiper-pagination-bullet-inactive-color": "#999999",
+              "--swiper-pagination-color": "#ffffff",
+              "--swiper-pagination-bullet-inactive-color": "#525252",
               "--swiper-pagination-bullet-inactive-opacity": "1",
-              "--swiper-pagination-bullet-size": "7px",
-              "--swiper-pagination-bullet-horizontal-gap": "3px",
+              "--swiper-pagination-bullet-size": "6px",
+              "--swiper-pagination-bullet-horizontal-gap": "4px",
             } as any
           }
           onSlideChange={(swiper) => setActiveIndex(swiper.activeIndex)}
@@ -548,23 +512,13 @@ const Header = React.memo(
         >
           {trendingAllData?.isLoading ? (
             <Box
+              className="sm-shimmer"
               sx={{
                 width: "100%",
-                height: "100vh",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                "@media (max-width: 700px)": {
-                  height: "70vh",
-                },
+                height: "min(82vh, 760px)",
+                "@media (max-width: 700px)": { height: "70vh" },
               }}
-            >
-              <Skeleton
-                sx={{
-                  background: "gray",
-                }}
-              />
-            </Box>
+            />
           ) : (
             trendingResults?.map((details, index) => (
               <SwiperSlide key={details.id}>
@@ -579,34 +533,38 @@ const Header = React.memo(
           )}
         </Swiper>
         <IconButton
+          label="Previous title"
           className="custom-swiper-prev"
+          variant="outlined"
           sx={{
             position: "absolute",
             top: "50%",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
             left: 16,
             zIndex: 10,
-            borderRadius: "50%",
+            backgroundColor: "rgba(0,0,0,0.6)",
+            borderColor: "rgba(255,255,255,0.14)",
+            display: { xs: "none", md: "inline-flex" },
+            "&:hover": { backgroundColor: "rgba(0,0,0,0.85)" },
           }}
         >
-          <ArrowBackIos />
+          <ArrowBackIos sx={{ fontSize: 18 }} />
         </IconButton>
         <IconButton
+          label="Next title"
           className="custom-swiper-next"
+          variant="outlined"
           sx={{
             position: "absolute",
             top: "50%",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
             right: 16,
             zIndex: 10,
-            borderRadius: "50%",
+            backgroundColor: "rgba(0,0,0,0.6)",
+            borderColor: "rgba(255,255,255,0.14)",
+            display: { xs: "none", md: "inline-flex" },
+            "&:hover": { backgroundColor: "rgba(0,0,0,0.85)" },
           }}
         >
-          <ArrowForwardIos />
+          <ArrowForwardIos sx={{ fontSize: 18 }} />
         </IconButton>
       </Box>
     );

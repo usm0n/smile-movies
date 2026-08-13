@@ -241,7 +241,7 @@ function PlaybackSurface({
           "--video-font-family":
             "\"IBM Plex Sans\", \"Segoe UI\", sans-serif",
           "--video-controls-color": "#f8fafc",
-          "--video-brand": "rgb(255, 220, 92)",
+          "--video-brand": "#ededed",
         } as React.CSSProperties}
       >
         <MediaOutlet />

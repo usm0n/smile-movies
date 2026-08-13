@@ -2,10 +2,8 @@ import { Box, Card, Dropdown, LinearProgress, Menu, MenuButton, MenuItem, Typogr
 import BlurImage from "../../utilities/blurImage";
 import { tvEpisodeDetails } from "../../tmdb-res";
 import { minuteToHour, shareLink, ymdToDmy } from "../../utilities/defaults";
-import { IosShare, MoreHoriz, PlayArrow } from "@mui/icons-material";
+import { IosShare, MoreHoriz, PlayArrow, Star as StarIcon } from "../ui/icons";
 import { useNavigate } from "react-router-dom";
-import StarIcon from "@mui/icons-material/Star";
-// import VisibilityIcon from "@mui/icons-material/Visibility";
 import { useState } from "react";
 import ParentalGuide from "../movie/ParentalGuide";
 
@@ -37,40 +35,75 @@ function EpisodeCard({
     <Card
       onClick={() => navigate(`/tv/${tvId}/${episode?.season_number}/${episode?.episode_number}/watch`)}
       sx={{
-        gap: "5px", border: "none", cursor: "pointer",
-        backgroundColor: "transparent",
-        ":hover": { backgroundColor: "rgba(255,255,255,0.1)" },
-        ":active": { backgroundColor: "rgba(255,255,255,0.2)" },
+        gap: 0.75,
+        p: 1.5,
+        cursor: "pointer",
         position: "relative",
-        // minWidth: 220,
+        flex: "0 0 270px",
+        width: 270,
+        maxWidth: 270,
+        border: "1px solid",
+        borderColor: "neutral.outlinedBorder",
+        borderRadius: "lg",
+        backgroundColor: "background.surface",
+        transition: "border-color 150ms ease, background-color 150ms ease",
+        ":hover": { borderColor: "#333", backgroundColor: "background.level1" },
       }}
     >
-      {/* ── Three-dot menu ── */}
-      <Dropdown>
+      {/* ── Three-dot menu (wrapped: Card injects data-first-child into its
+          first child, and Dropdown does not accept DOM props) ── */}
+      <Box>
+        <Dropdown>
         <MenuButton
           onClick={(e) => e.stopPropagation()}
-          sx={{ position: "absolute", top: "165px", right: "20px", background: "transparent", border: "none", zIndex: 3 }}
+          aria-label="Episode actions"
+          slotProps={{
+            root: {
+              sx: {
+                position: "absolute",
+                top: 10,
+                right: 10,
+                zIndex: 3,
+                minHeight: 28,
+                minWidth: 28,
+                p: 0,
+                borderRadius: "6px",
+                border: "1px solid rgba(255,255,255,0.14)",
+                backgroundColor: "rgba(0,0,0,0.7)",
+                color: "#ededed",
+              },
+            },
+          }}
         >
-          <MoreHoriz />
+          <MoreHoriz sx={{ fontSize: 16 }} />
         </MenuButton>
         <Menu onClick={(e) => e.stopPropagation()}>
           <MenuItem onClick={() => navigate(`/tv/${tvId}/${episode?.season_number}/${episode?.episode_number}/watch`)}>
-            <PlayArrow /> Watch now
+            <PlayArrow sx={{ fontSize: 16 }} /> Watch now
           </MenuItem>
           <MenuItem onClick={() => shareLink(`https://smile-movies.uz/tv/${tvId}/${episode?.season_number}/${episode?.episode_number}/watch`)}>
-            <IosShare /> Share this episode
+            <IosShare sx={{ fontSize: 16 }} /> Share episode
           </MenuItem>
-        </Menu>
-      </Dropdown>
+          </Menu>
+        </Dropdown>
+      </Box>
 
       {/* ── Thumbnail with spoil overlay ── */}
-      <Box sx={{ position: "relative", borderRadius: "12px", overflow: "hidden" }}>
+      <Box
+        sx={{
+          position: "relative",
+          borderRadius: "8px",
+          overflow: "hidden",
+          border: "1px solid",
+          borderColor: "neutral.outlinedBorder",
+        }}
+      >
         {/* The image — blurred until spoiled */}
         <Box sx={{ filter: hasThumbnail && spoiled ? "blur(10px)" : "none", transition: "filter 0.25s ease" }}>
           {BlurImage({
             highQualitySrc: `https://image.tmdb.org/t/p/original${episode?.still_path}`,
             lowQualitySrc: `https://image.tmdb.org/t/p/w200${episode?.still_path}`,
-            style: { width: "auto", height: "150px", aspectRatio: "16/9", borderRadius: "12px", display: "block" },
+            style: { width: "100%", aspectRatio: "16/9", objectFit: "cover", display: "block" },
           })}
         </Box>
 
@@ -83,7 +116,7 @@ function EpisodeCard({
               display: "flex", alignItems: "center", justifyContent: "center",
               cursor: "pointer",
               background: "rgba(0,0,0,0.18)",
-              borderRadius: "12px",
+              borderRadius: "8px",
               zIndex: 2,
               transition: "opacity 0.2s",
               "&:hover": { background: "rgba(0,0,0,0.28)" },
@@ -92,9 +125,8 @@ function EpisodeCard({
             <Box
               sx={{
                 display: "flex", alignItems: "center", gap: 0.5,
-                px: 1.2, py: 0.5, borderRadius: 20,
+                px: 1.2, py: 0.5, borderRadius: "8px",
                 background: "rgba(0,0,0,0.65)",
-                backdropFilter: "blur(4px)",
                 border: "1px solid rgba(255,255,255,0.18)",
               }}
             >
@@ -112,10 +144,9 @@ function EpisodeCard({
             sx={{
               position: "absolute", bottom: 6, left: 6, zIndex: 3,
               display: "inline-flex", alignItems: "center", gap: 0.3,
-              px: 0.7, py: 0.3, borderRadius: 4,
-              background: "rgba(0,0,0,0.72)",
-              backdropFilter: "blur(4px)",
-              border: "1px solid rgba(245,197,24,0.45)",
+              px: 0.7, py: 0.3, borderRadius: "4px",
+              background: "rgba(0,0,0,0.8)",
+              border: "1px solid rgba(255,255,255,0.14)",
               userSelect: "none",
             }}
           >
@@ -128,10 +159,39 @@ function EpisodeCard({
       </Box>
 
       {/* ── Episode info ── */}
-      <Typography level="body-xs">EPISODE {episode?.episode_number}</Typography>
-      <Typography level="body-lg" sx={{ lineHeight: 1.3 }}>{episode?.name}</Typography>
-      <Typography level="body-sm">
-        {episode?.overview?.length > 70 ? <>{episode.overview.slice(0, 70)}...</> : episode?.overview}
+      <Typography
+        level="body-xs"
+        sx={{
+          textTransform: "uppercase",
+          letterSpacing: "0.06em",
+          mt: 0.5,
+          whiteSpace: "nowrap",
+        }}
+      >
+        Episode {episode?.episode_number}
+      </Typography>
+      <Typography
+        level="title-sm"
+        sx={{
+          display: "-webkit-box",
+          WebkitBoxOrient: "vertical",
+          WebkitLineClamp: 1,
+          overflow: "hidden",
+        }}
+      >
+        {episode?.name}
+      </Typography>
+      <Typography
+        level="body-sm"
+        sx={{
+          display: "-webkit-box",
+          WebkitBoxOrient: "vertical",
+          WebkitLineClamp: 3,
+          overflow: "hidden",
+          minHeight: "3.9em",
+        }}
+      >
+        {episode?.overview}
       </Typography>
       {(isCompleted || isInProgress || isNext) ? (
         <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
@@ -140,7 +200,7 @@ function EpisodeCard({
             value={isCompleted ? 100 : isInProgress ? progressValue : 0}
             sx={{
               "--LinearProgress-thickness": "4px",
-              color: isCompleted ? "rgb(120, 255, 178)" : "rgb(255, 220, 92)",
+              color: isCompleted ? "#3ecf8e" : "#ededed",
               background: "rgba(255,255,255,0.08)",
             }}
           />
@@ -156,7 +216,7 @@ function EpisodeCard({
 
       {/* ── Footer row: runtime + parental guide icon ── */}
       <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mt: "auto" }}>
-        <Typography level="body-xs">
+        <Typography level="body-xs" sx={{ whiteSpace: "nowrap" }}>
           {minuteToHour(episode?.runtime)} • {ymdToDmy(episode?.air_date)}
         </Typography>
         {imdbEpisodeId && (

@@ -1,7 +1,7 @@
 import {
   Box, Button, Input, Modal, ModalDialog, Typography,
 } from "@mui/joy";
-import { LockOutlined, CheckCircleOutline } from "@mui/icons-material";
+import { LockOutlined, CheckCircleOutline } from "../ui/icons";
 import { useState, useEffect } from "react";
 import { profilesAPI } from "../../service/api/smb/profiles.api.service";
 
@@ -101,10 +101,10 @@ function PinLockModal({ open, mode: initialMode, onSuccess, onCancel }: Props) {
   return (
     <Modal open={open} onClose={onCancel}>
       <ModalDialog sx={{ maxWidth: 340, textAlign: "center", p: 4, display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
-        <Box sx={{ width: 52, height: 52, borderRadius: "50%", background: "rgba(255,220,92,0.15)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <Box sx={{ width: 52, height: 52, borderRadius: "50%", background: "rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "center" }}>
           {done
             ? <CheckCircleOutline sx={{ color: "rgb(100,220,120)", fontSize: 28 }} />
-            : <LockOutlined sx={{ color: "rgb(255,220,92)", fontSize: 28 }} />}
+            : <LockOutlined sx={{ color: "#ededed", fontSize: 28 }} />}
         </Box>
 
         {done && (

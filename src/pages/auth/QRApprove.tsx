@@ -1,9 +1,11 @@
-import { Box, Button, CircularProgress, Typography } from "@mui/joy";
-import { CheckCircleOutline, QrCode2 } from "@mui/icons-material";
+import { Box } from "@mui/joy";
+import { CheckCircleOutline, QrCode2, WarningRounded } from "../../components/ui/icons";
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { qrAPI } from "../../service/api/smb/qr.api.service";
 import { useUsers } from "../../context/Users";
+import EmptyState from "../../components/ui/EmptyState";
+import Button from "../../components/ui/Button";
 
 function QRApprove() {
   const { token } = useParams<{ token: string }>();
@@ -18,67 +20,89 @@ function QRApprove() {
     try {
       const res = await qrAPI.approve(token);
       setStatus("done");
-      setMessage(res.success ? "Device approved! The other screen will log in now." : "Invalid or expired QR code.");
+      setMessage(
+        res.success
+          ? "Device approved. The other screen will sign in now."
+          : "Invalid or expired QR code.",
+      );
     } catch (err: any) {
       setStatus("error");
       setMessage(err?.response?.data?.message || "QR code not found or expired.");
     }
   };
 
+  const shell = (children: React.ReactNode) => (
+    <Box
+      sx={{
+        minHeight: "100vh",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        px: 2,
+        py: "var(--sm-nav-height)",
+      }}
+    >
+      <Box sx={{ width: "100%", maxWidth: 440 }}>{children}</Box>
+    </Box>
+  );
+
   if (!isAuthenticated) {
-    return (
-      <Box sx={{ height: "100vh", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 2 }}>
-        <QrCode2 sx={{ fontSize: 56, color: "rgb(255,220,92)" }} />
-        <Typography level="h3">Log in to approve this device</Typography>
-        <Typography level="body-md" sx={{ color: "text.tertiary", textAlign: "center", maxWidth: 360 }}>
-          You need to be logged in on this device to approve a QR login for another device.
-        </Typography>
-        <Button onClick={() => navigate("/auth/login")}>Log in</Button>
-      </Box>
+    return shell(
+      <EmptyState
+        icon={QrCode2}
+        title="Sign in to approve this device"
+        description="You need to be signed in on this device to approve a QR login for another one."
+        action={<Button onClick={() => navigate("/auth/login")}>Sign In</Button>}
+      />,
     );
   }
 
-  return (
-    <Box sx={{ height: "100vh", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 3 }}>
-      {status === "idle" && (
-        <>
-          <QrCode2 sx={{ fontSize: 56, color: "rgb(255,220,92)" }} />
-          <Typography level="h3">Approve QR Login</Typography>
-          <Typography level="body-md" sx={{ color: "text.tertiary", textAlign: "center", maxWidth: 360 }}>
-            Another device is trying to log in to your account using this QR code. Tap Approve to grant access.
-          </Typography>
-          <Box sx={{ display: "flex", gap: 1 }}>
-            <Button onClick={approve} size="lg" sx={{ background: "rgb(255,220,92)", color: "black" }}>
-              Approve Login
-            </Button>
-            <Button size="lg" variant="outlined" color="neutral" onClick={() => navigate("/")}>
-              Cancel
-            </Button>
-          </Box>
-        </>
-      )}
+  if (status === "done") {
+    return shell(
+      <EmptyState
+        icon={CheckCircleOutline}
+        title="Device approved"
+        description={message}
+        action={
+          <Button variant="outlined" color="neutral" onClick={() => navigate("/")}>
+            Go home
+          </Button>
+        }
+      />,
+    );
+  }
 
-      {status === "loading" && <CircularProgress size="lg" />}
+  if (status === "error") {
+    return shell(
+      <EmptyState
+        icon={WarningRounded}
+        title="Approval failed"
+        description={message}
+        action={
+          <Button variant="outlined" color="neutral" onClick={() => navigate("/")}>
+            Go home
+          </Button>
+        }
+      />,
+    );
+  }
 
-      {status === "done" && (
+  return shell(
+    <EmptyState
+      icon={QrCode2}
+      title="Approve QR sign-in"
+      description="Another device is trying to sign in to your account with this QR code. Approve only if it's you."
+      action={
         <>
-          <CheckCircleOutline sx={{ fontSize: 56, color: "rgb(100,220,120)" }} />
-          <Typography level="h3" sx={{ color: "rgb(100,220,120)" }}>Done!</Typography>
-          <Typography level="body-md" sx={{ color: "text.tertiary", textAlign: "center", maxWidth: 360 }}>
-            {message}
-          </Typography>
-          <Button onClick={() => navigate("/")} variant="outlined">Go Home</Button>
+          <Button loading={status === "loading"} onClick={approve}>
+            Approve
+          </Button>
+          <Button variant="outlined" color="neutral" onClick={() => navigate("/")}>
+            Cancel
+          </Button>
         </>
-      )}
-
-      {status === "error" && (
-        <>
-          <Typography level="h3" sx={{ color: "danger.400" }}>Failed</Typography>
-          <Typography level="body-md" sx={{ color: "text.tertiary", textAlign: "center" }}>{message}</Typography>
-          <Button onClick={() => navigate("/")} variant="outlined">Go Home</Button>
-        </>
-      )}
-    </Box>
+      }
+    />,
   );
 }
 

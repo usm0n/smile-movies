@@ -1,4 +1,5 @@
-import { Box, Button, Card, Chip, CircularProgress, Divider, Input, Option, Select, Stack, Typography } from "@mui/joy";
+import { Shimmer } from "../../components/ui/Skeleton";
+import { Box, Button, Card, Chip, Divider, Input, Option, Select, Stack, Typography } from "@mui/joy";
 import { NotificationInterests, NotificationPreferences, User } from "../../user";
 import {
   defaultNotificationInterests,
@@ -9,7 +10,7 @@ import {
 import { useEffect, useState } from "react";
 import { notificationsAPI } from "../../service/api/smb/notifications.api.service";
 import { NotificationHistoryItem } from "../../types/notifications";
-import toast from "react-hot-toast";
+import { toast } from "../../components/ui/toast";
 
 function NotificationSettings({
   userValue,
@@ -244,7 +245,7 @@ function NotificationSettings({
         </Typography>
 
         {historyLoading ? (
-          <CircularProgress size="sm" />
+          <Shimmer height={64} radius={8} />
         ) : history.length === 0 ? (
           <Typography level="body-sm" textColor="neutral.500">
             No notification deliveries yet. Once release events are queued, you will see history here.
@@ -252,7 +253,7 @@ function NotificationSettings({
         ) : (
           <Stack spacing={1.25}>
             {history.map((item) => (
-              <Card key={item.id} sx={{ p: 1.5, borderRadius: 18, background: "rgba(255,255,255,0.02)" }}>
+              <Card key={item.id} sx={{ p: 1.5, borderRadius: "8px", backgroundColor: "background.surface" }}>
                 <Stack direction="row" spacing={1} sx={{ justifyContent: "space-between", alignItems: "center", mb: 0.75 }}>
                   <Typography level="title-sm">{item.subject}</Typography>
                   <Chip

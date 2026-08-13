@@ -2,8 +2,6 @@
 
 import {
   Box,
-  Button,
-  ButtonGroup,
   Card,
   CardContent,
   CardCover,
@@ -12,10 +10,11 @@ import {
   Menu,
   MenuButton,
   MenuItem,
-  Modal,
-  ModalDialog,
   Typography,
 } from "@mui/joy";
+import Button from "../ui/Button";
+import Dialog from "../ui/Dialog";
+import Field from "../ui/Field";
 import {
   images,
   movieDetails,
@@ -24,18 +23,7 @@ import {
   videos,
 } from "../../tmdb-res";
 import { useEffect, useMemo, useState } from "react";
-import {
-  Add,
-  ArrowDropDown,
-  Check,
-  PlayArrow,
-  Star,
-  StarBorder,
-  Replay,
-  Notifications,
-  NotificationsNone,
-  PlaylistAdd,
-} from "@mui/icons-material";
+import { Add, ArrowDropDown, Check, PlayArrow, Star, StarBorder, Replay, Notifications, NotificationsNone, PlaylistAdd } from "../ui/icons";
 import {
   formatTimeAgo,
   isLoggedIn,
@@ -373,7 +361,7 @@ function Header({
         sx={{
           width: "100%",
           minHeight: { xs: "100svh", md: "100vh" },
-          height: { xs: "auto", md: "100vh" },
+          height: "auto",
           border: "none",
           borderRadius: 0,
           overflow: "hidden",
@@ -488,16 +476,15 @@ function Header({
                     maxHeight: { xs: "72px", md: "96px" },
                     objectFit: "contain",
                     objectPosition: { xs: "center center", md: "left center" },
-                    filter: "drop-shadow(0 0 18px rgba(0,0,0,1))",
+                    filter: "drop-shadow(0 2px 12px rgba(0,0,0,0.9))",
                   }}
                 />
               ) : (
                 <Typography
                   level="h1"
                   sx={{
-                    textShadow: "0 0 8px rgba(0,0,0,0.7)",
                     fontSize: { xs: "2rem", md: "3rem" },
-                    lineHeight: 1,
+                    lineHeight: 1.05,
                   }}
                 >
                   {movieTitle}
@@ -507,7 +494,7 @@ function Header({
               {movieDetails?.tagline ? (
                 <Typography
                   level="title-md"
-                  sx={{ color: "rgba(255,255,255,0.72)", maxWidth: "32ch" }}
+                  sx={{ color: "#a1a1a1", maxWidth: "40ch" }}
                 >
                   {movieDetails.tagline}
                 </Typography>
@@ -516,15 +503,43 @@ function Header({
               {metadataItems.length ? (
                 <Typography
                   level="body-sm"
-                  sx={{
-                    color: "rgba(255,255,255,0.7)",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.08em",
-                  }}
+                  sx={{ color: "#a1a1a1" }}
                 >
                   {metadataItems.join(" • ")}
                 </Typography>
               ) : null}
+
+              <Box
+                sx={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: 1,
+                  alignItems: "center",
+                  justifyContent: { xs: "center", md: "flex-start" },
+                }}
+              >
+                <IMDbRating mediaId={movieId} mediaType={movieType} />
+                <MatchScore
+                  movieTitle={movieTitle}
+                  movieYear={(
+                    movieDetails?.release_date ||
+                    movieDetails?.first_air_date ||
+                    ""
+                  ).slice(0, 4)}
+                  overview={movieDetails?.overview}
+                  genres={movieDetails?.genres?.map((genre) => genre.name)}
+                />
+                <ParentalGuide
+                  mediaId={movieId}
+                  mediaType={movieType}
+                  title={movieTitle}
+                  year={(
+                    movieDetails?.release_date ||
+                    movieDetails?.first_air_date ||
+                    ""
+                  ).slice(0, 4)}
+                />
+              </Box>
 
               <Box
                 sx={{
@@ -536,10 +551,12 @@ function Header({
                   alignItems: { xs: "center", md: "stretch" },
                 }}
               >
-                <ButtonGroup
-                  variant="solid"
+                <Box
                   sx={{
                     width: "100%",
+                    display: "flex",
+                    alignItems: "stretch",
+                    gap: 0.5,
                   }}
                 >
                   <Button
@@ -550,23 +567,9 @@ function Header({
                       isReleaseBlocked ||
                       myselfData?.isLoading
                     }
-                    startDecorator={<PlayArrow />}
-                    sx={{
-                      flex: 1,
-                      padding: "15px 0px",
-                      color: "black",
-                      transition: "all 0.1s ease-in-out",
-                      backgroundColor: "white",
-                      "&:hover": {
-                        backgroundColor: "rgb(255, 255, 255, 0.9)",
-                      },
-                      "&:active": {
-                        backgroundColor: "rgb(255, 255, 255, 0.8)",
-                      },
-                      "@media (max-width: 700px)": {
-                        padding: "12px 0px",
-                      },
-                    }}
+                    startDecorator={<PlayArrow sx={{ fontSize: 18 }} />}
+                    size="lg"
+                    sx={{ flex: 1 }}
                   >
                     {playLabel}
                   </Button>
@@ -594,33 +597,26 @@ function Header({
                         movieTitle,
                       );
                     }}
-                    sx={{
-                      minWidth: { xs: "54px", md: "64px" },
-                      color: "black",
-                      backgroundColor: "white",
-                      "&:hover": {
-                        backgroundColor: "rgb(255, 255, 255, 0.9)",
-                      },
-                      "&:active": {
-                        backgroundColor: "rgb(255, 255, 255, 0.8)",
-                      },
-                    }}
+                    size="lg"
+                    aria-label={watchlistItem ? "Remove from watchlist" : "Add to watchlist"}
+                    sx={{ minWidth: { xs: 48, md: 56 } }}
                   >
-                    {watchlistItem ? <Check /> : <Add />}
+                    {watchlistItem ? (
+                      <Check sx={{ fontSize: 18 }} />
+                    ) : (
+                      <Add sx={{ fontSize: 18 }} />
+                    )}
                   </Button>
                   <Dropdown open={collectionsMenuOpen} onOpenChange={(_, o) => { if (o) { setCollectionsMenuOpen(true); loadCollections(); } else setCollectionsMenuOpen(false); }}>
                     <MenuButton
                       slots={{ root: Button }}
                       slotProps={{
                         root: {
+                          "aria-label": "More list actions",
                           sx: {
-                            minWidth: { xs: "44px", md: "50px" },
-                            color: "black",
-                            backgroundColor: "white",
+                            minWidth: { xs: 40, md: 44 },
                             borderLeft: "1px solid rgba(0,0,0,0.12)",
                             padding: 0,
-                            "&:hover": { backgroundColor: "rgb(255,255,255,0.9)" },
-                            "&:active": { backgroundColor: "rgb(255,255,255,0.8)" },
                           },
                         },
                       }}
@@ -661,19 +657,14 @@ function Header({
                       </MenuItem>
                     </Menu>
                   </Dropdown>
-                </ButtonGroup>
+                </Box>
                 {hasStartedWatching ? (
-                  <ButtonGroup
-                    variant="plain"
-                    sx={{
-                      width: "100%",
-                    }}
-                  >
+                  <Box sx={{ width: "100%", display: "flex", gap: 0.5 }}>
                     <Button
-                      sx={{
-                        flex: 1,
-                      }}
-                      startDecorator={<Replay />}
+                      variant="outlined"
+                      color="neutral"
+                      sx={{ flex: 1 }}
+                      startDecorator={<Replay sx={{ fontSize: 16 }} />}
                       onClick={() => {
                         navigate(startOverEpisodeTarget.route);
                       }}
@@ -685,9 +676,11 @@ function Header({
                       <Dropdown>
                         <MenuButton
                           slots={{ root: Button }}
+                          aria-label="Start-over options"
+                          slotProps={{ root: { variant: "outlined", color: "neutral" } }}
                           disabled={isReleaseBlocked || myselfData?.isLoading}
                         >
-                          <ArrowDropDown />
+                          <ArrowDropDown sx={{ fontSize: 16 }} />
                         </MenuButton>
                         <Menu>
                           <MenuItem
@@ -707,29 +700,25 @@ function Header({
                         </Menu>
                       </Dropdown>
                     ) : null}
-                  </ButtonGroup>
+                  </Box>
                 ) : null}
-                <Typography
-                  level="body-sm"
-                  sx={{
-                    minHeight: "20px",
-                    color:
-                      "rgba(255,255,255,0.72)",
-                  }}
-                >
-                  {playButtonNote}
-                </Typography>
-                {progressNote ? (
+                {playButtonNote ? (
+                  <Typography level="body-sm" sx={{ color: "#a1a1a1" }}>
+                    {playButtonNote}
+                  </Typography>
+                ) : null}
+                {progressNote && !(watchlistItem || recentItem || ratingItem) ? (
                   <Typography
                     level="body-xs"
                     sx={{
                       textAlign: { xs: "center", md: "left" },
-                      color: "rgba(255,255,255,0.76)",
+                      color: "#707070",
                     }}
                   >
                     {progressNote}
                   </Typography>
                 ) : null}
+                <Box sx={{ width: "100%", display: "flex", gap: 0.5 }}>
                 <Button
                   disabled={
                     myselfData?.isLoading ||
@@ -743,33 +732,18 @@ function Header({
                     }
                     setIsRatingOpen(true);
                   }}
-                  sx={{
-                    width: "100%",
-                    borderRadius: "16px",
-                    color: ratingItem ? "rgb(255, 224, 130)" : "white",
-                    border: "1px solid",
-                    borderColor: ratingItem
-                      ? "rgba(255, 204, 92, 0.72)"
-                      : "rgba(255,255,255,0.28)",
-                    background: ratingItem
-                      ? "linear-gradient(180deg, rgba(75, 52, 5, 0.92) 0%, rgba(34, 23, 3, 0.92) 100%)"
-                      : "linear-gradient(180deg, rgba(14, 22, 39, 0.9) 0%, rgba(6, 10, 18, 0.92) 100%)",
-                    gap: 1,
-                    boxShadow: "0 18px 40px rgba(0,0,0,0.24)",
-                    backdropFilter: "blur(18px)",
-                    "&:hover": {
-                      background: ratingItem
-                        ? "linear-gradient(180deg, rgba(94, 67, 9, 0.95) 0%, rgba(43, 29, 4, 0.95) 100%)"
-                        : "linear-gradient(180deg, rgba(22, 33, 57, 0.96) 0%, rgba(10, 16, 28, 0.96) 100%)",
-                    },
-                  }}
+                  variant="outlined"
+                  color="neutral"
+                  sx={{ flex: 1, minWidth: 0 }}
+                  startDecorator={
+                    ratingItem ? (
+                      <Star sx={{ fontSize: 16, fill: "currentColor" }} />
+                    ) : (
+                      <StarBorder sx={{ fontSize: 16 }} />
+                    )
+                  }
                 >
-                  {ratingItem ? <Star /> : <StarBorder />}
-                  <Typography level="body-sm" sx={{ fontWeight: 700 }}>
-                    {ratingItem
-                      ? `Your rating: ${ratingItem.rating}/10`
-                      : "Rate this title"}
-                  </Typography>
+                  {ratingItem ? `Your rating: ${ratingItem.rating}/10` : "Rate this title"}
                 </Button>
                 {movieType === "tv" && isLoggedIn && (
                   <Button
@@ -786,45 +760,35 @@ function Header({
                         },
                       } as any);
                     }}
-                    sx={{
-                      width: "100%",
-                      borderRadius: "16px",
-                      color: (myselfData?.data as unknown as User)?.notificationInterests?.followedShows?.includes(String(movieId))
-                        ? "rgb(255, 224, 130)"
-                        : "white",
-                      border: "1px solid",
-                      borderColor: (myselfData?.data as unknown as User)?.notificationInterests?.followedShows?.includes(String(movieId))
-                        ? "rgba(255, 204, 92, 0.72)"
-                        : "rgba(255,255,255,0.28)",
-                      background: "linear-gradient(180deg, rgba(22, 33, 57, 0.96) 0%, rgba(10, 16, 28, 0.96) 100%)",
-                      "&:hover": {
-                        background: "linear-gradient(180deg, rgba(22, 33, 57, 0.96) 0%, rgba(10, 16, 28, 0.96) 100%)",
-                      },
-                    }}
+                    variant="outlined"
+                    color="neutral"
+                    sx={{ flex: 1, minWidth: 0 }}
+                    startDecorator={
+                      (myselfData?.data as unknown as User)?.notificationInterests?.followedShows?.includes(String(movieId)) ? (
+                        <Notifications sx={{ fontSize: 16 }} />
+                      ) : (
+                        <NotificationsNone sx={{ fontSize: 16 }} />
+                      )
+                    }
                   >
                     {(myselfData?.data as unknown as User)?.notificationInterests?.followedShows?.includes(String(movieId))
-                      ? <Notifications />
-                      : <NotificationsNone />}
-                    <Typography level="body-sm" sx={{ fontWeight: 700 }}>
-                      {(myselfData?.data as unknown as User)?.notificationInterests?.followedShows?.includes(String(movieId))
-                        ? "Following — new episodes"
-                        : "Follow for new episodes"}
-                    </Typography>
+                      ? "Following"
+                      : "Follow"}
                   </Button>
                 )}
+                </Box>
                 {(watchlistItem || recentItem || ratingItem) && (
                   <Box
                     sx={{
                       width: "100%",
-                      borderRadius: "18px",
-                      px: 1.4,
-                      py: 1.2,
-                      background: "rgba(7, 14, 28, 0.48)",
-                      border: "1px solid rgba(255,255,255,0.12)",
-                      backdropFilter: "blur(14px)",
+                      borderRadius: "8px",
+                      px: 1.5,
+                      py: 1.25,
+                      backgroundColor: "rgba(10,10,10,0.72)",
+                      border: "1px solid rgba(255,255,255,0.1)",
                       display: "flex",
                       flexDirection: "column",
-                      gap: 0.8,
+                      gap: 0.5,
                     }}
                   >
                     <Typography level="title-sm">Your library</Typography>
@@ -860,7 +824,7 @@ function Header({
                     <Typography
                       level="title-md"
                       sx={{
-                        color: "rgba(255,255,255,0.86)",
+                        color: "#ededed",
                       }}
                     >
                       {activeEpisodeTitle}
@@ -869,7 +833,7 @@ function Header({
                   <Typography
                     level="body-md"
                     sx={{
-                      color: "rgba(255,255,255,0.9)",
+                      color: "#a1a1a1",
                       display:
                         isOverviewLong && !isOverviewExpanded
                           ? "-webkit-box"
@@ -891,11 +855,8 @@ function Header({
                         alignSelf: { xs: "center", md: "flex-start" },
                         px: 0,
                         minHeight: 0,
-                        color: "rgb(255,216,77)",
-                        "&:hover": {
-                          backgroundColor: "transparent",
-                          color: "rgb(255,228,132)",
-                        },
+                        color: "text.tertiary",
+                        "&:hover": { backgroundColor: "transparent", color: "text.primary" },
                       }}
                     >
                       {isOverviewExpanded ? "Less" : "More"}
@@ -903,39 +864,6 @@ function Header({
                   ) : null}
                 </Box>
               ) : null}
-
-              <Box
-                sx={{
-                  display: "flex",
-                  flexWrap: "wrap",
-                  gap: 1,
-                  alignItems: "center",
-                  justifyContent: { xs: "center", md: "flex-start" },
-                  mt: 0.5,
-                }}
-              >
-                <IMDbRating mediaId={movieId} mediaType={movieType} />
-                <MatchScore
-                  movieTitle={movieTitle}
-                  movieYear={(
-                    movieDetails?.release_date ||
-                    movieDetails?.first_air_date ||
-                    ""
-                  ).slice(0, 4)}
-                  overview={movieDetails?.overview}
-                  genres={movieDetails?.genres?.map((genre) => genre.name)}
-                />
-                <ParentalGuide
-                  mediaId={movieId}
-                  mediaType={movieType}
-                  title={movieTitle}
-                  year={(
-                    movieDetails?.release_date ||
-                    movieDetails?.first_air_date ||
-                    ""
-                  ).slice(0, 4)}
-                />
-              </Box>
             </Box>
           </Box>
         </CardContent>
@@ -967,27 +895,41 @@ function Header({
       />
 
       {/* Create new list modal */}
-      <Modal open={newListModalOpen} onClose={() => setNewListModalOpen(false)}>
-        <ModalDialog sx={{ maxWidth: 360 }}>
-          <Typography level="title-md" sx={{ mb: 1.5 }}>Create new list</Typography>
+      <Dialog
+        open={newListModalOpen}
+        onClose={() => setNewListModalOpen(false)}
+        title="Create a new list"
+        description={`"${movieTitle}" will be added to it.`}
+        width={400}
+        actions={
+          <>
+            <Button
+              variant="outlined"
+              color="neutral"
+              onClick={() => setNewListModalOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={confirmCreateListAndAdd}
+              disabled={!newListName.trim()}
+              loading={addingToList === "new"}
+            >
+              Create and add
+            </Button>
+          </>
+        }
+      >
+        <Field label="List name">
           <Input
             autoFocus
-            placeholder="List name..."
+            placeholder="e.g. Weekend picks"
             value={newListName}
             onChange={(e) => setNewListName(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && confirmCreateListAndAdd()}
-            sx={{ mb: 2 }}
           />
-          <Box sx={{ display: "flex", gap: 1 }}>
-            <Button fullWidth onClick={confirmCreateListAndAdd} disabled={!newListName.trim()} loading={addingToList === "new"}>
-              Create & Add
-            </Button>
-            <Button fullWidth variant="outlined" color="neutral" onClick={() => setNewListModalOpen(false)}>
-              Cancel
-            </Button>
-          </Box>
-        </ModalDialog>
-      </Modal>
+        </Field>
+      </Dialog>
     </>
   );
 }

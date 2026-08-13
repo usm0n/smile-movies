@@ -1,14 +1,15 @@
 "use client";
-import { Box, Tab, TabList, TabPanel, Tabs, useColorScheme } from "@mui/joy";
+import { Box, Tab, TabList, TabPanel, Tabs } from "@mui/joy";
 import { useUsers } from "../../context/Users";
 import { User } from "../../user";
 import { useEffect, useState } from "react";
-import { backdropLoading } from "../../utilities/defaults";
 import { useLocation, useNavigate } from "react-router-dom";
 import Settings from "./Settings";
 import Devices from "./Devices";
 import PrivacySettings from "./PrivacySettings";
 import NotificationSettings from "./NotificationSettings";
+import PageHeader from "../../components/ui/PageHeader";
+import { Shimmer } from "../../components/ui/Skeleton";
 
 const tabPaths = [
   "/user/settings",
@@ -27,7 +28,6 @@ const SettingsMain = ({ initialTab = 0 }: { initialTab?: number }) => {
   } = useUsers();
   const [userValue, setUserValue] = useState<User>(myselfData?.data as User);
 
-  const { colorScheme } = useColorScheme();
   const navigate = useNavigate();
   const location = useLocation();
   const activeTab = Math.max(0, tabPaths.indexOf(location.pathname));
@@ -40,6 +40,9 @@ const SettingsMain = ({ initialTab = 0 }: { initialTab?: number }) => {
       navigate("/auth/login");
     }
   }, [authResolved, isAuthenticated, myselfData, navigate]);
+
+  const isLoading = !authResolved || myselfData?.isLoading;
+
   return (
     <form
       onSubmit={(e) => {
@@ -47,57 +50,64 @@ const SettingsMain = ({ initialTab = 0 }: { initialTab?: number }) => {
         updateMyself(userValue);
       }}
     >
-      {backdropLoading(!authResolved || myselfData?.isLoading, colorScheme)}
       <Box
         sx={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          marginTop: "100px",
-          width: "100%",
+          maxWidth: 900,
+          mx: "auto",
+          px: { xs: 2, sm: 3, md: 4 },
+          pt: "calc(var(--sm-nav-height) + 48px)",
+          pb: 8,
         }}
       >
-        <Tabs
-          value={activeTab === -1 ? initialTab : activeTab}
-          onChange={(_, value) => navigate(tabPaths[(value as number) || 0])}
-          sx={{
-            background: "transparent",
-            width: "90%",
-          }}
-        >
-          <TabList>
-            <Tab>Account</Tab>
-            <Tab>Notifications</Tab>
-            <Tab>Devices</Tab>
-            <Tab>Privacy Settings</Tab>
-          </TabList>
-          <TabPanel value={0}>
-            <Settings
-              updateMyself={updateMyself}
-              myselfData={myselfData}
-              setUserValue={setUserValue}
-              userValue={userValue}
-              updatedMyselfData={updatedMyselfData}
-            />
-          </TabPanel>
-          <TabPanel value={1}>
-            <NotificationSettings
-              userValue={userValue}
-              setUserValue={setUserValue}
-            />
-          </TabPanel>
-          <TabPanel value={2}>
-            <Devices myselfData={myselfData} />
-          </TabPanel>
-          <TabPanel value={3}>
-            <PrivacySettings
-              userValue={userValue}
-              setUserValue={setUserValue}
-              updateMyself={updateMyself}
-              updatedMyselfData={updatedMyselfData}
-            />
-          </TabPanel>
-        </Tabs>
+        <PageHeader
+          title="Settings"
+          description="Manage your account, notifications, devices and privacy."
+          divider={false}
+        />
+
+        {isLoading ? (
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+            <Shimmer height={40} />
+            <Shimmer height={220} radius={12} />
+            <Shimmer height={180} radius={12} />
+          </Box>
+        ) : (
+          <Tabs
+            value={activeTab === -1 ? initialTab : activeTab}
+            onChange={(_, value) => navigate(tabPaths[(value as number) || 0])}
+            sx={{ background: "transparent" }}
+          >
+            <TabList>
+              <Tab>Account</Tab>
+              <Tab>Notifications</Tab>
+              <Tab>Devices</Tab>
+              <Tab>Privacy</Tab>
+            </TabList>
+            <TabPanel value={0} sx={{ px: 0, pt: 4 }}>
+              <Settings
+                updateMyself={updateMyself}
+                myselfData={myselfData}
+                setUserValue={setUserValue}
+                userValue={userValue}
+                updatedMyselfData={updatedMyselfData}
+              />
+            </TabPanel>
+            <TabPanel value={1} sx={{ px: 0, pt: 4 }}>
+              <NotificationSettings userValue={userValue} setUserValue={setUserValue} />
+            </TabPanel>
+            <TabPanel value={2} sx={{ px: 0, pt: 4 }}>
+              <Devices myselfData={myselfData} />
+            </TabPanel>
+            <TabPanel value={3} sx={{ px: 0, pt: 4 }}>
+              <PrivacySettings
+                userValue={userValue}
+                setUserValue={setUserValue}
+                updateMyself={updateMyself}
+                updatedMyselfData={updatedMyselfData}
+              />
+            </TabPanel>
+          </Tabs>
+        )}
       </Box>
     </form>
   );

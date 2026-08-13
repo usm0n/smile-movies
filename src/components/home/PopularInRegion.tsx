@@ -4,7 +4,7 @@ import { tmdbAPI } from "../../service/api/api";
 import EventMC from "../cards/EventMC";
 import EventMCS from "../cards/skeleton/EventMC";
 
-function PopularInRegion({ region = "UZ", regionLabel = "Uzbekistan 🇺🇿" }: { region?: string; regionLabel?: string }) {
+function PopularInRegion({ region = "UZ", regionLabel = "Uzbekistan" }: { region?: string; regionLabel?: string }) {
   const [results, setResults] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -31,38 +31,19 @@ function PopularInRegion({ region = "UZ", regionLabel = "Uzbekistan 🇺🇿" }:
   if (!loading && !results.length) return null;
 
   return (
-    <Box sx={{ mb: 5 }}>
+    <Box>
       <Typography
-        level="h1"
-        sx={{
-          mb: 3,
-          color: "rgb(255, 216, 77)",
-          "@media (max-width: 700px)": { fontSize: "25px" },
-        }}
+        level="h3"
+        sx={{ mb: 2, fontSize: { xs: "1.25rem", md: "1.5rem" } }}
       >
         Popular in {regionLabel}
       </Typography>
       <Box
-        sx={{
-          display: "flex",
-          gap: 3,
-          overflowX: "scroll",
-          pb: 1,
-          paddingRight: "24px",
-          scrollbarColor: "transparent",
-          scrollbarWidth: "thin",
-          maskImage: "linear-gradient(to right, black 95%, transparent 100%)",
-          WebkitMaskImage: "linear-gradient(to right, black 95%, transparent 100%)",
-        }}
+        className="no-scrollbar"
+        sx={{ display: "flex", gap: 2, overflowX: "auto", pb: 0.5 }}
       >
         {loading ? (
-          <>
-            <EventMCS />
-            <EventMCS />
-            <EventMCS />
-            <EventMCS />
-            <EventMCS />
-          </>
+          Array.from({ length: 7 }).map((_, index) => <EventMCS key={index} />)
         ) : (
           results.map((item: any) => (
             <EventMC

@@ -1,10 +1,4 @@
-import {
-  Home,
-  HomeOutlined,
-  Login,
-  Search,
-  WatchLaterOutlined,
-} from "@mui/icons-material";
+import { Home, HomeOutlined, Login, Search, WatchLaterOutlined } from "../ui/icons";
 import { Avatar, Badge, ButtonGroup, IconButton } from "@mui/joy";
 import { useUsers } from "../../context/Users";
 import { isLoggedIn } from "../../utilities/defaults";

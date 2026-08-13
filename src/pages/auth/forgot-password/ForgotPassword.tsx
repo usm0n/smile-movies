@@ -1,20 +1,17 @@
-import { Mail } from "@mui/icons-material";
-import {
-  Box,
-  Button,
-  Card,
-  FormControl,
-  FormHelperText,
-  FormLabel,
-  Input,
-} from "@mui/joy";
+import { Mail } from "../../../components/ui/icons";
+import { Box, Input, Link, Typography } from "@mui/joy";
 import { isValidEmail, reload } from "../../../utilities/defaults";
 import { useEffect, useState } from "react";
 import { useUsers } from "../../../context/Users";
+import { useNavigate } from "react-router-dom";
+import AuthCard from "../../../components/auth/AuthCard";
+import Button from "../../../components/ui/Button";
+import Field from "../../../components/ui/Field";
 
 function ForgotPasswordEmail() {
-  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [userEmail, setUserEmail] = useState("");
   const { forgotPassword, forgotPasswordData } = useUsers();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (forgotPasswordData?.data) {
@@ -22,71 +19,51 @@ function ForgotPasswordEmail() {
       reload();
     }
   }, [forgotPasswordData]);
+
   return (
-    <form
-      onSubmit={(e) => {
-        e.preventDefault();
-        forgotPassword(userEmail!);
-      }}
+    <AuthCard
+      title="Reset your password"
+      description="We'll email you a link to set a new one."
+      footer={
+        <Typography level="body-sm">
+          Remembered it?{" "}
+          <Link onClick={() => navigate("/auth/login")} sx={{ cursor: "pointer" }}>
+            Back to sign in
+          </Link>
+        </Typography>
+      }
     >
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          height: "100vh",
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          forgotPassword(userEmail);
         }}
       >
-        <Card
-          sx={{
-            padding: "20px",
-            borderRadius: "10px",
-            gap: "20px",
-          }}
-        >
-          <FormLabel sx={{ fontSize: "20px" }}>Forgot Password</FormLabel>
-          <Box gap={1} display={"flex"} flexDirection={"column"}>
-            <FormControl
-            //   color={forgotPasswordData?.isIncorrect ? "danger" : "neutral"}
-            >
-              <FormLabel>Email</FormLabel>
-              <Input
-                disabled={forgotPasswordData?.isLoading}
-                name="email"
-                placeholder="Your email"
-                value={userEmail!}
-                onChange={(e) =>
-                  setUserEmail(e.target.value.toLocaleLowerCase())
-                }
-                startDecorator={<Mail />}
-              />
-              <FormHelperText>
-                {/* {forgotPasswordData?.isIncorrect && "Invalid email address"} */}
-              </FormHelperText>
-            </FormControl>
-          </Box>
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+          <Field label="Email">
+            <Input
+              disabled={forgotPasswordData?.isLoading}
+              name="email"
+              type="email"
+              autoComplete="email"
+              placeholder="you@example.com"
+              value={userEmail}
+              onChange={(e) => setUserEmail(e.target.value.toLocaleLowerCase())}
+              startDecorator={<Mail sx={{ fontSize: 16 }} />}
+            />
+          </Field>
           <Button
             type="submit"
-            disabled={
-              !isValidEmail(userEmail!) ||
-              !userEmail?.trim() ||
-              forgotPasswordData?.isLoading
-            }
-            sx={{
-              background: "rgb(255, 216, 77)",
-              color: "black",
-              ":hover": {
-                background: "rgb(255, 216, 77)",
-                opacity: 0.8,
-                transition: "all 0.2s ease-in-out",
-              },
-            }}
+            size="lg"
+            fullWidth
+            loading={forgotPasswordData?.isLoading}
+            disabled={!isValidEmail(userEmail) || !userEmail.trim()}
           >
-            {forgotPasswordData?.isLoading ? "Loading..." : "Submit"}
+            Send reset link
           </Button>
-        </Card>
-      </Box>
-    </form>
+        </Box>
+      </form>
+    </AuthCard>
   );
 }
 

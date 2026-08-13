@@ -1,20 +1,13 @@
-import {
-  Box,
-  Button,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Link,
-  Modal,
-  ModalClose,
-  ModalDialog,
-  Snackbar,
-  Typography,
-} from "@mui/joy";
+import { Box, Typography } from "@mui/joy";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUsers } from "../../context/Users";
 import { User } from "../../user";
+import Button from "../ui/Button";
+import IconButton from "../ui/IconButton";
+import Dialog from "../ui/Dialog";
+import EmptyState from "../ui/EmptyState";
+import { Close, Mail, WarningRounded } from "../ui/icons";
 
 function NotVerified({
   type,
@@ -34,149 +27,106 @@ function NotVerified({
     setDismissed(false);
   }, [currentUser?.email, currentUser?.isVerified]);
 
-  if (type == "page") {
+  if (type === "page") {
     return (
       <Box
         sx={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          height: "100vh",
-          width: "100%",
+          minHeight: "100vh",
+          display: "grid",
+          placeItems: "center",
+          px: 2,
+          py: "var(--sm-nav-height)",
         }}
       >
-        <Box
-          sx={{
-            display: "flex",
-            flexDirection: "column",
-            textAlign: "center",
-            alignItems: "center",
-            gap: 4,
-            width: "90%",
-          }}
-        >
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              gap: 1,
-            }}
-          >
-            <Typography level="h2">Please, Verify your email</Typography>
-            <Typography level="body-sm">
-              You can't access this page until you verify your email.
-            </Typography>
-          </Box>
-          <Box
-            sx={{
-              display: "flex",
-              gap: 2,
-              flexDirection: "column",
-            }}
-          >
-            <Button
-              onClick={() => navigate("/auth/verify-email")}
-              sx={{
-                width: "250px",
-              }}
-            >
-              Verify now
-            </Button>
-            <Button
-              onClick={() => navigate("/")}
-              variant="soft"
-              color="neutral"
-            >
-              Go home
-            </Button>
-          </Box>
+        <Box sx={{ width: "100%", maxWidth: 460 }}>
+          <EmptyState
+            icon={Mail}
+            title="Verify your email"
+            description="This page unlocks once your email address is confirmed."
+            action={
+              <>
+                <Button onClick={() => navigate("/auth/verify-email")}>
+                  Verify now
+                </Button>
+                <Button variant="outlined" color="neutral" onClick={() => navigate("/")}>
+                  Go home
+                </Button>
+              </>
+            }
+          />
         </Box>
       </Box>
     );
-  } else if (type == "snackbar") {
+  }
+
+  if (type === "snackbar") {
+    if (!isAuthenticated || !myselfData?.data || isVerified || dismissed) return null;
+
+    // Thin bordered banner pinned under the nav, Vercel's notice pattern.
     return (
-      isAuthenticated &&
-      myselfData?.data &&
-      !isVerified &&
-      !dismissed && (
-        <Snackbar open>
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              gap: "15px",
-            }}
-          >
-            <Box
-              sx={{
-                display: "flex",
-                flexDirection: "column",
-                gap: "5px",
-              }}
-            >
-              <Typography level="title-md">
-                Please verify your email address to unlock all features
-              </Typography>
-              <Typography level="body-md">
-                We sent you a 6-digit code to your email address{" "}
-                <Link>{currentUser?.email}</Link>
-              </Typography>
-            </Box>
-            <Box
-              sx={{
-                display: "flex",
-                flexDirection: "row",
-                gap: "1rem",
-                "& > *": {
-                  width: "100%",
-                },
-              }}
-            >
-              <Button
-                onClick={() => {
-                  navigate("/auth/verify-email");
-                }}
-              >
-                Verify Now!
-              </Button>
-              <Button
-                onClick={() => setDismissed(true)}
-                color="neutral"
-                variant="soft"
-              >
-                Not now
-              </Button>
-            </Box>
-          </Box>
-        </Snackbar>
-      )
-    );
-  } else if (type == "modal") {
-    return (
-      <Modal onClose={() => setModalOpen?.(false)} open={modalOpen || false}>
-        <ModalDialog>
-          <ModalClose />
-          <DialogTitle>Verify your email</DialogTitle>
-          <DialogContent>
-            You can't use this feature until you verify your email
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => navigate("/auth/verify-email")}>
-              Verify now
-            </Button>
-            <Button
-              onClick={() => setModalOpen?.(false)}
-              variant="soft"
-              color="neutral"
-            >
-              Cancel
-            </Button>
-          </DialogActions>
-        </ModalDialog>
-      </Modal>
+      <Box
+        role="status"
+        sx={{
+          position: "fixed",
+          top: "var(--sm-nav-height)",
+          left: 0,
+          right: 0,
+          zIndex: 900,
+          display: "flex",
+          alignItems: "center",
+          gap: 1.5,
+          px: { xs: 2, md: 3 },
+          py: 1.25,
+          borderBottom: "1px solid",
+          borderColor: "rgba(245,166,35,0.28)",
+          backgroundColor: "rgba(245,166,35,0.08)",
+        }}
+      >
+        <WarningRounded sx={{ fontSize: 16, color: "warning.plainColor" }} />
+        <Typography
+          level="body-sm"
+          sx={{
+            flex: 1,
+            minWidth: 0,
+            color: "text.primary",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: { xs: "nowrap", md: "normal" },
+          }}
+        >
+          Verify {currentUser?.email} to unlock every feature.
+        </Typography>
+        <Button size="sm" onClick={() => navigate("/auth/verify-email")}>
+          Verify
+        </Button>
+        <IconButton label="Dismiss" size="sm" onClick={() => setDismissed(true)}>
+          <Close sx={{ fontSize: 16 }} />
+        </IconButton>
+      </Box>
     );
   }
+
+  return (
+    <Dialog
+      open={modalOpen || false}
+      onClose={() => setModalOpen?.(false)}
+      title="Verify your email"
+      description="This feature unlocks once your email address is confirmed."
+      width={420}
+      actions={
+        <>
+          <Button
+            variant="outlined"
+            color="neutral"
+            onClick={() => setModalOpen?.(false)}
+          >
+            Cancel
+          </Button>
+          <Button onClick={() => navigate("/auth/verify-email")}>Verify now</Button>
+        </>
+      }
+    />
+  );
 }
 
 export default NotVerified;

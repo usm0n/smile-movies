@@ -1,5 +1,5 @@
 import { Box, Typography } from "@mui/joy";
-import StarIcon from "@mui/icons-material/Star";
+import { Star as StarIcon } from "../ui/icons";
 
 interface RatingBadgeProps {
   rating: number; // TMDB vote_average 0–10
@@ -31,7 +31,6 @@ function RatingBadge({ rating, size = "sm", showIcon = true }: RatingBadgeProps)
         py: 0.3,
         borderRadius: 4,
         background: "rgba(0,0,0,0.65)",
-        backdropFilter: "blur(4px)",
         border: `1px solid ${color}55`,
         userSelect: "none",
       }}

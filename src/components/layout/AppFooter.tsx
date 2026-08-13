@@ -1,14 +1,42 @@
-import { Box, Chip, Divider, Link, Stack, Typography } from "@mui/joy";
+import { Box, Typography } from "@mui/joy";
 import { Link as RouterLink } from "react-router-dom";
+import Badge from "../ui/Badge";
 
-const footerLinks = [
-  { label: "Download", to: "/download" },
-  { label: "About", to: "/about" },
-  { label: "Contact", to: "/contact" },
-  { label: "Privacy", to: "/privacy" },
-  { label: "Terms", to: "/terms" },
-  { label: "DMCA", to: "/dmca" },
-  { label: "Cookies", to: "/cookies" },
+const columns = [
+  {
+    title: "Product",
+    links: [
+      { label: "Browse", to: "/browse" },
+      { label: "Discover", to: "/discover" },
+      { label: "SmileAI", to: "/ai" },
+      { label: "Download", to: "/download" },
+    ],
+  },
+  {
+    title: "Library",
+    links: [
+      { label: "Watchlist", to: "/watchlist" },
+      { label: "My Lists", to: "/collections" },
+      { label: "Downloads", to: "/downloads" },
+      { label: "Settings", to: "/user/settings" },
+    ],
+  },
+  {
+    title: "Company",
+    links: [
+      { label: "About", to: "/about" },
+      { label: "Contact", to: "/contact" },
+    ],
+  },
+  {
+    title: "Legal",
+    links: [
+      { label: "Privacy", to: "/privacy" },
+      { label: "Terms", to: "/terms" },
+      { label: "DMCA", to: "/dmca" },
+      { label: "Cookies", to: "/cookies" },
+    ],
+  },
 ];
 
 function AppFooter() {
@@ -16,73 +44,97 @@ function AppFooter() {
     <Box
       component="footer"
       sx={{
-        mt: 8,
-        px: { xs: 2, md: 4 },
-        pb: 4,
+        mt: 10,
+        borderTop: "1px solid",
+        borderColor: "neutral.outlinedBorder",
+        backgroundColor: "background.body",
       }}
     >
       <Box
         sx={{
-          maxWidth: 1200,
+          maxWidth: "var(--sm-page-max)",
           mx: "auto",
-          borderRadius: 28,
-          border: "1px solid rgba(255,255,255,0.08)",
-          background:
-            "linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.015))",
-          backdropFilter: "blur(18px)",
-          p: { xs: 2.5, md: 3.5 },
+          px: { xs: 2, md: 4 },
+          py: { xs: 5, md: 6 },
+          display: "grid",
+          gap: { xs: 4, md: 6 },
+          gridTemplateColumns: {
+            xs: "repeat(2, minmax(0, 1fr))",
+            md: "1.4fr repeat(4, minmax(0, 1fr))",
+          },
         }}
       >
-        <Stack
-          direction={{ xs: "column", md: "row" }}
-          spacing={2}
-          sx={{ justifyContent: "space-between", alignItems: { md: "center" } }}
-        >
-          <Box>
-            <Stack direction="row" spacing={1} sx={{ alignItems: "center", mb: 1 }}>
-              <Typography level="title-lg" sx={{ fontWeight: 700 }}>
-                Smile Movies
-              </Typography>
-              <Chip size="sm" variant="soft" color="warning">
-                Web-first beta
-              </Chip>
-            </Stack>
-            <Typography level="body-sm" textColor="neutral.300">
-              The web app stays the source of truth while PWA and direct-download builds roll out.
+        <Box sx={{ gridColumn: { xs: "1 / -1", md: "auto" } }}>
+          <Typography level="title-md" sx={{ fontWeight: 600, mb: 1 }}>
+            Smile Movies
+          </Typography>
+          <Typography level="body-sm" sx={{ maxWidth: 280, mb: 2 }}>
+            Track what you watch, find what's next, and take it offline.
+          </Typography>
+          <Badge tone="neutral">Web-first beta</Badge>
+        </Box>
+
+        {columns.map((column) => (
+          <Box key={column.title}>
+            <Typography
+              level="body-xs"
+              sx={{
+                textTransform: "uppercase",
+                letterSpacing: "0.06em",
+                fontWeight: 500,
+                color: "text.secondary",
+                mb: 1.5,
+              }}
+            >
+              {column.title}
             </Typography>
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+              {column.links.map((link) => (
+                <Box
+                  key={link.to}
+                  component={RouterLink}
+                  to={link.to}
+                  sx={{
+                    fontSize: "0.875rem",
+                    color: "text.tertiary",
+                    textDecoration: "none",
+                    width: "fit-content",
+                    transition: "color 150ms ease",
+                    "&:hover": { color: "text.primary" },
+                  }}
+                >
+                  {link.label}
+                </Box>
+              ))}
+            </Box>
           </Box>
+        ))}
+      </Box>
 
-          <Stack
-            direction="row"
-            spacing={1.5}
-            sx={{ flexWrap: "wrap", rowGap: 1, columnGap: 2 }}
-          >
-            {footerLinks.map((link) => (
-              <Link
-                key={link.to}
-                component={RouterLink}
-                to={link.to}
-                underline="none"
-                sx={{ color: "neutral.100", fontSize: 14 }}
-              >
-                {link.label}
-              </Link>
-            ))}
-          </Stack>
-        </Stack>
-
-        <Divider sx={{ my: 2.5, borderColor: "rgba(255,255,255,0.08)" }} />
-
-        <Stack
-          direction={{ xs: "column", md: "row" }}
-          spacing={1}
-          sx={{ justifyContent: "space-between", color: "neutral.400" }}
+      <Box
+        sx={{
+          borderTop: "1px solid",
+          borderColor: "neutral.outlinedBorder",
+        }}
+      >
+        <Box
+          sx={{
+            maxWidth: "var(--sm-page-max)",
+            mx: "auto",
+            px: { xs: 2, md: 4 },
+            py: 2.5,
+            display: "flex",
+            flexWrap: "wrap",
+            gap: 1,
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
         >
           <Typography level="body-xs">
-            SmileAI, watch tracking, and direct downloads are evolving in phases. Use the PWA for the best iPhone experience today.
+            © {new Date().getFullYear()} Smile Movies. All rights reserved.
           </Typography>
-          <Typography level="body-xs">TMDB metadata powers discovery across the app.</Typography>
-        </Stack>
+          <Typography level="body-xs">Metadata by TMDB.</Typography>
+        </Box>
       </Box>
     </Box>
   );

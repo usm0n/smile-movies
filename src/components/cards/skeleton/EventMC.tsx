@@ -1,30 +1,13 @@
-import { Box, Card, CardCover, Skeleton } from "@mui/joy";
+import { Box } from "@mui/joy";
+import { Shimmer } from "../../ui/Skeleton";
 
+/** Poster-card placeholder — mirrors the real EventMC dimensions exactly. */
 function EventMCS() {
   return (
-    <Box>
-      <Card
-        sx={{
-          cursor: "pointer",
-          minHeight: "400px",
-          width: "250px",
-          background: "transparent",
-          border: "1px solid gray",
-          "@media (max-width: 800px)": {
-            margin: "0 auto",
-            width: "200px",
-            minHeight: "300px",
-          },
-          ":hover": {
-            transition: "all 0.2s ease-in-out",
-            opacity: 0.8,
-          },
-        }}
-      >
-        <CardCover>
-          <Skeleton sx={{ background: "gray" }} />
-        </CardCover>
-      </Card>
+    <Box sx={{ width: { xs: 150, sm: 176 }, flexShrink: 0 }}>
+      <Shimmer sx={{ width: "100%", aspectRatio: "2 / 3", height: "auto" }} radius={8} />
+      <Shimmer width="72%" height={13} sx={{ mt: 1.25 }} />
+      <Shimmer width="40%" height={10} sx={{ mt: 0.75 }} />
     </Box>
   );
 }
