@@ -115,16 +115,20 @@ export const mainRoutes = [
     element: <Settings initialTab={0} />,
   },
   {
-    path: "/user/notifications",
+    path: "/user/connections",
     element: <Settings initialTab={1} />,
   },
   {
-    path: "/user/devices",
+    path: "/user/notifications",
     element: <Settings initialTab={2} />,
   },
   {
-    path: "/user/privacy",
+    path: "/user/devices",
     element: <Settings initialTab={3} />,
+  },
+  {
+    path: "/user/privacy",
+    element: <Settings initialTab={4} />,
   },
   {
     path: "/movie/:movieId",

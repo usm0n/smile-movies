@@ -8,7 +8,6 @@ import { TMDBProvider } from "./context/TMDB.tsx";
 import UsersProvider from "./context/Users.tsx";
 import { BrowserRouter } from "react-router-dom";
 import { CssBaseline, CssVarsProvider } from "@mui/joy";
-import { GoogleOAuthProvider } from "@react-oauth/google";
 import OCProvider from "./context/OC.tsx";
 import { StreamProvider } from "./context/Stream.tsx";
 import { registerServiceWorker } from "./pwa/registerServiceWorker.ts";
@@ -18,23 +17,21 @@ import { Toaster } from "./components/ui/toast.tsx";
 registerServiceWorker();
 
 createRoot(document.getElementById("root")!).render(
-  <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
-    <CssVarsProvider theme={theme} defaultMode="dark" modeStorageKey="smile-mode">
-      <CssBaseline />
-      <BrowserRouter>
-        <StreamProvider>
-          <OCProvider>
-            <UsersProvider>
-              <TMDBProvider>
-                <StrictMode>
-                  <Toaster />
-                  <App />
-                </StrictMode>
-              </TMDBProvider>
-            </UsersProvider>
-          </OCProvider>
-        </StreamProvider>
-      </BrowserRouter>
-    </CssVarsProvider>
-  </GoogleOAuthProvider>,
+  <CssVarsProvider theme={theme} defaultMode="dark" modeStorageKey="smile-mode">
+    <CssBaseline />
+    <BrowserRouter>
+      <StreamProvider>
+        <OCProvider>
+          <UsersProvider>
+            <TMDBProvider>
+              <StrictMode>
+                <Toaster />
+                <App />
+              </StrictMode>
+            </TMDBProvider>
+          </UsersProvider>
+        </OCProvider>
+      </StreamProvider>
+    </BrowserRouter>
+  </CssVarsProvider>,
 );

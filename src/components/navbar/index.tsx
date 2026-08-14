@@ -43,7 +43,6 @@ import React, { useEffect, useMemo, useState, type ComponentType } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useUsers } from "../../context/Users";
 import { User } from "../../user";
-import { googleLogout } from "@react-oauth/google";
 import { useTMDB } from "../../context/TMDB";
 import { images, movieDetails, tvDetails } from "../../tmdb-res";
 import PinLockModal from "../../components/account/PinLockModal";
@@ -592,7 +591,6 @@ const Navbar: React.FC = () => {
               loading={logoutData?.isLoading}
               onClick={() => {
                 logout();
-                googleLogout();
               }}
             >
               Log out

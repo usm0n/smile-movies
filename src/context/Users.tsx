@@ -50,7 +50,7 @@ const UsersContext = createContext({
   getMyself: async () => {},
   updateUserById: async (_id: string, _user: userType.User) => {},
   updateUserByEmail: async (_email: string, _user: userType.User) => {},
-  updateMyself: async (_user: userType.User) => {},
+  updateMyself: async (_user: Partial<userType.User>) => {},
   deleteUserById: async (_id: string) => {},
   deleteUserByEmail: async (_email: string) => {},
   deleteMyself: async () => {},
@@ -317,7 +317,7 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
       });
     }
   };
-  const updateMyself = async (user: userType.User) => {
+  const updateMyself = async (user: Partial<userType.User>) => {
     setUpdatedMyselfData((prev) => ({ ...prev, isLoading: true }));
     try {
       const response = await users.updateMyself(user);

@@ -1,18 +1,39 @@
-import {
-  Box,
-  Button,
-  Card,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Divider,
-  Modal,
-  ModalDialog,
-  Typography,
-} from "@mui/joy";
+import { Box, Switch, Typography } from "@mui/joy";
+import Button from "../../components/ui/Button";
+import Panel from "../../components/ui/Panel";
 import { PrivacySettings as PrivacySettingsType, User } from "../../user";
-import { WarningRounded } from "../../components/ui/icons";
-import { useState } from "react";
+import { LaunchRounded } from "../../components/ui/icons";
+import { useNavigate } from "react-router-dom";
+
+/**
+ * Settings → Privacy.
+ *
+ * Every toggle here controls one thing only: what a visitor to your public
+ * profile can see. Anything that changes how you sign in lives under Login
+ * connections, and deletion lives under Account.
+ */
+
+const PRIVACY_TOGGLES: {
+  key: keyof PrivacySettingsType;
+  label: string;
+  description: string;
+}[] = [
+  {
+    key: "showWatchlist",
+    label: "Watchlist",
+    description: "Let anyone see the titles you have saved to watch.",
+  },
+  {
+    key: "showRecentlyWatched",
+    label: "Recently watched",
+    description: "Show the last titles you played, including your progress.",
+  },
+  {
+    key: "showRatings",
+    label: "Ratings",
+    description: "Show the scores you have given to movies and shows.",
+  },
+];
 
 function PrivacySettings({
   userValue,
@@ -25,103 +46,153 @@ function PrivacySettings({
   updateMyself: (user: User) => void;
   updatedMyselfData: { isLoading: boolean } | null;
 }) {
-  const [deleteModal, setDeleteModal] = useState(false);
+  const navigate = useNavigate();
+  const privacy = (userValue?.privacy || {}) as PrivacySettingsType;
+  const visibleCount = PRIVACY_TOGGLES.filter((item) => privacy[item.key]).length;
+
+  const toggle = (key: keyof PrivacySettingsType) =>
+    setUserValue((prev) => ({
+      ...prev,
+      privacy: {
+        ...(prev.privacy as PrivacySettingsType),
+        [key]: !(prev.privacy as PrivacySettingsType)?.[key],
+      },
+    }));
 
   return (
-    <Card
-      sx={{
-        width: "700px",
-        margin: "0 auto",
-        "@media (max-width: 800px)": {
-          width: "90%",
-        },
-      }}
+    <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+      <Panel
+        title="Public profile visibility"
+        description={
+          userValue?.handle
+            ? `Controls what visitors see at /u/${userValue.handle}.`
+            : "Set a handle under Account to publish a public profile."
+        }
+        footerHint={
+          visibleCount === 0
+            ? "Nothing from your library is public."
+            : `${visibleCount} of ${PRIVACY_TOGGLES.length} sections are public.`
+        }
+        footer={
+          <>
+            {!!userValue?.handle && (
+              <Button
+                variant="outlined"
+                color="neutral"
+                startDecorator={<LaunchRounded sx={{ fontSize: 15 }} />}
+                onClick={() => window.open(`/u/${userValue.handle}`, "_blank")}
+              >
+                Preview
+              </Button>
+            )}
+            <Button
+              loading={updatedMyselfData?.isLoading}
+              onClick={() => updateMyself(userValue)}
+            >
+              Save changes
+            </Button>
+          </>
+        }
       >
-      <Typography level="h4">Privacy Settings</Typography>
-      <Typography level="body-sm" textColor="neutral.400">
-        Choose which library sections appear on your public profile. Watchlist stays social by default, while recently watched and ratings stay private until you opt in.
-      </Typography>
-      <Divider />
-      {[
-        { key: "showWatchlist", label: "Show my watchlist to others" },
-        { key: "showRecentlyWatched", label: "Show my recently watched titles" },
-        { key: "showRatings", label: "Show my ratings to others" },
-      ].map(({ key, label }) => (
-        <Box
-          key={key}
-          sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1 }}
-        >
-          <Typography level="body-sm">{label}</Typography>
-          <Button
-            size="sm"
-            variant={(userValue?.privacy as any)?.[key] ? "solid" : "outlined"}
-            color={(userValue?.privacy as any)?.[key] ? "primary" : "neutral"}
-            onClick={() =>
-              setUserValue((prev) => ({
-                ...prev,
-                privacy: {
-                  ...(prev.privacy as PrivacySettingsType),
-                  [key]: !(prev.privacy as any)?.[key],
-                },
-              }))
-            }
-            sx={{ minWidth: 56 }}
-          >
-            {(userValue?.privacy as any)?.[key] ? "On" : "Off"}
-          </Button>
+        <Box sx={{ display: "flex", flexDirection: "column" }}>
+          {PRIVACY_TOGGLES.map((item, index) => (
+            <Box
+              key={item.key}
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 2,
+                py: 2,
+                borderTop: index === 0 ? "none" : "1px solid",
+                borderColor: "neutral.outlinedBorder",
+              }}
+            >
+              <Box sx={{ minWidth: 0 }}>
+                <Typography level="title-sm">{item.label}</Typography>
+                <Typography
+                  level="body-xs"
+                  sx={{ color: "text.tertiary", mt: 0.25 }}
+                >
+                  {item.description}
+                </Typography>
+              </Box>
+              <Switch
+                checked={Boolean(privacy[item.key])}
+                onChange={() => toggle(item.key)}
+                slotProps={{ input: { "aria-label": item.label } }}
+              />
+            </Box>
+          ))}
         </Box>
-      ))}
-      <Divider />
-      <Button
-        onClick={() => updateMyself(userValue)}
-        loading={updatedMyselfData?.isLoading}
+      </Panel>
+
+      <Panel
+        title="Account details"
+        description="Read-only facts about this account."
       >
-        Save Privacy Settings
-      </Button>
-      <Divider />
-      <Box display={"flex"} gap={"10px"} alignItems={"center"}>
-        <Typography level="title-md">Created at:</Typography>
-        <Typography>{userValue?.createdAt}</Typography>
-      </Box>
-      <Box display={"flex"} gap={"10px"} alignItems={"center"}>
-        <Typography level="title-md">Signed in with:</Typography>
-        <Typography>
-          {userValue?.loginType == "google" ? "Google" : "Email & Password"}
-        </Typography>
-      </Box>
-      <Button
-        onClick={() => setDeleteModal(true)}
-        color="danger"
-        variant="outlined"
-      >
-        Delete account
-      </Button>
-      <Modal open={deleteModal} onClose={() => setDeleteModal(false)}>
-        <ModalDialog minWidth={500} variant="outlined" role="alertdialog">
-          <DialogTitle>
-            <WarningRounded />
-            Confirmation
-          </DialogTitle>
-          <Divider />
-          <DialogContent>
-            Are you sure you want to delete your account? Remember, this cannot
-            be undone!
-          </DialogContent>
-          <DialogActions>
-            <Button disabled variant="solid" color="danger" onClick={() => {}}>
-              Delete my account
+        <Box sx={{ display: "flex", flexDirection: "column" }}>
+          <DetailRow label="Created" value={userValue?.createdAt || "—"} />
+          <DetailRow label="Last sign-in" value={userValue?.lastLogin || "—"} />
+          <DetailRow
+            label="Primary email"
+            value={userValue?.email || "No email on this account"}
+          />
+          <DetailRow
+            label="Devices"
+            value={`${userValue?.devices?.length || 0} registered`}
+          />
+        </Box>
+      </Panel>
+
+      <Panel
+        title="Your data"
+        description="Sign-in methods, connected emails and account deletion are handled elsewhere in Settings."
+        footer={
+          <>
+            <Button
+              variant="outlined"
+              color="neutral"
+              onClick={() => navigate("/user/connections")}
+            >
+              Login connections
             </Button>
             <Button
-              variant="plain"
+              variant="outlined"
               color="neutral"
-              onClick={() => setDeleteModal(false)}
+              onClick={() => navigate("/user/settings")}
             >
-              Cancel
+              Account &amp; deletion
             </Button>
-          </DialogActions>
-        </ModalDialog>
-      </Modal>
-    </Card>
+          </>
+        }
+      />
+    </Box>
+  );
+}
+
+function DetailRow({ label, value }: { label: string; value: string }) {
+  return (
+    <Box
+      sx={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        gap: 2,
+        py: 1.5,
+        "&:not(:first-of-type)": {
+          borderTop: "1px solid",
+          borderColor: "neutral.outlinedBorder",
+        },
+      }}
+    >
+      <Typography level="body-sm" sx={{ color: "text.tertiary" }}>
+        {label}
+      </Typography>
+      <Typography level="body-sm" sx={{ fontFamily: "code", fontSize: "0.8rem" }}>
+        {value}
+      </Typography>
+    </Box>
   );
 }
 

@@ -1,23 +1,24 @@
-import {
-  Avatar,
-  Box,
-  Input,
-  Option,
-  Select,
-  Textarea,
-  Typography,
-} from "@mui/joy";
+import { Box, Input, Option, Select, Textarea, Typography } from "@mui/joy";
 import Button from "../../components/ui/Button";
 import IconButton from "../../components/ui/IconButton";
 import Dialog from "../../components/ui/Dialog";
 import Field from "../../components/ui/Field";
 import Panel from "../../components/ui/Panel";
+import AvatarPanel from "../../components/account/AvatarPanel";
 import { ResponseType, User } from "../../user";
-import { Edit, Lock, LockOpen, Mail, Visibility, VisibilityOff, WarningRounded } from "../../components/ui/icons";
+import {
+  Delete,
+  LaunchRounded,
+  Lock,
+  LockOpen,
+  Mail,
+  Visibility,
+  VisibilityOff,
+  WarningRounded,
+} from "../../components/ui/icons";
 import { isValidEmail } from "../../utilities/defaults";
 import React, { useState } from "react";
 import { toast } from "../../components/ui/toast";
-import { smbAPI } from "../../service/api/api";
 import { useUsers } from "../../context/Users";
 import { useNavigate } from "react-router-dom";
 import PinLockModal from "../../components/account/PinLockModal";
@@ -42,15 +43,29 @@ function Settings({
   myselfData: ResponseType | null;
   updateMyself: (user: User) => void;
 }) {
-  const { changePassword, resendTokenVerification, resendTokenVerificationData } = useUsers() as any;
+  const {
+    changePassword,
+    resendTokenVerification,
+    resendTokenVerificationData,
+    deleteMyself,
+    logout,
+  } = useUsers();
+
   const [emailModal, setEmailModal] = useState(false);
   const [passwordModal, setPasswordModal] = useState(false);
+  const [deleteModal, setDeleteModal] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  const [deleting, setDeleting] = useState(false);
   const [passwordVisibility, setPasswordVisibility] = useState(false);
   const [verifySent, setVerifySent] = useState(false);
   const [pinModal, setPinModal] = useState<"setup" | "change" | null>(null);
   const pinEnabled = userValue?.accountPin?.enabled;
 
-  const [passwords, setPasswords] = useState({ oldPassword: "", newPassword: "", newPasswordConfirm: "" });
+  const [passwords, setPasswords] = useState({
+    oldPassword: "",
+    newPassword: "",
+    newPasswordConfirm: "",
+  });
   const navigate = useNavigate();
 
   const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -63,30 +78,20 @@ function Settings({
     setPasswords((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Profile picture: upload to Firebase Storage via backend, store URL
-  const [picUploading, setPicUploading] = useState(false);
-  const handleProfilePic = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("Image must be under 5MB");
-      return;
+  const resetPasswords = () =>
+    setPasswords({ oldPassword: "", newPassword: "", newPasswordConfirm: "" });
+
+  const handleDeleteAccount = async () => {
+    setDeleting(true);
+    try {
+      await deleteMyself();
+      toast.success("Your account has been deleted.");
+      await logout();
+    } catch {
+      // The interceptor already surfaced the failure.
+    } finally {
+      setDeleting(false);
     }
-    setPicUploading(true);
-    const reader = new FileReader();
-    reader.onload = async () => {
-      try {
-        const base64 = (reader.result as string).split(",")[1];
-        const mimeType = file.type;
-        const res = await smbAPI.post("/users/upload-profile-pic", { base64, mimeType });
-        setUserValue((prev) => ({ ...prev, profilePic: res.data.url }));
-      } catch (_) {
-        toast.error("Failed to upload image. Please try again.");
-      } finally {
-        setPicUploading(false);
-      }
-    };
-    reader.readAsDataURL(file);
   };
 
   const passwordVisibilityToggle = (
@@ -105,11 +110,13 @@ function Settings({
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-      {!userValue?.isVerified && (
+      {!userValue?.isVerified && userValue?.email && (
         <Panel
           title="Email not verified"
           description="Verify your email to unlock full access. We'll send a code plus a one-click verify link."
-          footerHint={verifySent ? "Verification email sent — check your inbox." : undefined}
+          footerHint={
+            verifySent ? "Verification email sent — check your inbox." : undefined
+          }
           footer={
             <>
               <Button
@@ -141,46 +148,12 @@ function Settings({
         </Panel>
       )}
 
-      <Panel
-        title="Avatar"
-        description="This is your avatar across Smile Movies. JPG, PNG or GIF, max 5MB."
-        footerHint="Click upload to choose a square image."
-        footer={
-          <>
-            {userValue?.profilePic && (
-              <Button
-                variant="outlined"
-                color="danger"
-                onClick={() => setUserValue((prev) => ({ ...prev, profilePic: "" }))}
-              >
-                Remove
-              </Button>
-            )}
-            <Button
-              component="label"
-              variant="outlined"
-              color="neutral"
-              loading={picUploading}
-            >
-              Upload
-              <input
-                type="file"
-                accept="image/*"
-                hidden
-                onChange={handleProfilePic}
-                disabled={picUploading}
-              />
-            </Button>
-          </>
+      <AvatarPanel
+        user={userValue}
+        onChange={(profilePic) =>
+          setUserValue((prev) => ({ ...prev, profilePic }))
         }
-      >
-        <Avatar
-          src={userValue?.profilePic}
-          sx={{ width: 64, height: 64, borderRadius: "999px", fontSize: "1.25rem" }}
-        >
-          {userValue?.firstname?.[0]}
-        </Avatar>
-      </Panel>
+      />
 
       <Panel
         title="Profile"
@@ -188,15 +161,21 @@ function Settings({
         footerHint="Changes apply to every device."
         footer={
           <Button
-            type="submit"
             loading={updatedMyselfData?.isLoading}
             disabled={!userValue?.firstname?.trim()}
+            onClick={() => updateMyself(userValue)}
           >
             Save changes
           </Button>
         }
       >
-        <Box sx={{ display: "grid", gap: 2, gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" } }}>
+        <Box
+          sx={{
+            display: "grid",
+            gap: 2,
+            gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
+          }}
+        >
           <Field label="First name" required>
             <Input
               required
@@ -232,7 +211,12 @@ function Settings({
           <Field label="Gender">
             <Select
               value={userValue?.gender || null}
-              onChange={(_, v) => setUserValue((prev) => ({ ...prev, gender: v as any }))}
+              onChange={(_, v) =>
+                setUserValue((prev) => ({
+                  ...prev,
+                  gender: (v as User["gender"]) || undefined,
+                }))
+              }
               placeholder="Select"
             >
               {GENDER_OPTIONS.map((o) => (
@@ -248,22 +232,27 @@ function Settings({
       <Panel
         title="Public profile"
         description={`Your profile lives at /u/${userValue?.handle || "yourname"} and needs a unique handle.`}
-        footerHint={userValue?.handle ? `smile-movies.uz/u/${userValue.handle}` : "Pick a handle to publish it."}
+        footerHint={
+          userValue?.handle
+            ? `smile-movies.uz/u/${userValue.handle}`
+            : "Pick a handle to publish it."
+        }
         footer={
           <>
             {!!userValue?.handle && (
               <Button
                 variant="outlined"
                 color="neutral"
+                startDecorator={<LaunchRounded sx={{ fontSize: 15 }} />}
                 onClick={() => window.open(`/u/${userValue.handle}`, "_blank")}
               >
                 View profile
               </Button>
             )}
             <Button
-              type="submit"
               loading={updatedMyselfData?.isLoading}
               disabled={!userValue?.firstname?.trim()}
+              onClick={() => updateMyself(userValue)}
             >
               Save changes
             </Button>
@@ -286,7 +275,9 @@ function Settings({
               minRows={3}
               placeholder="Tell people what you love to watch."
               value={userValue?.bio || ""}
-              onChange={(e) => setUserValue((prev) => ({ ...prev, bio: e.target.value }))}
+              onChange={(e) =>
+                setUserValue((prev) => ({ ...prev, bio: e.target.value }))
+              }
             />
           </Field>
         </Box>
@@ -294,49 +285,53 @@ function Settings({
 
       <Panel
         title="Sign-in"
-        description={
-          userValue?.loginType === "google"
-            ? "You sign in with Google, so email and password are managed there."
-            : "Change the email address and password used to sign in."
+        description="Change the primary email address and password used to sign in. Manage every other method under Login connections."
+        footerHint="Adding Google, Apple or a phone number lives in Login connections."
+        footer={
+          <Button
+            variant="outlined"
+            color="neutral"
+            onClick={() => navigate("/user/connections")}
+          >
+            Manage connections
+          </Button>
         }
       >
         <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-          <Field label="Email">
+          <Field label="Primary email">
             <Input
               name="email"
               disabled
-              value={userValue?.email || ""}
+              value={userValue?.email || "No email on this account"}
               endDecorator={
-                userValue?.loginType !== "google" ? (
-                  <IconButton
-                    label="Change email"
-                    size="sm"
-                    onClick={() => setEmailModal(true)}
-                  >
-                    <Edit sx={{ fontSize: 15 }} />
-                  </IconButton>
-                ) : undefined
+                <Button
+                  size="sm"
+                  variant="plain"
+                  color="neutral"
+                  onClick={() => setEmailModal(true)}
+                >
+                  Change
+                </Button>
               }
             />
           </Field>
-          {userValue?.loginType !== "google" && (
-            <Field label="Password">
-              <Input
-                type="password"
-                disabled
-                value="•••••••••"
-                endDecorator={
-                  <IconButton
-                    label="Change password"
-                    size="sm"
-                    onClick={() => setPasswordModal(true)}
-                  >
-                    <Edit sx={{ fontSize: 15 }} />
-                  </IconButton>
-                }
-              />
-            </Field>
-          )}
+          <Field label="Password">
+            <Input
+              type="password"
+              disabled
+              value="•••••••••"
+              endDecorator={
+                <Button
+                  size="sm"
+                  variant="plain"
+                  color="neutral"
+                  onClick={() => setPasswordModal(true)}
+                >
+                  Change
+                </Button>
+              }
+            />
+          </Field>
         </Box>
       </Panel>
 
@@ -386,6 +381,53 @@ function Settings({
         }
       />
 
+      {/* ── Danger zone ── */}
+      <Box
+        sx={{
+          border: "1px solid",
+          borderColor: "danger.outlinedBorder",
+          borderRadius: "lg",
+          backgroundColor: "background.surface",
+          overflow: "hidden",
+        }}
+      >
+        <Box sx={{ px: 3, pt: 3, pb: 2 }}>
+          <Typography level="title-md" sx={{ fontWeight: 600 }}>
+            Delete account
+          </Typography>
+          <Typography level="body-sm" sx={{ mt: 0.5, maxWidth: 620 }}>
+            Permanently deletes your profile, watchlist, ratings, reviews, devices
+            and avatar. This cannot be undone.
+          </Typography>
+        </Box>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 2,
+            flexWrap: "wrap",
+            px: 3,
+            py: 2,
+            borderTop: "1px solid",
+            borderColor: "danger.outlinedBorder",
+            backgroundColor: "background.level1",
+          }}
+        >
+          <Typography level="body-xs">
+            Member since {userValue?.createdAt || "—"}.
+          </Typography>
+          <Button
+            color="danger"
+            variant="outlined"
+            startDecorator={<Delete sx={{ fontSize: 16 }} />}
+            onClick={() => setDeleteModal(true)}
+          >
+            Delete account
+          </Button>
+        </Box>
+      </Box>
+
       {/* ── Email dialog ── */}
       <Dialog
         open={emailModal}
@@ -393,7 +435,7 @@ function Settings({
           setEmailModal(false);
           setUserValue({ ...userValue, email: (myselfData?.data as User).email });
         }}
-        title="Change email"
+        title="Change primary email"
         description="You'll need to verify the new address before it takes effect."
         actions={
           <>
@@ -402,7 +444,10 @@ function Settings({
               color="neutral"
               onClick={() => {
                 setEmailModal(false);
-                setUserValue({ ...userValue, email: (myselfData?.data as User).email });
+                setUserValue({
+                  ...userValue,
+                  email: (myselfData?.data as User).email,
+                });
               }}
             >
               Cancel
@@ -413,7 +458,10 @@ function Settings({
                 userValue?.email === (myselfData?.data as User)?.email ||
                 !isValidEmail(userValue?.email || "")
               }
-              onClick={() => updateMyself(userValue)}
+              onClick={() => {
+                updateMyself(userValue);
+                setEmailModal(false);
+              }}
             >
               Update email
             </Button>
@@ -445,7 +493,7 @@ function Settings({
         open={passwordModal}
         onClose={() => {
           setPasswordModal(false);
-          setPasswords({ oldPassword: "", newPassword: "", newPasswordConfirm: "" });
+          resetPasswords();
         }}
         title="Change password"
         description="Use at least 8 characters."
@@ -456,7 +504,7 @@ function Settings({
               color="neutral"
               onClick={() => {
                 setPasswordModal(false);
-                setPasswords({ oldPassword: "", newPassword: "", newPasswordConfirm: "" });
+                resetPasswords();
               }}
             >
               Cancel
@@ -466,7 +514,7 @@ function Settings({
                 if (changePassword)
                   await changePassword(passwords.oldPassword, passwords.newPassword);
                 setPasswordModal(false);
-                setPasswords({ oldPassword: "", newPassword: "", newPasswordConfirm: "" });
+                resetPasswords();
               }}
               disabled={
                 passwords.newPasswordConfirm.trim().length < 8 ||
@@ -529,6 +577,51 @@ function Settings({
             />
           </Field>
         </Box>
+      </Dialog>
+
+      {/* ── Delete account dialog ── */}
+      <Dialog
+        open={deleteModal}
+        onClose={() => {
+          setDeleteModal(false);
+          setDeleteConfirmText("");
+        }}
+        title="Delete your account?"
+        description="This permanently removes your account and everything in it. There is no undo."
+        actions={
+          <>
+            <Button
+              variant="outlined"
+              color="neutral"
+              onClick={() => {
+                setDeleteModal(false);
+                setDeleteConfirmText("");
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              color="danger"
+              loading={deleting}
+              disabled={deleteConfirmText !== "delete my account"}
+              onClick={handleDeleteAccount}
+            >
+              Delete account
+            </Button>
+          </>
+        }
+      >
+        <Field
+          label="Type “delete my account” to confirm"
+          helper="This is intentionally tedious — deletion cannot be reversed."
+        >
+          <Input
+            value={deleteConfirmText}
+            onChange={(event) => setDeleteConfirmText(event.target.value)}
+            placeholder="delete my account"
+            autoComplete="off"
+          />
+        </Field>
       </Dialog>
 
       {pinModal && (
