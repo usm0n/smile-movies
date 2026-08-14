@@ -9,49 +9,14 @@ import {
   fetchImdbParentalGuide,
   ImdbParentsGuideEntry,
 } from "../../service/api/imdb/imdb.api.service";
-
-// ── Category display config ───────────────────────────────────────────────────
-const CATEGORY_META: Record<string, { label: string; emoji: string }> = {
-  SEXUAL_CONTENT:               { label: "Sex & Nudity",            emoji: "🔞" },
-  VIOLENCE:                     { label: "Violence & Gore",          emoji: "🩸" },
-  PROFANITY:                    { label: "Profanity",                emoji: "🤬" },
-  ALCOHOL_DRUGS:                { label: "Alcohol, Drugs & Smoking", emoji: "🍷" },
-  FRIGHTENING_INTENSE_SCENES:   { label: "Frightening & Intense",   emoji: "😱" },
-};
-
-const CATEGORY_ORDER = [
-  "SEXUAL_CONTENT",
-  "VIOLENCE",
-  "PROFANITY",
-  "ALCOHOL_DRUGS",
-  "FRIGHTENING_INTENSE_SCENES",
-];
-
-const SEVERITY_CONFIG: Record<string, { color: string; label: string }> = {
-  NONE:     { color: "#21d07a", label: "None"     },
-  MILD:     { color: "#d2d531", label: "Mild"     },
-  MODERATE: { color: "#e67e22", label: "Moderate" },
-  SEVERE:   { color: "#e74c3c", label: "Severe"   },
-};
-const SEVERITY_ORDER = ["NONE", "MILD", "MODERATE", "SEVERE"];
-
-function dominantSeverity(entry: ImdbParentsGuideEntry): string {
-  // if (!entry.severityBreakdowns?.length) return "NONE";
-  // return [...entry.severityBreakdowns].sort((a, b) => b.voteCount - a.voteCount)[0]
-  //   ?.severityLevel?.toUpperCase() ?? "NONE";
-
-const breakdowns = entry.severityBreakdowns?.filter(b => (b.voteCount ?? 0) > 0) ?? [];
-if (!breakdowns.length) return "NONE";
-  return [...breakdowns].sort((a, b) => b.voteCount - a.voteCount)[0]
-    ?.severityLevel?.toUpperCase() ?? "NONE";
-}
-
-function severityChipColor(sev: string): "success" | "warning" | "danger" | "neutral" {
-  if (sev === "NONE") return "success";
-  if (sev === "MILD" || sev === "MODERATE") return "warning";
-  if (sev === "SEVERE") return "danger";
-  return "neutral";
-}
+import {
+  CATEGORY_META,
+  SEVERITY_CONFIG,
+  SEVERITY_ORDER,
+  dominantSeverity,
+  severityChipColor,
+  sortParentalGuide,
+} from "./parentalGuideShared";
 
 // ── Severity bar ──────────────────────────────────────────────────────────────
 function SeverityBar({ entry }: { entry: ImdbParentsGuideEntry }) {
@@ -212,10 +177,7 @@ function ParentalGuide({ mediaId, mediaType, imdbId, title, year, variant = "but
       const resolvedId = imdbId ?? (mediaId && mediaType ? await resolveImdbId(mediaId, mediaType) : null);
       if (!resolvedId) { setError("IMDb ID not found for this title."); return; }
       const entries = await fetchImdbParentalGuide(resolvedId);
-      const sorted = [...entries].sort(
-        (a, b) => CATEGORY_ORDER.indexOf(a.category) - CATEGORY_ORDER.indexOf(b.category)
-      );
-      setGuide(sorted);
+      setGuide(sortParentalGuide(entries));
     } catch {
       setError("Could not load parental guide. Please try again.");
     } finally {

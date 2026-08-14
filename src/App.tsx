@@ -23,7 +23,10 @@ function App() {
   return (
     <Box className="app-shell">
       <NotVerified type="snackbar" />
-      <Navbar />
+      {/* The player owns the whole viewport and puts its own back button, title
+          and controls at the very top — a fixed app header would sit on top of
+          all three, which on a phone leaves nothing tappable. */}
+      {!isWatchPage && <Navbar />}
       <CommandMenu />
       <Box component="main" sx={{ flex: 1 }}>
         <Suspense fallback={<RouteFallback />}>

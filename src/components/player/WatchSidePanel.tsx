@@ -1,10 +1,10 @@
-import { useEffect, useRef } from "react";
+import { ReactNode, useEffect, useRef } from "react";
 import { Box, Typography } from "@mui/joy";
 import { useMediaRemote } from "@vidstack/react";
 import { Check, Close, Loader, PlayArrow } from "../ui/icons";
 import { AnimeMode, ProviderId, VixsrcSourceOption } from "../../types/providers";
 
-export type WatchPanelTab = "episodes" | "sources";
+export type WatchPanelTab = "episodes" | "sources" | "info";
 
 type SeasonOption = {
   id: number;
@@ -55,6 +55,8 @@ export type WatchSidePanelProps = {
   version: AnimeMode;
   onVersionChange: (version: AnimeMode) => void;
   notice?: string;
+  /** Rendered under the Info tab — the page owns what "info" means. */
+  infoContent?: ReactNode;
 };
 
 const formatRuntime = (minutes: number) =>
@@ -214,6 +216,7 @@ function WatchSidePanel({
   version,
   onVersionChange,
   notice,
+  infoContent,
 }: WatchSidePanelProps) {
   const remote = useMediaRemote();
   const activeEpisodeRef = useRef<HTMLDivElement | null>(null);
@@ -259,7 +262,9 @@ function WatchSidePanel({
       />
       <Box
         role="dialog"
-        aria-label={tab === "episodes" ? "Episodes" : "Sources"}
+        aria-label={
+          tab === "episodes" ? "Episodes" : tab === "info" ? "Info" : "Sources"
+        }
         sx={{
           position: "absolute",
           top: 0,
@@ -303,6 +308,13 @@ function WatchSidePanel({
               selected={tab === "sources"}
               onClick={() => onTabChange("sources")}
             />
+            {infoContent ? (
+              <PanelTab
+                label="Info"
+                selected={tab === "info"}
+                onClick={() => onTabChange("info")}
+              />
+            ) : null}
           </Box>
           <Box
             component="button"
@@ -483,6 +495,8 @@ function WatchSidePanel({
                 })}
               </Box>
             </>
+          ) : tab === "info" && infoContent ? (
+            infoContent
           ) : (
             <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
               <Box>

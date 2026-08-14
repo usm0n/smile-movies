@@ -31,6 +31,12 @@ import WatchSidePanel, {
 } from "../../components/player/WatchSidePanel";
 import { isAnimeTitle } from "../../utilities/anime";
 import { buildSubtitleOffsetKey } from "../../utilities/subtitlePrefs";
+import { readAnimeVersion, writeAnimeVersion } from "../../utilities/animePrefs";
+import AnimeVersionPrompt from "../../components/player/AnimeVersionPrompt";
+import WatchInfoPanel from "../../components/player/WatchInfoPanel";
+import { useImdbWatchInfo } from "../../utilities/useImdbWatchInfo";
+import { Info as InfoIcon, FamilyRestroom, Star } from "../../components/ui/icons";
+import { Chip } from "@mui/joy";
 
 const AUTO_SAVE_INTERVAL_MS = 60000;
 const MIN_PROGRESS_DELTA_MINUTES = 1;
@@ -239,8 +245,29 @@ function Watch() {
   const autoProvider: ProviderId = isAnime ? ANIME_PROVIDER : DEFAULT_PROVIDER;
   const selectedProvider = explicitProvider || autoProvider;
   const isProviderResolved = Boolean(explicitProvider) || areDetailsReady;
-  const versionParam = searchParams.get("version") as AnimeMode | null;
-  const version: AnimeMode = versionParam === "dub" ? "dub" : "sub";
+  /**
+   * Audio version for anime.
+   *
+   * The URL wins when it says something (a shared link, or a switch made in the
+   * sources sheet). Otherwise we use what the viewer told us the first time
+   * they were asked. When we have neither, we ask rather than defaulting to
+   * subbed — viewers who wanted a dub used to conclude the site had none,
+   * because the only control for it is buried behind the sources sheet.
+   */
+  const versionParam =
+    searchParams.get("version") === "dub"
+      ? "dub"
+      : searchParams.get("version") === "sub"
+        ? "sub"
+        : null;
+  const storedVersion = useMemo(
+    () => readAnimeVersion(movieType, movieId),
+    [movieId, movieType],
+  );
+  const resolvedVersion: AnimeMode | null = versionParam || storedVersion;
+  const version: AnimeMode = resolvedVersion || "sub";
+  const needsVersionChoice =
+    isAnime && selectedProvider === ANIME_PROVIDER && !resolvedVersion;
   const selectedServerFromQuery = String(searchParams.get(SERVER_PARAM_KEY) || "").trim();
   const availableStream = getStreamData.data?.stream || null;
   const resolvedProvider = getStreamData.data?.resolvedProvider || selectedProvider;
@@ -251,13 +278,25 @@ function Watch() {
     availableSources.find((source) => source.active) ||
     availableSources[0] ||
     null;
-  const playbackStream = useMemo(() => (sessionBaseReady ? availableStream : null), [availableStream, sessionBaseReady]);
+  // Nothing plays behind the audio-version question — the stream context holds
+  // whatever was last fetched, so without this the previous title would carry
+  // on underneath it.
+  const isPlaybackHeld = needsVersionChoice;
+  const playbackStream = useMemo(
+    () => (sessionBaseReady && !isPlaybackHeld ? availableStream : null),
+    [availableStream, isPlaybackHeld, sessionBaseReady],
+  );
   const providerPlaybackSourceUrl = useMemo(
     () =>
-      sessionBaseReady
+      sessionBaseReady && !isPlaybackHeld
         ? activeSource?.url || availableStream?.masterPlaylistUrl || ""
         : "",
-    [activeSource?.url, availableStream?.masterPlaylistUrl, sessionBaseReady],
+    [
+      activeSource?.url,
+      availableStream?.masterPlaylistUrl,
+      isPlaybackHeld,
+      sessionBaseReady,
+    ],
   );
   const playbackSourceUrl = providerPlaybackSourceUrl;
 
@@ -297,6 +336,7 @@ function Watch() {
   const isPreparingPlayback = getStreamData.isLoading;
   const isPlaybackUnavailable =
     !isPreparingPlayback &&
+    !isPlaybackHeld &&
     sessionBaseReady &&
     !getStreamData.isAvailable &&
     getStreamData.provider === selectedProvider;
@@ -782,6 +822,12 @@ function Watch() {
 
   useEffect(() => {
     if (!movieId || !movieType || !isProviderResolved) return;
+    // Asking which audio version they want is pointless if we have already
+    // fetched one of them behind the question. A link that names AnimeKai
+    // outright resolves the provider before TMDB answers, so it also has to
+    // wait here — otherwise the question arrives after the subbed stream.
+    if (needsVersionChoice) return;
+    if (selectedProvider === ANIME_PROVIDER && !areDetailsReady) return;
 
     const animeVersion = selectedProvider === ANIME_PROVIDER ? version : undefined;
 
@@ -794,10 +840,12 @@ function Watch() {
       getStream(selectedProvider, "tv", movieId, seasonId, episodeId, animeVersion);
     }
   }, [
+    areDetailsReady,
     episodeId,
     isProviderResolved,
     movieId,
     movieType,
+    needsVersionChoice,
     seasonId,
     selectedProvider,
     version,
@@ -991,6 +1039,21 @@ function Watch() {
     setSearchParams(nextParams);
   };
 
+  /**
+   * Remember the answer as well as acting on it — the whole point of asking is
+   * that the viewer should never have to hunt for this control again.
+   */
+  const setVersionInQuery = useCallback((nextVersion: AnimeMode) => {
+    writeAnimeVersion(nextVersion, movieType, movieId);
+    setLastPlaybackError("");
+    setSearchParams((previous) => {
+      const nextParams = new URLSearchParams(previous);
+      nextParams.set("version", nextVersion);
+      nextParams.delete(SERVER_PARAM_KEY);
+      return nextParams;
+    });
+  }, [movieId, movieType, setSearchParams]);
+
   const setServerInQuery = useCallback((serverId: string) => {
     const nextParams = new URLSearchParams(searchParams);
     nextParams.set(PROVIDER_PARAM_KEY, selectedProvider);
@@ -1114,6 +1177,23 @@ function Watch() {
     setIsPanelOpen(true);
   };
 
+  const imdbInfo = useImdbWatchInfo({
+    mediaType: movieType,
+    mediaId: movieId,
+    season: seasonId,
+    episode: episodeId,
+  });
+  /**
+   * The parental-guide button and the info button open the same tab; this is
+   * what tells the panel which of the two the viewer pressed.
+   */
+  const [shouldFocusParentalGuide, setShouldFocusParentalGuide] = useState(false);
+
+  const openInfoPanel = (focusParentalGuide = false) => {
+    setShouldFocusParentalGuide(focusParentalGuide);
+    openPanel("info");
+  };
+
   const providerOptions: ProviderOption[] = PROVIDER_OPTIONS.map((providerOption) => ({
     id: providerOption,
     label: getProviderLabel(providerOption),
@@ -1162,6 +1242,72 @@ function Watch() {
       color: "#ffffff",
     },
   } as const;
+  /** Small pill used for the meta row under the title. */
+  const metaButtonStyles = {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 0.5,
+    height: 26,
+    px: 1,
+    borderRadius: "6px",
+    border: "1px solid rgba(255,255,255,0.16)",
+    backgroundColor: "rgba(10,10,10,0.55)",
+    backdropFilter: "blur(8px)",
+    color: "#ededed",
+    cursor: "pointer",
+    fontFamily: "body",
+    fontSize: "0.75rem",
+    fontWeight: 500,
+    "&:hover": {
+      backgroundColor: "rgba(26,26,26,0.85)",
+      borderColor: "rgba(255,255,255,0.28)",
+      color: "#ffffff",
+    },
+  } as const;
+  const titleMeta = (
+    <>
+      {imdbInfo.rating > 0 ? (
+        <Chip
+          size="sm"
+          startDecorator={<Star sx={{ fontSize: 13, color: "#F5C518" }} />}
+          sx={{
+            height: 26,
+            backgroundColor: "rgba(10,10,10,0.55)",
+            backdropFilter: "blur(8px)",
+            border: "1px solid rgba(245,197,24,0.35)",
+            color: "#ffffff",
+            fontWeight: 700,
+            fontSize: "0.75rem",
+          }}
+        >
+          {imdbInfo.rating.toFixed(1)}
+        </Chip>
+      ) : null}
+      <Box
+        component="button"
+        type="button"
+        aria-label="Parental guide"
+        title="Parental guide"
+        onClick={() => openInfoPanel(true)}
+        sx={metaButtonStyles}
+      >
+        <FamilyRestroom sx={{ fontSize: 14 }} />
+        <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
+          Parental guide
+        </Box>
+      </Box>
+      <Box
+        component="button"
+        type="button"
+        aria-label={movieType === "tv" ? "Episode info" : "About this film"}
+        title={movieType === "tv" ? "Episode info" : "About this film"}
+        onClick={() => openInfoPanel(false)}
+        sx={metaButtonStyles}
+      >
+        <InfoIcon sx={{ fontSize: 14 }} />
+      </Box>
+    </>
+  );
   const errorOverlay = (
     <Box
       sx={{
@@ -1279,9 +1425,11 @@ function Watch() {
         chrome={{
           title: mediaTitle || "Preparing stream",
           subtitle: chromeSubtitle,
+          titleMeta,
           onBack: () => navigate(`/${movieType}/${movieId}`),
           sourcesLabel,
           onOpenSources: () => openPanel("sources"),
+          onOpenInfo: () => openInfoPanel(false),
           ...(movieType === "tv"
             ? { onOpenEpisodes: () => openPanel("episodes") }
             : {}),
@@ -1366,18 +1514,47 @@ function Watch() {
               }}
               sources={availableSources}
               activeSourceId={activeSource?.id || ""}
-              onSourceChange={setServerInQuery}
+              onSourceChange={(sourceId) => {
+                // Picking a server is the end of that errand — leaving the
+                // sheet open just puts a full-screen panel between the viewer
+                // and the video they came back to.
+                setServerInQuery(sourceId);
+                setIsPanelOpen(false);
+              }}
               isSourcesLoading={isPreparingPlayback}
               showVersion={selectedProvider === ANIME_PROVIDER}
               version={version}
-              onVersionChange={(nextVersion) => {
-                setSearchParams((prev) => {
-                  const next = new URLSearchParams(prev);
-                  next.set("version", nextVersion);
-                  return next;
-                });
-              }}
+              onVersionChange={setVersionInQuery}
               notice={providerNotice || autoProviderNotice}
+              infoContent={
+                <WatchInfoPanel
+                  mediaType={movieType}
+                  title={mediaTitle}
+                  subtitle={chromeSubtitle}
+                  episodeName={
+                    movieType === "tv" ? activeEpisodeData?.name : undefined
+                  }
+                  overview={
+                    movieType === "tv"
+                      ? activeEpisodeData?.overview
+                      : movieDetailsDataArr?.overview
+                  }
+                  stillPath={
+                    movieType === "tv" ? activeEpisodeData?.still_path : undefined
+                  }
+                  airDate={
+                    movieType === "tv"
+                      ? activeEpisodeData?.air_date
+                      : movieDetailsDataArr?.release_date
+                  }
+                  runtime={fallbackDurationMinutes}
+                  genres={(mediaDetails?.genres || [])
+                    .map((genre) => genre?.name)
+                    .filter(Boolean) as string[]}
+                  imdb={imdbInfo}
+                  focusParentalGuide={shouldFocusParentalGuide}
+                />
+              }
             />
             {centerErrorMessage ? errorOverlay : null}
           </>
@@ -1390,7 +1567,9 @@ function Watch() {
             top: 0,
             left: 0,
             right: 0,
-            zIndex: 1001,
+            // Above the audio-version prompt: leaving must stay possible while
+            // the question is on screen.
+            zIndex: 1003,
             display: "flex",
             alignItems: "center",
             gap: 1,
@@ -1434,8 +1613,18 @@ function Watch() {
           </Box>
         </Box>
       ) : null}
-      {!playbackSourceUrl && centerErrorMessage ? errorOverlay : null}
-      {!playbackSourceUrl && !centerErrorMessage ? (
+      {/* The question comes before the stream request, so it is a page-level
+          overlay — at this point `<media-player>` has no source and renders
+          nothing to hang it off. */}
+      {needsVersionChoice ? (
+        <Box sx={{ position: "absolute", inset: 0, zIndex: 1002 }}>
+          <AnimeVersionPrompt title={mediaTitle} onChoose={setVersionInQuery} />
+        </Box>
+      ) : null}
+      {!playbackSourceUrl && centerErrorMessage && !needsVersionChoice
+        ? errorOverlay
+        : null}
+      {!playbackSourceUrl && !centerErrorMessage && !needsVersionChoice ? (
         <Box
           sx={{
             position: "absolute",

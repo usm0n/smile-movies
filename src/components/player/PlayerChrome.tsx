@@ -17,6 +17,7 @@ import {
   Forward10,
   Fullscreen,
   FullscreenExit,
+  Info,
   ListVideo,
   Loader,
   Pause,
@@ -48,11 +49,14 @@ export type PlayerChromeProps = {
   title: string;
   /** Second line under the title — "S2 · E4 · Episode name" for series. */
   subtitle?: string;
+  /** Third line under the title — rating, parental guide, info. */
+  titleMeta?: ReactNode;
   onBack?: () => void;
   /** Page-level actions (watch party, share) pinned to the top-right. */
   topRight?: ReactNode;
   onOpenEpisodes?: () => void;
   onOpenSources?: () => void;
+  onOpenInfo?: () => void;
   /** Shown next to the sources button — "Vixsrc · Server 2". */
   sourcesLabel?: string;
   onNextEpisode?: () => void;
@@ -250,10 +254,12 @@ function Popover({ children }: { children: ReactNode }) {
 function PlayerChrome({
   title,
   subtitle,
+  titleMeta,
   onBack,
   topRight,
   onOpenEpisodes,
   onOpenSources,
+  onOpenInfo,
   sourcesLabel,
   onNextEpisode,
   subtitleOffset,
@@ -503,6 +509,20 @@ function PlayerChrome({
                 {subtitle}
               </Typography>
             ) : null}
+            {titleMeta ? (
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  flexWrap: "wrap",
+                  gap: 0.75,
+                  mt: 0.75,
+                  "& > *": { pointerEvents: "auto" },
+                }}
+              >
+                {titleMeta}
+              </Box>
+            ) : null}
           </Box>
           <Box
             sx={{
@@ -693,6 +713,11 @@ function PlayerChrome({
 
             <Box sx={{ flex: 1 }} />
 
+            {onOpenInfo ? (
+              <ControlButton label="About this episode" onClick={onOpenInfo}>
+                <Info sx={{ fontSize: 19 }} />
+              </ControlButton>
+            ) : null}
             {onOpenEpisodes ? (
               <ControlButton label="Episodes" onClick={onOpenEpisodes}>
                 <ListVideo sx={{ fontSize: 19 }} />
