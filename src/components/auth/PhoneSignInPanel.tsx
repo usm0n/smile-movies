@@ -13,25 +13,45 @@ import type { Location } from "../../user";
  * which binds the number to a chat, and every login code afterwards lands in
  * that chat. The panel therefore has a third state most phone flows don't —
  * "your number isn't linked to the bot yet" — which deep-links into Telegram.
+ *
+ * The panel never collects profile details. An unknown number is handed to
+ * `onNotRegistered` so the caller can route to registration, where the profile
+ * is actually collected.
  */
 
 const RESEND_SECONDS = 60;
 
-export type PhoneSignInMode = "signin" | "link";
+export type PhoneSignInMode = "signin" | "register" | "link";
+
+export interface PhoneVerification {
+  phone: string;
+  phoneToken: string;
+  firstname: string;
+}
 
 function PhoneSignInPanel({
   mode = "signin",
   deviceLocation,
+  initialPhone = "",
   onSuccess,
+  onVerified,
+  onNotRegistered,
+  onAlreadyRegistered,
 }: {
   mode?: PhoneSignInMode;
   deviceLocation?: Location;
+  /** Prefills the number, e.g. carried over from a failed sign-in attempt. */
+  initialPhone?: string;
+  /** Sign-in and link modes: a session now exists. */
   onSuccess?: (result: { created?: boolean }) => void;
+  /** Register mode: the number is proven, but no account exists yet. */
+  onVerified?: (result: PhoneVerification) => void;
+  onNotRegistered?: (phone: string) => void;
+  onAlreadyRegistered?: (phone: string) => void;
 }) {
   const [step, setStep] = useState<"phone" | "code">("phone");
-  const [phone, setPhone] = useState("");
+  const [phone, setPhone] = useState(initialPhone);
   const [code, setCode] = useState("");
-  const [firstname, setFirstname] = useState("");
   const [busy, setBusy] = useState(false);
   const [cooldown, setCooldown] = useState(0);
   const [botUsername, setBotUsername] = useState("");
@@ -66,21 +86,36 @@ function PhoneSignInPanel({
       const request =
         mode === "link"
           ? connectorsAPI.requestPhoneLink(digits)
-          : connectorsAPI.requestPhoneCode(digits);
+          : connectorsAPI.requestPhoneCode(
+              digits,
+              mode === "register" ? "register" : "signin",
+            );
       await request;
       setStep("code");
       setCooldown(RESEND_SECONDS);
     } catch (error) {
-      const data = (error as { data?: { needsTelegramLink?: boolean; botUsername?: string } })
-        ?.data;
+      const data = (
+        error as {
+          data?: {
+            needsTelegramLink?: boolean;
+            botUsername?: string;
+            notRegistered?: boolean;
+            alreadyRegistered?: boolean;
+          };
+        }
+      )?.data;
       if (data?.needsTelegramLink) {
         setNeedsBotLink(true);
         if (data.botUsername) setBotUsername(data.botUsername);
       }
+      // The API refuses to invent an account behind a code, so an unknown
+      // number becomes a trip to the register page instead.
+      if (data?.notRegistered) onNotRegistered?.(digits);
+      if (data?.alreadyRegistered) onAlreadyRegistered?.(digits);
     } finally {
       setBusy(false);
     }
-  }, [digits, mode]);
+  }, [digits, mode, onAlreadyRegistered, onNotRegistered]);
 
   const submitCode = useCallback(async () => {
     setBusy(true);
@@ -88,21 +123,45 @@ function PhoneSignInPanel({
       if (mode === "link") {
         await connectorsAPI.verifyPhoneLink(digits, code.trim());
         onSuccess?.({});
+      } else if (mode === "register") {
+        const response = await connectorsAPI.verifyPhoneRegistration(
+          digits,
+          code.trim(),
+        );
+        onVerified?.({
+          phone: digits,
+          phoneToken: response.phoneToken,
+          firstname: response.firstname || "",
+        });
       } else {
         const response = await connectorsAPI.verifyPhoneCode(
           digits,
           code.trim(),
-          firstname.trim(),
           deviceLocation,
         );
         onSuccess?.({ created: response.created });
       }
-    } catch {
-      // The interceptor already toasted the API's message.
+    } catch (error) {
+      // The interceptor already toasted the API's message; only the routing
+      // hints need handling here.
+      const data = (
+        error as { data?: { notRegistered?: boolean; alreadyRegistered?: boolean } }
+      )?.data;
+      if (data?.notRegistered) onNotRegistered?.(digits);
+      if (data?.alreadyRegistered) onAlreadyRegistered?.(digits);
     } finally {
       setBusy(false);
     }
-  }, [code, deviceLocation, digits, firstname, mode, onSuccess]);
+  }, [
+    code,
+    deviceLocation,
+    digits,
+    mode,
+    onAlreadyRegistered,
+    onNotRegistered,
+    onSuccess,
+    onVerified,
+  ]);
 
   if (step === "code") {
     return (
@@ -146,16 +205,6 @@ function PhoneSignInPanel({
           />
         </Field>
 
-        {mode === "signin" && (
-          <Field label="Your name" hint="Only used if this creates a new account">
-            <Input
-              value={firstname}
-              onChange={(event) => setFirstname(event.target.value)}
-              placeholder="Alex"
-            />
-          </Field>
-        )}
-
         <Button
           size="lg"
           fullWidth
@@ -163,7 +212,11 @@ function PhoneSignInPanel({
           disabled={code.length !== 6}
           onClick={submitCode}
         >
-          {mode === "link" ? "Connect phone" : "Verify and continue"}
+          {mode === "link"
+            ? "Connect phone"
+            : mode === "register"
+              ? "Verify number"
+              : "Verify and continue"}
         </Button>
 
         <Box sx={{ display: "flex", justifyContent: "space-between", gap: 1 }}>

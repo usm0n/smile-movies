@@ -43,24 +43,43 @@ export const connectorsAPI = {
     return response.data as { configured: boolean; botUsername: string };
   },
 
-  requestPhoneCode: async (phone: string) => {
-    const response = await smbAPI.post("/users/auth/phone/request", { phone });
+  /**
+   * `purpose` decides which side of the account check the API applies:
+   * "signin" refuses an unknown number, "register" refuses a known one.
+   */
+  requestPhoneCode: async (phone: string, purpose: "signin" | "register" = "signin") => {
+    const response = await smbAPI.post("/users/auth/phone/request", {
+      phone,
+      purpose,
+    });
     return response.data as { message: string; expiresAt: number };
   },
 
   verifyPhoneCode: async (
     phone: string,
     code: string,
-    firstname?: string,
     deviceLocation?: Location,
   ) => {
     const response = await smbAPI.post("/users/auth/phone/verify", {
       phone,
       code,
-      firstname: firstname || "",
       ...devicePayload(deviceLocation),
     });
     return response.data as { message: string; created: boolean };
+  },
+
+  /** Proves ownership of a number for registration; signs nobody in. */
+  verifyPhoneRegistration: async (phone: string, code: string) => {
+    const response = await smbAPI.post("/users/auth/phone/verify-registration", {
+      phone,
+      code,
+    });
+    return response.data as {
+      message: string;
+      phone: string;
+      phoneToken: string;
+      firstname: string;
+    };
   },
 
   // ── Linking from Settings ──────────────────────────────────────────────────

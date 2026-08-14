@@ -1,4 +1,4 @@
-import { Lock, Mail, Person, Visibility, VisibilityOff, ArrowBack, ArrowForward } from "../../components/ui/icons";
+import { Lock, Mail, Person, PhoneIphone, Visibility, VisibilityOff, ArrowBack, ArrowForward } from "../../components/ui/icons";
 import {
   Box,
   Divider,
@@ -23,12 +23,13 @@ import {
   isValidEmail,
   reload,
 } from "../../utilities/defaults";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useUsers } from "../../context/Users";
 import { useOC } from "../../context/OC";
 import React from "react";
 import { AppleMark, GoogleMark } from "../../components/auth/ProviderIcons";
 import { useFederatedSignIn } from "../../components/auth/useFederatedSignIn";
+import PhoneSignInPanel from "../../components/auth/PhoneSignInPanel";
 import {
   defaultNotificationPreferences,
   notificationDigestOptions,
@@ -46,10 +47,19 @@ function Register() {
   const [step, setStep] = useState(0);
   const [passwordVisibility, setPasswordVisibility] = useState(false);
   const [cpassword, setCpassword] = useState("");
+  // Phone is verified up front, before the account exists: the panel returns a
+  // short-lived token that the register call spends as proof of ownership.
+  const [searchParams] = useSearchParams();
+  const [showPhonePanel, setShowPhonePanel] = useState(
+    Boolean(searchParams.get("phone")),
+  );
+  const [verifiedPhone, setVerifiedPhone] = useState("");
 
   const [userValue, setUserValue] = useState<UserRegister>({
     email: "",
     password: "",
+    phone: "",
+    phoneToken: "",
     firstname: "",
     lastname: "",
     deviceId: deviceId(),
@@ -91,11 +101,18 @@ function Register() {
     setUserValue((prev) => ({ ...prev, deviceLocation: locationData.data }));
   }, [locationData]);
 
-  const step1Valid =
+  // Either credential is enough on its own, but a half-filled email block is
+  // not: an address without a usable password would create an account nobody
+  // can sign in to.
+  const hasEmail = userValue.email.trim().length > 0;
+  const emailBlockValid =
     isValidEmail(userValue.email) &&
-    userValue.firstname.trim().length > 0 &&
     userValue.password.trim().length >= 8 &&
     cpassword === userValue.password;
+  const step1Valid =
+    userValue.firstname.trim().length > 0 &&
+    (hasEmail ? emailBlockValid : Boolean(verifiedPhone)) &&
+    (emailBlockValid || Boolean(verifiedPhone));
 
   const step2Valid = !!userValue.age && !!userValue.gender;
 
@@ -163,12 +180,17 @@ function Register() {
                 <Input name="lastname" value={userValue.lastname} onChange={handleInput} placeholder="Doe" startDecorator={<Person sx={{ fontSize: 16 }} />} />
               </FormControl>
             </Box>
-            <FormControl required>
+            <Typography level="body-xs" sx={{ color: "text.tertiary" }}>
+              Sign up with an email address, a phone number, or both — you only
+              need one.
+            </Typography>
+
+            <FormControl>
               <FormLabel>Email</FormLabel>
               <Input name="email" value={userValue.email} onChange={handleInput} placeholder="user@example.com" startDecorator={<Mail sx={{ fontSize: 16 }} />} />
             </FormControl>
             <FormControl
-              required
+              required={hasEmail}
               color={userValue.password.trim() && userValue.password.length < 8 ? "warning" : cpassword.trim().length >= 8 && cpassword !== userValue.password && userValue.password.trim().length >= 8 ? "danger" : "neutral"}
             >
               <FormLabel>Password</FormLabel>
@@ -184,7 +206,7 @@ function Register() {
                 {cpassword.trim().length >= 8 && cpassword !== userValue.password && userValue.password.trim().length >= 8 && "Passwords don't match"}
               </FormHelperText>
             </FormControl>
-            <FormControl required color={cpassword.trim() && cpassword.length < 8 ? "warning" : cpassword !== userValue.password && cpassword.trim().length >= 8 && userValue.password.trim().length >= 8 ? "danger" : "neutral"}>
+            <FormControl required={hasEmail} color={cpassword.trim() && cpassword.length < 8 ? "warning" : cpassword !== userValue.password && cpassword.trim().length >= 8 && userValue.password.trim().length >= 8 ? "danger" : "neutral"}>
               <FormLabel>Confirm Password</FormLabel>
               <Input
                 name="cpassword" value={cpassword} onChange={(e) => setCpassword(e.target.value)}
@@ -194,6 +216,91 @@ function Register() {
                 endDecorator={<IconButton label={passwordVisibility ? "Hide password" : "Show password"} size="sm" onClick={() => setPasswordVisibility(!passwordVisibility)}>{passwordVisibility ? <VisibilityOff sx={{ fontSize: 16 }} /> : <Visibility sx={{ fontSize: 16 }} />}</IconButton>}
               />
             </FormControl>
+            <Divider><Typography level="body-xs">and / or</Typography></Divider>
+
+            {verifiedPhone ? (
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: 1.5,
+                  p: 1.5,
+                  border: "1px solid",
+                  borderColor: "neutral.outlinedBorder",
+                  borderRadius: "md",
+                  backgroundColor: "background.level1",
+                }}
+              >
+                <Box>
+                  <Typography level="title-sm">Phone verified</Typography>
+                  <Typography level="body-sm">+{verifiedPhone}</Typography>
+                </Box>
+                <Link
+                  component="button"
+                  type="button"
+                  level="body-sm"
+                  onClick={() => {
+                    setVerifiedPhone("");
+                    setUserValue((prev) => ({
+                      ...prev,
+                      phone: "",
+                      phoneToken: "",
+                    }));
+                    setShowPhonePanel(true);
+                  }}
+                >
+                  Change
+                </Link>
+              </Box>
+            ) : showPhonePanel ? (
+              <Box
+                sx={{
+                  p: 2,
+                  border: "1px solid",
+                  borderColor: "neutral.outlinedBorder",
+                  borderRadius: "md",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 1.5,
+                }}
+              >
+                <Typography level="title-sm">Phone number</Typography>
+                <PhoneSignInPanel
+                  mode="register"
+                  initialPhone={searchParams.get("phone") || ""}
+                  onVerified={({ phone, phoneToken, firstname }) => {
+                    setVerifiedPhone(phone);
+                    setUserValue((prev) => ({
+                      ...prev,
+                      phone,
+                      phoneToken,
+                      // Telegram already knows the name; only use it when the
+                      // user has not typed one.
+                      firstname: prev.firstname || firstname,
+                    }));
+                    setShowPhonePanel(false);
+                  }}
+                  // The number already has an account, so signing in is the
+                  // thing to do with it.
+                  onAlreadyRegistered={(phone) =>
+                    navigate(`/auth/login?phone=${encodeURIComponent(phone)}`)
+                  }
+                />
+              </Box>
+            ) : (
+              <Button
+                size="lg"
+                fullWidth
+                variant="outlined"
+                color="neutral"
+                startDecorator={<PhoneIphone sx={{ fontSize: 16 }} />}
+                onClick={() => setShowPhonePanel(true)}
+              >
+                Add a phone number
+              </Button>
+            )}
+
             <Button
               size="lg"
               fullWidth
@@ -341,7 +448,12 @@ function Register() {
               <Button size="lg" variant="outlined" color="neutral" startDecorator={<ArrowBack sx={{ fontSize: 16 }} />} onClick={() => setStep(1)} sx={{ flex: 1 }}>Back</Button>
               <Button
                 size="lg"
-                onClick={() => register(userValue)}
+                onClick={() =>
+                  register({
+                    ...userValue,
+                    loginType: hasEmail ? "email" : "phone",
+                  })
+                }
                 loading={isBusy}
                 sx={{ flex: 2 }}
               >

@@ -117,7 +117,6 @@ function QRLoginPanel() {
 // ── Main Login Page ───────────────────────────────────────────────────────────
 function Login() {
   const [passwordVisibility, setPasswordVisibility] = useState(false);
-  const [activeTab, setActiveTab] = useState(0);
 
   const { login, loginData, registerData } = useUsers();
   const { myselfData } = useUsers();
@@ -125,8 +124,11 @@ function Login() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
-  // Pre-fill email from ?hint= (Switch Account flow)
+  // Pre-fill email from ?hint= (Switch Account flow), or the phone number
+  // carried over from a registration attempt on an already-known number.
   const emailHint = searchParams.get("hint") || "";
+  const phoneHint = searchParams.get("phone") || "";
+  const [activeTab, setActiveTab] = useState(phoneHint ? 1 : 0);
   const [userValue, setUserValue] = useState<UserLogin>({
     email: emailHint, password: "",
     deviceId: deviceId(), deviceName: deviceName(), deviceType: deviceType(),
@@ -285,8 +287,14 @@ function Login() {
 
             <TabPanel value={1} sx={{ p: 0 }}>
               <PhoneSignInPanel
+                initialPhone={phoneHint}
                 deviceLocation={locationData.data}
                 onSuccess={() => reload()}
+                // A number with no account can't be signed in; carry it over to
+                // registration so the person doesn't retype it.
+                onNotRegistered={(phone) =>
+                  navigate(`/auth/register?phone=${encodeURIComponent(phone)}`)
+                }
               />
             </TabPanel>
 

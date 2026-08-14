@@ -115,8 +115,12 @@ export interface UserRegister {
   bio?: string;
   firstname: string;
   lastname?: string;
+  /** Email and phone are each optional, but at least one must be present. */
   email: string;
   password: string;
+  /** Digits only; requires `phoneToken` from the Telegram verification step. */
+  phone?: string;
+  phoneToken?: string;
   profilePic?: string;
   isVerified?: boolean;
   deviceName: string;
