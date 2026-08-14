@@ -51,50 +51,56 @@ import { pinLockStore, DEVICE_ID_KEY } from "../../utilities/pinLockStore";
 import Button from "../ui/Button";
 import IconButton from "../ui/IconButton";
 import Dialog from "../ui/Dialog";
+import { useTranslation } from "../../context/Locale";
+import type { TranslationKey } from "../../locales/en";
+import { pickPreferredLogoPath } from "../../utilities/tmdbImages";
 
 const DETAIL_PAGE_REGEX = /^\/(movie|tv)\/([^/]+)$/;
 
 // "/" and "/browse" render the same page, so only one of them is presented as a
 // destination — /browse stays routable for old links and bookmarks.
-type NavLink = { label: string; to: string; exact?: boolean };
+// Labels are held as translation keys rather than text: these arrays are
+// module constants, evaluated once at import, so a resolved string would keep
+// whichever language was active at load and never follow a locale change.
+type NavLink = { labelKey: TranslationKey; to: string; exact?: boolean };
 
 const NAV_LINKS: NavLink[] = [
-  { label: "Home", to: "/", exact: true },
-  { label: "Discover", to: "/discover" },
-  { label: "SmileAI", to: "/ai" },
+  { labelKey: "nav.home", to: "/", exact: true },
+  { labelKey: "nav.discover", to: "/discover" },
+  { labelKey: "nav.smileAI", to: "/ai" },
 ];
 
 // Library destinations used to live only inside the avatar menu. They are the
 // primary return destinations, so signed-in users get them in the nav itself.
 const LIBRARY_NAV_LINKS: NavLink[] = [
-  { label: "Watchlist", to: "/watchlist" },
-  { label: "My Lists", to: "/collections" },
+  { labelKey: "nav.watchlist", to: "/watchlist" },
+  { labelKey: "nav.myLists", to: "/collections" },
 ];
 
 const DRAWER_SECTIONS: {
-  title?: string;
+  titleKey?: TranslationKey;
   links: (NavLink & { icon: ComponentType<IconProps> })[];
 }[] = [
   {
     links: [
-      { label: "Home", to: "/", icon: HomeIcon, exact: true },
-      { label: "Discover", to: "/discover", icon: Compass },
-      { label: "SmileAI", to: "/ai", icon: AutoAwesome },
+      { labelKey: "nav.home", to: "/", icon: HomeIcon, exact: true },
+      { labelKey: "nav.discover", to: "/discover", icon: Compass },
+      { labelKey: "nav.smileAI", to: "/ai", icon: AutoAwesome },
     ],
   },
   {
-    title: "Library",
+    titleKey: "nav.sectionLibrary",
     links: [
-      { label: "Watchlist", to: "/watchlist", icon: Bookmark },
-      { label: "My Lists", to: "/collections", icon: Layers },
-      { label: "Downloads", to: "/downloads", icon: Download },
+      { labelKey: "nav.watchlist", to: "/watchlist", icon: Bookmark },
+      { labelKey: "nav.myLists", to: "/collections", icon: Layers },
+      { labelKey: "nav.downloads", to: "/downloads", icon: Download },
     ],
   },
   {
-    title: "App",
+    titleKey: "nav.sectionApp",
     links: [
-      { label: "Settings", to: "/user/settings", icon: SettingsIcon },
-      { label: "Get the app", to: "/download", icon: PhoneIphone },
+      { labelKey: "nav.settings", to: "/user/settings", icon: SettingsIcon },
+      { labelKey: "nav.getApp", to: "/download", icon: PhoneIphone },
     ],
   },
 ];
@@ -105,10 +111,7 @@ const isRouteActive = (pathname: string, to: string, exact?: boolean) =>
     : pathname === to || pathname.startsWith(`${to}/`);
 
 const getPreferredLogoPath = (imageData?: images | null) =>
-  imageData?.logos?.find((logo) => logo.iso_639_1 === "en")?.file_path ||
-  imageData?.logos?.find((logo) => !logo.iso_639_1)?.file_path ||
-  imageData?.logos?.[0]?.file_path ||
-  null;
+  pickPreferredLogoPath(imageData?.logos);
 
 const openCommandMenu = () => window.dispatchEvent(new Event("smile:command"));
 
@@ -130,6 +133,7 @@ const Navbar: React.FC = () => {
     useTMDB();
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useTranslation();
   const user = myselfData?.data as User;
 
   // Enforce persisted lock state on mount and when user/device data loads
@@ -226,9 +230,9 @@ const Navbar: React.FC = () => {
 
   // Watchlist / My Lists / SmileAI moved into the nav proper, so this menu is
   // only account-scoped destinations now.
-  const menuLinks = [
-    { label: "Downloads", to: "/downloads", icon: Download },
-    { label: "Settings", to: "/user/settings", icon: SettingsIcon },
+  const menuLinks: (NavLink & { icon: ComponentType<IconProps> })[] = [
+    { labelKey: "nav.downloads", to: "/downloads", icon: Download },
+    { labelKey: "nav.settings", to: "/user/settings", icon: SettingsIcon },
   ];
 
   const renderAuthControls = () => {
@@ -239,7 +243,7 @@ const Navbar: React.FC = () => {
     if (!isAuthenticated) {
       return (
         <Button size="sm" onClick={() => navigate("/auth/login")}>
-          Sign In
+          {t("nav.signIn")}
         </Button>
       );
     }
@@ -300,7 +304,7 @@ const Navbar: React.FC = () => {
           {menuLinks.map((link) => (
             <MenuItem key={link.to} onClick={() => navigate(link.to)}>
               <link.icon sx={{ fontSize: 16 }} />
-              <ListItemContent>{link.label}</ListItemContent>
+              <ListItemContent>{t(link.labelKey)}</ListItemContent>
             </MenuItem>
           ))}
 
@@ -314,12 +318,12 @@ const Navbar: React.FC = () => {
               }}
             >
               <Lock sx={{ fontSize: 16 }} />
-              <ListItemContent>Lock account</ListItemContent>
+              <ListItemContent>{t("account.lock")}</ListItemContent>
             </MenuItem>
           ) : (
             <MenuItem onClick={() => setPinModalMode("setup")}>
               <LockOpen sx={{ fontSize: 16 }} />
-              <ListItemContent>Set up PIN lock</ListItemContent>
+              <ListItemContent>{t("account.setupPin")}</ListItemContent>
             </MenuItem>
           )}
           <MenuItem
@@ -329,7 +333,7 @@ const Navbar: React.FC = () => {
             }}
           >
             <SwitchAccount sx={{ fontSize: 16 }} />
-            <ListItemContent>Switch account</ListItemContent>
+            <ListItemContent>{t("account.switch")}</ListItemContent>
           </MenuItem>
 
           {!user?.isVerified && (
@@ -338,7 +342,7 @@ const Navbar: React.FC = () => {
               sx={{ color: "warning.plainColor" }}
             >
               <WarningRounded sx={{ fontSize: 16 }} />
-              <ListItemContent>Verify your account</ListItemContent>
+              <ListItemContent>{t("account.verify")}</ListItemContent>
             </MenuItem>
           )}
 
@@ -346,20 +350,20 @@ const Navbar: React.FC = () => {
           {user?.handle && (
             <MenuItem onClick={() => navigate(`/u/${user.handle}`)}>
               <PersonIcon sx={{ fontSize: 16 }} />
-              <ListItemContent>Public profile</ListItemContent>
+              <ListItemContent>{t("account.publicProfile")}</ListItemContent>
             </MenuItem>
           )}
           {user?.isAdmin && (
             <MenuItem onClick={() => navigate("/admin")}>
               <AdminPanelSettingsRounded sx={{ fontSize: 16 }} />
-              <ListItemContent>Admin</ListItemContent>
+              <ListItemContent>{t("account.admin")}</ListItemContent>
             </MenuItem>
           )}
 
           <Divider sx={{ my: 0.5 }} />
           <MenuItem onClick={() => setLogoutModal(true)}>
             <Logout sx={{ fontSize: 16 }} />
-            <ListItemContent>Log out</ListItemContent>
+            <ListItemContent>{t("nav.signOut")}</ListItemContent>
           </MenuItem>
         </Menu>
       </Dropdown>
@@ -506,7 +510,7 @@ const Navbar: React.FC = () => {
                   },
                 }}
               >
-                {link.label}
+                {t(link.labelKey)}
               </Box>
             );
           })}
@@ -574,7 +578,7 @@ const Navbar: React.FC = () => {
       <Dialog
         open={logoutModal}
         onClose={() => setLogoutModal(false)}
-        title="Log out"
+        title={t("nav.signOut")}
         description="You'll need to sign in again to sync your watchlist and progress."
         width={420}
         actions={
@@ -593,7 +597,7 @@ const Navbar: React.FC = () => {
                 logout();
               }}
             >
-              Log out
+              {t("nav.signOut")}
             </Button>
           </>
         }
@@ -646,7 +650,7 @@ const Navbar: React.FC = () => {
             </Box>
           ) : (
             <Button fullWidth onClick={() => navigateTo("/auth/login")}>
-              Sign In
+              {t("nav.signIn")}
             </Button>
           )}
 
@@ -657,8 +661,8 @@ const Navbar: React.FC = () => {
             titles) and "Get the app" previously shared the download icon.
           */}
           {DRAWER_SECTIONS.map((section, sectionIndex) => (
-            <Box key={section.title ?? sectionIndex}>
-              {section.title && (
+            <Box key={section.titleKey ?? sectionIndex}>
+              {section.titleKey && (
                 <Typography
                   level="body-xs"
                   sx={{
@@ -670,12 +674,12 @@ const Navbar: React.FC = () => {
                     color: "text.tertiary",
                   }}
                 >
-                  {section.title}
+                  {t(section.titleKey)}
                 </Typography>
               )}
               <List
                 sx={{
-                  mt: section.title ? 0.5 : 2,
+                  mt: section.titleKey ? 0.5 : 2,
                   "--ListItem-paddingY": "10px",
                   "--ListItem-radius": "8px",
                 }}
@@ -684,7 +688,7 @@ const Navbar: React.FC = () => {
                   const active = isRouteActive(location.pathname, link.to, link.exact);
                   return (
                     <ListItemButton
-                      key={`${link.label}-${link.to}`}
+                      key={`${link.labelKey}-${link.to}`}
                       selected={active}
                       aria-current={active ? "page" : undefined}
                       onClick={() => navigateTo(link.to)}
@@ -701,7 +705,7 @@ const Navbar: React.FC = () => {
                           color: active ? "text.primary" : "text.tertiary",
                         }}
                       />
-                      {link.label}
+                      {t(link.labelKey)}
                     </ListItemButton>
                   );
                 })}
@@ -722,7 +726,7 @@ const Navbar: React.FC = () => {
                   setLogoutModal(true);
                 }}
               >
-                Log out
+                {t("nav.signOut")}
               </Button>
             </>
           )}
@@ -732,7 +736,7 @@ const Navbar: React.FC = () => {
       <Dialog
         open={showSwitchAccounts}
         onClose={() => setShowSwitchAccounts(false)}
-        title="Switch account"
+        title={t("account.switch")}
         description="Pick a saved account to sign in with."
         width={400}
       >
@@ -843,7 +847,7 @@ const Navbar: React.FC = () => {
           <Typography level="h3">
             {user?.firstname} {user?.lastname}
           </Typography>
-          <Typography level="body-sm">Account locked</Typography>
+          <Typography level="body-sm">{t("account.locked")}</Typography>
           <Button
             startDecorator={<LockOpen sx={{ fontSize: 16 }} />}
             size="lg"

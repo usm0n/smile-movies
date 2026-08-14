@@ -10,6 +10,7 @@ import { BrowserRouter } from "react-router-dom";
 import { CssBaseline, CssVarsProvider } from "@mui/joy";
 import OCProvider from "./context/OC.tsx";
 import { StreamProvider } from "./context/Stream.tsx";
+import { LocaleProvider } from "./context/Locale.tsx";
 import { registerServiceWorker } from "./pwa/registerServiceWorker.ts";
 import theme from "./theme";
 import { Toaster } from "./components/ui/toast.tsx";
@@ -20,18 +21,20 @@ createRoot(document.getElementById("root")!).render(
   <CssVarsProvider theme={theme} defaultMode="dark" modeStorageKey="smile-mode">
     <CssBaseline />
     <BrowserRouter>
-      <StreamProvider>
-        <OCProvider>
-          <UsersProvider>
-            <TMDBProvider>
-              <StrictMode>
-                <Toaster />
-                <App />
-              </StrictMode>
-            </TMDBProvider>
-          </UsersProvider>
-        </OCProvider>
-      </StreamProvider>
+      <LocaleProvider>
+        <StreamProvider>
+          <OCProvider>
+            <UsersProvider>
+              <TMDBProvider>
+                <StrictMode>
+                  <Toaster />
+                  <App />
+                </StrictMode>
+              </TMDBProvider>
+            </UsersProvider>
+          </OCProvider>
+        </StreamProvider>
+      </LocaleProvider>
     </BrowserRouter>
   </CssVarsProvider>,
 );

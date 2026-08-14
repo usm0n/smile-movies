@@ -8,6 +8,7 @@ import EventMC from "../cards/EventMC";
 import EventMCS from "../cards/skeleton/EventMC";
 import { useTMDB } from "../../context/TMDB";
 import { images } from "../../tmdb-res";
+import { pickPreferredLogoPath } from "../../utilities/tmdbImages";
 function BecauseYouWatched() {
   const { myselfData } = useUsers();
   const { movieImages, movieImagesData, tvImages, tvImagesData } = useTMDB();
@@ -50,9 +51,7 @@ function BecauseYouWatched() {
   }, [user?.recentlyWatched?.length]);
 
   const logoData = seed?.type === "movie" ? movieImagesData : tvImagesData;
-  const logoPath = (logoData?.data as images)?.logos?.find(
-    (l) => l.iso_639_1 === "en",
-  )?.file_path;
+  const logoPath = pickPreferredLogoPath((logoData?.data as images)?.logos);
   const logoLoading = logoData?.isLoading;
 
   const seedTitleDisplay = logoLoading ? (

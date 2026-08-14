@@ -20,7 +20,13 @@ function CastCard({ actor }: { actor: movieCredits["cast"][0] }) {
           width: "120px",
           height: "120px",
         }}
-        src={`https://image.tmdb.org/t/p/w500${actor.profile_path}`}
+        // Without a photo the Avatar falls back to the initials below; setting
+        // src regardless requested ".../w500null" and logged a 404.
+        src={
+          actor.profile_path
+            ? `https://image.tmdb.org/t/p/w500${actor.profile_path}`
+            : undefined
+        }
       >
         {actor.name
           ?.split(" ")

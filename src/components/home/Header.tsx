@@ -25,6 +25,7 @@ import {
   buildPlaybackAvailabilityKey,
   getPlaybackTarget,
 } from "../../utilities/playbackTarget";
+import { pickPreferredLogoPath } from "../../utilities/tmdbImages";
 
 const Header = React.memo(
   ({
@@ -99,9 +100,7 @@ const Header = React.memo(
           ? (movieImagesData as ResponseType)?.isLoading
           : (tvImagesData as ResponseType)?.isLoading;
 
-      const logoPath =
-        imgData?.logos?.find((logo) => logo.iso_639_1 === "en")?.file_path ||
-        null;
+      const logoPath = pickPreferredLogoPath(imgData?.logos);
 
       return { logoPath, logoLoading };
     }, [activeIndex, movieImagesData, tvImagesData, trendingResults]);

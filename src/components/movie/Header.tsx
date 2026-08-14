@@ -45,12 +45,10 @@ import {
   getPlaybackTarget,
   getStartOverTarget,
 } from "../../utilities/playbackTarget";
+import { pickPreferredLogoPath } from "../../utilities/tmdbImages";
 
 const getPreferredLogoPath = (movieImages: images) =>
-  movieImages?.logos?.find((logo) => logo.iso_639_1 === "en")?.file_path ||
-  movieImages?.logos?.find((logo) => !logo.iso_639_1)?.file_path ||
-  movieImages?.logos?.[0]?.file_path ||
-  null;
+  pickPreferredLogoPath(movieImages?.logos);
 
 function Header({
   movieImages,

@@ -80,6 +80,67 @@ export const tmdbAPI = axios.create({
   headers: { Authorization: `Bearer ${import.meta.env.VITE_TMDB_API_KEY}` },
 });
 
+/**
+ * TMDB returns titles, overviews and taglines in whatever `language` the
+ * request asks for, so the interface locale has to reach every call. The value
+ * lives here rather than in React state because the axios instance is created
+ * once at module load, outside any provider; `LocaleProvider` pushes changes in.
+ */
+let tmdbLanguage = "en-US";
+
+export const setTmdbLanguage = (language: string) => {
+  tmdbLanguage = language;
+};
+
+/** Bare subtag (`ru`, `en`) — what the artwork endpoints and logo pickers use. */
+export const getTmdbImageLanguage = () => tmdbLanguage.split("-")[0];
+
+/**
+ * Preference list for artwork and trailers: the viewer's language first, then
+ * English, then `null` — TMDB's marker for textless assets, which read
+ * correctly in any locale and are usually the best hero backdrops.
+ */
+const preferredMediaLanguages = () => {
+  const subtag = getTmdbImageLanguage();
+  return subtag === "en" ? "en,null" : `${subtag},en,null`;
+};
+
+tmdbAPI.interceptors.request.use((config) => {
+  const url = config.url || "";
+
+  /**
+   * `/images` treats `language` as a hard filter rather than a preference, so
+   * asking it for `ru-RU` returns only artwork that has Russian text — for
+   * Fight Club that is 1 backdrop instead of 105, and for most titles none at
+   * all, which empties the hero. `include_image_language` is the endpoint's
+   * own way to express a preference: Russian first, then English, then the
+   * textless artwork (`null`) that suits any locale.
+   */
+  if (/\/images(\?|$)/.test(url)) {
+    config.params = { include_image_language: preferredMediaLanguages(), ...(config.params || {}) };
+    return config;
+  }
+
+  /**
+   * `/videos` filters the same way — asking for `ru-RU` cuts a recent title
+   * from 51 trailers to 1 — so it gets the same preference list, alongside
+   * `language` since the two combine here.
+   */
+  if (/\/videos(\?|$)/.test(url)) {
+    config.params = {
+      language: tmdbLanguage,
+      include_video_language: preferredMediaLanguages(),
+      ...(config.params || {}),
+    };
+    return config;
+  }
+
+  // Spread the caller's params last so a request that names its own language
+  // — a deliberate English lookup, say — still wins.
+  config.params = { language: tmdbLanguage, ...(config.params || {}) };
+  return config;
+});
+
 export const omdbAPI = axios.create({
   baseURL: "https://www.omdbapi.com",
   params: { apikey: import.meta.env.VITE_OMDB_API_KEY },

@@ -36,6 +36,7 @@ import WatchSidePanel, {
   WatchPanelTab,
 } from "../../components/player/WatchSidePanel";
 import { isAnimeTitle } from "../../utilities/anime";
+import { pickPreferredLogoPath } from "../../utilities/tmdbImages";
 import { buildSubtitleOffsetKey } from "../../utilities/subtitlePrefs";
 import { readAnimeVersion, writeAnimeVersion } from "../../utilities/animePrefs";
 import AnimeVersionPrompt from "../../components/player/AnimeVersionPrompt";
@@ -200,10 +201,7 @@ function Watch() {
   const backdropPoster =
     mediaPoster ? `https://image.tmdb.org/t/p/original${mediaPoster}` : "";
   const mediaImages = movieType === "movie" ? movieImagesDataArr : tvImagesDataArr;
-  const mediaLogo =
-    mediaImages?.logos?.find((logo) => logo?.iso_639_1 === "en")?.file_path ||
-    mediaImages?.logos?.[0]?.file_path ||
-    "";
+  const mediaLogo = pickPreferredLogoPath(mediaImages?.logos) || "";
   const mediaLogoUrl = mediaLogo
     ? `https://image.tmdb.org/t/p/w500${mediaLogo}`
     : "";

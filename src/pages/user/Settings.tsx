@@ -22,6 +22,8 @@ import { toast } from "../../components/ui/toast";
 import { useUsers } from "../../context/Users";
 import { useNavigate } from "react-router-dom";
 import PinLockModal from "../../components/account/PinLockModal";
+import { useTranslation } from "../../context/Locale";
+import { LOCALE_LABELS, SUPPORTED_LOCALES, type Locale } from "../../utilities/localePrefs";
 
 const GENDER_OPTIONS = [
   { value: "male", label: "Male" },
@@ -67,6 +69,7 @@ function Settings({
     newPasswordConfirm: "",
   });
   const navigate = useNavigate();
+  const { t, locale, setLocale } = useTranslation();
 
   const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -110,6 +113,33 @@ function Settings({
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+      <Panel
+        title={t("settings.language.title")}
+        description={t("settings.language.description")}
+        footerHint={t("settings.language.contentNote")}
+      >
+        <Field label={t("settings.language.label")}>
+          <Select
+            value={locale}
+            onChange={(_event, value) => {
+              if (!value || value === locale) return;
+              setLocale(value as Locale);
+              // Interface strings re-render on their own, but titles and
+              // overviews already fetched from TMDB are cached in the old
+              // language. Reloading is what makes the whole page agree; the
+              // choice is persisted before this runs, so it survives.
+              window.location.reload();
+            }}
+          >
+            {SUPPORTED_LOCALES.map((option) => (
+              <Option key={option} value={option}>
+                {LOCALE_LABELS[option]}
+              </Option>
+            ))}
+          </Select>
+        </Field>
+      </Panel>
+
       {!userValue?.isVerified && userValue?.email && (
         <Panel
           title="Email not verified"
