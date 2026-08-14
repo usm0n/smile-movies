@@ -1,5 +1,6 @@
 import {
   ProviderId,
+  SkipTimesResponse,
   VixsrcAvailabilityBatchResponse,
   VixsrcAvailabilityItem,
   VixsrcMediaType,
@@ -136,6 +137,29 @@ export const providersAPI = {
 
     availabilityRequests.set(key, request);
     return request;
+  },
+  /**
+   * Intro/outro timings for the skip button. Returns an empty segment list for
+   * anything nobody has timed, which is the common case — callers should treat
+   * "no segments" as normal rather than as a failure.
+   */
+  getSkipTimes: async (
+    mediaType: VixsrcMediaType,
+    tmdbId: string,
+    season?: number,
+    episode?: number,
+    episodeLength?: number,
+  ) => {
+    return smbV1API.get<SkipTimesResponse>(
+      `/providers/skip-times/${mediaType}/${tmdbId}`,
+      {
+        params: {
+          ...(season ? { season } : {}),
+          ...(episode ? { episode } : {}),
+          ...(episodeLength ? { episodeLength } : {}),
+        },
+      },
+    );
   },
   getVixsrcAvailabilityBatch: async (
     items: AvailabilityRequestItem[],

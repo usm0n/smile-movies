@@ -60,3 +60,17 @@ export interface VixsrcStreamResponse {
 export interface VixsrcAvailabilityBatchResponse {
   items: VixsrcAvailabilityItem[];
 }
+
+export type SkipSegmentType = "intro" | "outro" | "recap";
+
+export interface SkipSegment {
+  type: SkipSegmentType;
+  /** Seconds from the start of the episode. */
+  startTime: number;
+  endTime: number;
+}
+
+export interface SkipTimesResponse {
+  segments: SkipSegment[];
+  source: "aniskip" | "skipdb" | "none";
+}

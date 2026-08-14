@@ -38,6 +38,7 @@ import {
   clampSubtitleOffset,
   formatSubtitleOffset,
 } from "../../utilities/subtitlePrefs";
+import { SkipSegment } from "../../types/providers";
 
 const SEEK_SECONDS = 10;
 const PLAYBACK_RATES = [0.5, 0.75, 1, 1.25, 1.5, 2];
@@ -47,6 +48,15 @@ type PopoverId = "captions" | "settings" | null;
 
 export type PlayerChromeProps = {
   title: string;
+  /**
+   * TMDB logo path for the title, shown in place of the text heading.
+   *
+   * The logo is the title as its audience knows it — typeface, casing and all —
+   * so it identifies what is playing faster than the name set in our own font.
+   * `title` stays required: it is the alt text, and the fallback for the many
+   * titles TMDB has no logo for.
+   */
+  titleLogo?: string;
   /** Second line under the title — "S2 · E4 · Episode name" for series. */
   subtitle?: string;
   /** Third line under the title — rating, parental guide, info. */
@@ -60,6 +70,11 @@ export type PlayerChromeProps = {
   /** Shown next to the sources button — "Vixsrc · Server 2". */
   sourcesLabel?: string;
   onNextEpisode?: () => void;
+  /**
+   * Intro/outro ranges for the current episode. Empty for anything nobody has
+   * timed — including every movie — in which case no skip button is offered.
+   */
+  skipSegments?: SkipSegment[];
   subtitleOffset: number;
   onSubtitleOffsetChange: (offset: number) => void;
   appearance: SubtitleAppearance;
@@ -253,6 +268,7 @@ function Popover({ children }: { children: ReactNode }) {
  */
 function PlayerChrome({
   title,
+  titleLogo,
   subtitle,
   titleMeta,
   onBack,
@@ -262,6 +278,7 @@ function PlayerChrome({
   onOpenInfo,
   sourcesLabel,
   onNextEpisode,
+  skipSegments,
   subtitleOffset,
   onSubtitleOffsetChange,
   appearance,
@@ -273,6 +290,7 @@ function PlayerChrome({
     paused,
     started,
     waiting,
+    currentTime,
     muted,
     volume,
     fullscreen,
@@ -289,7 +307,49 @@ function PlayerChrome({
     touchPointer,
   } = useMediaStore();
   const [popover, setPopover] = useState<PopoverId>(null);
+  // Keyed on the URL so moving to another title clears a previous failure:
+  // one missing logo must not demote every later title to plain text.
+  const [brokenLogo, setBrokenLogo] = useState("");
+  const isLogoBroken = Boolean(titleLogo) && brokenLogo === titleLogo;
   const clickTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  /**
+   * The segment playback is currently inside, if any.
+   *
+   * Skipping is offered only while the segment is actually on screen, and the
+   * button disappears at its end — a viewer who wanted to watch the opening
+   * should not have a control hanging over the episode afterwards. Segments the
+   * viewer has already dismissed stay dismissed for this episode.
+   */
+  const [dismissedSegments, setDismissedSegments] = useState<string[]>([]);
+  const activeSegment = useMemo(() => {
+    if (!skipSegments?.length || !started) return null;
+
+    return (
+      skipSegments.find(
+        (segment) =>
+          currentTime >= segment.startTime &&
+          currentTime < segment.endTime &&
+          !dismissedSegments.includes(`${segment.type}:${segment.startTime}`),
+      ) || null
+    );
+  }, [currentTime, dismissedSegments, skipSegments, started]);
+
+  const skipActiveSegment = useCallback(() => {
+    if (!activeSegment) return;
+
+    setDismissedSegments((current) => [
+      ...current,
+      `${activeSegment.type}:${activeSegment.startTime}`,
+    ]);
+    remote.seek(activeSegment.endTime);
+  }, [activeSegment, remote]);
+
+  // Episode changes reuse this component, so the dismissals have to be cleared
+  // with the timings they belonged to.
+  useEffect(() => {
+    setDismissedSegments([]);
+  }, [skipSegments]);
 
   const captionTracks = useMemo(
     () =>
@@ -483,19 +543,37 @@ function PlayerChrome({
             </ControlButton>
           ) : null}
           <Box sx={{ flex: 1, minWidth: 0, pt: 0.5 }}>
-            <Typography
-              level="title-md"
-              sx={{
-                color: "#ffffff",
-                fontWeight: 600,
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-                textShadow: "0 1px 6px rgba(0,0,0,0.9)",
-              }}
-            >
-              {title}
-            </Typography>
+            {titleLogo && !isLogoBroken ? (
+              <Box
+                component="img"
+                src={titleLogo}
+                alt={title}
+                onError={() => setBrokenLogo(titleLogo)}
+                sx={{
+                  display: "block",
+                  width: "auto",
+                  maxWidth: { xs: "170px", sm: "260px" },
+                  height: { xs: "26px", sm: "30px" },
+                  objectFit: "contain",
+                  objectPosition: "left center",
+                  filter: "drop-shadow(0 2px 8px rgba(0,0,0,0.8))",
+                }}
+              />
+            ) : (
+              <Typography
+                level="title-md"
+                sx={{
+                  color: "#ffffff",
+                  fontWeight: 600,
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                  textShadow: "0 1px 6px rgba(0,0,0,0.9)",
+                }}
+              >
+                {title}
+              </Typography>
+            )}
             {subtitle ? (
               <Typography
                 level="body-xs"
@@ -989,6 +1067,52 @@ function PlayerChrome({
           </Box>
         </Box>
       </Box>
+
+      {/* Skip intro / recap / ending, while the segment is on screen */}
+      {activeSegment ? (
+        <Box
+          sx={{
+            position: "absolute",
+            right: { xs: 12, md: 24 },
+            // Clear of the control bar, which is taller on desktop.
+            bottom: { xs: 84, md: 104 },
+            // Deliberately outside `.sm-chrome`: that layer fades out once the
+            // viewer goes idle, which is exactly what watching an intro looks
+            // like. The skip button has to outlast it.
+            zIndex: 4,
+            pointerEvents: "auto",
+          }}
+        >
+          <Box
+            component="button"
+            type="button"
+            onClick={skipActiveSegment}
+            sx={{
+              ...controlButtonStyles,
+              px: 2.5,
+              height: 40,
+              borderRadius: "4px",
+              border: "1px solid rgba(255,255,255,0.35)",
+              backgroundColor: "rgba(0,0,0,0.65)",
+              backdropFilter: "blur(4px)",
+              color: "#ffffff",
+              fontSize: "0.875rem",
+              fontWeight: 600,
+              "&:hover": {
+                backgroundColor: "#ffffff",
+                color: "#000000",
+                borderColor: "#ffffff",
+              },
+            }}
+          >
+            {activeSegment.type === "intro"
+              ? "Skip Intro"
+              : activeSegment.type === "recap"
+                ? "Skip Recap"
+                : "Skip Ending"}
+          </Box>
+        </Box>
+      ) : null}
     </>
   );
 }

@@ -20,7 +20,13 @@ import { User } from "../../user";
 import PlaybackSurface from "../../components/player/PlaybackSurface";
 import { playbackAPI } from "../../service/api/smb/playback.api.service";
 import RatingDialog from "../../components/library/RatingDialog";
-import { AnimeMode, ProviderId, ProviderSourceFormat } from "../../types/providers";
+import {
+  AnimeMode,
+  ProviderId,
+  ProviderSourceFormat,
+  SkipSegment,
+} from "../../types/providers";
+import { providersAPI } from "../../service/api/smb/providers.api.service";
 import DownloadButton from "../../components/player/DownloadButton";
 import { copyToClipboard } from "../../utilities/defaults";
 import { watchPartyAPI } from "../../service/api/smb/watchparty.api.service";
@@ -196,6 +202,9 @@ function Watch() {
     mediaImages?.logos?.find((logo) => logo?.iso_639_1 === "en")?.file_path ||
     mediaImages?.logos?.[0]?.file_path ||
     "";
+  const mediaLogoUrl = mediaLogo
+    ? `https://image.tmdb.org/t/p/w500${mediaLogo}`
+    : "";
   const fallbackDurationMinutes = useMemo(() => {
     if (movieType === "tv") {
       return (
@@ -412,6 +421,43 @@ function Watch() {
     animeFallbackRef.current = { contextKey: mediaContextKey, used: false };
     setAutoProviderNotice("");
   }, [mediaContextKey]);
+
+  /**
+   * Intro/outro timings for the skip button.
+   *
+   * Only series are asked for: no public source has movie timings, so a request
+   * for one is a round trip that can only ever come back empty. Failures are
+   * silent by design — a missing skip button is a missing convenience, not
+   * something worth interrupting playback to report.
+   */
+  const [skipSegments, setSkipSegments] = useState<SkipSegment[]>([]);
+
+  useEffect(() => {
+    setSkipSegments([]);
+
+    if (movieType !== "tv" || !movieId || !seasonId || !episodeId) return;
+
+    let isCurrent = true;
+    providersAPI
+      .getSkipTimes(
+        "tv",
+        movieId,
+        Number(seasonId),
+        Number(episodeId),
+        fallbackDurationMinutes * 60,
+      )
+      .then((response) => {
+        if (!isCurrent) return;
+        setSkipSegments(response.data?.segments || []);
+      })
+      .catch(() => {
+        if (isCurrent) setSkipSegments([]);
+      });
+
+    return () => {
+      isCurrent = false;
+    };
+  }, [episodeId, fallbackDurationMinutes, movieId, movieType, seasonId]);
 
   useEffect(() => {
     setSessionBaseProgress(0);
@@ -1424,9 +1470,11 @@ function Watch() {
         subtitleOffsetKey={subtitleOffsetKey}
         chrome={{
           title: mediaTitle || "Preparing stream",
+          titleLogo: mediaLogoUrl,
           subtitle: chromeSubtitle,
           titleMeta,
           onBack: () => navigate(`/${movieType}/${movieId}`),
+          skipSegments,
           sourcesLabel,
           onOpenSources: () => openPanel("sources"),
           onOpenInfo: () => openInfoPanel(false),
@@ -1588,10 +1636,10 @@ function Watch() {
             <ArrowBackIos sx={{ fontSize: 18 }} />
           </IconButton>
           <Box sx={{ minWidth: 0 }}>
-            {mediaLogo ? (
+            {mediaLogoUrl ? (
               <Box
                 component="img"
-                src={`https://image.tmdb.org/t/p/original${mediaLogo}`}
+                src={mediaLogoUrl}
                 alt={mediaTitle || "Title logo"}
                 sx={{
                   width: "auto",
