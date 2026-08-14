@@ -53,7 +53,7 @@ const LOCAL_ROUTE_PROGRESS_PREFIX = "watch-progress:";
 const LOCAL_RECENT_PROGRESS_PREFIX = "recent-progress:";
 const PROVIDER_PARAM_KEY = "provider";
 const SERVER_PARAM_KEY = "server";
-const PROVIDER_OPTIONS: ProviderId[] = ["vixsrc", "showbox", "anikai"];
+const PROVIDER_OPTIONS: ProviderId[] = ["vixsrc", "showbox", "anikai", "ruvo"];
 const DEFAULT_PROVIDER: ProviderId = "vixsrc";
 const ANIME_PROVIDER: ProviderId = "anikai";
 
@@ -61,6 +61,7 @@ const PROVIDER_DESCRIPTIONS: Record<ProviderId, string> = {
   vixsrc: "Broad catalogue, multi-quality HLS",
   showbox: "Direct files, several mirrors",
   anikai: "Anime only — subbed and dubbed",
+  ruvo: "Russian dubs — several voiceovers",
 };
 
 /** Returns the provider the URL explicitly asks for, or null when it says nothing. */
@@ -73,6 +74,7 @@ const parseProviderFromQuery = (value: string | null): ProviderId | null => {
 
 const getProviderLabel = (provider: ProviderId) => {
   if (provider === "anikai") return "AnimeKai";
+  if (provider === "ruvo") return "Русская озвучка";
   return provider === "showbox" ? "ShowBox" : "Vixsrc";
 };
 
