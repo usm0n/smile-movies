@@ -21,6 +21,8 @@ import Event from "../../components/home/Event";
 import Cast from "../../components/movie/Cast";
 import About from "../../components/movie/About";
 import ReviewsSection from "../../components/reviews/ReviewsSection";
+import ImdbTitleExtras from "../../components/movie/imdb/ImdbTitleExtras";
+import { useImdbTitleDetails } from "../../utilities/useImdbTitleDetails";
 
 function Movie() {
   const { movieId } = useParams();
@@ -39,6 +41,8 @@ function Movie() {
     movieVideosData,
   } = useTMDB();
   const [eventRelatedType, setEventRelatedType] = useState("recommendations");
+  // Resolved from the TMDB id; renders nothing if IMDb has no match.
+  const imdbState = useImdbTitleDetails({ mediaType: "movie", mediaId: movieId });
 
   const movieData = movieDetailsData?.data as movieDetails & tvDetails;
   const movieImagesDataArr = movieImagesData?.data as images;
@@ -127,6 +131,8 @@ function Movie() {
         <Divider />
         <About movieDetails={movieData} />
         <Divider />
+        <ImdbTitleExtras state={imdbState} />
+        {imdbState.details && <Divider />}
         <ReviewsSection
           mediaId={movieId!}
           mediaType="movie"

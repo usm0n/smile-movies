@@ -102,6 +102,30 @@ export async function resolveImdbId(
   }
 }
 
+/**
+ * The reverse of `resolveImdbId`: turn a tt-ID back into a TMDB id so IMDb
+ * cross-references (sequels, remakes) can link into this app rather than out
+ * to imdb.com. Returns null for titles TMDB has never indexed.
+ */
+export async function findByImdbId(
+  imdbId: string
+): Promise<{ id: number; mediaType: "movie" | "tv" } | null> {
+  try {
+    const res = await tmdbAPI.get(`/find/${imdbId}`, {
+      params: { external_source: "imdb_id" },
+    });
+    const movie = res.data?.movie_results?.[0];
+    if (movie?.id) return { id: movie.id, mediaType: "movie" };
+
+    const tv = res.data?.tv_results?.[0];
+    if (tv?.id) return { id: tv.id, mediaType: "tv" };
+
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 /** Fetch IMDb title details (includes aggregate rating) */
 export async function fetchImdbTitle(imdbId: string): Promise<ImdbTitle | null> {
   try {
@@ -162,4 +186,276 @@ export async function fetchImdbParentalGuide(
 ): Promise<ImdbParentsGuideEntry[]> {
   const res = await smbV1API.get(`/imdb/titles/${imdbId}/parentsGuide`);
   return (res.data?.parentsGuide ?? []) as ImdbParentsGuideEntry[];
+}
+
+// ── Title details ────────────────────────────────────────────────────────────
+
+export interface ImdbMoney {
+  amount: number;
+  currency: string;
+}
+
+export interface ImdbCertificate {
+  rating: string;
+  ratingReason?: string;
+  ratingsBody?: string;
+  country?: { id: string; text: string };
+}
+
+export interface ImdbBoxOffice {
+  budget?: ImdbMoney;
+  grossWorldwide?: ImdbMoney;
+  grossDomestic?: ImdbMoney;
+  openingWeekendDomestic?: ImdbMoney;
+  openingWeekendEndDate?: string;
+}
+
+export interface ImdbAwardsSummary {
+  topAward?: { name: string; event?: string; year?: number };
+  topAwardWins: number;
+  topAwardNominations: number;
+  totalWins: number;
+  totalNominations: number;
+}
+
+export interface ImdbRanking {
+  /** Only ranks <= 250 are the "Top 250"; the chart continues past that. */
+  topRank?: number;
+  meterRank?: number;
+  meterDirection?: "UP" | "DOWN" | "FLAT";
+  meterDifference?: number;
+}
+
+export interface ImdbTechnicalSpecs {
+  runtimeSeconds?: number;
+  runtimeText?: string;
+  aspectRatios: string[];
+  soundMixes: string[];
+  colorations: string[];
+  cameras: string[];
+  negativeFormats: string[];
+  printedFormats: string[];
+  filmLengths: string[];
+  laboratories: string[];
+  processes: string[];
+}
+
+export interface ImdbSectionCounts {
+  trivia: number;
+  goofs: number;
+  quotes: number;
+  crazyCredits: number;
+  alternateVersions: number;
+  filmingLocations: number;
+  connections: number;
+  reviews: number;
+  keywords: number;
+}
+
+export interface ImdbTitleDetails {
+  id: string;
+  keywords: string[];
+  genres: string[];
+  countriesOfOrigin: Array<{ id: string; text: string }>;
+  spokenLanguages: Array<{ id: string; text: string }>;
+  certificate?: ImdbCertificate;
+  certificates: ImdbCertificate[];
+  boxOffice: ImdbBoxOffice;
+  awards: ImdbAwardsSummary;
+  ranking: ImdbRanking;
+  technicalSpecs: ImdbTechnicalSpecs;
+  counts: ImdbSectionCounts;
+}
+
+// ── Paginated sections ───────────────────────────────────────────────────────
+
+export interface ImdbPage<T> {
+  items: T[];
+  total: number;
+  hasMore: boolean;
+  nextCursor?: string;
+}
+
+export interface ImdbInterestScore {
+  usersInterested: number;
+  usersVoted: number;
+}
+
+export interface ImdbFactItem {
+  id: string;
+  text: string;
+  isSpoiler: boolean;
+  category?: { id: string; text: string };
+  interest?: ImdbInterestScore;
+}
+
+export interface ImdbQuoteLine {
+  text: string;
+  character?: string;
+  stageDirection?: string;
+}
+
+export interface ImdbQuote {
+  id: string;
+  isSpoiler: boolean;
+  lines: ImdbQuoteLine[];
+  interest?: ImdbInterestScore;
+}
+
+export interface ImdbAward {
+  id: string;
+  isWinner: boolean;
+  category?: string;
+  name: string;
+  event?: string;
+  year?: number;
+  notes?: string;
+  names: Array<{ id: string; name: string }>;
+}
+
+export interface ImdbFilmingLocation {
+  id: string;
+  location: string;
+  note?: string;
+  interest?: ImdbInterestScore;
+}
+
+export interface ImdbConnection {
+  id: string;
+  category: { id: string; text: string };
+  title: {
+    id: string;
+    name: string;
+    year?: number;
+    type?: string;
+    imageUrl?: string;
+  };
+}
+
+export interface ImdbUserReview {
+  id: string;
+  summary: string;
+  text: string;
+  isSpoiler: boolean;
+  authorRating?: number;
+  authorName?: string;
+  submissionDate?: string;
+  upVotes: number;
+  downVotes: number;
+}
+
+export type ImdbFactKind =
+  | "trivia"
+  | "goofs"
+  | "crazyCredits"
+  | "alternateVersions";
+
+export type ImdbReviewSort = "helpfulness" | "newest" | "rating" | "votes";
+
+/**
+ * Sections are decoration, never the point of the page — a failed one renders
+ * as absent rather than taking the title page down with it.
+ */
+const emptyPage = <T,>(): ImdbPage<T> => ({
+  items: [],
+  total: 0,
+  hasMore: false,
+});
+
+/**
+ * Keywords, certificates, box office, awards, ranking and technical specs in
+ * one request, plus the counts that decide which sections are worth rendering.
+ */
+export async function fetchImdbDetails(
+  imdbId: string
+): Promise<ImdbTitleDetails | null> {
+  try {
+    const res = await smbV1API.get(`/imdb/titles/${imdbId}/details`);
+    return res.data as ImdbTitleDetails;
+  } catch {
+    return null;
+  }
+}
+
+/** Trivia, goofs, crazy credits or alternate versions. */
+export async function fetchImdbFacts(
+  imdbId: string,
+  kind: ImdbFactKind,
+  options: {
+    limit?: number;
+    after?: string;
+    spoilers?: "include" | "exclude" | "only";
+  } = {}
+): Promise<ImdbPage<ImdbFactItem>> {
+  return withRetry(async () => {
+    const res = await smbV1API.get(`/imdb/titles/${imdbId}/facts`, {
+      params: { kind, ...options },
+    });
+    return res.data as ImdbPage<ImdbFactItem>;
+  }).catch(() => emptyPage<ImdbFactItem>());
+}
+
+/** Memorable quotes, each a run of character lines. */
+export async function fetchImdbQuotes(
+  imdbId: string,
+  options: { limit?: number; after?: string } = {}
+): Promise<ImdbPage<ImdbQuote>> {
+  return withRetry(async () => {
+    const res = await smbV1API.get(`/imdb/titles/${imdbId}/quotes`, {
+      params: options,
+    });
+    return res.data as ImdbPage<ImdbQuote>;
+  }).catch(() => emptyPage<ImdbQuote>());
+}
+
+/** Award nominations and wins, most prestigious first. */
+export async function fetchImdbAwards(
+  imdbId: string,
+  options: { limit?: number; after?: string } = {}
+): Promise<ImdbPage<ImdbAward>> {
+  return withRetry(async () => {
+    const res = await smbV1API.get(`/imdb/titles/${imdbId}/awards`, {
+      params: options,
+    });
+    return res.data as ImdbPage<ImdbAward>;
+  }).catch(() => emptyPage<ImdbAward>());
+}
+
+/** Where the title was shot. */
+export async function fetchImdbFilmingLocations(
+  imdbId: string,
+  options: { limit?: number; after?: string } = {}
+): Promise<ImdbPage<ImdbFilmingLocation>> {
+  return withRetry(async () => {
+    const res = await smbV1API.get(`/imdb/titles/${imdbId}/locations`, {
+      params: options,
+    });
+    return res.data as ImdbPage<ImdbFilmingLocation>;
+  }).catch(() => emptyPage<ImdbFilmingLocation>());
+}
+
+/** Sequels, remakes, references and other title-to-title links. */
+export async function fetchImdbConnections(
+  imdbId: string,
+  options: { limit?: number; after?: string; category?: string } = {}
+): Promise<ImdbPage<ImdbConnection>> {
+  return withRetry(async () => {
+    const res = await smbV1API.get(`/imdb/titles/${imdbId}/connections`, {
+      params: options,
+    });
+    return res.data as ImdbPage<ImdbConnection>;
+  }).catch(() => emptyPage<ImdbConnection>());
+}
+
+/** IMDb user reviews, most helpful first by default. */
+export async function fetchImdbUserReviews(
+  imdbId: string,
+  options: { limit?: number; after?: string; sort?: ImdbReviewSort } = {}
+): Promise<ImdbPage<ImdbUserReview>> {
+  return withRetry(async () => {
+    const res = await smbV1API.get(`/imdb/titles/${imdbId}/reviews`, {
+      params: options,
+    });
+    return res.data as ImdbPage<ImdbUserReview>;
+  }).catch(() => emptyPage<ImdbUserReview>());
 }

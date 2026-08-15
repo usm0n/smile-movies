@@ -194,3 +194,17 @@ export const Layers = icon(L.Layers);
 export const Cookie = icon(L.Cookie);
 export const Scale = icon(L.Scale);
 export const Loader = icon(L.LoaderCircle);
+
+/* ── IMDb title sections ─────────────────────────────────────────────────── */
+export const Trophy = icon(L.Trophy);
+export const MapPin = icon(L.MapPin);
+export const Quote = icon(L.Quote);
+export const Lightbulb = icon(L.Lightbulb);
+export const Bug = icon(L.Bug);
+export const Coins = icon(L.Coins);
+export const Ticket = icon(L.Ticket);
+export const TrendingUp = icon(L.TrendingUp);
+export const TrendingDown = icon(L.TrendingDown);
+export const Tag = icon(L.Tag);
+export const Clapperboard = icon(L.Clapperboard);
+export const Aperture = icon(L.Aperture);
