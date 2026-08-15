@@ -37,6 +37,8 @@ import { User } from "../../user";
 import IMDbRating from "./IMDbRating";
 import ParentalGuide from "./ParentalGuide";
 import MatchScore from "./MatchScore";
+import ImdbRankBadges from "./imdb/ImdbRankBadges";
+import { useImdbTitleDetails } from "../../utilities/useImdbTitleDetails";
 import { collectionsAPI, Collection } from "../../service/api/smb/collections.api.service";
 import RatingDialog from "../library/RatingDialog";
 import { providersAPI } from "../../service/api/smb/providers.api.service";
@@ -75,6 +77,8 @@ function Header({
     upsertRatingData,
     updateMyself,
   } = useUsers();
+  // Shares its request with the IMDb sections further down the page.
+  const imdbState = useImdbTitleDetails({ mediaType: movieType, mediaId: movieId });
   const [isVideoLoaded, setIsVideoLoaded] = useState(false);
   const [isRatingOpen, setIsRatingOpen] = useState(false);
   const [collections, setCollections] = useState<Collection[]>([]);
@@ -517,6 +521,7 @@ function Header({
                 }}
               >
                 <IMDbRating mediaId={movieId} mediaType={movieType} />
+                <ImdbRankBadges ranking={imdbState.details?.ranking ?? {}} />
                 <MatchScore
                   movieTitle={movieTitle}
                   movieYear={(

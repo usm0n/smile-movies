@@ -20,6 +20,8 @@ import Event from "../../components/home/Event";
 import Cast from "../../components/movie/Cast";
 import About from "../../components/movie/About";
 import ReviewsSection from "../../components/reviews/ReviewsSection";
+import ImdbTitleExtras from "../../components/movie/imdb/ImdbTitleExtras";
+import { useImdbTitleDetails } from "../../utilities/useImdbTitleDetails";
 
 function TVSeries() {
   const { tvId } = useParams();
@@ -41,6 +43,8 @@ function TVSeries() {
   } = useTMDB();
   const [currentSeason, setCurrentSeason] = useState(1);
   const [eventRelatedType, setEventRelatedType] = useState("recommendations");
+  // Resolved from the TMDB id; renders nothing if IMDb has no match.
+  const imdbState = useImdbTitleDetails({ mediaType: "tv", mediaId: tvId });
 
   const tvSeriesData = tvSeriesDetailsData?.data as movieDetails & tvDetails;
   const tvSeriesCreditsDataArr = tvSeriesCreditsData?.data as movieCredits;
@@ -143,6 +147,8 @@ function TVSeries() {
         <Divider/>
         <About movieDetails={tvSeriesData} />
         <Divider/>
+        <ImdbTitleExtras state={imdbState} />
+        {imdbState.details && <Divider />}
         <ReviewsSection
           mediaId={tvId!}
           mediaType="tv"
