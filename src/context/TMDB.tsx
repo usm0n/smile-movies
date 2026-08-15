@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useRef, useState } from "react";
 import * as tmdbRes from "../tmdb-res";
 import { tmdb } from "../service/api/tmdb/tmdb.api.service";
 
@@ -267,25 +267,67 @@ export const TMDBProvider = ({ children }: { children: React.ReactNode }) => {
   const [searchPersonData, setSearchPersonData] =
     useState<tmdbRes.ResponseType | null>(null);
 
-  const searchPerson = async (query: string, page: number) => {
+  /**
+   * Every field on this context is a singleton slot, so two pages — or two
+   * navigations to the same page — fetching at once write through the same
+   * setter. Whichever response lands last wins, which is why clicking quickly
+   * between titles could leave you looking at the one you left. A per-slot
+   * ticket lets a superseded response drop itself instead.
+   */
+  const requestTickets = useRef<Record<string, number>>({});
+
+  /**
+   * The tmdb service layer resolves rather than rejects on failure: it returns
+   * the axios error. Without this check a rate-limited or failed request is
+   * stored as though it were data, so the section renders blank with
+   * `isError: false` and only a reload clears it.
+   */
+  const isRequestFailure = (
+    value: unknown,
+  ): value is Error & { response?: { status?: number } } =>
+    value instanceof Error ||
+    (typeof value === "object" && value !== null && "isAxiosError" in value);
+
+  const runRequest = async <T extends NonNullable<tmdbRes.ResponseType["data"]>>(
+    slot: string,
+    setData: React.Dispatch<React.SetStateAction<tmdbRes.ResponseType | null>>,
+    request: () => Promise<unknown>,
+  ) => {
+    const ticket = (requestTickets.current[slot] ?? 0) + 1;
+    requestTickets.current[slot] = ticket;
+    const isStale = () => requestTickets.current[slot] !== ticket;
+
+    setData({
+      isLoading: true,
+      isError: false,
+      data: null,
+      errorResponse: null,
+    });
+
     try {
-      setSearchPersonData({
-        isLoading: true,
+      const response = await request();
+      if (isStale()) return;
+      if (isRequestFailure(response)) {
+        setData({
+          isLoading: false,
+          isError: true,
+          data: null,
+          // Only a genuine 404 means "no such title"; a network blip or a 429
+          // must not render the page as not-found.
+          isIncorrect: response.response?.status === 404,
+          errorResponse: response.response ?? response,
+        });
+        return;
+      }
+      setData({
+        isLoading: false,
         isError: false,
-        data: null,
+        data: response as T,
         errorResponse: null,
       });
-      const response = await tmdb.searchPerson(query, page);
-      if (response) {
-        setSearchPersonData({
-          isLoading: false,
-          isError: false,
-          data: response as tmdbRes.searchPerson,
-          errorResponse: null,
-        });
-      }
     } catch (error) {
-      setSearchPersonData({
+      if (isStale()) return;
+      setData({
         isLoading: false,
         isError: true,
         data: null,
@@ -294,1090 +336,292 @@ export const TMDBProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  const peopleImages = async (id: string) => {
-    try {
-      setPeopleImagesData({
-        isLoading: true,
-        isError: false,
-        data: null,
-        errorResponse: null,
-      });
-      const response = await tmdb.peopleImages(id);
-      if (response) {
-        setPeopleImagesData({
-          isLoading: false,
-          isError: false,
-          data: response as tmdbRes.images,
-          errorResponse: null,
-        });
-      }
-    } catch (error) {
-      setPeopleImagesData({
-        isLoading: false,
-        isError: true,
-        data: null,
-        errorResponse: error,
-      });
-    }
+  /** Return a slot to idle and retire any request still in flight for it. */
+  const clearSlot = (
+    slot: string,
+    setData: React.Dispatch<React.SetStateAction<tmdbRes.ResponseType | null>>,
+  ) => {
+    requestTickets.current[slot] = (requestTickets.current[slot] ?? 0) + 1;
+    setData({
+      isLoading: false,
+      isError: false,
+      data: null,
+      errorResponse: null,
+    });
   };
 
-  const peopleCombinedCredits = async (id: string) => {
-    try {
-      setPeopleCombinedCreditsData({
-        isLoading: true,
-        isError: false,
-        data: null,
-        errorResponse: null,
-      });
-      const response = await tmdb.peopleCombinedCredits(id);
-      if (response) {
-        setPeopleCombinedCreditsData({
-          isLoading: false,
-          isError: false,
-          data: response as tmdbRes.peopleCombinedCredits,
-          errorResponse: null,
-        });
-      }
-    } catch (error) {
-      setPeopleCombinedCreditsData({
-        isLoading: false,
-        isError: true,
-        data: null,
-        errorResponse: error,
-      });
-    }
-  };
+  const searchPerson = async (query: string, page: number) =>
+    runRequest<tmdbRes.searchPerson>(
+      "SearchPersonData",
+      setSearchPersonData,
+      () => tmdb.searchPerson(query, page),
+    );
 
-  const peopleDetails = async (id: string) => {
-    try {
-      setPeopleDetailsData({
-        isLoading: true,
-        isError: false,
-        data: null,
-        errorResponse: null,
-      });
-      const response = await tmdb.peopleDetails(id);
-      if (response) {
-        setPeopleDetailsData({
-          isLoading: false,
-          isError: false,
-          data: response as tmdbRes.peopleDetails,
-          errorResponse: null,
-        });
-      }
-    } catch (error) {
-      setPeopleDetailsData({
-        isLoading: false,
-        isError: true,
-        data: null,
-        errorResponse: error,
-      });
-    }
-  };
+  const peopleImages = async (id: string) =>
+    runRequest<tmdbRes.images>(
+      "PeopleImagesData",
+      setPeopleImagesData,
+      () => tmdb.peopleImages(id),
+    );
 
-  const movieImages = async (id: string) => {
-    try {
-      setMovieImagesData({
-        isLoading: true,
-        isError: false,
-        data: null,
-        errorResponse: null,
-      });
-      const response = await tmdb.movieImages(id);
-      if (response) {
-        setMovieImagesData({
-          isLoading: false,
-          isError: false,
-          data: response as tmdbRes.images,
-          errorResponse: null,
-        });
-      }
-    } catch (error) {
-      setMovieImagesData({
-        isLoading: false,
-        isError: true,
-        data: null,
-        errorResponse: error,
-      });
-    }
-  };
+  const peopleCombinedCredits = async (id: string) =>
+    runRequest<tmdbRes.peopleCombinedCredits>(
+      "PeopleCombinedCreditsData",
+      setPeopleCombinedCreditsData,
+      () => tmdb.peopleCombinedCredits(id),
+    );
 
-  const tvImages = async (id: string) => {
-    try {
-      setTvImagesData({
-        isLoading: true,
-        isError: false,
-        data: null,
-        errorResponse: null,
-      });
-      const response = await tmdb.tvImages(id);
-      if (response) {
-        setTvImagesData({
-          isLoading: false,
-          isError: false,
-          data: response as tmdbRes.images,
-          errorResponse: null,
-        });
-      }
-    } catch (error) {
-      setTvImagesData({
-        isLoading: false,
-        isError: true,
-        data: null,
-        errorResponse: error,
-      });
-    }
-  };
+  const peopleDetails = async (id: string) =>
+    runRequest<tmdbRes.peopleDetails>(
+      "PeopleDetailsData",
+      setPeopleDetailsData,
+      () => tmdb.peopleDetails(id),
+    );
 
-  const movieTranslations = async (id: string) => {
-    try {
-      setMovieTranslationsData({
-        isLoading: true,
-        isError: false,
-        data: null,
-        errorResponse: null,
-      });
-      const response = await tmdb.movieTranslations(id);
-      if (response) {
-        setMovieTranslationsData({
-          isLoading: false,
-          isError: false,
-          data: response as tmdbRes.movieTranslations,
-          errorResponse: null,
-        });
-      }
-    } catch (error) {
-      setMovieTranslationsData({
-        isLoading: false,
-        isError: true,
-        data: null,
-        errorResponse: error,
-      });
-    }
-  };
+  const movieImages = async (id: string) =>
+    runRequest<tmdbRes.images>(
+      "MovieImagesData",
+      setMovieImagesData,
+      () => tmdb.movieImages(id),
+    );
 
-  const tvSeriesTranslations = async (id: string) => {
-    try {
-      setTvSeriesTranslationsData({
-        isLoading: true,
-        isError: false,
-        data: null,
-        errorResponse: null,
-      });
-      const response = await tmdb.tvTranslations(id);
-      if (response) {
-        setTvSeriesTranslationsData({
-          isLoading: false,
-          isError: false,
-          data: response as tmdbRes.tvTranslations,
-          errorResponse: null,
-        });
-      }
-    } catch (error) {
-      setTvSeriesTranslationsData({
-        isLoading: false,
-        isError: true,
-        data: null,
-        errorResponse: error,
-      });
-    }
-  };
+  const tvImages = async (id: string) =>
+    runRequest<tmdbRes.images>(
+      "TvImagesData",
+      setTvImagesData,
+      () => tmdb.tvImages(id),
+    );
 
-  const movieSimilar = async (id: string) => {
-    try {
-      setMovieSimilarData({
-        isLoading: true,
-        isError: false,
-        data: null,
-        errorResponse: null,
-      });
-      const response = await tmdb.movieSimilar(id);
-      if (response) {
-        setMovieSimilarData({
-          isLoading: false,
-          isError: false,
-          data: response as tmdbRes.DiscoverMovie,
-          errorResponse: null,
-        });
-      }
-    } catch (error) {
-      setMovieSimilarData({
-        isLoading: false,
-        isError: true,
-        data: null,
-        errorResponse: error,
-      });
-    }
-  };
+  const movieTranslations = async (id: string) =>
+    runRequest<tmdbRes.movieTranslations>(
+      "MovieTranslationsData",
+      setMovieTranslationsData,
+      () => tmdb.movieTranslations(id),
+    );
 
-  const tvSeriesSimilar = async (id: string) => {
-    try {
-      setTvSeriesSimilarData({
-        isLoading: true,
-        isError: false,
-        data: null,
-        errorResponse: null,
-      });
-      const response = await tmdb.tvSimilar(id);
-      if (response) {
-        setTvSeriesSimilarData({
-          isLoading: false,
-          isError: false,
-          data: response as tmdbRes.DiscoverTV,
-          errorResponse: null,
-        });
-      }
-    } catch (error) {
-      setTvSeriesSimilarData({
-        isLoading: false,
-        isError: true,
-        data: null,
-        errorResponse: error,
-      });
-    }
-  };
+  const tvSeriesTranslations = async (id: string) =>
+    runRequest<tmdbRes.tvTranslations>(
+      "TvSeriesTranslationsData",
+      setTvSeriesTranslationsData,
+      () => tmdb.tvTranslations(id),
+    );
 
-  const movieVideos = async (id: string) => {
-    try {
-      setMovieVideosData({
-        isLoading: true,
-        isError: false,
-        data: null,
-        errorResponse: null,
-      });
-      const response = await tmdb.movieVideos(id);
-      if (response) {
-        setMovieVideosData({
-          isLoading: false,
-          isError: false,
-          data: response as tmdbRes.videos,
-          errorResponse: null,
-        });
-      }
-    } catch (error) {
-      setMovieVideosData({
-        isLoading: false,
-        isError: true,
-        data: null,
-        errorResponse: error,
-      });
-    }
-  };
+  const movieSimilar = async (id: string) =>
+    runRequest<tmdbRes.DiscoverMovie>(
+      "MovieSimilarData",
+      setMovieSimilarData,
+      () => tmdb.movieSimilar(id),
+    );
 
-  const tvSeriesVideos = async (id: string) => {
-    try {
-      setTvSeriesVideosData({
-        isLoading: true,
-        isError: false,
-        data: null,
-        errorResponse: null,
-      });
-      const response = await tmdb.tvVideos(id);
-      if (response) {
-        setTvSeriesVideosData({
-          isLoading: false,
-          isError: false,
-          data: response as tmdbRes.videos,
-          errorResponse: null,
-        });
-      }
-    } catch (error) {
-      setTvSeriesVideosData({
-        isLoading: false,
-        isError: true,
-        data: null,
-        errorResponse: error,
-      });
-    }
-  };
+  const tvSeriesSimilar = async (id: string) =>
+    runRequest<tmdbRes.DiscoverTV>(
+      "TvSeriesSimilarData",
+      setTvSeriesSimilarData,
+      () => tmdb.tvSimilar(id),
+    );
+
+  const movieVideos = async (id: string) =>
+    runRequest<tmdbRes.videos>(
+      "MovieVideosData",
+      setMovieVideosData,
+      () => tmdb.movieVideos(id),
+    );
+
+  const tvSeriesVideos = async (id: string) =>
+    runRequest<tmdbRes.videos>(
+      "TvSeriesVideosData",
+      setTvSeriesVideosData,
+      () => tmdb.tvVideos(id),
+    );
 
   const searchMultiAC = async (query: string, page: number) => {
     const trimmedQuery = query.trim();
     if (!trimmedQuery) {
-      setSearchMultiACData({
-        isLoading: false,
-        isError: false,
-        data: null,
-        errorResponse: null,
-      });
+      clearSlot("SearchMultiACData", setSearchMultiACData);
       return;
     }
-
-    try {
-      setSearchMultiACData({
-        isLoading: true,
-        isError: false,
-        data: null,
-        errorResponse: null,
-      });
-      const response = await tmdb.searchMulti(trimmedQuery, page);
-      if (response) {
-        setSearchMultiACData({
-          isLoading: false,
-          isError: false,
-          data: response as tmdbRes.searchMulti,
-          errorResponse: null,
-        });
-      }
-    } catch (error) {
-      setSearchMultiACData({
-        isLoading: false,
-        isError: true,
-        data: null,
-        errorResponse: error,
-      });
-    }
+    return runRequest<tmdbRes.searchMulti>(
+      "SearchMultiACData",
+      setSearchMultiACData,
+      () => tmdb.searchMulti(trimmedQuery, page),
+    );
   };
   const searchMulti = async (query: string, page: number) => {
     const trimmedQuery = query.trim();
+    // Committing a full search retires whatever the autocomplete had in
+    // flight — it used to be parked on `isLoading: true` forever, so the
+    // dropdown kept spinning after the results page had already rendered.
+    clearSlot("SearchMultiACData", setSearchMultiACData);
     if (!trimmedQuery) {
-      setSearchMultiData({
-        isLoading: false,
-        isError: false,
-        data: null,
-        errorResponse: null,
-      });
-      setSearchMultiACData({
-        isLoading: false,
-        isError: false,
-        data: null,
-        errorResponse: null,
-      });
+      clearSlot("SearchMultiData", setSearchMultiData);
       return;
     }
-
-    try {
-      setSearchMultiData({
-        isLoading: true,
-        isError: false,
-        data: null,
-        errorResponse: null,
-      });
-      setSearchMultiACData({
-        isLoading: true,
-        isError: false,
-        data: null,
-        errorResponse: null,
-      });
-      const response = await tmdb.searchMulti(trimmedQuery, page);
-      if (response) {
-        setSearchMultiData({
-          isLoading: false,
-          isError: false,
-          data: response as tmdbRes.searchMulti,
-          errorResponse: null,
-        });
-      }
-    } catch (error) {
-      setSearchMultiData({
-        isLoading: false,
-        isError: true,
-        data: null,
-        errorResponse: error,
-      });
-    }
+    return runRequest<tmdbRes.searchMulti>(
+      "SearchMultiData",
+      setSearchMultiData,
+      () => tmdb.searchMulti(trimmedQuery, page),
+    );
   };
   const tvEpisodeCredits = async (
     id: string,
     seasonNumber: number,
     episodeNumber: number,
-  ) => {
-    try {
-      setTvEpisodeCreditsData({
-        isLoading: true,
-        isError: false,
-        data: null,
-        errorResponse: null,
-      });
-      const response = await tmdb.tvEpisodeCredits(
-        id,
-        seasonNumber,
-        episodeNumber,
-      );
-      if (response) {
-        setTvEpisodeCreditsData({
-          isLoading: false,
-          isError: false,
-          data: response as tmdbRes.tvEpisodeCredits,
-          errorResponse: null,
-        });
-      }
-    } catch (error) {
-      setTvEpisodeCreditsData({
-        isLoading: false,
-        isError: true,
-        data: null,
-        errorResponse: error,
-      });
-    }
-  };
+  ) =>
+    runRequest<tmdbRes.tvEpisodeCredits>(
+      "TvEpisodeCreditsData",
+      setTvEpisodeCreditsData,
+      () => tmdb.tvEpisodeCredits(id, seasonNumber, episodeNumber),
+    );
   const tvEpisodeDetails = async (
     id: string,
     seasonNumber: number,
     episodeNumber: number,
-  ) => {
-    try {
-      setTvEpisodeDetailsData({
-        isLoading: true,
-        isError: false,
-        data: null,
-        errorResponse: null,
-      });
-      const response = await tmdb.tvEpisodeDetails(
-        id,
-        seasonNumber,
-        episodeNumber,
-      );
-      if (!("response" in response)) {
-        setTvEpisodeDetailsData({
-          isLoading: false,
-          isError: false,
-          data: response as tmdbRes.tvEpisodeDetails,
-          errorResponse: null,
-        });
-      } else {
-        setTvEpisodeDetailsData({
-          isLoading: false,
-          isError: true,
-          data: null,
-          errorResponse: response.response,
-          isIncorrect: true,
-        });
-      }
-    } catch (error) {
-      setTvEpisodeDetailsData({
-        isLoading: false,
-        isError: true,
-        data: null,
-        errorResponse: error,
-        isIncorrect: true,
-      });
-    }
-  };
-  const tvSeasonsDetails = async (id: string, seasonNumber: number) => {
-    try {
-      setTvSeasonsDetailsData({
-        isLoading: true,
-        isError: false,
-        data: null,
-        errorResponse: null,
-      });
-      const response = await tmdb.tvSeasonsDetails(id, seasonNumber);
-      if (!("response" in response)) {
-        setTvSeasonsDetailsData({
-          isLoading: false,
-          isError: false,
-          data: response as tmdbRes.DiscoverTV,
-          errorResponse: null,
-        });
-      } else {
-        setTvSeasonsDetailsData({
-          isLoading: false,
-          isError: true,
-          data: null,
-          errorResponse: response.response,
-          isIncorrect: true,
-        });
-      }
-    } catch (error) {
-      setTvSeasonsDetailsData({
-        isLoading: false,
-        isError: true,
-        data: null,
-        errorResponse: error,
-      });
-    }
-  };
-  const tvSeasonsCredits = async (id: string, seasonNumber: number) => {
-    try {
-      setTvSeasonsCreditsData({
-        isLoading: true,
-        isError: false,
-        data: null,
-        errorResponse: null,
-      });
-      const response = await tmdb.tvSeasonsCredits(id, seasonNumber);
-      if (response) {
-        setTvSeasonsCreditsData({
-          isLoading: false,
-          isError: false,
-          data: response as tmdbRes.DiscoverTV,
-          errorResponse: null,
-        });
-      }
-    } catch (error) {
-      setTvSeasonsCreditsData({
-        isLoading: false,
-        isError: true,
-        data: null,
-        errorResponse: error,
-      });
-    }
-  };
-  const tvSeriesRecommendations = async (id: string) => {
-    try {
-      setTvSeriesRecommendationsData({
-        isLoading: true,
-        isError: false,
-        data: null,
-        errorResponse: null,
-      });
-      const response = await tmdb.tvSeriesRecommendations(id);
-      if (response) {
-        setTvSeriesRecommendationsData({
-          isLoading: false,
-          isError: false,
-          data: response as tmdbRes.DiscoverTV,
-          errorResponse: null,
-        });
-      }
-    } catch (error) {
-      setTvSeriesRecommendationsData({
-        isLoading: false,
-        isError: true,
-        data: null,
-        errorResponse: error,
-      });
-    }
-  };
-  const tvSeriesCredits = async (id: string) => {
-    try {
-      setTvSeriesCreditsData({
-        isLoading: true,
-        isError: false,
-        data: null,
-        errorResponse: null,
-      });
-      const response = await tmdb.tvSeriesCredits(id);
-      if (response) {
-        setTvSeriesCreditsData({
-          isLoading: false,
-          isError: false,
-          data: response as tmdbRes.movieCredits,
-          errorResponse: null,
-        });
-      }
-    } catch (error) {
-      setTvSeriesCreditsData({
-        isLoading: false,
-        isError: true,
-        data: null,
-        errorResponse: error,
-      });
-    }
-  };
-  const movieRecommendations = async (id: string) => {
-    try {
-      setMovieRecommendationsData({
-        isLoading: true,
-        isError: false,
-        data: null,
-        errorResponse: null,
-      });
-      const response = await tmdb.movieRecommendations(id);
-      if (response) {
-        setMovieRecommendationsData({
-          isLoading: false,
-          isError: false,
-          data: response as tmdbRes.DiscoverMovie,
-          errorResponse: null,
-        });
-      }
-    } catch (error) {
-      setMovieRecommendationsData({
-        isLoading: false,
-        isError: true,
-        data: null,
-        errorResponse: error,
-      });
-    }
-  };
+  ) =>
+    runRequest<tmdbRes.tvEpisodeDetails>(
+      "TvEpisodeDetailsData",
+      setTvEpisodeDetailsData,
+      () => tmdb.tvEpisodeDetails(id, seasonNumber, episodeNumber),
+    );
+  const tvSeasonsDetails = async (id: string, seasonNumber: number) =>
+    runRequest<tmdbRes.DiscoverTV>(
+      "TvSeasonsDetailsData",
+      setTvSeasonsDetailsData,
+      () => tmdb.tvSeasonsDetails(id, seasonNumber),
+    );
+  const tvSeasonsCredits = async (id: string, seasonNumber: number) =>
+    runRequest<tmdbRes.DiscoverTV>(
+      "TvSeasonsCreditsData",
+      setTvSeasonsCreditsData,
+      () => tmdb.tvSeasonsCredits(id, seasonNumber),
+    );
+  const tvSeriesRecommendations = async (id: string) =>
+    runRequest<tmdbRes.DiscoverTV>(
+      "TvSeriesRecommendationsData",
+      setTvSeriesRecommendationsData,
+      () => tmdb.tvSeriesRecommendations(id),
+    );
+  const tvSeriesCredits = async (id: string) =>
+    runRequest<tmdbRes.movieCredits>(
+      "TvSeriesCreditsData",
+      setTvSeriesCreditsData,
+      () => tmdb.tvSeriesCredits(id),
+    );
+  const movieRecommendations = async (id: string) =>
+    runRequest<tmdbRes.DiscoverMovie>(
+      "MovieRecommendationsData",
+      setMovieRecommendationsData,
+      () => tmdb.movieRecommendations(id),
+    );
 
-  const movieCredits = async (id: string) => {
-    try {
-      setMovieCreditsData({
-        isLoading: true,
-        isError: false,
-        data: null,
-        errorResponse: null,
-      });
-      const response = await tmdb.movieCredits(id);
-      if (response) {
-        setMovieCreditsData({
-          isLoading: false,
-          isError: false,
-          data: response as tmdbRes.movieCredits,
-          errorResponse: null,
-        });
-      }
-    } catch (error) {
-      setMovieCreditsData({
-        isLoading: false,
-        isError: true,
-        data: null,
-        errorResponse: error,
-      });
-    }
-  };
+  const movieCredits = async (id: string) =>
+    runRequest<tmdbRes.movieCredits>(
+      "MovieCreditsData",
+      setMovieCreditsData,
+      () => tmdb.movieCredits(id),
+    );
 
-  const discoverMovie = async (page: number) => {
-    try {
-      setDiscoverMovieData({
-        isLoading: true,
-        isError: false,
-        data: null,
-        errorResponse: null,
-      });
-      const response = await tmdb.discover("movie", page);
-      if (response) {
-        setDiscoverMovieData({
-          isLoading: false,
-          isError: false,
-          data: response as tmdbRes.DiscoverMovie,
-          errorResponse: null,
-        });
-      }
-    } catch (error) {
-      setDiscoverMovieData({
-        isLoading: false,
-        isError: true,
-        data: null,
-        errorResponse: error,
-      });
-    }
-  };
-  const discoverTv = async (page: number) => {
-    try {
-      setDiscoverTvData({
-        isLoading: true,
-        isError: false,
-        data: null,
-        errorResponse: null,
-      });
-      const response = await tmdb.discover("tv", page);
-      if (response) {
-        setDiscoverTvData({
-          isLoading: false,
-          isError: false,
-          data: response as tmdbRes.DiscoverTV,
-          errorResponse: null,
-        });
-      }
-    } catch (error) {
-      setDiscoverTvData({
-        isLoading: false,
-        isError: true,
-        data: null,
-        errorResponse: error,
-      });
-    }
-  };
-  const nowPlayingMovies = async (page: number) => {
-    try {
-      setNowPlayingMoviesData({
-        isLoading: true,
-        isError: false,
-        data: null,
-        errorResponse: null,
-      });
-      const response = await tmdb.nowPlayingMovies(page);
-      if (response) {
-        setNowPlayingMoviesData({
-          isLoading: false,
-          isError: false,
-          data: response as tmdbRes.nowPlayingMovies,
-          errorResponse: null,
-        });
-      }
-    } catch (error) {
-      setNowPlayingMoviesData({
-        isLoading: false,
-        isError: true,
-        data: null,
-        errorResponse: error,
-      });
-    }
-  };
-  const popularMovies = async (page: number) => {
-    try {
-      setPopularMoviesData({
-        isLoading: true,
-        isError: false,
-        data: null,
-        errorResponse: null,
-      });
-      const response = await tmdb.popularMovies(page);
-      if (response) {
-        setPopularMoviesData({
-          isLoading: false,
-          isError: false,
-          data: response as tmdbRes.popularMovies,
-          errorResponse: null,
-        });
-      }
-    } catch (error) {
-      setPopularMoviesData({
-        isLoading: false,
-        isError: true,
-        data: null,
-        errorResponse: error,
-      });
-    }
-  };
-  const topRatedMovies = async (page: number) => {
-    try {
-      setTopRatedMoviesData({
-        isLoading: true,
-        isError: false,
-        data: null,
-        errorResponse: null,
-      });
-      const response = await tmdb.topRatedMovies(page);
-      if (response) {
-        setTopRatedMoviesData({
-          isLoading: false,
-          isError: false,
-          data: response as tmdbRes.topRatedMovies,
-          errorResponse: null,
-        });
-      }
-    } catch (error) {
-      setTopRatedMoviesData({
-        isLoading: false,
-        isError: true,
-        data: null,
-        errorResponse: error,
-      });
-    }
-  };
-  const upcomingMovies = async (page: number) => {
-    try {
-      setUpcomingMoviesData({
-        isLoading: true,
-        isError: false,
-        data: null,
-        errorResponse: null,
-      });
-      const response = await tmdb.upcomingMovies(page);
-      if (response) {
-        setUpcomingMoviesData({
-          isLoading: false,
-          isError: false,
-          data: response as tmdbRes.upcomingMovies,
-          errorResponse: null,
-        });
-      }
-    } catch (error) {
-      setUpcomingMoviesData({
-        isLoading: false,
-        isError: true,
-        data: null,
-        errorResponse: error,
-      });
-    }
-  };
-  const airingTodayTv = async (page: number) => {
-    try {
-      setAiringTodayTvData({
-        isLoading: true,
-        isError: false,
-        data: null,
-        errorResponse: null,
-      });
-      const response = await tmdb.airingTodayTv(page);
-      if (response) {
-        setAiringTodayTvData({
-          isLoading: false,
-          isError: false,
-          data: response as tmdbRes.airingTodayTV,
-          errorResponse: null,
-        });
-      }
-    } catch (error) {
-      setAiringTodayTvData({
-        isLoading: false,
-        isError: true,
-        data: null,
-        errorResponse: error,
-      });
-    }
-  };
-  const onTheAirTv = async (page: number) => {
-    try {
-      setOnTheAirTvData({
-        isLoading: true,
-        isError: false,
-        data: null,
-        errorResponse: null,
-      });
-      const response = await tmdb.onTheAirTv(page);
-      if (response) {
-        setOnTheAirTvData({
-          isLoading: false,
-          isError: false,
-          data: response as tmdbRes.onTheAirTV,
-          errorResponse: null,
-        });
-      }
-    } catch (error) {
-      setOnTheAirTvData({
-        isLoading: false,
-        isError: true,
-        data: null,
-        errorResponse: error,
-      });
-    }
-  };
-  const popularTv = async (page: number) => {
-    try {
-      setPopularTvData({
-        isLoading: true,
-        isError: false,
-        data: null,
-        errorResponse: null,
-      });
-      const response = await tmdb.popularTv(page);
-      if (response) {
-        setPopularTvData({
-          isLoading: false,
-          isError: false,
-          data: response as tmdbRes.popularTV,
-          errorResponse: null,
-        });
-      }
-    } catch (error) {
-      setPopularTvData({
-        isLoading: false,
-        isError: true,
-        data: null,
-        errorResponse: error,
-      });
-    }
-  };
-  const topRatedTv = async (page: number) => {
-    try {
-      setTopRatedTvData({
-        isLoading: true,
-        isError: false,
-        data: null,
-        errorResponse: null,
-      });
-      const response = await tmdb.topRatedTv(page);
-      if (response) {
-        setTopRatedTvData({
-          isLoading: false,
-          isError: false,
-          data: response as tmdbRes.topRatedTV,
-          errorResponse: null,
-        });
-      }
-    } catch (error) {
-      setTopRatedTvData({
-        isLoading: false,
-        isError: true,
-        data: null,
-        errorResponse: error,
-      });
-    }
-  };
-  const searchMovie = async (query: string, page: number) => {
-    try {
-      setSearchMovieData({
-        isLoading: true,
-        isError: false,
-        data: null,
-        errorResponse: null,
-      });
-      const response = await tmdb.searchMovie(query, page);
-      if (response) {
-        setSearchMovieData({
-          isLoading: false,
-          isError: false,
-          data: response as tmdbRes.searchMovie,
-          errorResponse: null,
-        });
-      }
-    } catch (error) {
-      setSearchMovieData({
-        isLoading: false,
-        isError: true,
-        data: null,
-        errorResponse: error,
-      });
-    }
-  };
-  const searchTv = async (query: string, page: number) => {
-    try {
-      setSearchTvData({
-        isLoading: true,
-        isError: false,
-        data: null,
-        errorResponse: null,
-      });
-      const response = await tmdb.searchTv(query, page);
-      if (response) {
-        setSearchTvData({
-          isLoading: false,
-          isError: false,
-          data: response as tmdbRes.searchTV,
-          errorResponse: null,
-        });
-      }
-    } catch (error) {
-      setSearchTvData({
-        isLoading: false,
-        isError: true,
-        data: null,
-        errorResponse: error,
-      });
-    }
-  };
-  const trendingAll = async (time: "day" | "week", page: number) => {
-    try {
-      setTrendingAllData({
-        isLoading: true,
-        isError: false,
-        data: null,
-        errorResponse: null,
-      });
-      const response = await tmdb.trending("all", time, page);
-      if (response) {
-        setTrendingAllData({
-          isLoading: false,
-          isError: false,
-          data: response as tmdbRes.trendingAll,
-          errorResponse: null,
-        });
-      }
-    } catch (error) {
-      setTrendingAllData({
-        isLoading: false,
-        isError: true,
-        data: null,
-        errorResponse: error,
-      });
-    }
-  };
-  const trendingMovies = async (time: "day" | "week", page: number) => {
-    try {
-      setTrendingMoviesData({
-        isLoading: true,
-        isError: false,
-        data: null,
-        errorResponse: null,
-      });
-      const response = await tmdb.trending("movie", time, page);
-      if (response) {
-        setTrendingMoviesData({
-          isLoading: false,
-          isError: false,
-          data: response as tmdbRes.trendingMovies,
-          errorResponse: null,
-        });
-      }
-    } catch (error) {
-      setTrendingMoviesData({
-        isLoading: false,
-        isError: true,
-        data: null,
-        errorResponse: error,
-      });
-    }
-  };
-  const trendingTv = async (time: "day" | "week", page: number) => {
-    try {
-      setTrendingTvData({
-        isLoading: true,
-        isError: false,
-        data: null,
-        errorResponse: null,
-      });
-      const response = await tmdb.trending("tv", time, page);
-      if (response) {
-        setTrendingTvData({
-          isLoading: false,
-          isError: false,
-          data: response as tmdbRes.trendingTV,
-          errorResponse: null,
-        });
-      }
-    } catch (error) {
-      setTrendingTvData({
-        isLoading: false,
-        isError: true,
-        data: null,
-        errorResponse: error,
-      });
-    }
-  };
-  const movie = async (id: string) => {
-    try {
-      setMovieDetailsData({
-        isLoading: true,
-        isError: false,
-        data: null,
-        errorResponse: null,
-      });
-      const response = await tmdb.movie(id);
-      if (!("response" in response)) {
-        setMovieDetailsData({
-          isLoading: false,
-          isError: false,
-          data: response as tmdbRes.movieDetails,
-          errorResponse: null,
-        });
-      } else {
-        setMovieDetailsData({
-          isLoading: false,
-          isError: true,
-          data: null,
-          isIncorrect: true,
-          errorResponse: response.response,
-        });
-      }
-    } catch (error) {
-      setMovieDetailsData({
-        isLoading: false,
-        isError: true,
-        data: null,
-        errorResponse: error,
-      });
-    }
-  };
-  const tvSeries = async (id: string) => {
-    try {
-      setTvSeriesDetailsData({
-        isLoading: true,
-        isError: false,
-        data: null,
-        errorResponse: null,
-      });
-      const response = await tmdb.tv(id);
-      if (!("response" in response)) {
-        setTvSeriesDetailsData({
-          isLoading: false,
-          isError: false,
-          data: response as tmdbRes.tvDetails,
-          errorResponse: null,
-        });
-      } else {
-        setTvSeriesDetailsData({
-          isLoading: false,
-          isError: true,
-          data: null,
-          isIncorrect: true,
-          errorResponse: response.response,
-        });
-      }
-    } catch (error) {
-      setTvSeriesDetailsData({
-        isLoading: false,
-        isError: true,
-        data: null,
-        errorResponse: error,
-      });
-    }
-  };
+  const discoverMovie = async (page: number) =>
+    runRequest<tmdbRes.DiscoverMovie>(
+      "DiscoverMovieData",
+      setDiscoverMovieData,
+      () => tmdb.discover("movie", page),
+    );
+  const discoverTv = async (page: number) =>
+    runRequest<tmdbRes.DiscoverTV>(
+      "DiscoverTvData",
+      setDiscoverTvData,
+      () => tmdb.discover("tv", page),
+    );
+  const nowPlayingMovies = async (page: number) =>
+    runRequest<tmdbRes.nowPlayingMovies>(
+      "NowPlayingMoviesData",
+      setNowPlayingMoviesData,
+      () => tmdb.nowPlayingMovies(page),
+    );
+  const popularMovies = async (page: number) =>
+    runRequest<tmdbRes.popularMovies>(
+      "PopularMoviesData",
+      setPopularMoviesData,
+      () => tmdb.popularMovies(page),
+    );
+  const topRatedMovies = async (page: number) =>
+    runRequest<tmdbRes.topRatedMovies>(
+      "TopRatedMoviesData",
+      setTopRatedMoviesData,
+      () => tmdb.topRatedMovies(page),
+    );
+  const upcomingMovies = async (page: number) =>
+    runRequest<tmdbRes.upcomingMovies>(
+      "UpcomingMoviesData",
+      setUpcomingMoviesData,
+      () => tmdb.upcomingMovies(page),
+    );
+  const airingTodayTv = async (page: number) =>
+    runRequest<tmdbRes.airingTodayTV>(
+      "AiringTodayTvData",
+      setAiringTodayTvData,
+      () => tmdb.airingTodayTv(page),
+    );
+  const onTheAirTv = async (page: number) =>
+    runRequest<tmdbRes.onTheAirTV>(
+      "OnTheAirTvData",
+      setOnTheAirTvData,
+      () => tmdb.onTheAirTv(page),
+    );
+  const popularTv = async (page: number) =>
+    runRequest<tmdbRes.popularTV>(
+      "PopularTvData",
+      setPopularTvData,
+      () => tmdb.popularTv(page),
+    );
+  const topRatedTv = async (page: number) =>
+    runRequest<tmdbRes.topRatedTV>(
+      "TopRatedTvData",
+      setTopRatedTvData,
+      () => tmdb.topRatedTv(page),
+    );
+  const searchMovie = async (query: string, page: number) =>
+    runRequest<tmdbRes.searchMovie>(
+      "SearchMovieData",
+      setSearchMovieData,
+      () => tmdb.searchMovie(query, page),
+    );
+  const searchTv = async (query: string, page: number) =>
+    runRequest<tmdbRes.searchTV>(
+      "SearchTvData",
+      setSearchTvData,
+      () => tmdb.searchTv(query, page),
+    );
+  const trendingAll = async (time: "day" | "week", page: number) =>
+    runRequest<tmdbRes.trendingAll>(
+      "TrendingAllData",
+      setTrendingAllData,
+      () => tmdb.trending("all", time, page),
+    );
+  const trendingMovies = async (time: "day" | "week", page: number) =>
+    runRequest<tmdbRes.trendingMovies>(
+      "TrendingMoviesData",
+      setTrendingMoviesData,
+      () => tmdb.trending("movie", time, page),
+    );
+  const trendingTv = async (time: "day" | "week", page: number) =>
+    runRequest<tmdbRes.trendingTV>(
+      "TrendingTvData",
+      setTrendingTvData,
+      () => tmdb.trending("tv", time, page),
+    );
+  const movie = async (id: string) =>
+    runRequest<tmdbRes.movieDetails>(
+      "MovieDetailsData",
+      setMovieDetailsData,
+      () => tmdb.movie(id),
+    );
+  const tvSeries = async (id: string) =>
+    runRequest<tmdbRes.tvDetails>(
+      "TvSeriesDetailsData",
+      setTvSeriesDetailsData,
+      () => tmdb.tv(id),
+    );
   return (
     <TmdbContext.Provider
       value={{

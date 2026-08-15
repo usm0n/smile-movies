@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTMDB } from "../../context/TMDB";
 import {
   images,
@@ -10,6 +10,7 @@ import {
 } from "../../tmdb-res";
 import { useParams } from "react-router-dom";
 import NotFound from "../../components/utils/NotFound";
+import LoadFailed from "../../components/utils/LoadFailed";
 import { Box, Divider } from "@mui/joy";
 import { DetailSkeleton, RowSkeleton } from "../../components/ui/Skeleton";
 import Header from "../../components/movie/Header";
@@ -53,21 +54,38 @@ function TVSeries() {
   const tvSeasonsDetailsDataArr =
     tvSeasonsDetailsData?.data as tvSeasonsDetails;
 
+  /**
+   * The TMDB context stores one response per endpoint for the whole app, so on
+   * the render where `tvId` changes those slots still hold the previous title —
+   * or the home page's hero. Holding the skeleton until this render's effect
+   * has claimed the id is what stops the old title flashing up first.
+   */
+  const requestedId = useRef<string | undefined>(undefined);
+  const isStale = requestedId.current !== tvId;
+
+  /**
+   * Only what the hero needs blocks the page; the cast row and the related rail
+   * carry their own placeholders and fill in behind it.
+   */
   const isFetching =
+    isStale ||
     !tvSeriesDetailsData ||
     tvSeriesDetailsData?.isLoading ||
-    tvSeriesCreditsData?.isLoading ||
     tvSeriesVideosData?.isLoading ||
     tvImagesData?.isLoading;
 
-  useEffect(() => {
-    if (tvId) {
-      tvSeries(tvId);
-      tvSeriesCredits(tvId);
-      tvImages(tvId);
-      tvSeriesVideos(tvId);
-    }
+  const loadTitle = useCallback(() => {
+    if (!tvId) return;
+    requestedId.current = tvId;
+    tvSeries(tvId);
+    tvSeriesCredits(tvId);
+    tvImages(tvId);
+    tvSeriesVideos(tvId);
   }, [tvId]);
+
+  useEffect(() => {
+    loadTitle();
+  }, [loadTitle]);
   useEffect(() => {
     switch (eventRelatedType) {
       case "recommendations":
@@ -94,6 +112,8 @@ function TVSeries() {
         <RowSkeleton count={6} />
       </Container>
     </Box>
+  ) : tvSeriesDetailsData?.isError ? (
+    <LoadFailed onRetry={loadTitle} />
   ) : (
     <Box
       sx={{
@@ -116,7 +136,9 @@ function TVSeries() {
           tvSeasonData={tvSeasonsDetailsDataArr}
           currentSeason={currentSeason}
           setCurrentSeason={setCurrentSeason}
-          isLoading={tvSeasonsDetailsData?.isLoading!}
+          // Null on the first render of a season, before its effect fires —
+          // treat that as loading so the list shows placeholders, not nothing.
+          isLoading={!tvSeasonsDetailsData || tvSeasonsDetailsData.isLoading}
         />
         {tvSeriesVideosDataArr?.results?.filter(
           (video) =>
@@ -143,7 +165,10 @@ function TVSeries() {
           isTitleSimple={true}
         />
         <Divider/>
-        <Cast movieCredits={tvSeriesCreditsDataArr} />
+        <Cast
+          movieCredits={tvSeriesCreditsDataArr}
+          isLoading={Boolean(tvSeriesCreditsData?.isLoading)}
+        />
         <Divider/>
         <About movieDetails={tvSeriesData} />
         <Divider/>

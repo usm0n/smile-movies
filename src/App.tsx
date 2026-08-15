@@ -10,6 +10,7 @@ import NotVerified from "./components/utils/NotVerified";
 import { useLocation } from "react-router-dom";
 import { Suspense, useEffect } from "react";
 import RouteFallback from "./components/utils/RouteFallback";
+import ScrollManager from "./components/utils/ScrollManager";
 
 function App() {
   const { setMode } = useColorScheme();
@@ -22,6 +23,7 @@ function App() {
 
   return (
     <Box className="app-shell">
+      <ScrollManager />
       <NotVerified type="snackbar" />
       {/* The player owns the whole viewport and puts its own back button, title
           and controls at the very top — a fixed app header would sit on top of
