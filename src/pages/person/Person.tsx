@@ -1,10 +1,11 @@
 import { AspectRatio, Box, Typography } from "@mui/joy";
-import { useEffect } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { useTMDB } from "../../context/TMDB";
 import { ageCount, ymdToDmy } from "../../utilities/defaults";
 import { DetailSkeleton, RowSkeleton } from "../../components/ui/Skeleton";
 import NotFound from "../../components/utils/NotFound";
+import LoadFailed from "../../components/utils/LoadFailed";
 import {
   peopleCombinedCredits,
   peopleDetails,
@@ -31,22 +32,35 @@ function Person() {
   const peopleImagesDataArr = peopleImagesData?.data as peopleImages;
   const peopleCombinedCreditsDataArr =
     peopleCombinedCreditsData?.data as peopleCombinedCredits;
+  // The TMDB context keeps one response per endpoint for the whole app, so on
+  // the render where `personId` changes the slots below still hold the previous
+  // person. `!peopleDetailsData` covers the same gap on a fresh mount, before
+  // the effect has flipped the slot to loading.
+  const requestedId = useRef<string | undefined>(undefined);
   const isLoading =
+    requestedId.current !== personId ||
+    !peopleDetailsData ||
     peopleDetailsData?.isLoading ||
     peopleCombinedCreditsData?.isLoading ||
     peopleImagesData?.isLoading;
-  const isIncorrect =
-    peopleCombinedCreditsData?.isIncorrect ||
-    peopleDetailsData?.isIncorrect ||
-    peopleImagesData?.isIncorrect;
+  // Only the person's own record decides not-found; a failed credits or images
+  // request is a missing section, not a missing person.
+  const isIncorrect = peopleDetailsData?.isIncorrect;
+
+  // Keyed on personId: this route reuses one component instance, so clicking
+  // through to another person from the credits list has to refetch here or the
+  // page keeps showing whoever you were looking at until a reload.
+  const loadPerson = useCallback(() => {
+    if (!personId) return;
+    requestedId.current = personId;
+    peopleDetails(personId);
+    peopleCombinedCredits(personId);
+    peopleImages(personId);
+  }, [personId]);
 
   useEffect(() => {
-    if (personId) {
-      peopleDetails(personId);
-      peopleCombinedCredits(personId);
-      peopleImages(personId);
-    }
-  }, []);
+    loadPerson();
+  }, [loadPerson]);
   return isIncorrect ? (
     <NotFound />
   ) : isLoading ? (
@@ -64,6 +78,8 @@ function Person() {
       <DetailSkeleton />
       <RowSkeleton count={6} />
     </Box>
+  ) : peopleDetailsData?.isError ? (
+    <LoadFailed onRetry={loadPerson} />
   ) : (
     <Box
       sx={{

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTMDB } from "../../context/TMDB";
 import {
   // DiscoverMovie,
@@ -11,6 +11,7 @@ import {
 } from "../../tmdb-res";
 import { useParams } from "react-router-dom";
 import NotFound from "../../components/utils/NotFound";
+import LoadFailed from "../../components/utils/LoadFailed";
 // import MovieSC from "../../components/movie/MovieSkeleton";
 import { Box, Divider } from "@mui/joy";
 import { DetailSkeleton, RowSkeleton } from "../../components/ui/Skeleton";
@@ -48,22 +49,38 @@ function Movie() {
   const movieImagesDataArr = movieImagesData?.data as images;
   const movieVideosDataArr = movieVideosData?.data as videos;
   const movieCreditsDataArr = movieCreditsData?.data as movieCredits;
+  /**
+   * The TMDB context stores one response per endpoint for the whole app, so on
+   * the render where `movieId` changes those slots still hold the previous
+   * title — or the home page's hero. Holding the skeleton until this render's
+   * effect has claimed the id is what stops the old title flashing up first.
+   */
+  const requestedId = useRef<string | undefined>(undefined);
+  const isStale = requestedId.current !== movieId;
+
+  /**
+   * Only what the hero needs blocks the page. Cast and Related carry their own
+   * placeholders and fill in behind it — previously the slowest of six requests
+   * decided when anything at all became visible.
+   */
   const isFetching =
+    isStale ||
     !movieDetailsData ||
     movieDetailsData?.isLoading ||
-    movieCreditsData?.isLoading ||
-    movieRecommendationsData?.isLoading ||
     movieImagesData?.isLoading ||
-    movieVideosData?.isLoading ||
-    movieSimilarData?.isLoading;
-  useEffect(() => {
-    if (movieId) {
-      movie(movieId);
-      movieCredits(movieId);
-      movieImages(movieId);
-      movieVideos(movieId);
-    }
+    movieVideosData?.isLoading;
+  const loadTitle = useCallback(() => {
+    if (!movieId) return;
+    requestedId.current = movieId;
+    movie(movieId);
+    movieCredits(movieId);
+    movieImages(movieId);
+    movieVideos(movieId);
   }, [movieId]);
+
+  useEffect(() => {
+    loadTitle();
+  }, [loadTitle]);
   useEffect(() => {
     if (movieId)
       switch (eventRelatedType) {
@@ -86,6 +103,8 @@ function Movie() {
         <RowSkeleton count={6} />
       </Container>
     </Box>
+  ) : movieDetailsData?.isError ? (
+    <LoadFailed onRetry={loadTitle} />
   ) : (
     <Box
       sx={{
@@ -127,7 +146,10 @@ function Movie() {
           isTitleSimple={true}
         />
         <Divider />
-        <Cast movieCredits={movieCreditsDataArr} />
+        <Cast
+          movieCredits={movieCreditsDataArr}
+          isLoading={Boolean(movieCreditsData?.isLoading)}
+        />
         <Divider />
         <About movieDetails={movieData} />
         <Divider />
