@@ -1031,15 +1031,29 @@ function Watch() {
     sessionBaseReady,
   ]);
 
+  /**
+   * `loaded-metadata` is not a once-per-episode event: HLS fires it again
+   * whenever the media element is re-attached, which is what recovering from a
+   * decode error or a large forward seek looks like from here. Resuming on
+   * every one of them dragged the viewer back to where they opened the episode
+   * moments after they had skipped an intro. The resume belongs to the source,
+   * so it is spent once and not offered again until the source changes.
+   */
+  const resumedSourceRef = useRef("");
+
   const handlePlayerLoadedMetadata = useCallback(() => {
     if (!playerRef.current) return;
+
+    const resumeKey = `${playbackSourceUrl}:${playerReloadToken}`;
+    if (resumedSourceRef.current === resumeKey) return;
+    resumedSourceRef.current = resumeKey;
 
     const tParam = Number(searchParams.get("t") || 0);
     const startAtMinutes = Math.max(0, tParam > 0 ? tParam / 60 : sessionBaseProgress);
     if (startAtMinutes > 0) {
       playerRef.current.currentTime = startAtMinutes * 60;
     }
-  }, [sessionBaseProgress, searchParams]);
+  }, [playbackSourceUrl, playerReloadToken, sessionBaseProgress, searchParams]);
 
   const handlePlayerTimeUpdate = useCallback(() => {
     if (!playerRef.current) return;

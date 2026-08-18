@@ -43,6 +43,13 @@ import { SkipSegment } from "../../types/providers";
 const SEEK_SECONDS = 10;
 const PLAYBACK_RATES = [0.5, 0.75, 1, 1.25, 1.5, 2];
 const OFFSET_STEPS = [-0.5, -0.1, 0.1, 0.5];
+/**
+ * How far a stream's runtime may differ from the one the skip timings were
+ * measured against before the ending is treated as belonging to another cut.
+ * Encodes routinely lose a minute or two to trimmed cards; a gap of minutes
+ * means the wrong release, and a button placed from it would fire mid-scene.
+ */
+const MAX_OUTRO_DRIFT_SECONDS = 300;
 
 type PopoverId = "captions" | "settings" | null;
 
@@ -291,6 +298,7 @@ function PlayerChrome({
     started,
     waiting,
     currentTime,
+    duration,
     muted,
     volume,
     fullscreen,
@@ -322,18 +330,58 @@ function PlayerChrome({
    * viewer has already dismissed stay dismissed for this episode.
    */
   const [dismissedSegments, setDismissedSegments] = useState<string[]>([]);
+
+  /**
+   * The timings as they apply to *this* stream.
+   *
+   * Both sources time an episode against one particular release, and the file
+   * being played is rarely that exact release — a minute of distributor logos
+   * here, a trimmed end-card there. Intros survive that (they are measured from
+   * a start both cuts share) but endings do not: an ending timed at 47:30
+   * against a 48:21 master never arrives in a 46:10 encode, which is why "Skip
+   * Ending" went missing on live-action series while anime — timed to the
+   * length we ask for — mostly worked.
+   *
+   * An ending runs to the end of its episode in every release, so the gap
+   * between the source's end and this stream's end is the offset for the whole
+   * segment. Where that gap is small the shift is a no-op; where it is large
+   * enough to mean a different cut entirely, the timings are dropped rather
+   * than guessed at.
+   */
+  const resolvedSegments = useMemo(() => {
+    const segments = skipSegments || [];
+    if (!segments.length || !Number.isFinite(duration) || duration <= 0) {
+      return segments;
+    }
+
+    return segments.flatMap((segment) => {
+      if (segment.type === "outro") {
+        const shift = duration - segment.endTime;
+        if (Math.abs(shift) > MAX_OUTRO_DRIFT_SECONDS) return [];
+
+        const startTime = Math.max(0, segment.startTime + shift);
+        if (startTime >= duration) return [];
+
+        return [{ ...segment, startTime, endTime: duration }];
+      }
+
+      if (segment.startTime >= duration) return [];
+      return [{ ...segment, endTime: Math.min(segment.endTime, duration) }];
+    });
+  }, [duration, skipSegments]);
+
   const activeSegment = useMemo(() => {
-    if (!skipSegments?.length || !started) return null;
+    if (!resolvedSegments.length || !started) return null;
 
     return (
-      skipSegments.find(
+      resolvedSegments.find(
         (segment) =>
           currentTime >= segment.startTime &&
           currentTime < segment.endTime &&
           !dismissedSegments.includes(`${segment.type}:${segment.startTime}`),
       ) || null
     );
-  }, [currentTime, dismissedSegments, skipSegments, started]);
+  }, [currentTime, dismissedSegments, resolvedSegments, started]);
 
   const skipActiveSegment = useCallback(() => {
     if (!activeSegment) return;
@@ -342,8 +390,23 @@ function PlayerChrome({
       ...current,
       `${activeSegment.type}:${activeSegment.startTime}`,
     ]);
-    remote.seek(activeSegment.endTime);
-  }, [activeSegment, remote]);
+
+    // Never past the last frame: a segment can end fractionally beyond the
+    // stream, and seeking there strands the player at a position it can never
+    // buffer.
+    const target =
+      Number.isFinite(duration) && duration > 0
+        ? Math.min(activeSegment.endTime, duration - 0.25)
+        : activeSegment.endTime;
+
+    // `seeking` before `seek` is the pair Vidstack expects. Sending `seek`
+    // alone leaves the player's own seek state unset if the media element
+    // happens to be mid-seek already, and the `seeked` that follows is then
+    // discarded — the spinner stays up and the controls stop tracking the
+    // video, which is the hang that followed a skip.
+    remote.seeking(target);
+    remote.seek(target);
+  }, [activeSegment, duration, remote]);
 
   // Episode changes reuse this component, so the dismissals have to be cleared
   // with the timings they belonged to.

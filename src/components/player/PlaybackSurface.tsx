@@ -338,14 +338,24 @@ function PlaybackSurface({
         },
         // The player fills the viewport, so the video is letterboxed inside it
         // rather than the page scrolling around a 16:9 box.
+        //
+        // The video is not a direct child of the outlet — Vidstack wraps it in a
+        // `<shadow-root>` element that has no size of its own, so a percentage
+        // height on the video resolves against `auto` and collapses back to the
+        // file's own dimensions. That is invisible in a window (the width still
+        // fills) but obvious in fullscreen, where the picture stays at its
+        // intrinsic size instead of growing to the screen. Taking the video out
+        // of flow against the outlet sizes it from the player box directly,
+        // whatever wrappers sit in between.
         "& media-outlet": {
+          position: "relative",
+          display: "block",
           width: "100%",
           height: "100%",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
         },
         "& media-outlet video": {
+          position: "absolute",
+          inset: 0,
           width: "100%",
           height: "100%",
           objectFit: "contain",
