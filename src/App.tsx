@@ -16,6 +16,10 @@ function App() {
   const { setMode } = useColorScheme();
   const location = useLocation();
   const isWatchPage = /\/watch(\/|$)/.test(location.pathname);
+  // The assistant is a fixed-height chat shell that pins its composer to the
+  // bottom of the viewport. A marketing footer underneath would make the page
+  // scroll past it, so /ai opts out of the footer the same way /watch does.
+  const isChatPage = /^\/ai(\/|$)/.test(location.pathname);
 
   useEffect(() => {
     setMode("dark");
@@ -39,7 +43,7 @@ function App() {
           </Routes>
         </Suspense>
       </Box>
-      {!isWatchPage && <AppFooter />}
+      {!isWatchPage && !isChatPage && <AppFooter />}
     </Box>
   );
 }

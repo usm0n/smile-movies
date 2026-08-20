@@ -1,16 +1,9 @@
 import {
   Box,
   Button,
-  Card,
-  Chip,
   CircularProgress,
-  Divider,
   Drawer,
   IconButton,
-  List,
-  ListItemButton,
-  ListItemContent,
-  Sheet,
   Textarea,
   Tooltip,
   Typography,
@@ -23,7 +16,21 @@ import {
   aiService,
   ChatMessage,
 } from "../../service/api/ai/ai.api.service";
-import { AutoAwesome as AutoAwesomeIcon, SearchRounded as SearchRoundedIcon, Send as SendIcon, Person as PersonIcon, ContentCopyRounded as ContentCopyRoundedIcon, RefreshRounded as RefreshRoundedIcon, DeleteOutlineRounded as DeleteOutlineRoundedIcon, AddRounded as AddRoundedIcon, MenuRounded as MenuRoundedIcon, HistoryRounded as HistoryRoundedIcon, ReplayRounded as ReplayRoundedIcon, PlaylistAdd as PlaylistAddIcon, CheckCircleOutline as CheckCircleOutlineIcon } from "../../components/ui/icons";
+import {
+  AutoAwesome as AutoAwesomeIcon,
+  SearchRounded as SearchRoundedIcon,
+  Send as SendIcon,
+  ContentCopyRounded as ContentCopyRoundedIcon,
+  RefreshRounded as RefreshRoundedIcon,
+  DeleteOutlineRounded as DeleteOutlineRoundedIcon,
+  AddRounded as AddRoundedIcon,
+  MenuRounded as MenuRoundedIcon,
+  ReplayRounded as ReplayRoundedIcon,
+  PlaylistAdd as PlaylistAddIcon,
+  CheckCircleOutline as CheckCircleOutlineIcon,
+  Check as CheckIcon,
+  ArrowUpRight as ArrowUpRightIcon,
+} from "../../components/ui/icons";
 import { isLoggedIn } from "../../utilities/defaults";
 import NotLoggedIn from "../../components/utils/NotLoggedIn";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -32,6 +39,47 @@ import { tmdbAPI } from "../../service/api/api";
 import EventMC from "../../components/cards/EventMC";
 import { collectionsAPI } from "../../service/api/smb/collections.api.service";
 import { useUsers } from "../../context/Users";
+import { tokens } from "../../theme";
+
+/**
+ * Shared bits of the Vercel-style chrome. Everything colour-related comes from
+ * the design tokens so this page stays in step with the rest of the app.
+ */
+const scrollbarSx = {
+  "&::-webkit-scrollbar": { width: 6 },
+  "&::-webkit-scrollbar-track": { background: "transparent" },
+  "&::-webkit-scrollbar-thumb": {
+    borderRadius: 3,
+    background: tokens.level2,
+  },
+  "&::-webkit-scrollbar-thumb:hover": { background: tokens.borderHover },
+} as const;
+
+/** Uppercase micro-label used above sections, as on Vercel's dashboard. */
+const sectionLabelSx = {
+  fontSize: "0.6875rem",
+  fontWeight: 500,
+  letterSpacing: "0.04em",
+  textTransform: "uppercase",
+  color: tokens.textTertiary,
+} as const;
+
+const messageActionSx = {
+  "--IconButton-size": "28px",
+  color: tokens.textTertiary,
+  "&:hover": { color: tokens.textPrimary, background: tokens.level1 },
+} as const;
+
+const kbdSx = {
+  px: "4px",
+  py: "1px",
+  borderRadius: "3px",
+  border: `1px solid ${tokens.border}`,
+  background: tokens.level1,
+  color: tokens.textTertiary,
+  fontFamily: "inherit",
+  fontSize: "0.625rem",
+} as const;
 
 const SUGGESTIONS = [
   "Recommend me something like Interstellar",
@@ -653,53 +701,37 @@ function AIAssistant() {
       i % 2 === 1 ? (
         <Box
           key={`${part}-${i}`}
-          component="span"
+          component="button"
+          onClick={() => goToSearch(part)}
+          aria-label={`Search for ${part}`}
           sx={{
             display: "inline-flex",
             alignItems: "center",
-            gap: 0.4,
-            flexWrap: "wrap",
-            verticalAlign: "middle",
-            mr: 0.25,
+            gap: "4px",
+            verticalAlign: "baseline",
+            mx: "1px",
+            px: "6px",
+            py: "1px",
+            font: "inherit",
+            fontWeight: 500,
+            lineHeight: 1.4,
+            color: tokens.textPrimary,
+            background: tokens.level1,
+            border: `1px solid ${tokens.border}`,
+            borderRadius: "4px",
+            cursor: "pointer",
+            transition: "background-color 150ms ease, border-color 150ms ease",
+            "&:hover": {
+              background: tokens.level2,
+              borderColor: tokens.borderHover,
+            },
+            "&:focus-visible": { outline: "none", boxShadow: tokens.focusRing },
           }}
         >
-          <Box
-            component="button"
-            onClick={() => goToSearch(part)}
-            sx={{
-              border: "none",
-              background: "transparent",
-              padding: 0,
-              margin: 0,
-              cursor: "pointer",
-              color: "#ededed",
-              fontWeight: 700,
-              textDecoration: "none",
-              transition: "all 0.15s ease",
-              "&:hover": {
-                textDecoration: "underline",
-                textUnderlineOffset: "3px",
-                color: "rgb(128, 204, 255)",
-              },
-            }}
-          >
-            {part}
-          </Box>
-          <IconButton aria-label={`Search for ${part}`}
-            size="sm"
-            onClick={() => goToSearch(part)}
-            sx={{
-              "--IconButton-size": "22px",
-              background: "rgba(255,255,255,0.06)",
-              color: "#ededed",
-              border: "1px solid rgba(255,255,255,0.06)",
-              "&:hover": {
-                background: "rgba(255,255,255,0.06)",
-              },
-            }}
-          >
-            <SearchRoundedIcon sx={{ fontSize: 14 }} />
-          </IconButton>
+          {part}
+          <SearchRoundedIcon
+            sx={{ fontSize: 11, color: tokens.textTertiary, flexShrink: 0 }}
+          />
         </Box>
       ) : (
         <span key={`${part}-${i}`}>{part}</span>
@@ -709,135 +741,152 @@ function AIAssistant() {
 
   const sessionList = useMemo(
     () => (
-      <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
-        <Box sx={{ display: "flex", gap: 1, mb: 1.2 }}>
-          <Button
-            startDecorator={<AddRoundedIcon />}
-            onClick={startNewChat}
-            sx={{ flex: 1 }}
-          >
-            New Chat
-          </Button>
-          <Tooltip title="Clear all history">
-            <IconButton aria-label="Clear all chat history"
-              color="neutral"
-              variant="outlined"
-              onClick={clearAllHistory}
-              disabled={!sessions.length}
-              sx={{
-                borderColor: "rgba(255,255,255,0.15)",
-                color: "neutral.400",
-                "&:hover": {
-                  color: "danger.300",
-                  borderColor: "rgba(255,84,84,0.35)",
-                  background: "rgba(255,84,84,0.08)",
-                },
-              }}
-            >
-              <DeleteOutlineRoundedIcon />
-            </IconButton>
-          </Tooltip>
-        </Box>
-
-        <Divider sx={{ my: 1 }} />
+      <Box sx={{ display: "flex", flexDirection: "column", height: "100%", minHeight: 0 }}>
+        <Button
+          variant="outlined"
+          color="neutral"
+          size="sm"
+          startDecorator={<AddRoundedIcon sx={{ fontSize: 15 }} />}
+          onClick={startNewChat}
+          sx={{ justifyContent: "flex-start", width: "100%", mb: 2 }}
+        >
+          New chat
+        </Button>
 
         <Box
           sx={{
-            flex: 1,
-            overflowY: "auto",
-            pr: 0.3,
-            "&::-webkit-scrollbar": { width: 4 },
-            "&::-webkit-scrollbar-thumb": {
-              borderRadius: 4,
-              background: "rgba(255,255,255,0.1)",
-            },
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            px: 0.75,
+            mb: 0.75,
           }}
         >
+          <Typography sx={sectionLabelSx}>History</Typography>
+          {syncingHistory ? (
+            <CircularProgress size="sm" sx={{ "--CircularProgress-size": "12px" }} />
+          ) : sessions.length ? (
+            <Typography sx={{ ...sectionLabelSx, letterSpacing: 0 }}>
+              {sessions.length}
+            </Typography>
+          ) : null}
+        </Box>
+
+        <Box sx={{ flex: 1, minHeight: 0, overflowY: "auto", mx: -0.5, px: 0.5, ...scrollbarSx }}>
           {!sessions.length ? (
-            <Typography level="body-sm" textColor="neutral.400" sx={{ mt: 2 }}>
-              No saved conversations yet.
+            <Typography level="body-xs" sx={{ px: 0.75, py: 1 }}>
+              No conversations yet.
             </Typography>
           ) : (
-            <List sx={{ "--ListItem-paddingY": "10px", "--List-gap": "8px" }}>
-              {sessions.map((session) => (
-                <Card
-                  key={session.sessionId}
-                  sx={{
-                    p: 0.7,
-                    overflow: "hidden",
-                    border: "1px solid",
-                    borderColor:
-                      activeSessionId === session.sessionId
-                        ? "rgba(255,255,255,0.06)"
-                        : "rgba(255,255,255,0.08)",
-                    background:
-                      activeSessionId === session.sessionId
-                        ? "rgba(255,255,255,0.06)"
-                        : "#0a0a0a",
-                  }}
-                >
-                  <Box sx={{ display: "flex", alignItems: "flex-start", gap: 0.4 }}>
-                    <ListItemButton
+            <Box sx={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+              {sessions.map((session) => {
+                const isActive = activeSessionId === session.sessionId;
+
+                return (
+                  <Box
+                    key={session.sessionId}
+                    sx={{
+                      position: "relative",
+                      borderRadius: "6px",
+                      background: isActive ? tokens.level1 : "transparent",
+                      transition: "background-color 150ms ease",
+                      "&:hover": { background: tokens.level1 },
+                      "&:hover .session-delete": { opacity: 1 },
+                    }}
+                  >
+                    <Box
+                      component="button"
                       onClick={() => void openSession(session.sessionId)}
                       sx={{
-                        alignItems: "flex-start",
-                        gap: 1.2,
-                        py: 0.9,
+                        display: "block",
+                        width: "100%",
+                        textAlign: "left",
+                        border: "none",
+                        background: "transparent",
+                        cursor: "pointer",
                         px: 1,
-                        borderRadius: 10,
-                        flex: 1,
+                        py: 0.9,
+                        pr: 4,
+                        borderRadius: "6px",
+                        "&:focus-visible": { outline: "none", boxShadow: tokens.focusRing },
                       }}
                     >
-                      <ListItemContent>
-                        <Typography level="title-sm" sx={{ lineHeight: 1.25 }}>
-                          {session.title || "Untitled chat"}
-                        </Typography>
-                        <Typography
-                          level="body-xs"
-                          textColor="neutral.400"
-                          sx={{
-                            mt: 0.4,
-                            display: "-webkit-box",
-                            WebkitLineClamp: 2,
-                            WebkitBoxOrient: "vertical",
-                            overflow: "hidden",
-                            minHeight: 30,
-                          }}
-                        >
-                          {session.lastAssistantPreview || "No assistant response yet"}
-                        </Typography>
-                        <Typography level="body-xs" textColor="neutral.500" sx={{ mt: 0.5 }}>
-                          {session.messageCount} messages · {formatSessionDate(session.updatedAtMs)}
-                        </Typography>
-                      </ListItemContent>
-                    </ListItemButton>
-                    <Tooltip title="Delete conversation">
-                      <IconButton aria-label="Delete chat"
-                        size="sm"
-                        color="neutral"
-                        variant="plain"
-                        onClick={() => void deleteSession(session.sessionId)}
+                      <Typography
+                        level="title-sm"
                         sx={{
-                          mt: 0.45,
-                          color: "neutral.400",
-                          "&:hover": {
-                            color: "danger.300",
-                            background: "rgba(255,84,84,0.12)",
-                          },
+                          fontSize: "0.8125rem",
+                          color: isActive ? tokens.textPrimary : tokens.textSecondary,
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
                         }}
                       >
-                        <DeleteOutlineRoundedIcon sx={{ fontSize: 18 }} />
+                        {session.title || "Untitled chat"}
+                      </Typography>
+                      <Typography
+                        level="body-xs"
+                        sx={{
+                          mt: 0.25,
+                          fontSize: "0.6875rem",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {formatSessionDate(session.updatedAtMs)} · {session.messageCount} messages
+                      </Typography>
+                    </Box>
+
+                    <Tooltip title="Delete conversation" size="sm">
+                      <IconButton
+                        className="session-delete"
+                        aria-label="Delete chat"
+                        size="sm"
+                        variant="plain"
+                        color="neutral"
+                        onClick={() => void deleteSession(session.sessionId)}
+                        sx={{
+                          position: "absolute",
+                          top: 6,
+                          right: 4,
+                          "--IconButton-size": "26px",
+                          opacity: { xs: 1, md: 0 },
+                          transition: "opacity 150ms ease, color 150ms ease",
+                          "&:hover": { color: tokens.redHover, background: tokens.level2 },
+                        }}
+                      >
+                        <DeleteOutlineRoundedIcon sx={{ fontSize: 14 }} />
                       </IconButton>
                     </Tooltip>
                   </Box>
-                </Card>
-              ))}
-            </List>
+                );
+              })}
+            </Box>
           )}
         </Box>
+
+        {sessions.length ? (
+          <Box sx={{ pt: 1.5, mt: 1, borderTop: `1px solid ${tokens.border}` }}>
+            <Button
+              variant="plain"
+              color="neutral"
+              size="sm"
+              startDecorator={<DeleteOutlineRoundedIcon sx={{ fontSize: 14 }} />}
+              onClick={clearAllHistory}
+              sx={{
+                justifyContent: "flex-start",
+                width: "100%",
+                fontSize: "0.75rem",
+                "&:hover": { color: tokens.redHover },
+              }}
+            >
+              Clear all history
+            </Button>
+          </Box>
+        ) : null}
       </Box>
     ),
-    [activeSessionId, clearAllHistory, deleteSession, openSession, sessions, startNewChat],
+    [activeSessionId, clearAllHistory, deleteSession, openSession, sessions, startNewChat, syncingHistory],
   );
 
   if (!isLoggedIn) return <NotLoggedIn type="page" />;
@@ -845,38 +894,34 @@ function AIAssistant() {
   return (
     <Box
       sx={{
+        // Pinned to the viewport under the fixed navbar. The message list is the
+        // only thing that scrolls, which keeps the composer on screen and stops
+        // the mobile URL bar (the 100vh/100dvh gap) from pushing it out of view.
+        position: "fixed",
+        top: "var(--sm-nav-height)",
+        left: 0,
+        right: 0,
+        bottom: 0,
         display: "flex",
-        minHeight: "100vh",
-        paddingTop: "84px",
-        paddingBottom: 3,
-        width: "100%",
-        px: { xs: 1.2, sm: 1.8, md: 2.4 },
-        gap: { xs: 0, md: 2.2 },
-        alignItems: "flex-start",
+        background: tokens.black,
       }}
     >
-      <Sheet
-        variant="soft"
+      {/* Desktop history rail */}
+      <Box
+        component="aside"
         sx={{
-          width: 300,
-          p: 1.2,
-          borderRadius: "8px",
-          border: "1px solid rgba(255,255,255,0.08)",
-          background: "rgba(7, 13, 25, 0.75)",
-          display: { xs: "none", md: "block" },
-          maxHeight: "calc(100vh - 110px)",
-          position: "sticky",
-          top: 92,
+          display: { xs: "none", md: "flex" },
+          flexDirection: "column",
+          width: 260,
           flexShrink: 0,
+          borderRight: `1px solid ${tokens.border}`,
+          px: 1.5,
+          py: 2,
+          overflow: "hidden",
         }}
       >
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1.2 }}>
-          <HistoryRoundedIcon sx={{ color: "rgb(96,183,255)", fontSize: 18 }} />
-          <Typography level="title-sm">Chat History</Typography>
-          {syncingHistory ? <CircularProgress size="sm" /> : null}
-        </Box>
         {sessionList}
-      </Sheet>
+      </Box>
 
       <Box
         sx={{
@@ -884,442 +929,535 @@ function AIAssistant() {
           flexDirection: "column",
           flex: 1,
           minWidth: 0,
-          width: "100%",
-          maxWidth: { xs: "100%", md: 920 },
-          mx: "auto",
-          height: "calc(100vh - 92px)",
+          height: "100%",
         }}
       >
-        <Box sx={{ py: 3, display: "flex", alignItems: "center", gap: 1.5 }}>
+        {/* Header */}
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 1.25,
+            px: { xs: 2, md: 3 },
+            py: 1.5,
+            borderBottom: `1px solid ${tokens.border}`,
+            flexShrink: 0,
+          }}
+        >
+          <IconButton
+            aria-label="Open chat history"
+            variant="outlined"
+            color="neutral"
+            size="sm"
+            onClick={() => setHistoryDrawerOpen(true)}
+            sx={{ display: { xs: "inline-flex", md: "none" }, "--IconButton-size": "32px" }}
+          >
+            <MenuRoundedIcon sx={{ fontSize: 16 }} />
+          </IconButton>
+
           <Box
             sx={{
-              width: 36,
-              height: 36,
-              borderRadius: "8px",
-              border: "1px solid",
-              borderColor: "neutral.outlinedBorder",
-              backgroundColor: "background.level1",
+              width: 28,
+              height: 28,
+              borderRadius: "6px",
+              border: `1px solid ${tokens.border}`,
+              background: tokens.surface,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
+              flexShrink: 0,
             }}
           >
-            <AutoAwesomeIcon sx={{ fontSize: 18, color: "text.primary" }} />
+            <AutoAwesomeIcon sx={{ fontSize: 15, color: tokens.textPrimary }} />
           </Box>
-          <Box sx={{ flex: 1 }}>
-            <Typography level="title-lg">SmileAI</Typography>
-            <Typography level="body-xs">Your movie and TV assistant</Typography>
+
+          <Box sx={{ minWidth: 0 }}>
+            <Typography level="title-sm" sx={{ lineHeight: 1.2 }}>
+              SmileAI
+            </Typography>
+            <Typography level="body-xs" sx={{ fontSize: "0.6875rem", lineHeight: 1.2 }}>
+              Movie and TV assistant
+            </Typography>
           </Box>
-          <IconButton aria-label="Open chat history"
-            onClick={() => setHistoryDrawerOpen(true)}
-            sx={{ display: { xs: "inline-flex", md: "none" } }}
-          >
-            <MenuRoundedIcon />
-          </IconButton>
         </Box>
 
-        {chatError && (
-          <Sheet
-            color="danger"
-            variant="soft"
-            sx={{
-              px: 1.4,
-              py: 1,
-              mb: 1,
-              borderRadius: 10,
-              border: "1px solid rgba(255, 96, 96, 0.22)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              gap: 1,
-            }}
-          >
-            <Typography level="body-sm">{chatError}</Typography>
-            {pendingRetry ? (
-              <Button
-                size="sm"
-                startDecorator={<ReplayRoundedIcon />}
-                onClick={() => void retryLastRequest()}
-                disabled={loading}
-              >
-                Retry
-              </Button>
-            ) : null}
-          </Sheet>
-        )}
-
+        {/* Messages */}
         <Box
           ref={messagesContainerRef}
           onScroll={handleMessagesScroll}
-          sx={{
-            flex: 1,
-            overflowY: "auto",
-            display: "flex",
-            flexDirection: "column",
-            gap: 2,
-            pb: 2,
-            "&::-webkit-scrollbar": { width: 4 },
-            "&::-webkit-scrollbar-thumb": {
-              borderRadius: 4,
-              background: "rgba(255,255,255,0.1)",
-            },
-          }}
+          sx={{ flex: 1, minHeight: 0, overflowY: "auto", ...scrollbarSx }}
         >
-          {(loadingHistory || loadingSession) && (
-            <Box sx={{ display: "flex", justifyContent: "center", pt: 8 }}>
-              <CircularProgress size="lg" />
-            </Box>
-          )}
-
-          {!loadingHistory && !loadingSession && messages.length === 0 && (
-            <Box sx={{ display: "flex", flexDirection: "column", gap: 3, pt: 2 }}>
-              <Typography level="body-md" textColor="neutral.400" textAlign="center">
-                Ask me anything — find movies by description, get recommendations, or check if something is family-safe.
-              </Typography>
-              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, justifyContent: "center" }}>
-                {SUGGESTIONS.map((suggestion) => (
-                  <Sheet
-                    key={suggestion}
-                    onClick={() => void sendMessage(suggestion)}
-                    sx={{
-                      px: 2,
-                      py: 1,
-                      borderRadius: "8px",
-                      border: "1px solid",
-                      borderColor: "rgba(255,255,255,0.06)",
-                      background: "rgba(255,255,255,0.03)",
-                      cursor: "pointer",
-                      fontSize: 13,
-                      transition: "all 0.15s",
-                      "&:hover": {
-                        borderColor: "#333333",
-                        color: "#ededed",
-                        boxShadow: "0 0 24px rgba(255,255,255,0.06)",
-                      },
-                    }}
-                  >
-                    {suggestion}
-                  </Sheet>
-                ))}
-              </Box>
-            </Box>
-          )}
-
-          {!loadingHistory && !loadingSession && messages.map((msg, index) => {
-            const isLastAssistant =
-              msg.role === "assistant" && index === messages.length - 1;
-
-            return (
+          <Box
+            sx={{
+              width: "100%",
+              maxWidth: 768,
+              mx: "auto",
+              px: { xs: 2, md: 3 },
+              py: 3,
+              display: "flex",
+              flexDirection: "column",
+              gap: 3,
+            }}
+          >
+            {chatError && (
               <Box
-                key={msg.id}
                 sx={{
                   display: "flex",
-                  flexDirection: msg.role === "user" ? "row-reverse" : "row",
+                  alignItems: "center",
+                  justifyContent: "space-between",
                   gap: 1.5,
-                  alignItems: "flex-start",
+                  px: 1.5,
+                  py: 1.25,
+                  borderRadius: "8px",
+                  border: "1px solid rgba(229, 72, 77, 0.35)",
+                  background: tokens.redDim,
                 }}
               >
+                <Typography level="body-sm" sx={{ color: tokens.redHover }}>
+                  {chatError}
+                </Typography>
+                {pendingRetry ? (
+                  <Button
+                    size="sm"
+                    variant="outlined"
+                    color="neutral"
+                    startDecorator={<ReplayRoundedIcon sx={{ fontSize: 14 }} />}
+                    onClick={() => void retryLastRequest()}
+                    disabled={loading}
+                  >
+                    Retry
+                  </Button>
+                ) : null}
+              </Box>
+            )}
+
+            {(loadingHistory || loadingSession) && (
+              <Box sx={{ display: "flex", justifyContent: "center", pt: 8 }}>
+                <CircularProgress size="sm" />
+              </Box>
+            )}
+
+            {/* Empty state */}
+            {!loadingHistory && !loadingSession && messages.length === 0 && (
+              <Box sx={{ pt: { xs: 4, md: 8 } }}>
+                <Typography
+                  sx={{
+                    fontSize: "1.75rem",
+                    fontWeight: 600,
+                    letterSpacing: "-0.03em",
+                    color: tokens.textPrimary,
+                    lineHeight: 1.15,
+                  }}
+                >
+                  What are you in the mood for?
+                </Typography>
+                <Typography level="body-sm" sx={{ mt: 1, mb: 3 }}>
+                  Describe a plot you half-remember, ask for something like a film you
+                  loved, or check whether a title is family-safe.
+                </Typography>
+
                 <Box
                   sx={{
-                    width: 28,
-                    height: 28,
+                    border: `1px solid ${tokens.border}`,
+                    borderRadius: "8px",
+                    overflow: "hidden",
+                  }}
+                >
+                  {SUGGESTIONS.map((suggestion, index) => (
+                    <Box
+                      key={suggestion}
+                      component="button"
+                      onClick={() => void sendMessage(suggestion)}
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        gap: 1.5,
+                        width: "100%",
+                        textAlign: "left",
+                        px: 1.75,
+                        py: 1.4,
+                        border: "none",
+                        borderTop: index === 0 ? "none" : `1px solid ${tokens.border}`,
+                        background: tokens.surface,
+                        color: tokens.textSecondary,
+                        font: "inherit",
+                        fontSize: "0.875rem",
+                        cursor: "pointer",
+                        transition: "background-color 150ms ease, color 150ms ease",
+                        "&:hover": { background: tokens.level1, color: tokens.textPrimary },
+                        "&:hover .suggestion-arrow": { opacity: 1, transform: "none" },
+                        "&:focus-visible": { outline: "none", boxShadow: tokens.focusRing },
+                      }}
+                    >
+                      {suggestion}
+                      <ArrowUpRightIcon
+                        className="suggestion-arrow"
+                        sx={{
+                          fontSize: 15,
+                          flexShrink: 0,
+                          opacity: 0,
+                          transform: "translate(-3px, 3px)",
+                          transition: "opacity 150ms ease, transform 150ms ease",
+                        }}
+                      />
+                    </Box>
+                  ))}
+                </Box>
+              </Box>
+            )}
+
+            {!loadingHistory && !loadingSession && messages.map((msg, index) => {
+              const isLastAssistant =
+                msg.role === "assistant" && index === messages.length - 1;
+
+              if (msg.role === "user") {
+                return (
+                  <Box key={msg.id} sx={{ display: "flex", justifyContent: "flex-end" }}>
+                    <Box
+                      sx={{
+                        maxWidth: "85%",
+                        px: 1.75,
+                        py: 1.1,
+                        borderRadius: "12px",
+                        background: tokens.level1,
+                        border: `1px solid ${tokens.border}`,
+                      }}
+                    >
+                      <Typography
+                        level="body-sm"
+                        sx={{
+                          color: tokens.textPrimary,
+                          lineHeight: 1.6,
+                          whiteSpace: "pre-wrap",
+                        }}
+                      >
+                        {msg.content}
+                      </Typography>
+                    </Box>
+                  </Box>
+                );
+              }
+
+              return (
+                <Box key={msg.id} sx={{ display: "flex", gap: 1.75, alignItems: "flex-start" }}>
+                  <Box
+                    sx={{
+                      width: 26,
+                      height: 26,
+                      mt: "1px",
+                      borderRadius: "6px",
+                      flexShrink: 0,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      border: `1px solid ${tokens.border}`,
+                      background: tokens.surface,
+                    }}
+                  >
+                    <AutoAwesomeIcon sx={{ fontSize: 14, color: tokens.textSecondary }} />
+                  </Box>
+
+                  <Box sx={{ minWidth: 0, flex: 1 }}>
+                    <Typography
+                      level="body-sm"
+                      sx={{
+                        color: tokens.textPrimary,
+                        lineHeight: 1.75,
+                        whiteSpace: "pre-wrap",
+                      }}
+                    >
+                      {renderMessage(msg.content)}
+                    </Typography>
+
+                    {msg.resolvingMedia && (
+                      <Typography level="body-xs" sx={{ mt: 1.5 }}>
+                        Pulling matching titles from the catalog...
+                      </Typography>
+                    )}
+
+                    {!!msg.relatedMedia?.length && (
+                      <Box sx={{ mt: 2.5 }}>
+                        <Typography sx={{ ...sectionLabelSx, mb: 1.25 }}>
+                          Quick picks
+                        </Typography>
+                        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1.25 }}>
+                          {msg.relatedMedia.map((media) => (
+                            <Box
+                              key={`${msg.id}-${media.mediaType}-${media.id}`}
+                              sx={{
+                                width: 200,
+                                display: "flex",
+                                flexDirection: "column",
+                                gap: 0.8,
+                                "@media (max-width: 800px)": { width: 160 },
+                              }}
+                            >
+                              <EventMC
+                                eventId={media.id}
+                                eventPoster={media.posterPath}
+                                eventTitle={media.title}
+                                eventType={media.mediaType}
+                              />
+                              {media.reason ? (
+                                <Typography
+                                  level="body-xs"
+                                  sx={{ px: 0.2, fontSize: "0.6875rem", lineHeight: 1.5 }}
+                                >
+                                  {media.reason}
+                                </Typography>
+                              ) : null}
+                            </Box>
+                          ))}
+                        </Box>
+                      </Box>
+                    )}
+
+                    {!!msg.listActions?.length && (
+                      <Box sx={{ mt: 2, display: "flex", flexWrap: "wrap", gap: 0.75 }}>
+                        {msg.listActions.map((action, idx) => {
+                          const actionKey = `${msg.id}-${idx}`;
+                          const done = executedListActions.has(actionKey);
+                          const busy = executingListAction === actionKey;
+
+                          return (
+                            <Button
+                              key={actionKey}
+                              size="sm"
+                              variant="outlined"
+                              color="neutral"
+                              disabled={done || busy}
+                              onClick={() => handleListAction(action, actionKey)}
+                              startDecorator={
+                                busy ? (
+                                  <CircularProgress
+                                    size="sm"
+                                    sx={{ "--CircularProgress-size": "13px" }}
+                                  />
+                                ) : done ? (
+                                  <CheckCircleOutlineIcon
+                                    sx={{ fontSize: 14, color: tokens.green }}
+                                  />
+                                ) : (
+                                  <PlaylistAddIcon sx={{ fontSize: 14 }} />
+                                )
+                              }
+                              sx={{ fontSize: "0.75rem", minHeight: 28 }}
+                            >
+                              {done
+                                ? `Added to ${action.listName}`
+                                : action.action === "create_and_add"
+                                ? `Create "${action.listName}" & add ${action.title}`
+                                : `Add ${action.title} to "${action.listName}"`}
+                            </Button>
+                          );
+                        })}
+                      </Box>
+                    )}
+
+                    {/* Row actions */}
+                    <Box
+                      sx={{
+                        mt: 1.25,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 0.25,
+                        ml: -0.5,
+                      }}
+                    >
+                      <Tooltip
+                        size="sm"
+                        title={copiedMessageId === msg.id ? "Copied" : "Copy response"}
+                      >
+                        <IconButton
+                          aria-label="Copy message"
+                          size="sm"
+                          variant="plain"
+                          color="neutral"
+                          onClick={() => void copyMessage(msg)}
+                          sx={messageActionSx}
+                        >
+                          {copiedMessageId === msg.id ? (
+                            <CheckIcon sx={{ fontSize: 14, color: tokens.green }} />
+                          ) : (
+                            <ContentCopyRoundedIcon sx={{ fontSize: 14 }} />
+                          )}
+                        </IconButton>
+                      </Tooltip>
+
+                      {isLastAssistant ? (
+                        <Tooltip size="sm" title="Regenerate response">
+                          <IconButton
+                            aria-label="Regenerate response"
+                            size="sm"
+                            variant="plain"
+                            color="neutral"
+                            disabled={loading}
+                            onClick={() => void regenerateLastAssistant()}
+                            sx={messageActionSx}
+                          >
+                            <RefreshRoundedIcon sx={{ fontSize: 14 }} />
+                          </IconButton>
+                        </Tooltip>
+                      ) : null}
+
+                      {msg.createdAtMs ? (
+                        <Typography
+                          level="body-xs"
+                          sx={{ ml: 0.75, fontSize: "0.6875rem" }}
+                        >
+                          {formatSessionDate(msg.createdAtMs)}
+                        </Typography>
+                      ) : null}
+                    </Box>
+                  </Box>
+                </Box>
+              );
+            })}
+
+            {loading && (
+              <Box sx={{ display: "flex", gap: 1.75, alignItems: "flex-start" }}>
+                <Box
+                  sx={{
+                    width: 26,
+                    height: 26,
+                    mt: "1px",
                     borderRadius: "6px",
                     flexShrink: 0,
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    border: "1px solid",
-                    borderColor: "neutral.outlinedBorder",
-                    backgroundColor: "background.level1",
-                    color: "text.secondary",
+                    border: `1px solid ${tokens.border}`,
+                    background: tokens.surface,
                   }}
                 >
-                  {msg.role === "user" ? (
-                    <PersonIcon sx={{ fontSize: 15 }} />
-                  ) : (
-                    <AutoAwesomeIcon sx={{ fontSize: 15 }} />
-                  )}
+                  <AutoAwesomeIcon sx={{ fontSize: 14, color: tokens.textSecondary }} />
                 </Box>
-                <Card
-                  sx={{
-                    maxWidth: msg.role === "assistant" ? "88%" : "80%",
-                    px: 2,
-                    py: 1.5,
-                    borderRadius:
-                      msg.role === "user"
-                        ? "16px 4px 16px 16px"
-                        : "4px 16px 16px 16px",
-                    background:
-                      msg.role === "user"
-                        ? "rgba(255,255,255,0.06)"
-                        : "#0a0a0a",
-                    border: "1px solid",
-                    borderColor:
-                      msg.role === "user"
-                        ? "rgba(255,255,255,0.14)"
-                        : "rgba(255,255,255,0.06)",
-                    boxShadow:
-                      msg.role === "assistant"
-                        ? "0 12px 48px rgba(0, 0, 0, 0.22)"
-                        : "none",
-                  }}
-                >
-                  <Typography
-                    level="body-sm"
-                    sx={{ lineHeight: 1.75, whiteSpace: "pre-wrap" }}
-                  >
-                    {renderMessage(msg.content)}
-                  </Typography>
-
-                  {msg.role === "assistant" ? (
-                    <Box
-                      sx={{
-                        mt: 1,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        gap: 1,
-                      }}
-                    >
-                      <Typography level="body-xs" textColor="neutral.400">
-                        {msg.createdAtMs
-                          ? formatSessionDate(msg.createdAtMs)
-                          : ""}
-                      </Typography>
-                      <Box sx={{ display: "flex", gap: 0.5 }}>
-                        <Tooltip
-                          title={
-                            copiedMessageId === msg.id ? "Copied" : "Copy response"
-                          }
-                        >
-                          <IconButton aria-label="Copy message"
-                            size="sm"
-                            onClick={() => void copyMessage(msg)}
-                          >
-                            <ContentCopyRoundedIcon sx={{ fontSize: 16 }} />
-                          </IconButton>
-                        </Tooltip>
-                        {isLastAssistant ? (
-                          <Tooltip title="Regenerate response">
-                            <IconButton aria-label="Regenerate response"
-                              size="sm"
-                              disabled={loading}
-                              onClick={() => void regenerateLastAssistant()}
-                            >
-                              <RefreshRoundedIcon sx={{ fontSize: 16 }} />
-                            </IconButton>
-                          </Tooltip>
-                        ) : null}
-                      </Box>
-                    </Box>
-                  ) : null}
-
-                  {msg.role === "assistant" && !!msg.relatedMedia?.length && (
-                    <Divider>
-                      Quick picks from this reply
-                    </Divider>
-                  )}
-
-                  {msg.role === "assistant" && msg.resolvingMedia && (
-                    <Typography level="body-xs" textColor="neutral.400" sx={{ mt: 1.5 }}>
-                      Pulling matching titles from the catalog...
-                    </Typography>
-                  )}
-
-                  {msg.role === "assistant" && !!msg.relatedMedia?.length && (
-                    <Box sx={{ mt: 2.2, display: "flex", flexDirection: "column", gap: 1.2 }}>
-                      <Box
-                        sx={{
-                          display: "flex",
-                          flexWrap: "wrap",
-                          gap: "10px",
-                        }}
-                      >
-                        {msg.relatedMedia.map((media) => (
-                          <Box
-                            key={`${msg.id}-${media.mediaType}-${media.id}`}
-                            sx={{
-                              width: "250px",
-                              display: "flex",
-                              flexDirection: "column",
-                              gap: 0.8,
-                              "@media (max-width: 800px)": {
-                                width: "200px",
-                              },
-                            }}
-                          >
-                            <EventMC
-                              eventId={media.id}
-                              eventPoster={media.posterPath}
-                              eventTitle={media.title}
-                              eventType={media.mediaType}
-                            />
-                            {media.reason ? (
-                              <Typography
-                                level="body-xs"
-                                textColor="neutral.400"
-                                sx={{ px: 0.4, lineHeight: 1.5 }}
-                              >
-                                {media.reason}
-                              </Typography>
-                            ) : null}
-                          </Box>
-                        ))}
-                      </Box>
-                    </Box>
-                  )}
-
-                  {/* List action suggestions */}
-                  {msg.role === "assistant" && msg.listActions && msg.listActions.length > 0 && (
-                    <Box sx={{ mt: 1.5, display: "flex", flexWrap: "wrap", gap: 1 }}>
-                      {msg.listActions.map((action, idx) => {
-                        const actionKey = `${msg.id}-${idx}`;
-                        const done = executedListActions.has(actionKey);
-                        const busy = executingListAction === actionKey;
-                        return (
-                          <Chip
-                            key={actionKey}
-                            size="sm"
-                            variant={done ? "solid" : "outlined"}
-                            color={done ? "success" : "neutral"}
-                            startDecorator={
-                              busy ? (
-                                <CircularProgress size="sm" sx={{ "--CircularProgress-size": "14px" }} />
-                              ) : done ? (
-                                <CheckCircleOutlineIcon sx={{ fontSize: 14 }} />
-                              ) : (
-                                <PlaylistAddIcon sx={{ fontSize: 14 }} />
-                              )
-                            }
-                            onClick={() => !done && !busy && handleListAction(action, actionKey)}
-                            sx={{
-                              cursor: done ? "default" : "pointer",
-                              fontSize: "0.75rem",
-                              py: 0.5,
-                            }}
-                          >
-                            {done
-                              ? `Added to "${action.listName}"`
-                              : action.action === "create_and_add"
-                              ? `Create "${action.listName}" & add ${action.title}`
-                              : `Add ${action.title} → "${action.listName}"`}
-                          </Chip>
-                        );
-                      })}
-                    </Box>
-                  )}
-                </Card>
-              </Box>
-            );
-          })}
-
-          {loading && (
-            <Box sx={{ display: "flex", gap: 1.5, alignItems: "flex-start" }}>
-              <Box
-                sx={{
-                  width: 28,
-                  height: 28,
-                  borderRadius: "6px",
-                  flexShrink: 0,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  border: "1px solid",
-                  borderColor: "neutral.outlinedBorder",
-                  backgroundColor: "background.level1",
-                  color: "text.secondary",
-                }}
-              >
-                <AutoAwesomeIcon sx={{ fontSize: 15 }} />
-              </Box>
-              <Card
-                sx={{
-                  px: 2,
-                  py: 1.5,
-                  borderRadius: "4px 16px 16px 16px",
-                  background: "#0a0a0a",
-                  border: "1px solid rgba(255,255,255,0.06)",
-                }}
-              >
-                <Box sx={{ display: "flex", gap: 0.6, alignItems: "center", height: 20 }}>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 0.6, height: 26 }}>
                   {[0, 1, 2].map((i) => (
                     <Box
                       key={i}
                       sx={{
-                        width: 6,
-                        height: 6,
+                        width: 5,
+                        height: 5,
                         borderRadius: "50%",
-                        background: "#707070",
-                        animation: "bounce 1.2s infinite",
-                        animationDelay: `${i * 0.2}s`,
-                        "@keyframes bounce": {
-                          "0%, 80%, 100%": { transform: "scale(0.6)", opacity: 0.4 },
+                        background: tokens.textTertiary,
+                        animation: "smileAiPulse 1.2s infinite ease-in-out",
+                        animationDelay: `${i * 0.16}s`,
+                        "@keyframes smileAiPulse": {
+                          "0%, 80%, 100%": { transform: "scale(0.6)", opacity: 0.35 },
                           "40%": { transform: "scale(1)", opacity: 1 },
                         },
                       }}
                     />
                   ))}
                 </Box>
-              </Card>
-            </Box>
-          )}
+              </Box>
+            )}
+          </Box>
         </Box>
 
-        <Box
-          sx={{
-            pb: 3,
-            pt: 2,
-            display: "flex",
-            gap: 1,
-            alignItems: "flex-end",
-            borderTop: "1px solid",
-            borderColor: "neutral.outlinedBorder",
-          }}
-        >
-          <Textarea
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                void sendMessage();
-              }
-            }}
-            placeholder="Ask about a movie, get recommendations, or describe something you want to watch..."
-            minRows={1}
-            maxRows={5}
-            disabled={loading || loadingSession}
-            sx={{
-              flex: 1,
-              "--Textarea-focusedHighlight": "#0070f3",
-              background: "#0a0a0a",
-              borderColor: "rgba(255,255,255,0.06)",
-            }}
-          />
-          <IconButton aria-label="Send message"
-            onClick={() => void sendMessage()}
-            disabled={!input.trim() || loading || loadingSession}
-            sx={{
-              background: "#ffffff",
-              color: "#000000",
-              "&:hover": { background: "#e5e5e5" },
-              "&:disabled": { opacity: 0.4 },
-              borderRadius: 8,
-              mb: 0.5,
-              boxShadow: "0 0 24px rgba(255,255,255,0.06)",
-            }}
-          >
-            <SendIcon />
-          </IconButton>
+        {/* Composer */}
+        <Box sx={{ flexShrink: 0, px: { xs: 2, md: 3 }, pb: { xs: 2, md: 3 }, pt: 1 }}>
+          <Box sx={{ width: "100%", maxWidth: 768, mx: "auto" }}>
+            <Box
+              sx={{
+                border: `1px solid ${tokens.border}`,
+                borderRadius: "12px",
+                background: tokens.surface,
+                transition: "border-color 150ms ease",
+                "&:hover": { borderColor: tokens.borderHover },
+                "&:focus-within": { borderColor: tokens.borderHover },
+              }}
+            >
+              <Textarea
+                variant="plain"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    void sendMessage();
+                  }
+                }}
+                placeholder="Ask about a movie, or describe something you want to watch..."
+                minRows={1}
+                maxRows={8}
+                disabled={loading || loadingSession}
+                sx={{
+                  background: "transparent",
+                  border: "none",
+                  borderRadius: "12px 12px 0 0",
+                  px: 1.75,
+                  pt: 1.5,
+                  pb: 0.5,
+                  fontSize: "0.875rem",
+                  "&.Mui-focused": { border: "none", boxShadow: "none" },
+                  "&:hover": { border: "none" },
+                  "&::before": { display: "none" },
+                }}
+              />
+
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: 1,
+                  px: 1.25,
+                  pb: 1.25,
+                  pt: 0.25,
+                }}
+              >
+                <Typography
+                  level="body-xs"
+                  sx={{
+                    fontSize: "0.6875rem",
+                    pl: 0.5,
+                    display: { xs: "none", sm: "block" },
+                  }}
+                >
+                  <Box component="kbd" sx={kbdSx}>
+                    Enter
+                  </Box>{" "}
+                  to send ·{" "}
+                  <Box component="kbd" sx={kbdSx}>
+                    Shift + Enter
+                  </Box>{" "}
+                  for a new line
+                </Typography>
+
+                <IconButton
+                  aria-label="Send message"
+                  onClick={() => void sendMessage()}
+                  disabled={!input.trim() || loading || loadingSession}
+                  sx={{
+                    ml: "auto",
+                    "--IconButton-size": "30px",
+                    borderRadius: "6px",
+                    background: tokens.textPrimary,
+                    color: tokens.black,
+                    "&:hover": { background: "#ffffff" },
+                    "&.Mui-disabled": {
+                      background: tokens.level2,
+                      color: tokens.textTertiary,
+                    },
+                  }}
+                >
+                  <SendIcon sx={{ fontSize: 15 }} />
+                </IconButton>
+              </Box>
+            </Box>
+          </Box>
         </Box>
       </Box>
 
-      <Drawer open={historyDrawerOpen} onClose={() => setHistoryDrawerOpen(false)}>
-        <Box sx={{ p: 1, width: "min(82vw, 300px)", pt: 2, height: "100%" }}>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1.2 }}>
-            <HistoryRoundedIcon sx={{ color: "rgb(96,183,255)", fontSize: 18 }} />
-            <Typography level="title-sm">Chat History</Typography>
-          </Box>
+      <Drawer
+        open={historyDrawerOpen}
+        onClose={() => setHistoryDrawerOpen(false)}
+        size="sm"
+      >
+        <Box sx={{ height: "100%", px: 1.5, py: 2, display: "flex", flexDirection: "column" }}>
           {sessionList}
         </Box>
       </Drawer>
