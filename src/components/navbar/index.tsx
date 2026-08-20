@@ -242,7 +242,11 @@ const Navbar: React.FC = () => {
 
     if (!isAuthenticated) {
       return (
-        <Button size="sm" onClick={() => navigate("/auth/login")}>
+        <Button
+          size="sm"
+          onClick={() => navigate("/auth/login")}
+          sx={{ whiteSpace: "nowrap" }}
+        >
           {t("nav.signIn")}
         </Button>
       );

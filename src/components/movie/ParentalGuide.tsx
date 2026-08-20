@@ -156,8 +156,9 @@ interface ParentalGuideProps {
   // Display
   title?: string;
   year?: string;
-  // Visual variant: "button" (default, full pill) | "icon" (compact icon-only for cards)
-  variant?: "button" | "icon";
+  // Visual variant: "button" (default, full pill) | "icon" (compact icon-only
+  // for cards) | "inline" (quiet text link, for prose)
+  variant?: "button" | "icon" | "inline";
 }
 
 function ParentalGuide({ mediaId, mediaType, imdbId, title, year, variant = "button" }: ParentalGuideProps) {
@@ -186,7 +187,25 @@ function ParentalGuide({ mediaId, mediaType, imdbId, title, year, variant = "but
   };
 
   const trigger =
-    variant === "icon" ? (
+    variant === "inline" ? (
+      // A quiet text link. As a red pill in the title hero this read as a
+      // warning about the title itself rather than an optional reference.
+      <Button
+        onClick={fetchGuide}
+        variant="plain"
+        color="neutral"
+        size="sm"
+        startDecorator={<FamilyRestroomIcon sx={{ fontSize: 15 }} />}
+        sx={{
+          px: 0,
+          minHeight: 0,
+          color: "text.tertiary",
+          "&:hover": { backgroundColor: "transparent", color: "text.primary" },
+        }}
+      >
+        Parental guide
+      </Button>
+    ) : variant === "icon" ? (
       <IconButton aria-label="Parental guide"
         onClick={fetchGuide}
         size="sm"

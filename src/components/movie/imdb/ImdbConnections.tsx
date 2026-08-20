@@ -164,7 +164,12 @@ function ImdbConnections({ imdbId, total: initialTotal }: { imdbId: string; tota
             sx={{
               display: "grid",
               gridTemplateColumns: {
-                xs: "1fr",
+                // minmax(0, …) rather than 1fr: a bare 1fr track is floored at
+                // its content's min width, and the no-wrap title inside these
+                // cards is one long unbreakable line — on a phone that widened
+                // the track past the viewport and gave the whole page a
+                // horizontal scroll.
+                xs: "minmax(0, 1fr)",
                 sm: "repeat(2, minmax(0, 1fr))",
                 lg: "repeat(3, minmax(0, 1fr))",
               },

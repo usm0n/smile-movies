@@ -1,7 +1,7 @@
 import { Box, CircularProgress, Chip, Tooltip, Typography } from "@mui/joy";
 import { useEffect, useState } from "react";
 import { aiService, MatchScoreResult } from "../../service/api/ai/ai.api.service";
-import { AutoAwesome as AutoAwesomeIcon, WarningAmber as WarningAmberIcon } from "../ui/icons";
+import { AutoAwesome as AutoAwesomeIcon } from "../ui/icons";
 import { isLoggedIn } from "../../utilities/defaults";
 
 interface MatchScoreProps {
@@ -12,6 +12,13 @@ interface MatchScoreProps {
   certification?: string;
 }
 
+/**
+ * One compact chip: "87% match".
+ *
+ * The reasoning and the age warning live in the tooltip rather than on the
+ * page. They are full sentences, and a sentence rendered as a chip cannot wrap
+ * — on a phone it ran straight off both edges of the hero.
+ */
 function MatchScore({ movieTitle, movieYear, overview, genres, certification }: MatchScoreProps) {
   const [result, setResult] = useState<MatchScoreResult | null>(null);
   const [loading, setLoading] = useState(false);
@@ -41,7 +48,7 @@ function MatchScore({ movieTitle, movieYear, overview, genres, certification }: 
     return (
       <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
         <CircularProgress size="sm" sx={{ width: 14, height: 14 }} />
-        <Typography level="body-xs" textColor="neutral.400">Calculating match…</Typography>
+        <Typography level="body-xs" textColor="neutral.400">Match…</Typography>
       </Box>
     );
   }
@@ -54,39 +61,32 @@ function MatchScore({ movieTitle, movieYear, overview, genres, certification }: 
     "danger";
 
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
-      <Tooltip
-        title={
-          <Box sx={{ maxWidth: 260 }}>
-            <Typography level="body-sm">{result.reasoning}</Typography>
-            <Typography level="body-xs" textColor="neutral.400" sx={{ mt: 0.5 }}>
-              Genre match: {result.genre_match}
+    <Tooltip
+      title={
+        <Box sx={{ maxWidth: 260, display: "flex", flexDirection: "column", gap: 0.5 }}>
+          <Typography level="body-sm">{result.reasoning}</Typography>
+          {result.age_warning ? (
+            <Typography level="body-xs" textColor="warning.300">
+              {result.age_warning}
             </Typography>
-          </Box>
-        }
-        placement="bottom-start"
+          ) : null}
+          <Typography level="body-xs" textColor="neutral.400">
+            Genre match: {result.genre_match}
+          </Typography>
+        </Box>
+      }
+      placement="bottom-start"
+    >
+      <Chip
+        startDecorator={<AutoAwesomeIcon sx={{ fontSize: 14 }} />}
+        color={scoreColor}
+        variant="soft"
+        size="sm"
+        sx={{ cursor: "help", fontWeight: 600, maxWidth: "100%" }}
       >
-        <Chip
-          startDecorator={<AutoAwesomeIcon sx={{ fontSize: 15 }} />}
-          color={scoreColor}
-          variant="soft"
-          size="sm"
-          sx={{ cursor: "help", fontWeight: 700 }}
-        >
-          {result.score}% match for you
-        </Chip>
-      </Tooltip>
-      {result.age_warning && (
-        <Chip
-          startDecorator={<WarningAmberIcon sx={{ fontSize: 14 }} />}
-          color="warning"
-          variant="soft"
-          size="sm"
-        >
-          {result.age_warning}
-        </Chip>
-      )}
-    </Box>
+        {result.score}% match
+      </Chip>
+    </Tooltip>
   );
 }
 

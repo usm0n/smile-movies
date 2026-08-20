@@ -5,11 +5,14 @@ import {
   Card,
   CardContent,
   CardCover,
+  Chip,
   Dropdown,
   Input,
+  ListDivider,
   Menu,
   MenuButton,
   MenuItem,
+  Tooltip,
   Typography,
 } from "@mui/joy";
 import Button from "../ui/Button";
@@ -23,7 +26,20 @@ import {
   videos,
 } from "../../tmdb-res";
 import { useEffect, useMemo, useState } from "react";
-import { Add, ArrowDropDown, Check, PlayArrow, Star, StarBorder, Replay, Notifications, NotificationsNone, PlaylistAdd } from "../ui/icons";
+import {
+  Add,
+  Calendar,
+  Check,
+  IosShare,
+  MoreHoriz,
+  Notifications,
+  NotificationsNone,
+  PlayArrow,
+  PlaylistAdd,
+  Replay,
+  Star,
+  StarBorder,
+} from "../ui/icons";
 import {
   formatTimeAgo,
   isLoggedIn,
@@ -31,6 +47,7 @@ import {
   ymdToDmy,
 } from "../../utilities/defaults";
 import BlurImage from "../../utilities/blurImage";
+import { toast } from "../ui/toast";
 import { useNavigate } from "react-router-dom";
 import { useUsers } from "../../context/Users";
 import { User } from "../../user";
@@ -81,6 +98,11 @@ function Header({
   // Shares its request with the IMDb sections further down the page.
   const imdbState = useImdbTitleDetails({ mediaType: movieType, mediaId: movieId });
   const [isVideoLoaded, setIsVideoLoaded] = useState(false);
+  const [isCompactViewport, setIsCompactViewport] = useState(
+    () =>
+      typeof window !== "undefined" &&
+      window.matchMedia("(max-width: 899.95px)").matches,
+  );
   const [isRatingOpen, setIsRatingOpen] = useState(false);
   const [collections, setCollections] = useState<Collection[]>([]);
   const [collectionsMenuOpen, setCollectionsMenuOpen] = useState(false);
@@ -145,13 +167,27 @@ function Header({
       video?.site === "YouTube" &&
       video?.official === true,
   )?.key;
-  const isTrailerAvailable = Boolean(trailerKey);
+  /**
+   * A phone hero is roughly 9:19 while the trailer is 16:9, so covering it
+   * would crop away three quarters of the frame. Phones get the backdrop
+   * still, which crops gracefully — and skip an autoplaying video on data.
+   */
+  const isTrailerAvailable = Boolean(trailerKey) && !isCompactViewport;
   const movieLogo = getPreferredLogoPath(movieImages);
   const movieTitle = movieDetails?.title || movieDetails?.name || "";
 
   useEffect(() => {
     setIsOverviewExpanded(false);
   }, [movieId]);
+
+  // Matches the theme's `md` breakpoint, where the hero becomes a wide stage.
+  useEffect(() => {
+    const query = window.matchMedia("(max-width: 899.95px)");
+    const onChange = (event: MediaQueryListEvent) =>
+      setIsCompactViewport(event.matches);
+    query.addEventListener("change", onChange);
+    return () => query.removeEventListener("change", onChange);
+  }, []);
 
   const watchlistItem = (myselfData?.data as unknown as User)?.watchlist?.find(
     (item) => item.id == movieId && item.type === movieType,
@@ -251,12 +287,14 @@ function Header({
         ? `Episode ${recentItem.currentEpisode}`
         : "")
       : "";
-  const overview = (
-    movieType === "tv" && hasStartedWatching
-      ? activeEpisodeDetails?.overview
-      : movieDetails?.overview
-  )?.trim() || "";
-  const isOverviewLong = overview.length > 220;
+  /**
+   * Always the title's own synopsis. It used to swap to the synopsis of the
+   * episode you were part-way through, which reads as a spoiler on the page
+   * whose job is to describe the show — the episode is named on the resume
+   * line under the play button instead.
+   */
+  const overview = movieDetails?.overview?.trim() || "";
+  const isOverviewLong = overview.length > 240;
   const backdropPath =
     (movieType === "tv" && hasStartedWatching
       ? activeEpisodeDetails?.still_path
@@ -280,11 +318,13 @@ function Header({
             ? `Continue S${recentItem.nextSeason}:E${recentItem.nextEpisode}`
             : "Watch Again"
         : "Play Now";
+  /**
+   * Only for titles you have not started — once you have, the progress bar and
+   * its resume line under the play button say all of this more directly.
+   */
   const progressNote =
     hasStartedWatching
-      ? movieType === "movie"
-        ? `${progressPercent}% done${recentItem?.currentTime ? ` • Resume at ${minuteToHour(recentItem.currentTime)}` : ""}`
-        : `${progressPercent}% done${recentItem?.currentSeason && recentItem?.currentEpisode ? ` • Resume S${recentItem.currentSeason}:E${recentItem.currentEpisode}` : ""}`
+      ? ""
       : recentItem?.nextSeason && recentItem?.nextEpisode
         ? `Next up • S${recentItem.nextSeason}:E${recentItem.nextEpisode}${recentItem.lastWatchedAt ? ` • ${formatTimeAgo(recentItem.lastWatchedAt)}` : ""}`
         : recentItem?.lastWatchedAt
@@ -334,9 +374,87 @@ function Header({
       ? "Checking video availability..."
       : "";
 
+  const isFollowing = Boolean(
+    (myselfData?.data as unknown as User)?.notificationInterests?.followedShows?.includes(
+      String(movieId),
+    ),
+  );
+
+  const toggleFollow = () => {
+    const interests = (myselfData?.data as unknown as User)?.notificationInterests;
+    const followed = interests?.followedShows || [];
+    updateMyself({
+      notificationInterests: {
+        ...interests,
+        followedShows: isFollowing
+          ? followed.filter((id: string) => id !== String(movieId))
+          : [...followed, String(movieId)],
+      },
+    } as any);
+  };
+
+  /** Age certificate as the rating boards state it — "TV-MA", "15", "R". */
+  const certificate = imdbState.details?.certificate?.rating || "";
+
+  /**
+   * Everything the old "Your library" card said, on the one line that sits
+   * under the progress bar: which episode you are on, and how much of it is
+   * left. `duration` and `currentTime` are both stored in whole minutes.
+   */
+  const minutesLeft =
+    recentItem?.duration && recentItem?.currentTime
+      ? Math.max(0, Math.round(recentItem.duration - recentItem.currentTime))
+      : 0;
+  const resumeLine = [
+    movieType === "tv" && recentItem?.currentSeason && recentItem?.currentEpisode
+      ? `S${recentItem.currentSeason}:E${recentItem.currentEpisode}`
+      : "",
+    activeEpisodeTitle,
+    minutesLeft ? `${minuteToHour(minutesLeft)} left` : `${progressPercent}% watched`,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+
+  // TMDB types this as a string, but the API sends the whole episode object.
+  const nextEpisode = (
+    movieDetails as unknown as {
+      next_episode_to_air?: {
+        air_date?: string;
+        season_number?: number;
+        episode_number?: number;
+      } | null;
+    }
+  )?.next_episode_to_air;
+  const nextEpisodeLine =
+    movieType === "tv" && nextEpisode?.air_date
+      ? `${
+        nextEpisode.season_number && nextEpisode.episode_number
+          ? `S${nextEpisode.season_number}:E${nextEpisode.episode_number}`
+          : "Next episode"
+      } airs ${ymdToDmy(nextEpisode.air_date)}`
+      : "";
+
+  const shareTitle = async () => {
+    const url = window.location.href;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: movieTitle, url });
+        return;
+      }
+      await navigator.clipboard.writeText(url);
+      toast.success("Link copied");
+    } catch {
+      // Dismissing the share sheet lands here too — nothing worth reporting.
+    }
+  };
+
   const metadataItems = [
+    // Three is enough to place a title; the full list is in About below.
     movieDetails?.genres?.length
-      ? movieDetails.genres.map((genre) => genre.name).join(", ")
+      ? movieDetails.genres
+        .slice(0, 3)
+        .map((genre) => genre.name)
+        .join(" · ")
       : null,
     movieDetails?.release_date || movieDetails?.first_air_date
       ? ymdToDmy(movieDetails?.release_date || movieDetails?.first_air_date)
@@ -410,16 +528,27 @@ function Header({
                       setIsVideoLoaded(true);
                     }, 4000);
                   }}
+                  /**
+                   * A YouTube embed cannot `object-fit: cover`, so it is sized
+                   * to the larger of the two dimensions that cover this stage
+                   * (76vw wide, 88vh tall) and centred — the overflow is
+                   * cropped, the way the backdrop image behind it crops. Left
+                   * at 100%/100% the 16:9 video letterboxed into a band of
+                   * picture between two thick black bars.
+                   */
                   style={{
                     position: "absolute",
-                    inset: 0,
+                    top: "50%",
+                    left: "50%",
+                    transform: "translate(-50%, -50%)",
                     border: "none",
-                    width: "100%",
-                    height: "100%",
+                    width: "max(100%, calc(88vh * 16 / 9))",
+                    height: "max(100%, calc(76vw * 9 / 16))",
                     opacity: isVideoLoaded ? 1 : 0,
                     transition: "opacity 0.45s ease",
+                    pointerEvents: "none",
                   }}
-                  src={`https://www.youtube.com/embed/${trailerKey}?autoplay=1&controls=0&mute=1&loop=1&playlist=${trailerKey}`}
+                  src={`https://www.youtube.com/embed/${trailerKey}?autoplay=1&controls=0&mute=1&loop=1&playlist=${trailerKey}&cc_load_policy=0&iv_load_policy=3&modestbranding=1&rel=0&playsinline=1`}
                 />
               ) : null}
             </Box>
@@ -437,10 +566,13 @@ function Header({
         />
         <CardContent
           sx={{
-            justifyContent: { xs: "center", md: "flex-end" },
+            // Anchored to the bottom at every size. Centred, the block floated
+            // in the middle of a phone screen with the artwork cropped behind
+            // it and a third of the hero left empty underneath.
+            justifyContent: "flex-end",
             alignItems: { xs: "center", md: "flex-start" },
             pt: { xs: "88px", md: "102px" },
-            pb: { xs: "24px", md: "48px" },
+            pb: { xs: "40px", md: "48px" },
             px: { xs: 2, sm: 3, md: 5, lg: 6 },
           }}
         >
@@ -455,9 +587,10 @@ function Header({
               sx={{
                 width: { xs: "100%", md: "min(42vw, 520px)" },
                 maxWidth: "100%",
+                minWidth: 0,
                 display: "flex",
                 flexDirection: "column",
-                gap: { xs: 1.6, md: 2.2 },
+                gap: { xs: 1.75, md: 2.25 },
                 p: 0,
                 borderRadius: 0,
                 background: "transparent",
@@ -512,17 +645,35 @@ function Header({
                 </Typography>
               ) : null}
 
+              {/* One factual row. Everything here is a number or a label a
+                  viewer can act on — the IMDb popularity meter and the AI's
+                  age-warning sentence used to sit here and ran off the edge of
+                  a phone screen; the warning now lives in the match tooltip. */}
               <Box
                 sx={{
                   display: "flex",
                   flexWrap: "wrap",
-                  gap: 1,
+                  gap: 0.75,
+                  minWidth: 0,
+                  maxWidth: "100%",
                   alignItems: "center",
                   justifyContent: { xs: "center", md: "flex-start" },
                 }}
               >
                 <IMDbRating mediaId={movieId} mediaType={movieType} />
                 <ImdbRankBadges ranking={imdbState.details?.ranking ?? {}} />
+                {certificate ? (
+                  <Tooltip title="Age rating" variant="soft" size="sm">
+                    <Chip
+                      size="sm"
+                      variant="outlined"
+                      color="neutral"
+                      sx={{ fontWeight: 600, maxWidth: "100%" }}
+                    >
+                      {certificate}
+                    </Chip>
+                  </Tooltip>
+                ) : null}
                 <MatchScore
                   movieTitle={movieTitle}
                   movieYear={(
@@ -532,27 +683,32 @@ function Header({
                   ).slice(0, 4)}
                   overview={movieDetails?.overview}
                   genres={movieDetails?.genres?.map((genre) => genre.name)}
+                  certification={certificate || undefined}
                 />
-                <ParentalGuide
-                  mediaId={movieId}
-                  mediaType={movieType}
-                  title={movieTitle}
-                  year={(
-                    movieDetails?.release_date ||
-                    movieDetails?.first_air_date ||
-                    ""
-                  ).slice(0, 4)}
-                />
+                {ratingItem ? (
+                  <Chip
+                    size="sm"
+                    variant="soft"
+                    color="primary"
+                    startDecorator={<Star sx={{ fontSize: 13, fill: "currentColor" }} />}
+                    sx={{ fontWeight: 600 }}
+                  >
+                    You rated {ratingItem.rating}/10
+                  </Chip>
+                ) : null}
               </Box>
 
+              {/* One primary action, two one-tap toggles, and a menu for the
+                  rest. Six stacked buttons is what made this page feel like a
+                  settings screen rather than a place to press play. */}
               <Box
                 sx={{
                   display: "flex",
                   flexDirection: "column",
-                  gap: 1,
+                  gap: 1.25,
                   width: "100%",
-                  maxWidth: { md: 360 },
-                  alignItems: { xs: "center", md: "stretch" },
+                  maxWidth: { xs: 420, md: 400 },
+                  minWidth: 0,
                 }}
               >
                 <Box
@@ -560,89 +716,214 @@ function Header({
                     width: "100%",
                     display: "flex",
                     alignItems: "stretch",
-                    gap: 0.5,
+                    gap: 0.75,
+                    minWidth: 0,
                   }}
                 >
                   <Button
                     onClick={() => {
                       navigate(playbackTarget.route);
                     }}
-                    disabled={
-                      isReleaseBlocked ||
-                      myselfData?.isLoading
-                    }
+                    disabled={isReleaseBlocked || myselfData?.isLoading}
                     startDecorator={<PlayArrow sx={{ fontSize: 18 }} />}
                     size="lg"
-                    sx={{ flex: 1 }}
+                    sx={{
+                      flex: 1,
+                      minWidth: 0,
+                      // Three fixed-width icon buttons share this row, so the
+                      // label has to give way rather than widen the page.
+                      fontSize: { xs: "0.9375rem", md: "1rem" },
+                      whiteSpace: "nowrap",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                    }}
                   >
                     {playLabel}
                   </Button>
-                  <Button
-                    disabled={
-                      myselfData?.isLoading ||
-                      addToWatchlistData?.isLoading ||
-                      removeFromWatchlistData?.isLoading
-                    }
-                    onClick={() => {
-                      if (!isLoggedIn) {
-                        navigate("/auth/login");
-                        return;
-                      }
-
-                      if (watchlistItem) {
-                        void removeFromWatchlist(movieType, movieId.toString());
-                        return;
-                      }
-
-                      void addToWatchlist(
-                        movieType,
-                        movieId.toString(),
-                        movieDetails.poster_path,
-                        movieTitle,
-                      );
-                    }}
-                    size="lg"
-                    aria-label={watchlistItem ? "Remove from watchlist" : "Add to watchlist"}
-                    sx={{ minWidth: { xs: 48, md: 56 } }}
+                  <Tooltip
+                    title={watchlistItem ? "In your watchlist" : "Add to watchlist"}
+                    variant="soft"
+                    size="sm"
                   >
-                    {watchlistItem ? (
-                      <Check sx={{ fontSize: 18 }} />
-                    ) : (
-                      <Add sx={{ fontSize: 18 }} />
-                    )}
-                  </Button>
-                  <Dropdown open={collectionsMenuOpen} onOpenChange={(_, o) => { if (o) { setCollectionsMenuOpen(true); loadCollections(); } else setCollectionsMenuOpen(false); }}>
+                    <Button
+                      variant="outlined"
+                      color="neutral"
+                      size="lg"
+                      disabled={
+                        myselfData?.isLoading ||
+                        addToWatchlistData?.isLoading ||
+                        removeFromWatchlistData?.isLoading
+                      }
+                      onClick={() => {
+                        if (!isLoggedIn) {
+                          navigate("/auth/login");
+                          return;
+                        }
+
+                        if (watchlistItem) {
+                          void removeFromWatchlist(movieType, movieId.toString());
+                          return;
+                        }
+
+                        void addToWatchlist(
+                          movieType,
+                          movieId.toString(),
+                          movieDetails.poster_path,
+                          movieTitle,
+                        );
+                      }}
+                      aria-label={
+                        watchlistItem ? "Remove from watchlist" : "Add to watchlist"
+                      }
+                      sx={{ width: { xs: 44, md: 48 }, flexShrink: 0, px: 0 }}
+                    >
+                      {watchlistItem ? (
+                        <Check sx={{ fontSize: 18 }} />
+                      ) : (
+                        <Add sx={{ fontSize: 18 }} />
+                      )}
+                    </Button>
+                  </Tooltip>
+                  <Tooltip
+                    title={
+                      ratingItem
+                        ? `Your rating: ${ratingItem.rating}/10`
+                        : "Rate this title"
+                    }
+                    variant="soft"
+                    size="sm"
+                  >
+                    <Button
+                      variant="outlined"
+                      color="neutral"
+                      size="lg"
+                      disabled={
+                        myselfData?.isLoading ||
+                        upsertRatingData?.isLoading ||
+                        deleteRatingData?.isLoading
+                      }
+                      onClick={() => {
+                        if (!isLoggedIn) {
+                          navigate("/auth/login");
+                          return;
+                        }
+                        setIsRatingOpen(true);
+                      }}
+                      aria-label="Rate this title"
+                      sx={{ width: { xs: 44, md: 48 }, flexShrink: 0, px: 0 }}
+                    >
+                      {ratingItem ? (
+                        <Star sx={{ fontSize: 18, fill: "currentColor" }} />
+                      ) : (
+                        <StarBorder sx={{ fontSize: 18 }} />
+                      )}
+                    </Button>
+                  </Tooltip>
+                  <Dropdown
+                    open={collectionsMenuOpen}
+                    onOpenChange={(_, o) => {
+                      if (o) {
+                        setCollectionsMenuOpen(true);
+                        loadCollections();
+                      } else setCollectionsMenuOpen(false);
+                    }}
+                  >
                     <MenuButton
                       slots={{ root: Button }}
                       slotProps={{
                         root: {
-                          "aria-label": "More list actions",
-                          sx: {
-                            minWidth: { xs: 40, md: 44 },
-                            borderLeft: "1px solid rgba(0,0,0,0.12)",
-                            padding: 0,
-                          },
+                          "aria-label": "More actions",
+                          variant: "outlined",
+                          color: "neutral",
+                          size: "lg",
+                          sx: { width: { xs: 44, md: 48 }, flexShrink: 0, px: 0 },
                         },
                       }}
                     >
-                      <ArrowDropDown />
+                      <MoreHoriz sx={{ fontSize: 18 }} />
                     </MenuButton>
-                    <Menu placement="bottom-end" sx={{ minWidth: 220, zIndex: 1300 }}>
+                    <Menu placement="bottom-end" sx={{ minWidth: 240, zIndex: 1300 }}>
+                      {hasStartedWatching && (
+                        <MenuItem
+                          disabled={isReleaseBlocked || myselfData?.isLoading}
+                          onClick={() => {
+                            navigate(startOverEpisodeTarget.route);
+                            setCollectionsMenuOpen(false);
+                          }}
+                        >
+                          <Replay sx={{ fontSize: 18 }} />
+                          {movieType === "tv"
+                            ? "Start over this episode"
+                            : "Play from beginning"}
+                        </MenuItem>
+                      )}
+                      {hasStartedWatching && movieType === "tv" && (
+                        <MenuItem
+                          disabled={isReleaseBlocked || myselfData?.isLoading}
+                          onClick={() => {
+                            navigate(startOverSeriesTarget.route);
+                            setCollectionsMenuOpen(false);
+                          }}
+                        >
+                          <Replay sx={{ fontSize: 18 }} />
+                          Start over the series
+                        </MenuItem>
+                      )}
+                      {hasStartedWatching && <ListDivider />}
                       <MenuItem
-                        disabled={addToWatchlistData?.isLoading || removeFromWatchlistData?.isLoading}
+                        disabled={
+                          addToWatchlistData?.isLoading ||
+                          removeFromWatchlistData?.isLoading
+                        }
                         onClick={() => {
-                          if (!isLoggedIn) { navigate("/auth/login"); return; }
-                          if (watchlistItem) void removeFromWatchlist(movieType, movieId.toString());
-                          else void addToWatchlist(movieType, movieId.toString(), (movieDetails as any)?.poster_path, movieTitle);
+                          if (!isLoggedIn) {
+                            navigate("/auth/login");
+                            return;
+                          }
+                          if (watchlistItem)
+                            void removeFromWatchlist(movieType, movieId.toString());
+                          else
+                            void addToWatchlist(
+                              movieType,
+                              movieId.toString(),
+                              (movieDetails as any)?.poster_path,
+                              movieTitle,
+                            );
                           setCollectionsMenuOpen(false);
                         }}
                       >
-                        {watchlistItem ? <Check sx={{ fontSize: 18 }} /> : <Add sx={{ fontSize: 18 }} />}
+                        {watchlistItem ? (
+                          <Check sx={{ fontSize: 18 }} />
+                        ) : (
+                          <Add sx={{ fontSize: 18 }} />
+                        )}
                         {watchlistItem ? "Remove from Watchlist" : "Add to Watchlist"}
                       </MenuItem>
+                      {movieType === "tv" && isLoggedIn && (
+                        <MenuItem
+                          onClick={() => {
+                            toggleFollow();
+                            setCollectionsMenuOpen(false);
+                          }}
+                        >
+                          {isFollowing ? (
+                            <Notifications sx={{ fontSize: 18 }} />
+                          ) : (
+                            <NotificationsNone sx={{ fontSize: 18 }} />
+                          )}
+                          {isFollowing
+                            ? "Stop following"
+                            : "Follow for new episodes"}
+                        </MenuItem>
+                      )}
                       {collections.length > 0 && (
                         <>
-                          <MenuItem disabled sx={{ fontSize: "0.72rem", opacity: 0.5, py: 0.5 }}>MY LISTS</MenuItem>
+                          <MenuItem
+                            disabled
+                            sx={{ fontSize: "0.72rem", opacity: 0.5, py: 0.5 }}
+                          >
+                            MY LISTS
+                          </MenuItem>
                           {collections.map((col) => (
                             <MenuItem
                               key={col.id}
@@ -655,59 +936,80 @@ function Header({
                           ))}
                         </>
                       )}
-                      <MenuItem onClick={createListAndAdd} disabled={addingToList === "new"}>
-                        <Add sx={{ fontSize: 18 }} />
+                      <MenuItem
+                        onClick={createListAndAdd}
+                        disabled={addingToList === "new"}
+                      >
+                        <PlaylistAdd sx={{ fontSize: 18 }} />
                         Create new list &amp; add
+                      </MenuItem>
+                      <ListDivider />
+                      <MenuItem
+                        onClick={() => {
+                          void shareTitle();
+                          setCollectionsMenuOpen(false);
+                        }}
+                      >
+                        <IosShare sx={{ fontSize: 18 }} />
+                        Share
                       </MenuItem>
                     </Menu>
                   </Dropdown>
                 </Box>
+
+                {/* The whole of the old "Your library" card, as the one line
+                    people actually read off it: where you are, what is left. */}
                 {hasStartedWatching ? (
-                  <Box sx={{ width: "100%", display: "flex", gap: 0.5 }}>
-                    <Button
-                      variant="outlined"
-                      color="neutral"
-                      sx={{ flex: 1 }}
-                      startDecorator={<Replay sx={{ fontSize: 16 }} />}
-                      onClick={() => {
-                        navigate(startOverEpisodeTarget.route);
+                  <Box
+                    sx={{
+                      width: "100%",
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 0.75,
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        width: "100%",
+                        height: 3,
+                        borderRadius: 3,
+                        backgroundColor: "rgba(255,255,255,0.18)",
+                        overflow: "hidden",
                       }}
-                      disabled={isReleaseBlocked || myselfData?.isLoading}
                     >
-                      Play from beginning
-                    </Button>
-                    {movieType === "tv" ? (
-                      <Dropdown>
-                        <MenuButton
-                          slots={{ root: Button }}
-                          aria-label="Start-over options"
-                          slotProps={{ root: { variant: "outlined", color: "neutral" } }}
-                          disabled={isReleaseBlocked || myselfData?.isLoading}
-                        >
-                          <ArrowDropDown sx={{ fontSize: 16 }} />
-                        </MenuButton>
-                        <Menu>
-                          <MenuItem
-                            onClick={() => {
-                              navigate(startOverEpisodeTarget.route);
-                            }}
-                          >
-                            Start over the episode
-                          </MenuItem>
-                          <MenuItem
-                            onClick={() => {
-                              navigate(startOverSeriesTarget.route);
-                            }}
-                          >
-                            Start over the series
-                          </MenuItem>
-                        </Menu>
-                      </Dropdown>
-                    ) : null}
+                      <Box
+                        sx={{
+                          width: `${progressPercent}%`,
+                          height: "100%",
+                          borderRadius: 3,
+                          backgroundColor: "#ededed",
+                        }}
+                      />
+                    </Box>
+                    <Typography
+                      level="body-xs"
+                      sx={{
+                        color: "#a1a1a1",
+                        textAlign: { xs: "center", md: "left" },
+                      }}
+                    >
+                      {resumeLine}
+                    </Typography>
                   </Box>
+                ) : progressNote ? (
+                  <Typography
+                    level="body-xs"
+                    sx={{
+                      color: "#707070",
+                      textAlign: { xs: "center", md: "left" },
+                    }}
+                  >
+                    {progressNote}
+                  </Typography>
                 ) : null}
-                {/* Placed with the resume controls: this is the moment someone
-                    is deciding whether they remember where they left off. */}
+
+                {/* Placed with the resume line: this is the moment someone is
+                    deciding whether they remember where they left off. */}
                 {movieType === "tv" &&
                 hasStartedWatching &&
                 recentItem?.currentSeason &&
@@ -720,134 +1022,36 @@ function Header({
                     episodeNumber={Number(recentItem.currentEpisode)}
                   />
                 ) : null}
+
+                {nextEpisodeLine ? (
+                  <Typography
+                    level="body-xs"
+                    startDecorator={<Calendar sx={{ fontSize: 13 }} />}
+                    sx={{ color: "#a1a1a1" }}
+                  >
+                    {nextEpisodeLine}
+                  </Typography>
+                ) : null}
+
                 {playButtonNote ? (
                   <Typography level="body-sm" sx={{ color: "#a1a1a1" }}>
                     {playButtonNote}
                   </Typography>
                 ) : null}
-                {progressNote && !(watchlistItem || recentItem || ratingItem) ? (
-                  <Typography
-                    level="body-xs"
-                    sx={{
-                      textAlign: { xs: "center", md: "left" },
-                      color: "#707070",
-                    }}
-                  >
-                    {progressNote}
-                  </Typography>
-                ) : null}
-                <Box sx={{ width: "100%", display: "flex", gap: 0.5 }}>
-                <Button
-                  disabled={
-                    myselfData?.isLoading ||
-                    upsertRatingData?.isLoading ||
-                    deleteRatingData?.isLoading
-                  }
-                  onClick={() => {
-                    if (!isLoggedIn) {
-                      navigate("/auth/login");
-                      return;
-                    }
-                    setIsRatingOpen(true);
-                  }}
-                  variant="outlined"
-                  color="neutral"
-                  sx={{ flex: 1, minWidth: 0 }}
-                  startDecorator={
-                    ratingItem ? (
-                      <Star sx={{ fontSize: 16, fill: "currentColor" }} />
-                    ) : (
-                      <StarBorder sx={{ fontSize: 16 }} />
-                    )
-                  }
-                >
-                  {ratingItem ? `Your rating: ${ratingItem.rating}/10` : "Rate this title"}
-                </Button>
-                {movieType === "tv" && isLoggedIn && (
-                  <Button
-                    onClick={() => {
-                      const interests = (myselfData?.data as unknown as User)?.notificationInterests;
-                      const followed = interests?.followedShows || [];
-                      const isCurrentlyFollowing = followed.includes(String(movieId));
-                      updateMyself({
-                        notificationInterests: {
-                          ...interests,
-                          followedShows: isCurrentlyFollowing
-                            ? followed.filter((id: string) => id !== String(movieId))
-                            : [...followed, String(movieId)],
-                        },
-                      } as any);
-                    }}
-                    variant="outlined"
-                    color="neutral"
-                    sx={{ flex: 1, minWidth: 0 }}
-                    startDecorator={
-                      (myselfData?.data as unknown as User)?.notificationInterests?.followedShows?.includes(String(movieId)) ? (
-                        <Notifications sx={{ fontSize: 16 }} />
-                      ) : (
-                        <NotificationsNone sx={{ fontSize: 16 }} />
-                      )
-                    }
-                  >
-                    {(myselfData?.data as unknown as User)?.notificationInterests?.followedShows?.includes(String(movieId))
-                      ? "Following"
-                      : "Follow"}
-                  </Button>
-                )}
-                </Box>
-                {(watchlistItem || recentItem || ratingItem) && (
-                  <Box
-                    sx={{
-                      width: "100%",
-                      borderRadius: "8px",
-                      px: 1.5,
-                      py: 1.25,
-                      backgroundColor: "rgba(10,10,10,0.72)",
-                      border: "1px solid rgba(255,255,255,0.1)",
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: 0.5,
-                    }}
-                  >
-                    <Typography level="title-sm">Your library</Typography>
-                    {watchlistItem?.addedAt ? (
-                      <Typography level="body-xs" textColor="neutral.500">
-                        In watchlist
-                        {watchlistItem.addedAt
-                          ? ` • Added ${formatTimeAgo(watchlistItem.addedAt)}`
-                          : ""}
-                      </Typography>
-                    ) : null}
-                    {recentItem?.lastWatchedAt ? (
-                      <Typography level="body-xs" textColor="neutral.300">
-                        {progressNote ||
-                          `Last watched ${formatTimeAgo(recentItem.lastWatchedAt)}`}
-                      </Typography>
-                    ) : null}
-                    {ratingItem ? (
-                      <Typography level="body-xs" textColor="neutral.300">
-                        Rated {ratingItem.rating}/10
-                        {ratingItem.ratedAt
-                          ? ` • ${formatTimeAgo(ratingItem.ratedAt)}`
-                          : ""}
-                      </Typography>
-                    ) : null}
-                  </Box>
-                )}
               </Box>
 
               {overview ? (
-                <Box sx={{ display: "flex", flexDirection: "column", gap: 0.75 }}>
-                  {activeEpisodeTitle ? (
-                    <Typography
-                      level="title-md"
-                      sx={{
-                        color: "#ededed",
-                      }}
-                    >
-                      {activeEpisodeTitle}
-                    </Typography>
-                  ) : null}
+                <Box
+                  sx={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 0.5,
+                    width: "100%",
+                    // The synopsis is the one block of prose here: it reads as
+                    // prose, so it is left-aligned even where the rest centres.
+                    textAlign: "left",
+                  }}
+                >
                   <Typography
                     level="body-md"
                     sx={{
@@ -858,28 +1062,50 @@ function Header({
                           : "block",
                       WebkitBoxOrient: "vertical",
                       WebkitLineClamp:
-                        isOverviewLong && !isOverviewExpanded ? 4 : "unset",
+                        isOverviewLong && !isOverviewExpanded ? 3 : "unset",
                       overflow: "hidden",
                     }}
                   >
                     {overview}
                   </Typography>
-                  {isOverviewLong ? (
-                    <Button
-                      variant="plain"
-                      size="sm"
-                      onClick={() => setIsOverviewExpanded((current) => !current)}
-                      sx={{
-                        alignSelf: { xs: "center", md: "flex-start" },
-                        px: 0,
-                        minHeight: 0,
-                        color: "text.tertiary",
-                        "&:hover": { backgroundColor: "transparent", color: "text.primary" },
-                      }}
-                    >
-                      {isOverviewExpanded ? "Less" : "More"}
-                    </Button>
-                  ) : null}
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 1.5,
+                      flexWrap: "wrap",
+                    }}
+                  >
+                    {isOverviewLong ? (
+                      <Button
+                        variant="plain"
+                        size="sm"
+                        onClick={() => setIsOverviewExpanded((current) => !current)}
+                        sx={{
+                          px: 0,
+                          minHeight: 0,
+                          color: "text.tertiary",
+                          "&:hover": {
+                            backgroundColor: "transparent",
+                            color: "text.primary",
+                          },
+                        }}
+                      >
+                        {isOverviewExpanded ? "Show less" : "Read more"}
+                      </Button>
+                    ) : null}
+                    <ParentalGuide
+                      variant="inline"
+                      mediaId={movieId}
+                      mediaType={movieType}
+                      title={movieTitle}
+                      year={(
+                        movieDetails?.release_date ||
+                        movieDetails?.first_air_date ||
+                        ""
+                      ).slice(0, 4)}
+                    />
+                  </Box>
                 </Box>
               ) : null}
             </Box>

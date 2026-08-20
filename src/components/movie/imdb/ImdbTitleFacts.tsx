@@ -218,7 +218,7 @@ function ImdbTitleFacts({ details }: { details: ImdbTitleDetails }) {
   if (!blocks.length) return null;
 
   return (
-    <ImdbSection title="Details" icon={<Scale sx={{ fontSize: 22 }} />}>
+    <ImdbSection title="Specs & box office" icon={<Scale sx={{ fontSize: 22 }} />}>
       <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
         {blocks.map((block, index) => (
           <Box key={block.key} sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
