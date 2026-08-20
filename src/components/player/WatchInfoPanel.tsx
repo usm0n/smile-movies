@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Box, Chip, Typography } from "@mui/joy";
-import { FamilyRestroom, Loader, Star } from "../ui/icons";
+import { AutoAwesome, FamilyRestroom, Loader, Star } from "../ui/icons";
+import { aiService, PriorEpisodeInput } from "../../service/api/ai/ai.api.service";
 import {
   ImdbParentsGuideEntry,
   fetchImdbParentalGuide,
@@ -28,6 +29,10 @@ export type WatchInfoPanelProps = {
   imdb: ImdbWatchInfo;
   /** Opens straight onto the parental guide when the viewer asked for it. */
   focusParentalGuide?: boolean;
+  seasonNumber?: number;
+  episodeNumber?: number;
+  /** Episodes before this one, in order. Drives the catch-up recap. */
+  priorEpisodes?: PriorEpisodeInput[];
 };
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
@@ -203,6 +208,149 @@ function ParentalGuideSection({
 }
 
 /**
+ * "What happened before this?" — a catch-up for picking a series back up weeks
+ * later, loaded on demand.
+ *
+ * Only the episodes before this one are sent to the API, so the recap has no
+ * way to spoil the episode about to play: the information simply is not there.
+ * Like the parental guide, it stays behind a tap — most viewers open this panel
+ * for the synopsis, and a recap nobody asked for would burn the AI budget on
+ * every episode change.
+ */
+function RecapSection({
+  title,
+  seasonNumber,
+  episodeNumber,
+  priorEpisodes,
+}: {
+  title: string;
+  seasonNumber: number;
+  episodeNumber: number;
+  priorEpisodes: PriorEpisodeInput[];
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [recap, setRecap] = useState("");
+  const [beats, setBeats] = useState<string[]>([]);
+  const [unavailable, setUnavailable] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    let cancelled = false;
+    setIsLoading(true);
+    setError("");
+
+    void aiService
+      .recap({ title, seasonNumber, episodeNumber, priorEpisodes })
+      .then((result) => {
+        if (cancelled) return;
+        setRecap(result.recap || "");
+        setBeats(result.beats || []);
+        setUnavailable(result.unavailable || "");
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setError("Could not build a recap right now.");
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+    // Deliberately keyed on `isOpen` alone. The caller remounts this component
+    // per episode, so the other inputs cannot change during a mount — and
+    // listing `priorEpisodes` would re-run the effect on every parent render,
+    // whose cleanup would cancel the request that is still in flight.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
+
+  if (!priorEpisodes.length) return null;
+
+  return (
+    <Box>
+      <SectionTitle>Catch me up</SectionTitle>
+
+      {!isOpen ? (
+        <Box
+          component="button"
+          type="button"
+          onClick={() => setIsOpen(true)}
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 1,
+            width: "100%",
+            px: 1.5,
+            py: 1.1,
+            borderRadius: "8px",
+            border: "1px solid #1f1f1f",
+            background: "#0a0a0a",
+            color: "#a1a1a1",
+            font: "inherit",
+            fontSize: "0.8125rem",
+            textAlign: "left",
+            cursor: "pointer",
+            "&:hover": { borderColor: "#333333", color: "#ededed" },
+          }}
+        >
+          <AutoAwesome sx={{ fontSize: 15, flexShrink: 0 }} />
+          What happened before this episode?
+        </Box>
+      ) : isLoading ? (
+        <Spinner />
+      ) : error ? (
+        <Typography level="body-sm">{error}</Typography>
+      ) : unavailable ? (
+        <Typography level="body-sm">{unavailable}</Typography>
+      ) : (
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 1.25 }}>
+          {recap ? (
+            <Typography level="body-sm" sx={{ color: "#a1a1a1" }}>
+              {recap}
+            </Typography>
+          ) : null}
+
+          {beats.length ? (
+            <Box component="ul" sx={{ display: "flex", flexDirection: "column", gap: 0.6, pl: 0 }}>
+              {beats.map((beat) => (
+                <Box
+                  key={beat}
+                  component="li"
+                  sx={{ display: "flex", gap: 1, alignItems: "flex-start" }}
+                >
+                  <Box
+                    sx={{
+                      width: 4,
+                      height: 4,
+                      mt: "8px",
+                      borderRadius: "50%",
+                      background: "#707070",
+                      flexShrink: 0,
+                    }}
+                  />
+                  <Typography level="body-sm" sx={{ color: "#a1a1a1" }}>
+                    {beat}
+                  </Typography>
+                </Box>
+              ))}
+            </Box>
+          ) : null}
+
+          <Typography level="body-xs">
+            AI-generated from earlier episode synopses. Covers nothing past S
+            {seasonNumber}E{episodeNumber - 1}.
+          </Typography>
+        </Box>
+      )}
+    </Box>
+  );
+}
+
+/**
  * "What am I watching?" — the synopsis, the episode's own IMDb rating and its
  * content warnings, as the third tab of the player's side sheet. It lives
  * inside `<media-player>` so it survives fullscreen, which a modal could not.
@@ -218,6 +366,9 @@ function WatchInfoPanel({
   genres,
   imdb,
   focusParentalGuide,
+  seasonNumber,
+  episodeNumber,
+  priorEpisodes,
 }: WatchInfoPanelProps) {
   const synopsis = String(overview || imdb.plot || "").trim();
   const facts = [
@@ -305,6 +456,18 @@ function WatchInfoPanel({
             {synopsis}
           </Typography>
         </Box>
+      ) : null}
+
+      {Number.isFinite(seasonNumber) && Number.isFinite(episodeNumber) && priorEpisodes?.length ? (
+        <RecapSection
+          // Remounting per episode resets the recap and keeps the fetch effect
+          // dependent on nothing but the viewer opening it.
+          key={`${seasonNumber}-${episodeNumber}`}
+          title={title}
+          seasonNumber={Number(seasonNumber)}
+          episodeNumber={Number(episodeNumber)}
+          priorEpisodes={priorEpisodes}
+        />
       ) : null}
 
       <ParentalGuideSection

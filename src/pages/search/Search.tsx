@@ -4,13 +4,19 @@ import Badge from "../../components/ui/Badge";
 import EmptyState from "../../components/ui/EmptyState";
 import PageHeader from "../../components/ui/PageHeader";
 import { useTMDB } from "../../context/TMDB";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import type { Movie, searchMovie, searchPerson, searchTV } from "../../tmdb-res";
 import EventMC from "../../components/cards/EventMC";
 import EventMCS from "../../components/cards/skeleton/EventMC";
 import { Search as SearchIcon } from "../../components/ui/icons";
 import Pagination from "../../components/navigation/Pagination";
+import AISuggestions from "../../components/ai/AISuggestions";
+import { aiService } from "../../service/api/ai/ai.api.service";
+import {
+  ResolvedMedia,
+  resolveSuggestedMediaList,
+} from "../../utilities/resolveSuggestedMedia";
 
 type SearchSort = "popularity" | "rating" | "release" | "title";
 type SearchYearFilter = "all" | "2020s" | "2010s" | "2000s" | "classic";
@@ -54,6 +60,11 @@ function Search() {
   const [sortBy, setSortBy] = useState<SearchSort>("popularity");
   const [yearFilter, setYearFilter] = useState<SearchYearFilter>("all");
   const [ratingFilter, setRatingFilter] = useState<SearchRatingFilter>("all");
+  const [rescueResults, setRescueResults] = useState<ResolvedMedia[]>([]);
+  const [rescueNote, setRescueNote] = useState("");
+  const [rescueLoading, setRescueLoading] = useState(false);
+  const [rescueError, setRescueError] = useState("");
+  const rescuedQueryRef = useRef("");
   const {
     searchMovie,
     searchMovieData,
@@ -161,6 +172,54 @@ function Search() {
       searchPerson(query, page ? +page : 1);
     }
   }, [query, page]);
+
+  /**
+   * TMDB matches on titles only, so a search phrased as a description — "the one
+   * where the guy has tattoos and can't form memories" — returns nothing even
+   * though the answer is obvious. When that happens, ask the assistant what the
+   * viewer probably meant and resolve its guesses back into real catalogue
+   * entries, rather than leaving them at a dead end.
+   */
+  const runSearchRescue = useCallback(async (rescueQuery: string) => {
+    setRescueLoading(true);
+    setRescueError("");
+    setRescueNote("");
+    setRescueResults([]);
+
+    try {
+      const assist = await aiService.searchAssist(rescueQuery);
+      setRescueNote(assist.interpretation);
+      setRescueResults(await resolveSuggestedMediaList(assist.titles));
+    } catch {
+      setRescueError("Couldn't work out what you meant. Try rewording it.");
+    } finally {
+      setRescueLoading(false);
+    }
+  }, []);
+
+  // Only a true zero-result search is a dead end. Every tab must be empty, not
+  // just the active one — if the catalogue matched a TV show while the viewer
+  // is on the Movies tab, the fix is to switch tabs, not to guess. Likewise a
+  // filter hiding results is a filter problem, not a search problem.
+  const catalogueMatchCount = [...movieResults, ...tvResults, ...personResults].length;
+  const isDeadEndSearch =
+    !isLoading && !!decodedQuery && !mediaFiltersActive && catalogueMatchCount === 0;
+
+  useEffect(() => {
+    if (!isDeadEndSearch) {
+      rescuedQueryRef.current = "";
+      setRescueResults([]);
+      setRescueNote("");
+      setRescueError("");
+      return;
+    }
+
+    // Results arrive from three separate requests, so this effect can fire more
+    // than once for the same dead end. Only pay for the first.
+    if (rescuedQueryRef.current === decodedQuery) return;
+    rescuedQueryRef.current = decodedQuery;
+    void runSearchRescue(decodedQuery);
+  }, [decodedQuery, isDeadEndSearch, runSearchRescue]);
   return (
     <Box
       sx={{
@@ -257,7 +316,23 @@ function Search() {
         <EmptyState
           icon={SearchIcon}
           title="No results found"
-          description={`Nothing matched "${decodedQuery}" with these filters. Try a different spelling or clear the filters.`}
+          description={
+            isDeadEndSearch
+              ? `Nothing in the catalogue is called "${decodedQuery}". If you were describing it rather than naming it, see below.`
+              : `Nothing matched "${decodedQuery}" with these filters. Try a different spelling or clear the filters.`
+          }
+        />
+      )}
+
+      {isDeadEndSearch && (
+        <AISuggestions
+          heading="Did you mean one of these?"
+          note={rescueNote}
+          items={rescueResults}
+          loading={rescueLoading}
+          error={rescueError}
+          onRetry={() => void runSearchRescue(decodedQuery)}
+          emptyMessage="No idea what this one is, sorry. Try describing the plot or naming an actor."
         />
       )}
 

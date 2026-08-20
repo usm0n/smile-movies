@@ -34,7 +34,10 @@ import {
 import { isLoggedIn } from "../../utilities/defaults";
 import NotLoggedIn from "../../components/utils/NotLoggedIn";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { tmdb } from "../../service/api/tmdb/tmdb.api.service";
+import {
+  ResolvedMedia,
+  resolveSuggestedMediaList,
+} from "../../utilities/resolveSuggestedMedia";
 import { tmdbAPI } from "../../service/api/api";
 import EventMC from "../../components/cards/EventMC";
 import { collectionsAPI } from "../../service/api/smb/collections.api.service";
@@ -89,24 +92,6 @@ const SUGGESTIONS = [
   "I want something like Breaking Bad",
 ];
 
-type ResolvedMedia = {
-  id: number | string;
-  mediaType: "movie" | "tv";
-  title: string;
-  posterPath: string;
-  reason?: string;
-};
-
-type TMDBSearchResult = {
-  id: number | string;
-  media_type?: string;
-  title?: string;
-  name?: string;
-  release_date?: string;
-  first_air_date?: string;
-  poster_path?: string;
-};
-
 type UIChatMessage = ChatMessage & {
   id: string;
   relatedMedia?: ResolvedMedia[];
@@ -117,9 +102,6 @@ type UIChatMessage = ChatMessage & {
 const makeMessageId = () =>
   `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 
-const normalizeTitle = (value: string) =>
-  value.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
-
 const extractBoldTitles = (content: string): string[] =>
   Array.from(
     new Set(
@@ -128,53 +110,6 @@ const extractBoldTitles = (content: string): string[] =>
         .filter(Boolean),
     ),
   ).slice(0, 6);
-
-const pickBestMediaMatch = (
-  title: string,
-  results: TMDBSearchResult[] = [],
-  preferredMediaType?: "movie" | "tv" | "unknown",
-  preferredYear?: number | null,
-) => {
-  const candidates = results.filter(
-    (result) =>
-      result &&
-      (result.media_type === "movie" ||
-        result.media_type === "tv" ||
-        preferredMediaType === "movie" ||
-        preferredMediaType === "tv"),
-  );
-  if (!candidates.length) return null;
-
-  const mediaFiltered =
-    preferredMediaType && preferredMediaType !== "unknown"
-      ? candidates.filter((result) => {
-          const inferredType =
-            result.media_type || ("name" in result ? "tv" : "movie");
-          return inferredType === preferredMediaType;
-        })
-      : candidates;
-  const pool = mediaFiltered.length ? mediaFiltered : candidates;
-  const normalized = normalizeTitle(title);
-  const exactMatch = pool.find(
-    (result) => normalizeTitle(result.title || result.name || "") === normalized,
-  );
-  if (exactMatch) return exactMatch;
-
-  if (preferredYear) {
-    const yearMatch = pool.find((result) => {
-      const resultYear = Number(
-        String(result.release_date || result.first_air_date || "").slice(0, 4),
-      );
-      return resultYear === preferredYear;
-    });
-    if (yearMatch) return yearMatch;
-  }
-
-  const containsMatch = pool.find((result) =>
-    normalizeTitle(result.title || result.name || "").includes(normalized),
-  );
-  return containsMatch || pool[0];
-};
 
 const formatSessionDate = (timestamp: number) => {
   if (!timestamp) return "";
@@ -359,42 +294,7 @@ function AIAssistant() {
       }
 
       try {
-        const resolvedMedia = (
-          await Promise.all(
-            recommendationInputs.map(async (recommendation) => {
-              const query = encodeURIComponent(recommendation.title);
-              let response: { results?: TMDBSearchResult[] } | null = null;
-
-              if (recommendation.mediaType === "movie") {
-                response = await tmdb.searchMovie(query, 1);
-              } else if (recommendation.mediaType === "tv") {
-                response = await tmdb.searchTv(query, 1);
-              } else {
-                response = await tmdb.searchMulti(query, 1);
-              }
-
-              const rawResults = Array.isArray(response?.results)
-                ? response.results
-                : [];
-              const bestMatch = pickBestMediaMatch(
-                recommendation.title,
-                rawResults,
-                recommendation.mediaType,
-                recommendation.year,
-              );
-              if (!bestMatch) return null;
-
-              return {
-                id: bestMatch.id,
-                mediaType: (bestMatch.media_type ||
-                  ("name" in bestMatch ? "tv" : "movie")) as "movie" | "tv",
-                title: bestMatch.title || bestMatch.name || recommendation.title,
-                posterPath: bestMatch.poster_path,
-                reason: recommendation.reason,
-              } as ResolvedMedia;
-            }),
-          )
-        ).filter(Boolean) as ResolvedMedia[];
+        const resolvedMedia = await resolveSuggestedMediaList(recommendationInputs);
 
         setMessages((prev) =>
           prev.map((message) =>

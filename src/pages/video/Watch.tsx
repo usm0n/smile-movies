@@ -182,6 +182,30 @@ function Watch() {
   const activeEpisodeData = tvSeasonsDetailsArr?.episodes?.find(
     (episode) => episode?.episode_number === Number(episodeId),
   );
+  /**
+   * Everything in this season before the episode being played, for the info
+   * panel's catch-up recap. Only earlier episodes are collected, so the recap
+   * cannot spoil what is about to start.
+   */
+  const priorEpisodes = useMemo(
+    () =>
+      movieType === "tv"
+        ? (tvSeasonsDetailsArr?.episodes || [])
+            .filter(
+              (episode) =>
+                Number(episode?.episode_number) > 0 &&
+                Number(episode?.episode_number) < Number(episodeId),
+            )
+            .sort((a, b) => Number(a?.episode_number) - Number(b?.episode_number))
+            .map((episode) => ({
+              seasonNumber: Number(seasonId) || 0,
+              episodeNumber: Number(episode?.episode_number) || 0,
+              name: String(episode?.name || ""),
+              overview: String(episode?.overview || ""),
+            }))
+        : [],
+    [episodeId, movieType, seasonId, tvSeasonsDetailsArr?.episodes],
+  );
   const routeProgressStorageKey =
     movieId && movieType
       ? `${LOCAL_ROUTE_PROGRESS_PREFIX}${movieType}:${movieId}:${seasonId || 0}:${episodeId || 0}`
@@ -1615,6 +1639,9 @@ function Watch() {
                     .filter(Boolean) as string[]}
                   imdb={imdbInfo}
                   focusParentalGuide={shouldFocusParentalGuide}
+                  seasonNumber={movieType === "tv" ? Number(seasonId) : undefined}
+                  episodeNumber={movieType === "tv" ? Number(episodeId) : undefined}
+                  priorEpisodes={priorEpisodes}
                 />
               }
             />

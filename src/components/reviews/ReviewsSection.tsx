@@ -17,6 +17,7 @@ import { useUsers } from "../../context/Users";
 import { reviewsAPI } from "../../service/api/smb/reviews.api.service";
 import { ReviewReactionType, ReviewRecord } from "../../types/reviews";
 import { User } from "../../user";
+import ReviewSummaryCard from "./ReviewSummaryCard";
 
 const reactionLabels: Array<{ key: ReviewReactionType; label: string }> = [
   { key: "helpful", label: "Helpful" },
@@ -231,6 +232,14 @@ function ReviewsSection({
       <Typography level="body-sm" textColor="neutral.400">
         Reactions and reviews are live first. Comments and threaded discussion come later after moderation is stronger.
       </Typography>
+
+      {!loading && reviews.length >= 3 ? (
+        <ReviewSummaryCard
+          mediaType={mediaType}
+          mediaId={mediaId}
+          reviewCount={reviews.length}
+        />
+      ) : null}
 
       {currentUser ? (
         !currentUser.handle ? (
