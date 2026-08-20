@@ -1,332 +1,615 @@
-import { Box, Skeleton, Tooltip, Typography, Button, Chip, LinearProgress } from "@mui/joy";
-import { useEffect, useState } from "react";
+import { Box, LinearProgress, Skeleton, Typography } from "@mui/joy";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { tvDetails } from "../../tmdb-res";
 import { useTMDB } from "../../context/TMDB";
-import { ArrowBack as ArrowBackIcon, Star as StarIcon } from "../../components/ui/icons";
+import { useUsers } from "../../context/Users";
+import { User } from "../../user";
+import Container from "../../utilities/Container";
+import Button from "../../components/ui/Button";
+import SegmentedControl from "../../components/ui/SegmentedControl";
+import { toast } from "../../components/ui/toast";
 import {
-  resolveImdbId,
-  fetchAllSeasonsBatched,
   ImdbEpisode,
+  fetchAllSeasonsBatched,
+  fetchImdbTitle,
+  resolveImdbId,
 } from "../../service/api/imdb/imdb.api.service";
+import RatingsHero from "../../components/tv/ratings/RatingsHero";
+import RatingsGrid from "../../components/tv/ratings/RatingsGrid";
+import RatingsChart from "../../components/tv/ratings/RatingsChart";
+import RatingsStats from "../../components/tv/ratings/RatingsStats";
+import EpisodeDialog from "../../components/tv/ratings/EpisodeDialog";
+import {
+  CellSize,
+  EpisodePoint,
+  LEGEND,
+  Progress,
+  ProgressMode,
+  SeasonData,
+  TIER_COLORS,
+  buildStats,
+  progressState,
+} from "../../components/tv/ratings/ratingsShared";
+import {
+  canShareImage,
+  downloadBlob,
+  renderRatingsImage,
+  slugify,
+} from "../../components/tv/ratings/ratingsImage";
 
-// ─── Colour system ────────────────────────────────────────────────────────────
-type Tier = "absolute" | "awesome" | "great" | "good" | "regular" | "bad" | "garbage" | "none";
+type View = "grid" | "trend";
 
-function getTier(r: number): Tier {
-  if (r <= 0) return "none";
-  if (r >= 9.5) return "absolute";
-  if (r >= 9.0) return "awesome";
-  if (r >= 8.0) return "great";
-  if (r >= 7.0) return "good";
-  if (r >= 6.0) return "regular";
-  if (r >= 5.0) return "bad";
-  return "garbage";
-}
-
-const TIER_COLORS: Record<Tier, { bg: string; text: string; border: string }> = {
-  absolute: { bg: "rgb(29, 161, 242)",  text: "#a8d8ff", border: "#2196f3" },
-  awesome:  { bg: "rgb(24, 106, 59)",   text: "#6ee6a8", border: "#21d07a" },
-  great:    { bg: "rgb(40, 180, 99)",   text: "#8ce68c", border: "#4caf50" },
-  good:     { bg: "rgb(244, 208, 63)",  text: "#f5e25a", border: "#d2d531" },
-  regular:  { bg: "rgb(243, 156, 18)",  text: "#ffb566", border: "#e67e22" },
-  bad:      { bg: "rgb(231, 76, 60)",   text: "#ff8080", border: "#e74c3c" },
-  garbage:  { bg: "rgb(99, 57, 116)",   text: "#d0a0f0", border: "#9b59b6" },
-  none:     { bg: "rgba(255,255,255,0.06)", text: "#555577", border: "transparent" },
+/** Can this browser put a PNG in the native share sheet? Probe once. */
+const probeFileShare = () => {
+  try {
+    const file = new File([new Blob()], "probe.png", { type: "image/png" });
+    return canShareImage(file);
+  } catch {
+    return false;
+  }
 };
 
-const LEGEND: { label: string; tier: Tier; range: string }[] = [
-  { label: "Absolute Cinema", tier: "absolute", range: "≥9.5" },
-  { label: "Awesome",         tier: "awesome",  range: "9.0–9.4" },
-  { label: "Great",           tier: "great",    range: "8.0–8.9" },
-  { label: "Good",            tier: "good",     range: "7.0–7.9" },
-  { label: "Regular",         tier: "regular",  range: "6.0–6.9" },
-  { label: "Bad",             tier: "bad",      range: "5.0–5.9" },
-  { label: "Garbage",         tier: "garbage",  range: "<5.0" },
-];
-
-// ─── Types ────────────────────────────────────────────────────────────────────
-interface SeasonData {
-  seasonNumber: number;
-  episodes: Map<number, ImdbEpisode>;
-  average: number;
-}
-
-// ─── Component ────────────────────────────────────────────────────────────────
 function TVRatings() {
   const { tvId } = useParams();
   const navigate = useNavigate();
   const { tvSeries, tvSeriesDetailsData } = useTMDB();
+  const { myselfData, upsertRecentlyWatched, upsertRecentlyWatchedData } = useUsers();
 
   const [seasons, setSeasons] = useState<SeasonData[]>([]);
   const [loading, setLoading] = useState(true);
-  const [progress, setProgress] = useState({ loaded: 0, total: 0 });
+  const [progressCount, setProgressCount] = useState({ loaded: 0, total: 0 });
   const [error, setError] = useState<string | null>(null);
-  const [hoveredCell, setHoveredCell] = useState<{ s: number; e: number } | null>(null);
+  const [imdbRating, setImdbRating] = useState<number | null>(null);
 
-  const tvData = tvSeriesDetailsData?.data as tvDetails;
+  const [view, setView] = useState<View>("grid");
+  const [cellSize, setCellSize] = useState<CellSize>("normal");
+  const [progressMode, setProgressMode] = useState<ProgressMode>("dim");
+  const [focusedSeason, setFocusedSeason] = useState<number | null>(null);
+  const [selected, setSelected] = useState<EpisodePoint | null>(null);
+  const [imageBusy, setImageBusy] = useState(false);
+
+  const tvData = tvSeriesDetailsData?.data as tvDetails | undefined;
+  const canShareFiles = useMemo(probeFileShare, []);
 
   useEffect(() => {
     if (tvId) tvSeries(tvId);
   }, [tvId]);
 
-  useEffect(() => {
+  const loadRatings = useCallback(async () => {
     if (!tvData?.seasons || !tvId) return;
 
-    const fetchAll = async () => {
-      setLoading(true);
-      setError(null);
-      setSeasons([]);
+    setLoading(true);
+    setError(null);
+    setSeasons([]);
 
-      try {
-        const imdbId = await resolveImdbId(tvId, "tv");
-        if (!imdbId) {
-          setError("Could not find IMDb ID for this show.");
-          return;
-        }
-
-        const seasonNums = tvData.seasons
-          .filter((s) => s.season_number > 0)
-          .map((s) => s.season_number);
-
-        setProgress({ loaded: 0, total: seasonNums.length });
-
-        const seasonMap = await fetchAllSeasonsBatched(
-          imdbId,
-          seasonNums,
-          (loaded, total) => setProgress({ loaded, total })
-        );
-
-        const parsed: SeasonData[] = seasonNums
-          .map((n) => {
-            const eps = seasonMap.get(n) ?? [];
-            const epMap = new Map<number, ImdbEpisode>();
-            eps.forEach((e) => epMap.set(e.episodeNumber, e));
-
-            const rated = eps.filter((e) => (e.rating?.aggregateRating ?? 0) > 0);
-            const avg =
-              rated.length > 0
-                ? Math.round(
-                    (rated.reduce((a, e) => a + (e.rating?.aggregateRating ?? 0), 0) /
-                      rated.length) * 10
-                  ) / 10
-                : 0;
-
-            return { seasonNumber: n, episodes: epMap, average: avg };
-          })
-          .filter((s) => s.episodes.size > 0);
-
-        setSeasons(parsed);
-      } catch {
-        setError("Failed to load IMDb ratings. Please try again.");
-      } finally {
-        setLoading(false);
+    try {
+      const imdbId = await resolveImdbId(tvId, "tv");
+      if (!imdbId) {
+        setError("Could not find IMDb ID for this show.");
+        return;
       }
-    };
 
-    fetchAll();
+      // The series' own rating is one cheap call and gives the grid something
+      // to be compared against in the header.
+      void fetchImdbTitle(imdbId).then((title) =>
+        setImdbRating(title?.rating?.aggregateRating ?? null),
+      );
+
+      const seasonNumbers = tvData.seasons
+        .filter((season) => season.season_number > 0)
+        .map((season) => season.season_number);
+
+      setProgressCount({ loaded: 0, total: seasonNumbers.length });
+
+      const seasonMap = await fetchAllSeasonsBatched(
+        imdbId,
+        seasonNumbers,
+        (loaded, total) => setProgressCount({ loaded, total }),
+      );
+
+      const parsed: SeasonData[] = seasonNumbers
+        .map((number) => {
+          const episodes = seasonMap.get(number) ?? [];
+          const byNumber = new Map<number, ImdbEpisode>();
+          episodes.forEach((episode) => byNumber.set(episode.episodeNumber, episode));
+
+          const rated = episodes.filter(
+            (episode) => (episode.rating?.aggregateRating ?? 0) > 0,
+          );
+          const average =
+            rated.length > 0
+              ? Math.round(
+                  (rated.reduce(
+                    (sum, episode) => sum + (episode.rating?.aggregateRating ?? 0),
+                    0,
+                  ) /
+                    rated.length) *
+                    10,
+                ) / 10
+              : 0;
+
+          return {
+            seasonNumber: number,
+            episodes: byNumber,
+            order: [...byNumber.keys()].sort((a, b) => a - b),
+            average,
+            ratedCount: rated.length,
+          };
+        })
+        .filter((season) => season.episodes.size > 0);
+
+      setSeasons(parsed);
+    } catch {
+      setError("Failed to load IMDb ratings. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   }, [tvData, tvId]);
 
-  const maxEpisodes = seasons.reduce((m, s) => Math.max(m, s.episodes.size), 0);
-  const progressPct = progress.total > 0 ? (progress.loaded / progress.total) * 100 : 0;
+  useEffect(() => {
+    void loadRatings();
+  }, [loadRatings]);
+
+  useEffect(() => {
+    if (!tvData?.name) return;
+    const previous = document.title;
+    document.title = `${tvData.name} · Episode ratings`;
+    return () => {
+      document.title = previous;
+    };
+  }, [tvData?.name]);
+
+  // ── The viewer's place in the run ──────────────────────────────────────────
+  const user = myselfData?.data as User | undefined;
+  const recentItem = user?.recentlyWatched?.find(
+    (item) => item.id === String(tvId) && item.type === "tv",
+  );
+  const progress: Progress = useMemo(
+    () =>
+      recentItem?.currentSeason && recentItem?.currentEpisode
+        ? { season: recentItem.currentSeason, episode: recentItem.currentEpisode }
+        : null,
+    [recentItem?.currentSeason, recentItem?.currentEpisode],
+  );
+  const storedNext: Progress = useMemo(
+    () =>
+      recentItem?.nextSeason && recentItem?.nextEpisode
+        ? { season: recentItem.nextSeason, episode: recentItem.nextEpisode }
+        : null,
+    [recentItem?.nextSeason, recentItem?.nextEpisode],
+  );
+
+  /** The episode that follows `season`/`episode` in air order, if there is one. */
+  const followingEpisode = useCallback(
+    (season: number, episode: number): Progress => {
+      const seasonIndex = seasons.findIndex((entry) => entry.seasonNumber === season);
+      if (seasonIndex < 0) return null;
+
+      const order = seasons[seasonIndex].order;
+      const position = order.indexOf(episode);
+      if (position >= 0 && position < order.length - 1) {
+        return { season, episode: order[position + 1] };
+      }
+
+      const nextSeason = seasons[seasonIndex + 1];
+      if (!nextSeason?.order.length) return null;
+      return { season: nextSeason.seasonNumber, episode: nextSeason.order[0] };
+    },
+    [seasons],
+  );
+
+  const nextUp: Progress =
+    storedNext ||
+    (progress ? followingEpisode(progress.season, progress.episode) : null);
+
+  const currentEpisodeTitle = useMemo(() => {
+    const target = progress || nextUp;
+    if (!target) return undefined;
+    const season = seasons.find((entry) => entry.seasonNumber === target.season);
+    return season?.episodes.get(target.episode)?.title;
+  }, [progress, nextUp, seasons]);
+
+  // Nothing to dim or hide until we know where they are — and once the
+  // account loads and we do, "dim ahead" is the useful default.
+  const hasProgress = Boolean(progress);
+  useEffect(() => {
+    setProgressMode(hasProgress ? "dim" : "off");
+  }, [hasProgress]);
+
+  const stats = useMemo(() => buildStats(seasons), [seasons]);
+
+  // ── Share and export ───────────────────────────────────────────────────────
+  const shareUrl = typeof window !== "undefined" ? window.location.href : "";
+
+  const share = async () => {
+    const text = tvData?.name
+      ? `${tvData.name} — every episode rated${
+          stats.average ? ` (avg ${stats.average.toFixed(1)})` : ""
+        }`
+      : "Episode ratings";
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: tvData?.name, text, url: shareUrl });
+        return;
+      }
+      await navigator.clipboard.writeText(shareUrl);
+      toast.success("Link copied");
+    } catch {
+      // A dismissed share sheet lands here too — nothing worth reporting.
+    }
+  };
+
+  const buildImage = async () => {
+    const firstYear = tvData?.first_air_date?.slice(0, 4);
+    const lastYear = tvData?.last_air_date?.slice(0, 4);
+    const years =
+      firstYear && lastYear && firstYear !== lastYear
+        ? `${firstYear}–${tvData?.in_production ? "present" : lastYear}`
+        : firstYear || "";
+
+    return renderRatingsImage({
+      title: tvData?.name || "Series",
+      meta: [
+        years,
+        `${seasons.length} season${seasons.length === 1 ? "" : "s"}`,
+        `${stats.totalCount} episodes`,
+        tvData?.genres?.slice(0, 2).map((genre) => genre.name).join(" · "),
+      ]
+        .filter(Boolean)
+        .join("  ·  "),
+      posterUrl: tvData?.poster_path
+        ? `https://image.tmdb.org/t/p/w342${tvData.poster_path}`
+        : null,
+      seasons,
+      stats,
+      imdbRating,
+      progress,
+      nextUp,
+      progressMode,
+      footer: typeof window !== "undefined" ? window.location.host : "smile movies",
+    });
+  };
+
+  const fileName = `${slugify(tvData?.name || "series")}-episode-ratings.png`;
+
+  const saveImage = async () => {
+    setImageBusy(true);
+    try {
+      downloadBlob(await buildImage(), fileName);
+      toast.success("Saved as image");
+    } catch {
+      toast.error("Couldn't render the image");
+    } finally {
+      setImageBusy(false);
+    }
+  };
+
+  const shareImage = async () => {
+    setImageBusy(true);
+    try {
+      const blob = await buildImage();
+      const file = new File([blob], fileName, { type: "image/png" });
+      if (canShareImage(file)) {
+        await navigator.share({
+          files: [file],
+          title: tvData?.name,
+          text: `${tvData?.name} — every episode rated`,
+        });
+        return;
+      }
+      downloadBlob(blob, fileName);
+      toast.success("Saved as image");
+    } catch {
+      // Dismissing the sheet throws AbortError; don't shout about it.
+    } finally {
+      setImageBusy(false);
+    }
+  };
+
+  const markCurrent = async (point: EpisodePoint) => {
+    const following = followingEpisode(point.season, point.episode);
+    await upsertRecentlyWatched(
+      "tv",
+      String(tvId),
+      tvData?.poster_path || "",
+      tvData?.name || "",
+      0,
+      0,
+      point.season,
+      point.episode,
+      following?.season ?? 0,
+      following?.episode ?? 0,
+    );
+    setSelected(null);
+    toast.success(`Marked S${point.season}:E${point.episode} as where you are`);
+  };
+
+  const progressPct =
+    progressCount.total > 0 ? (progressCount.loaded / progressCount.total) * 100 : 0;
 
   return (
-    <Box sx={{ minHeight: "100vh", paddingTop: "80px", pb: 8, width: "95%", maxWidth: 1100, margin: "0 auto" }}>
+    <Box sx={{ pt: "calc(var(--sm-nav-height) + 24px)", pb: 10 }}>
+      <Container gap={3}>
+        <RatingsHero
+          tvId={tvId!}
+          tv={tvData}
+          imdbRating={imdbRating}
+          stats={stats}
+          seasonCount={seasons.length}
+          progress={progress}
+          nextUp={nextUp}
+          currentEpisodeTitle={currentEpisodeTitle}
+          onShare={share}
+          onSaveImage={saveImage}
+          onShareImage={shareImage}
+          imageBusy={imageBusy}
+          canShareFiles={canShareFiles}
+        />
 
-      {/* ── Header ── */}
-      <Box sx={{ display: "flex", alignItems: "flex-start", gap: 2, mb: 3, flexWrap: "wrap" }}>
-        <Button variant="plain" color="neutral" startDecorator={<ArrowBackIcon />} onClick={() => navigate(`/tv/${tvId}`)}>
-          Back
-        </Button>
-        <Box>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <StarIcon sx={{ color: "#F5C518" }} />
-            <Typography level="h2" fontWeight={700}>IMDb Episode Ratings</Typography>
-          </Box>
-          {tvData && (
-            <Typography level="body-md" textColor="neutral.400">
-              {tvData.name} · {seasons.length > 0 ? `${seasons.length} seasons` : loading ? "Loading…" : "0 seasons"}
-            </Typography>
-          )}
-        </Box>
-      </Box>
-
-      {/* ── Legend ── */}
-      <Box sx={{ display: "flex", gap: 1.5, mb: 3, flexWrap: "wrap", alignItems: "center", p: 1.5, borderRadius: "8px", backgroundColor: "background.surface", border: "1px solid", borderColor: "neutral.outlinedBorder" }}>
-        {LEGEND.map((item) => {
-          const c = TIER_COLORS[item.tier];
-          return (
-            <Box key={item.tier} sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-              <Box sx={{ width: 11, height: 11, borderRadius: "3px", background: c.bg, flexShrink: 0 }} />
-              <Typography level="body-xs" sx={{ color: c.text, whiteSpace: "nowrap" }}>{item.label}</Typography>
-              <Typography level="body-xs" textColor="neutral.500">{item.range}</Typography>
-            </Box>
-          );
-        })}
-      </Box>
-
-      {/* ── Error ── */}
-      {error && (
-        <Typography level="body-md" textColor="danger.400" sx={{ mb: 3 }}>{error}</Typography>
-      )}
-
-      {/* ── Loading with progress ── */}
-      {loading && (
-        <Box sx={{ mb: 3 }}>
-          {progress.total > 0 && (
-            <>
-              <Box sx={{ display: "flex", justifyContent: "space-between", mb: 0.5 }}>
-                <Typography level="body-xs" textColor="neutral.400">
-                  Loading seasons… {progress.loaded}/{progress.total}
-                </Typography>
-                <Typography level="body-xs" textColor="neutral.400">
-                  {Math.round(progressPct)}%
-                </Typography>
-              </Box>
-              <LinearProgress
-                determinate
-                value={progressPct}
-                sx={{ mb: 2, "--LinearProgress-thickness": "3px", color: "#F5C518" }}
+        {/* ── Controls ── */}
+        {!loading && !error && seasons.length > 0 && (
+          <Box
+            sx={{
+              display: "flex",
+              gap: 1.5,
+              flexWrap: "wrap",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
+            <Box sx={{ display: "flex", gap: 1.5, flexWrap: "wrap", alignItems: "center" }}>
+              <SegmentedControl
+                ariaLabel="View"
+                size="sm"
+                value={view}
+                onChange={(value) => setView(value as View)}
+                segments={[
+                  { value: "grid", label: "Grid" },
+                  { value: "trend", label: "Trend" },
+                ]}
               />
-            </>
-          )}
-          <Box sx={{ overflowX: "auto" }}>
-            <Box sx={{ display: "inline-grid", gap: 1 }}>
-              {Array(8).fill(null).map((_, i) => (
-                <Box key={i} sx={{ display: "flex", gap: 1 }}>
-                  <Skeleton variant="rectangular" width={36} height={33} sx={{ borderRadius: "5px", flexShrink: 0 }} />
-                  {Array(5).fill(null).map((_, j) => (
-                    <Skeleton key={j} variant="rectangular" width={50} height={33} sx={{ borderRadius: "5px" }} />
-                  ))}
-                </Box>
-              ))}
+              {view === "grid" && (
+                <SegmentedControl
+                  ariaLabel="Cell size"
+                  size="sm"
+                  value={cellSize}
+                  onChange={(value) => setCellSize(value as CellSize)}
+                  segments={[
+                    { value: "compact", label: "S" },
+                    { value: "normal", label: "M" },
+                    { value: "large", label: "L" },
+                  ]}
+                />
+              )}
+              {progress && (
+                <SegmentedControl
+                  ariaLabel="My progress"
+                  size="sm"
+                  value={progressMode}
+                  onChange={(value) => setProgressMode(value as ProgressMode)}
+                  segments={[
+                    { value: "off", label: "Show all" },
+                    { value: "dim", label: "Dim ahead" },
+                    { value: "spoiler", label: "Spoiler-free" },
+                  ]}
+                />
+              )}
             </Box>
+
+            {focusedSeason !== null && (
+              <Button
+                size="sm"
+                variant="plain"
+                color="neutral"
+                onClick={() => setFocusedSeason(null)}
+              >
+                Clear season {focusedSeason} focus
+              </Button>
+            )}
           </Box>
-        </Box>
-      )}
+        )}
 
-      {/* ── Grid ── */}
-      {!loading && !error && seasons.length > 0 && (
-        <Box sx={{ overflowX: "auto", pb: 2 }}>
-          <Box sx={{ display: "inline-block", minWidth: "100%" }}>
-
-            {/* Season header row */}
-            <Box sx={{ display: "flex", gap: "8px", mb: "4px", pl: "48px" }}>
-              {seasons.map((s) => (
-                <Box key={s.seasonNumber} sx={{ width: 50, flexShrink: 0, textAlign: "center" }}>
-                  <Typography level="body-xs" sx={{ fontWeight: 700, color: "rgba(255,255,255,0.7)", fontSize: 11 }}>
-                    S{s.seasonNumber}
+        {/* ── Legend ── */}
+        {!loading && !error && seasons.length > 0 && (
+          <Box
+            sx={{
+              display: "flex",
+              gap: 1.5,
+              flexWrap: "wrap",
+              alignItems: "center",
+              p: 1.5,
+              borderRadius: "8px",
+              backgroundColor: "background.surface",
+              border: "1px solid",
+              borderColor: "neutral.outlinedBorder",
+            }}
+          >
+            {LEGEND.map((item) => {
+              const color = TIER_COLORS[item.tier];
+              return (
+                <Box
+                  key={item.tier}
+                  sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
+                >
+                  <Box
+                    sx={{
+                      width: 11,
+                      height: 11,
+                      borderRadius: "3px",
+                      background: color.bg,
+                      flexShrink: 0,
+                    }}
+                  />
+                  <Typography
+                    level="body-xs"
+                    sx={{ color: color.text, whiteSpace: "nowrap" }}
+                  >
+                    {item.label}
+                  </Typography>
+                  <Typography level="body-xs" textColor="neutral.500">
+                    {item.range}
                   </Typography>
                 </Box>
-              ))}
-            </Box>
-
-            {/* Episode rows */}
-            {Array.from({ length: maxEpisodes }, (_, i) => i + 1).map((epNum) => (
-              <Box key={epNum} sx={{ display: "flex", gap: "8px", mb: "4px", alignItems: "center" }}>
-                <Box sx={{ width: 40, flexShrink: 0, textAlign: "right", pr: "4px" }}>
-                  <Typography level="body-xs" sx={{ fontSize: 10, color: "rgba(255,255,255,0.4)", fontWeight: 600 }}>
-                    E{epNum}
-                  </Typography>
-                </Box>
-
-                {seasons.map((s) => {
-                  const ep = s.episodes.get(epNum);
-                  const rating = ep?.rating?.aggregateRating ?? 0;
-                  const tier = getTier(rating);
-                  const c = TIER_COLORS[tier];
-                  const isHovered = hoveredCell?.s === s.seasonNumber && hoveredCell?.e === epNum;
-
-                  return (
-                    <Tooltip
-                      key={s.seasonNumber}
-                      placement="top"
-                      disableInteractive
-                      title={
-                        ep ? (
-                          <Box sx={{ maxWidth: 220 }}>
-                            <Typography level="body-sm" fontWeight={700}>{ep.title || `Episode ${epNum}`}</Typography>
-                            <Typography level="body-xs" textColor="neutral.300">
-                              S{s.seasonNumber}:E{epNum}{rating > 0 ? ` · ⭐ ${rating.toFixed(1)}` : " · No rating"}
-                            </Typography>
-                            {ep.rating?.voteCount ? (
-                              <Typography level="body-xs" textColor="neutral.400">
-                                {ep.rating.voteCount.toLocaleString()} votes
-                              </Typography>
-                            ) : null}
-                            {ep.plot && (
-                              <Typography level="body-xs" textColor="neutral.400" sx={{ mt: 0.5 }}>
-                                {ep.plot.slice(0, 90)}{ep.plot.length > 90 ? "…" : ""}
-                              </Typography>
-                            )}
-                          </Box>
-                        ) : null
-                      }
-                    >
-                      <Box
-                        onClick={() => ep ? navigate(`/tv/${tvId}/${s.seasonNumber}/${epNum}/watch`) : undefined}
-                        onMouseEnter={() => ep && setHoveredCell({ s: s.seasonNumber, e: epNum })}
-                        onMouseLeave={() => setHoveredCell(null)}
-                        sx={{
-                          width: 50, height: 33, flexShrink: 0, borderRadius: "5px",
-                          background: ep ? c.bg : "rgba(255,255,255,0.03)",
-                          display: "flex", alignItems: "center", justifyContent: "center",
-                          cursor: ep ? "pointer" : "default",
-                          transition: "all 0.12s",
-                          transform: isHovered ? "scale(1.08)" : "scale(1)",
-                          boxShadow: isHovered ? `0 0 10px ${c.border}66` : "none",
-                          zIndex: isHovered ? 2 : 1,
-                          position: "relative",
-                        }}
-                      >
-                        {ep && rating > 0 ? (
-                          <Typography sx={{ fontSize: 13, fontWeight: 600, color: rating >= 9.0 ? "#fff" : "#000", lineHeight: 1, letterSpacing: "-0.3px" }}>
-                            {rating.toFixed(1)}
-                          </Typography>
-                        ) : ep ? (
-                          <Typography sx={{ fontSize: 13, color: "#888" }}>?</Typography>
-                        ) : null}
-                      </Box>
-                    </Tooltip>
-                  );
-                })}
+              );
+            })}
+            {progress && (
+              <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, ml: "auto" }}>
+                <Box
+                  sx={{
+                    width: 11,
+                    height: 11,
+                    borderRadius: "3px",
+                    border: "2px solid #fff",
+                    flexShrink: 0,
+                  }}
+                />
+                <Typography level="body-xs" textColor="neutral.300">
+                  You're here
+                </Typography>
               </Box>
-            ))}
+            )}
+          </Box>
+        )}
 
-            {/* Season averages row */}
-            <Box sx={{ display: "flex", gap: "8px", mt: "8px", pl: "48px", alignItems: "center" }}>
-              {seasons.map((s) => {
-                const tier = getTier(s.average);
-                const c = TIER_COLORS[tier];
-                return (
-                  <Box key={s.seasonNumber} sx={{ width: 50, flexShrink: 0, textAlign: "center" }}>
-                    <Chip
-                      size="sm"
-                      sx={{
-                        fontSize: 11, fontWeight: 800,
-                        color: s.average >= 9.0 ? "#fff" : "#000",
-                        background: c.bg,
-                        border: `1px solid ${c.border}`,
-                        minWidth: "100%", borderRadius: "6px",
-                        "--Chip-paddingInline": "4px",
-                      }}
-                    >
-                      {s.average > 0 ? s.average.toFixed(1) : "—"}
-                    </Chip>
-                  </Box>
-                );
-              })}
-            </Box>
-            <Box sx={{ pl: "48px", mt: "2px" }}>
-              <Typography level="body-xs" textColor="neutral.500" sx={{ fontSize: 10 }}>AVG.</Typography>
+        {/* ── Error ── */}
+        {error && !loading && (
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 2,
+              flexWrap: "wrap",
+              p: 2,
+              borderRadius: "10px",
+              border: "1px solid",
+              borderColor: "danger.outlinedBorder",
+              backgroundColor: "rgba(229,72,77,0.08)",
+            }}
+          >
+            <Typography level="body-sm" textColor="danger.300">
+              {error}
+            </Typography>
+            <Button
+              size="sm"
+              variant="outlined"
+              color="neutral"
+              onClick={() => void loadRatings()}
+            >
+              Try again
+            </Button>
+          </Box>
+        )}
+
+        {/* ── Loading ── */}
+        {loading && (
+          <Box>
+            {progressCount.total > 0 && (
+              <>
+                <Box sx={{ display: "flex", justifyContent: "space-between", mb: 0.5 }}>
+                  <Typography level="body-xs" textColor="neutral.400">
+                    Loading seasons… {progressCount.loaded}/{progressCount.total}
+                  </Typography>
+                  <Typography level="body-xs" textColor="neutral.400">
+                    {Math.round(progressPct)}%
+                  </Typography>
+                </Box>
+                <LinearProgress
+                  determinate
+                  value={progressPct}
+                  sx={{ mb: 2, "--LinearProgress-thickness": "3px", color: "#F5C518" }}
+                />
+              </>
+            )}
+            <Box sx={{ overflowX: "auto" }}>
+              <Box sx={{ display: "inline-grid", gap: 1 }}>
+                {Array(8)
+                  .fill(null)
+                  .map((_, row) => (
+                    <Box key={row} sx={{ display: "flex", gap: 1 }}>
+                      <Skeleton
+                        variant="rectangular"
+                        width={36}
+                        height={33}
+                        sx={{ borderRadius: "5px", flexShrink: 0 }}
+                      />
+                      {Array(5)
+                        .fill(null)
+                        .map((__, column) => (
+                          <Skeleton
+                            key={column}
+                            variant="rectangular"
+                            width={50}
+                            height={33}
+                            sx={{ borderRadius: "5px" }}
+                          />
+                        ))}
+                    </Box>
+                  ))}
+              </Box>
             </Box>
           </Box>
-        </Box>
-      )}
+        )}
 
-      {!loading && !error && seasons.length === 0 && (
-        <Typography level="body-md" textColor="neutral.500">No episode ratings found for this show.</Typography>
-      )}
+        {/* ── The grid or the trend line ── */}
+        {!loading && !error && seasons.length > 0 && (
+          <>
+            {view === "grid" ? (
+              <RatingsGrid
+                seasons={seasons}
+                cellSize={cellSize}
+                progress={progress}
+                nextUp={nextUp}
+                progressMode={progressMode}
+                focusedSeason={focusedSeason}
+                onFocusSeason={setFocusedSeason}
+                onSelect={setSelected}
+              />
+            ) : (
+              <RatingsChart
+                seasons={seasons}
+                progress={progress}
+                nextUp={nextUp}
+                progressMode={progressMode}
+                focusedSeason={focusedSeason}
+                onSelect={setSelected}
+              />
+            )}
+
+            <RatingsStats stats={stats} onSelect={setSelected} />
+          </>
+        )}
+
+        {!loading && !error && seasons.length === 0 && (
+          <Box sx={{ py: 6, textAlign: "center" }}>
+            <Typography level="body-md" textColor="neutral.500">
+              No episode ratings found for this show.
+            </Typography>
+            <Button
+              variant="outlined"
+              color="neutral"
+              sx={{ mt: 2 }}
+              onClick={() => navigate(`/tv/${tvId}`)}
+            >
+              Back to the show
+            </Button>
+          </Box>
+        )}
+      </Container>
+
+      <EpisodeDialog
+        point={selected}
+        state={
+          selected
+            ? progressState(progress, nextUp, selected.season, selected.episode)
+            : "none"
+        }
+        tvId={tvId!}
+        onClose={() => setSelected(null)}
+        onMarkCurrent={user ? (point) => void markCurrent(point) : undefined}
+        markBusy={Boolean(upsertRecentlyWatchedData?.isLoading)}
+      />
     </Box>
   );
 }
