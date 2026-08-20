@@ -46,6 +46,8 @@ function PlaybackSurface({
   chrome,
   overlay,
   subtitleOffsetKey,
+  videoInset,
+  captionsLift,
 }: {
   playerRef: React.MutableRefObject<any>;
   stream: VixsrcPlaybackStream | null;
@@ -66,8 +68,66 @@ function PlaybackSurface({
   overlay?: ReactNode;
   /** localStorage key the subtitle delay is remembered under. */
   subtitleOffsetKey: string;
+  /**
+   * CSS inset for the picture inside the player box.
+   *
+   * Watch-party layouts shrink the video to make room for the cameras. Doing it
+   * here rather than by reparenting keeps the whole arrangement inside
+   * `<media-player>`, so it survives fullscreen.
+   */
+  videoInset?: string;
+  /** Pixels to raise the captions by, so a layout cannot cover them. */
+  captionsLift?: number;
 }) {
   const playbackReadyRef = useRef(false);
+
+  /**
+   * hls.js tuning for streams that arrive the long way round.
+   *
+   * Some providers — AnimeKai above all — cannot be fetched by the browser
+   * directly, so their segments are relayed through an edge worker. That relay
+   * adds latency and makes delivery bursty, and hls.js's defaults are built for
+   * a CDN answering from down the street: thirty seconds of buffer, an ABR
+   * estimate that starts optimistic, and few retries. The result is a stream
+   * that plays, drains its buffer on one slow segment, and stalls — the
+   * stuttering that made anime feel broken on desktop while the same player
+   * handled other providers fine.
+   *
+   * Everything here buys headroom: a deeper buffer to ride out a slow segment,
+   * a cautious opening bandwidth guess so the first fragments are small enough
+   * to arrive quickly, and enough retries that one failed segment is recovered
+   * from rather than fatal. The back buffer is capped in exchange, so the
+   * deeper forward buffer does not cost memory on a long film.
+   */
+  const applyHlsConfig = useCallback((provider: unknown) => {
+    if (!provider || (provider as { type?: string }).type !== "hls") return;
+
+    (provider as { config: Record<string, unknown> }).config = {
+      lowLatencyMode: false,
+      backBufferLength: 30,
+      maxBufferLength: 60,
+      maxMaxBufferLength: 180,
+      maxBufferSize: 120 * 1000 * 1000,
+      maxBufferHole: 0.5,
+      // A relayed segment can take a while; giving up after two tries turns a
+      // slow fetch into a playback error.
+      fragLoadingMaxRetry: 8,
+      fragLoadingRetryDelay: 500,
+      fragLoadingMaxRetryTimeout: 8000,
+      manifestLoadingMaxRetry: 4,
+      levelLoadingMaxRetry: 4,
+      nudgeMaxRetry: 8,
+      // Start conservative rather than picking 1080p off an unmeasured link and
+      // spending the first ten seconds rebuffering.
+      abrEwmaDefaultEstimate: 800_000,
+      startLevel: -1,
+    };
+  }, []);
+
+  const configureHls = useCallback(
+    (event: Event) => applyHlsConfig((event as CustomEvent<unknown>).detail),
+    [applyHlsConfig],
+  );
 
   const subtitleTracks = useMemo(() => {
     const tracks = Array.isArray(stream?.subtitleTracks) ? stream.subtitleTracks : [];
@@ -298,6 +358,11 @@ function PlaybackSurface({
     player.addEventListener("play", markProgress);
     player.addEventListener("error", handleErrorEvent);
     player.addEventListener("stream-error", handleErrorEvent);
+    player.addEventListener("provider-change", configureHls);
+    // The provider can already be in place by the time this effect runs — for
+    // an eagerly loading player it usually is — and that fires the event before
+    // anyone is listening.
+    applyHlsConfig((player as { provider?: unknown }).provider);
 
     return () => {
       window.clearInterval(stallTimeout);
@@ -317,8 +382,9 @@ function PlaybackSurface({
       player.removeEventListener("play", markProgress);
       player.removeEventListener("error", handleErrorEvent);
       player.removeEventListener("stream-error", handleErrorEvent);
+      player.removeEventListener("provider-change", configureHls);
     };
-  }, [playerRef, sourceUrl, reloadToken]);
+  }, [applyHlsConfig, configureHls, playerRef, sourceUrl, reloadToken]);
 
   if (!sourceUrl) {
     return null;
@@ -326,6 +392,13 @@ function PlaybackSurface({
 
   return (
     <Box
+      style={
+        {
+          "--sm-video-inset": videoInset || "0px",
+          // Subtitles belong on the picture, so they rise with its bottom edge.
+          "--sm-captions-lift": `${captionsLift || 0}px`,
+        } as React.CSSProperties
+      }
       sx={{
         position: "absolute",
         inset: 0,
@@ -355,15 +428,17 @@ function PlaybackSurface({
         },
         "& media-outlet video": {
           position: "absolute",
-          inset: 0,
-          width: "100%",
-          height: "100%",
+          inset: "var(--sm-video-inset, 0px)",
+          width: "auto",
+          height: "auto",
           objectFit: "contain",
+          transition: "inset 220ms ease",
         },
-        // Captions ride above the control bar while it is visible.
+        // Captions ride above the control bar while it is visible, and above
+        // the camera strip when a layout puts one there.
         "& media-captions": {
           transition: "transform 200ms ease",
-          transform: "translateY(-56px)",
+          transform: "translateY(calc(-56px - var(--sm-captions-lift, 0px)))",
         },
         "& media-player[data-user-idle]:not([data-paused]) media-captions": {
           transform: "translateY(0)",

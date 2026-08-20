@@ -10,6 +10,8 @@ import {
   PhoneOff,
   Send,
   Smile,
+  Layers,
+  Loader,
   Videocam,
   VideocamOff,
 } from "../ui/icons";
@@ -17,6 +19,12 @@ import { copyToClipboard } from "../../utilities/defaults";
 import { toast } from "../ui/toast";
 import { WatchPartySession } from "./useWatchPartySession";
 import { ParticipantAudio, ParticipantTile } from "./ParticipantMedia";
+import {
+  PARTY_LAYOUTS,
+  PartyLayout,
+  THEATER_STRIP_PX,
+  gridShape,
+} from "./partyLayout";
 
 const REACTIONS = ["😂", "😍", "😱", "🔥", "👏", "😴"];
 
@@ -52,13 +60,18 @@ const roundButtonStyles = {
  */
 function WatchPartyDock({
   session,
+  layout,
+  onLayoutChange,
   onExit,
 }: {
   session: WatchPartySession;
+  layout: PartyLayout;
+  onLayoutChange: (layout: PartyLayout) => void;
   onExit: () => void;
 }) {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isReactionsOpen, setIsReactionsOpen] = useState(false);
+  const [isLayoutOpen, setIsLayoutOpen] = useState(false);
   const [chatInput, setChatInput] = useState("");
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
@@ -117,6 +130,48 @@ function WatchPartyDock({
         ))}
       </Box>
 
+      {/* Who the room is waiting for, while it waits. */}
+      {session.waitingFor.length ? (
+        <Box
+          sx={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            zIndex: 8,
+            display: "flex",
+            alignItems: "center",
+            gap: 1,
+            px: 2,
+            py: 1.25,
+            borderRadius: "999px",
+            border: "1px solid #1f1f1f",
+            backgroundColor: "rgba(10,10,10,0.88)",
+            backdropFilter: "blur(10px)",
+            pointerEvents: "none",
+          }}
+        >
+          <Box
+            sx={{
+              width: 8,
+              height: 8,
+              borderRadius: "50%",
+              backgroundColor: "#f5a623",
+              animation: "sm-wait-pulse 1.1s ease-in-out infinite",
+              "@keyframes sm-wait-pulse": {
+                "0%, 100%": { opacity: 0.35 },
+                "50%": { opacity: 1 },
+              },
+            }}
+          />
+          <Typography level="body-sm" sx={{ color: "#ededed" }}>
+            {session.waitingFor.length === 1
+              ? `Waiting for ${session.waitingFor[0]}…`
+              : `Waiting for ${session.waitingFor.length} people…`}
+          </Typography>
+        </Box>
+      ) : null}
+
       {/* Playback cannot start on its own until this tab has been touched. */}
       {session.needsGesture ? (
         <Box
@@ -153,12 +208,84 @@ function WatchPartyDock({
         </Box>
       ) : null}
 
+      {/* Theatre: a row of equal tiles across the bottom of the player. */}
+      {layout === "theater" && inCall.length ? (
+        <Box
+          className="no-scrollbar"
+          sx={{
+            position: "absolute",
+            left: 0,
+            right: 0,
+            bottom: 0,
+            height: THEATER_STRIP_PX,
+            zIndex: 5,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 1,
+            px: 1.5,
+            overflowX: "auto",
+            backgroundColor: "#050505",
+            borderTop: "1px solid #1f1f1f",
+            pointerEvents: "auto",
+          }}
+        >
+          {inCall.map((person) => (
+            <ParticipantTile
+              key={person.pid}
+              person={person}
+              size={THEATER_STRIP_PX * 1.28}
+              speaking={session.someoneSpeaking === person.displayName}
+            />
+          ))}
+        </Box>
+      ) : null}
+
+      {/* Equal grid: the video holds the first cell, cameras fill the rest. */}
+      {layout === "grid" && inCall.length ? (
+        <Box
+          sx={{
+            position: "absolute",
+            inset: 0,
+            zIndex: 5,
+            display: "grid",
+            gridTemplateColumns: `repeat(${gridShape(inCall.length + 1).columns}, 1fr)`,
+            gridTemplateRows: `repeat(${gridShape(inCall.length + 1).rows}, 1fr)`,
+            gap: "2px",
+            pointerEvents: "none",
+          }}
+        >
+          {/* The picture itself occupies this cell. */}
+          <Box />
+          {inCall.map((person) => (
+            <Box
+              key={person.pid}
+              sx={{
+                position: "relative",
+                minWidth: 0,
+                minHeight: 0,
+                pointerEvents: "auto",
+              }}
+            >
+              <ParticipantTile
+                person={person}
+                fill
+                speaking={session.someoneSpeaking === person.displayName}
+              />
+            </Box>
+          ))}
+        </Box>
+      ) : null}
+
       {/* The rail: faces, then the controls under them. */}
       <Box
         sx={{
           position: "absolute",
           right: { xs: 8, md: 16 },
-          bottom: { xs: 84, md: 104 },
+          bottom:
+            layout === "theater" && inCall.length
+              ? { xs: 84 + THEATER_STRIP_PX, md: 104 + THEATER_STRIP_PX }
+              : { xs: 84, md: 104 },
           zIndex: 7,
           display: "flex",
           flexDirection: "column",
@@ -167,7 +294,7 @@ function WatchPartyDock({
           pointerEvents: "none",
         }}
       >
-        {inCall.length ? (
+        {layout === "spotlight" && inCall.length ? (
           <Box
             className="no-scrollbar"
             sx={{
@@ -190,6 +317,56 @@ function WatchPartyDock({
         ) : null}
 
         <Box sx={{ display: "flex", alignItems: "center", gap: 0.75, position: "relative" }}>
+          {isLayoutOpen ? (
+            <Box
+              sx={{
+                position: "absolute",
+                bottom: 48,
+                right: 0,
+                width: 244,
+                py: 0.5,
+                borderRadius: "10px",
+                border: "1px solid #1f1f1f",
+                backgroundColor: "rgba(10,10,10,0.96)",
+                backdropFilter: "blur(12px)",
+                pointerEvents: "auto",
+              }}
+            >
+              {PARTY_LAYOUTS.map((option) => (
+                <Box
+                  key={option.id}
+                  component="button"
+                  type="button"
+                  onClick={() => {
+                    onLayoutChange(option.id);
+                    setIsLayoutOpen(false);
+                  }}
+                  sx={{
+                    display: "block",
+                    width: "100%",
+                    px: 1.25,
+                    py: 0.75,
+                    border: "none",
+                    background:
+                      option.id === layout ? "#1a1a1a" : "transparent",
+                    color: option.id === layout ? "#ededed" : "#a1a1a1",
+                    textAlign: "left",
+                    cursor: "pointer",
+                    fontFamily: "body",
+                    "&:hover": { background: "#141414", color: "#ededed" },
+                  }}
+                >
+                  <Box sx={{ fontSize: "0.8125rem", fontWeight: 500 }}>
+                    {option.label}
+                  </Box>
+                  <Box sx={{ fontSize: "0.6875rem", color: "#707070" }}>
+                    {option.description}
+                  </Box>
+                </Box>
+              ))}
+            </Box>
+          ) : null}
+
           {isReactionsOpen ? (
             <Box
               sx={{
@@ -241,7 +418,11 @@ function WatchPartyDock({
                 component="button"
                 type="button"
                 aria-label={session.micOn ? "Mute microphone" : "Unmute microphone"}
-                title={session.micOn ? "Mute microphone" : "Unmute microphone"}
+                title={
+                  session.micOn
+                    ? "Mute microphone"
+                    : "Unmute — this starts voice chat for the party"
+                }
                 onClick={session.toggleMic}
                 sx={{
                   ...roundButtonStyles,
@@ -251,7 +432,15 @@ function WatchPartyDock({
                   borderColor: session.micOn ? "rgba(62,207,142,0.5)" : roundButtonStyles.border,
                 }}
               >
-                {session.micOn ? (
+                {session.isConnectingCall ? (
+                  <Loader
+                    sx={{
+                      fontSize: 18,
+                      animation: "sm-spin 900ms linear infinite",
+                      "@keyframes sm-spin": { to: { transform: "rotate(360deg)" } },
+                    }}
+                  />
+                ) : session.micOn ? (
                   <Mic sx={{ fontSize: 18 }} />
                 ) : (
                   <MicOff sx={{ fontSize: 18 }} />
@@ -282,9 +471,26 @@ function WatchPartyDock({
           <Box
             component="button"
             type="button"
+            aria-label="Change layout"
+            title="Change layout"
+            onClick={() => {
+              setIsLayoutOpen((open) => !open);
+              setIsReactionsOpen(false);
+            }}
+            sx={roundButtonStyles}
+          >
+            <Layers sx={{ fontSize: 18 }} />
+          </Box>
+
+          <Box
+            component="button"
+            type="button"
             aria-label="Send a reaction"
             title="Send a reaction"
-            onClick={() => setIsReactionsOpen((open) => !open)}
+            onClick={() => {
+              setIsReactionsOpen((open) => !open);
+              setIsLayoutOpen(false);
+            }}
             sx={roundButtonStyles}
           >
             <Smile sx={{ fontSize: 18 }} />

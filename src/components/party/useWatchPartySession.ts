@@ -49,14 +49,35 @@ const DRIFT_TOLERANCE_SECONDS = 1.5;
 const ECHO_GUARD_MS = 1200;
 /** Leader's unprompted correction interval. */
 const HEARTBEAT_MS = 4000;
-/** How often the polling transport asks the API for the state. */
-const POLL_INTERVAL_MS = 2000;
+/**
+ * How often the polling transport asks the API for the state.
+ *
+ * This is now the ordinary path, not a fallback — a party only opens a WebRTC
+ * connection once somebody turns on a microphone — so it has to be quick enough
+ * that a pause lands while the other person is still reaching for the remote.
+ * A control action is pushed immediately regardless; this interval only bounds
+ * how long the *other* end waits to hear about it.
+ */
+const POLL_INTERVAL_MS = 1500;
 /** Presence/state write-back while Daily carries the real traffic. */
 const PRESENCE_INTERVAL_MS = 15000;
 /** Volume the film drops to while someone is talking. */
 const DUCKED_VOLUME_RATIO = 0.25;
 const DUCK_RELEASE_MS = 1200;
 const REACTION_LIFETIME_MS = 4000;
+/**
+ * How long a stall has to last before the party waits for it.
+ *
+ * Short hitches are constant and self-correcting; pausing everyone for each one
+ * would be worse than the hitch. This is the point at which one person is
+ * genuinely behind rather than momentarily catching up.
+ */
+const STALL_GRACE_MS = 900;
+/**
+ * Nobody waits forever. A viewer whose connection has given up entirely must
+ * not hold the rest of the room hostage.
+ */
+const MAX_WAIT_MS = 20000;
 
 export type PartyStatus =
   | "idle"
@@ -102,7 +123,8 @@ type SyncEnvelope =
   | { t: "chat"; message: WatchPartyMessage }
   | { t: "reaction"; reaction: WatchPartyReaction }
   | { t: "nav"; by: string; name: string; path: string }
-  | { t: "control"; mode: WatchPartyControl };
+  | { t: "control"; mode: WatchPartyControl }
+  | { t: "buffering"; by: string; name: string; stalled: boolean };
 
 export interface WatchPartySession {
   status: PartyStatus;
@@ -125,7 +147,10 @@ export interface WatchPartySession {
   sendReaction: (emoji: string) => void;
 
   /** Voice and video, absent when the room could not be joined. */
+  /** Voice and video can be offered at all in this deployment. */
   voiceAvailable: boolean;
+  /** Currently opening the room after a first tap on mic or camera. */
+  isConnectingCall: boolean;
   micOn: boolean;
   camOn: boolean;
   toggleMic: () => void;
@@ -137,6 +162,12 @@ export interface WatchPartySession {
   /** Playback is blocked until the viewer interacts — browsers require it. */
   needsGesture: boolean;
   acceptGesture: () => void;
+
+  /**
+   * Who the party is currently waiting to finish buffering, if anyone. Empty
+   * when everybody is watching.
+   */
+  waitingFor: string[];
 
   setControlMode: (mode: WatchPartyControl) => void;
   resync: () => void;
@@ -178,6 +209,7 @@ const emptySession = (code: string, status: PartyStatus): WatchPartySession => (
   reactions: [],
   sendReaction: () => undefined,
   voiceAvailable: false,
+  isConnectingCall: false,
   micOn: false,
   camOn: false,
   toggleMic: () => undefined,
@@ -187,6 +219,7 @@ const emptySession = (code: string, status: PartyStatus): WatchPartySession => (
   someoneSpeaking: "",
   needsGesture: false,
   acceptGesture: () => undefined,
+  waitingFor: [],
   setControlMode: () => undefined,
   resync: () => undefined,
   broadcastNavigation: () => undefined,
@@ -225,6 +258,7 @@ export function useWatchPartySession(options: {
   const [duckAudio, setDuckAudio] = useState(true);
   const [someoneSpeaking, setSomeoneSpeaking] = useState("");
   const [needsGesture, setNeedsGesture] = useState(false);
+  const [waitingFor, setWaitingFor] = useState<string[]>([]);
 
   const callRef = useRef<DailyCall | null>(null);
   const selfRef = useRef<{ pid: string; displayName: string } | null>(null);
@@ -246,6 +280,22 @@ export function useWatchPartySession(options: {
   const lastStateRef = useRef<Extract<SyncEnvelope, { t: "state" }> | null>(null);
   /** `serverTime - Date.now()`, so stored positions are read on our clock. */
   const clockSkewRef = useRef(0);
+  /**
+   * The hold.
+   *
+   * Seeking is the moment a party falls apart: whoever jumped resumes from a
+   * warm buffer while everyone else is still fetching segments at the new
+   * position, and from then on they are watching different frames of the same
+   * film. So a stall anywhere pauses everyone, and playback resumes only once
+   * the slowest person has caught up. `heldRef` remembers that the pause was
+   * ours rather than a viewer's, so it can be undone without being mistaken for
+   * someone pressing play.
+   */
+  const stalledPeersRef = useRef(new Map<string, string>());
+  const heldRef = useRef(false);
+  const holdStartedAtRef = useRef(0);
+  const stallTimerRef = useRef(0);
+  const localStalledRef = useRef(false);
   const identityRef = useRef(identity);
   const duckRef = useRef({ enabled: true, baseVolume: 1, timer: 0 });
   const leftRef = useRef(false);
@@ -340,6 +390,11 @@ export function useWatchPartySession(options: {
         player.currentTime = target;
       }
 
+      // A correction arriving mid-wait must not restart playback under the
+      // person we are all waiting for. The state is recorded either way, so the
+      // hold releases into the right one.
+      if (envelope.state === "playing" && stalledPeersRef.current.size) return;
+
       if (envelope.state === "playing" && player.paused) {
         const started = player.play();
         if (started && typeof (started as Promise<void>).catch === "function") {
@@ -354,6 +409,59 @@ export function useWatchPartySession(options: {
       }
     },
     [getPlayer],
+  );
+
+  /**
+   * Pause for the stragglers, and pick back up when they arrive.
+   *
+   * The pause is applied under the echo guard so it never leaves this client as
+   * "somebody pressed pause" — the party's agreed state is still "playing", and
+   * that is what everyone returns to once the wait is over.
+   */
+  const applyHold = useCallback(() => {
+    const player = getPlayer();
+    if (!player) return;
+
+    const stalled = Array.from(stalledPeersRef.current.values());
+    setWaitingFor(stalled);
+
+    if (stalled.length) {
+      if (heldRef.current || player.paused) return;
+      heldRef.current = true;
+      holdStartedAtRef.current = Date.now();
+      echoGuardRef.current = Date.now() + ECHO_GUARD_MS;
+      void player.pause();
+      return;
+    }
+
+    if (!heldRef.current) return;
+    heldRef.current = false;
+    holdStartedAtRef.current = 0;
+
+    // Only resume if the party was playing when the wait began; a hold that
+    // overlapped a genuine pause must not restart the film.
+    if (partyRef.current?.state !== "playing") return;
+    echoGuardRef.current = Date.now() + ECHO_GUARD_MS;
+    const started = player.play();
+    if (started && typeof (started as Promise<void>).catch === "function") {
+      (started as Promise<void>).catch(() => setNeedsGesture(true));
+    }
+  }, [getPlayer]);
+
+  /** Tell the party this client is, or is no longer, behind. */
+  const reportStall = useCallback(
+    (stalled: boolean) => {
+      const me = selfRef.current;
+      if (!me || localStalledRef.current === stalled) return;
+      localStalledRef.current = stalled;
+
+      if (stalled) stalledPeersRef.current.set(me.pid, me.displayName);
+      else stalledPeersRef.current.delete(me.pid);
+      applyHold();
+
+      send({ t: "buffering", by: me.pid, name: me.displayName, stalled });
+    },
+    [applyHold, send],
   );
 
   /* ── Inbound messages, whichever transport carried them ─────────────────── */
@@ -423,9 +531,20 @@ export function useWatchPartySession(options: {
             current ? { ...current, control: envelope.mode } : current,
           );
           return;
+
+        case "buffering": {
+          if (me && envelope.by === me.pid) return;
+          if (envelope.stalled) {
+            stalledPeersRef.current.set(envelope.by, envelope.name);
+          } else {
+            stalledPeersRef.current.delete(envelope.by);
+          }
+          applyHold();
+          return;
+        }
       }
     },
-    [applyState, getPlayer, send],
+    [applyHold, applyState, getPlayer, send],
   );
 
   /* ── Local playback events → the party ──────────────────────────────────── */
@@ -480,18 +599,74 @@ export function useWatchPartySession(options: {
       applyState({ ...known, time: known.time + elapsed, at: Date.now() });
     };
 
+    /**
+     * Stall detection.
+     *
+     * `waiting` fires constantly during normal playback — every quality switch,
+     * every segment boundary on a slow link — so it is reported only once it
+     * has lasted long enough to mean this client is genuinely behind. Recovery
+     * is reported immediately: nobody should wait a moment longer than needed.
+     */
+    const handleWaiting = () => {
+      if (stallTimerRef.current) return;
+      stallTimerRef.current = window.setTimeout(() => {
+        stallTimerRef.current = 0;
+        reportStall(true);
+      }, STALL_GRACE_MS);
+    };
+
+    const handleRecovered = () => {
+      if (stallTimerRef.current) {
+        window.clearTimeout(stallTimerRef.current);
+        stallTimerRef.current = 0;
+      }
+      reportStall(false);
+    };
+
+    // A seek is the one case worth reporting without waiting out the grace
+    // period: whoever did not initiate it is certain to be refilling a buffer.
+    const handleSeeking = () => {
+      handleWaiting();
+    };
+
     player.addEventListener("play", handleLocalChange);
     player.addEventListener("pause", handleLocalChange);
     player.addEventListener("seeked", handleLocalChange);
     player.addEventListener("can-play", catchUpOnLoad);
+    player.addEventListener("waiting", handleWaiting);
+    player.addEventListener("seeking", handleSeeking);
+    player.addEventListener("playing", handleRecovered);
+    player.addEventListener("can-play", handleRecovered);
 
     return () => {
+      if (stallTimerRef.current) {
+        window.clearTimeout(stallTimerRef.current);
+        stallTimerRef.current = 0;
+      }
       player.removeEventListener("play", handleLocalChange);
       player.removeEventListener("pause", handleLocalChange);
       player.removeEventListener("seeked", handleLocalChange);
       player.removeEventListener("can-play", catchUpOnLoad);
+      player.removeEventListener("waiting", handleWaiting);
+      player.removeEventListener("seeking", handleSeeking);
+      player.removeEventListener("playing", handleRecovered);
+      player.removeEventListener("can-play", handleRecovered);
     };
-  }, [applyState, broadcastLocalState, code, getPlayer, playerKey, status]);
+  }, [applyState, broadcastLocalState, code, getPlayer, playerKey, reportStall, status]);
+
+  useEffect(() => {
+    if (!waitingFor.length) return;
+
+    const timeout = window.setTimeout(() => {
+      // Someone has dropped out rather than buffered. Release the room and let
+      // them catch up on their own — they can always ask for a resync.
+      stalledPeersRef.current.clear();
+      applyHold();
+      toast.message("Carried on without whoever is still buffering.");
+    }, MAX_WAIT_MS);
+
+    return () => window.clearTimeout(timeout);
+  }, [applyHold, waitingFor.length]);
 
   /* ── Leader's periodic correction ───────────────────────────────────────── */
 
@@ -548,20 +723,11 @@ export function useWatchPartySession(options: {
         );
         setMessages(result.party.messages || []);
 
-        if (result.daily) {
-          const joined = await connectDaily(result.daily.url, result.daily.token);
-          if (cancelled) return;
-          if (joined) {
-            transportRef.current = "daily";
-            setTransport("daily");
-          } else {
-            transportRef.current = "polling";
-            setTransport("polling");
-          }
-        } else {
-          transportRef.current = "polling";
-          setTransport("polling");
-        }
+        // Nobody joins the WebRTC room just to watch a film. Playback sync and
+        // chat run over the API until somebody actually wants to be heard or
+        // seen, at which point `connectCall` takes over as the transport too.
+        transportRef.current = "polling";
+        setTransport("polling");
 
         if (cancelled) return;
         setStatus("connected");
@@ -630,8 +796,28 @@ export function useWatchPartySession(options: {
     setCamOn(Boolean(local?.video));
   }, []);
 
-  const connectDaily = useCallback(
-    async (url: string, token: string): Promise<boolean> => {
+  /**
+   * Join the voice/video room.
+   *
+   * Called the first time this client turns on a microphone or camera, and also
+   * when somebody *else* does — you cannot hear a room you are not in. While
+   * connected, the same channel carries playback sync, which is faster than
+   * polling; leaving it falls straight back.
+   */
+  const connectCall = useCallback(
+    async (): Promise<boolean> => {
+      if (callRef.current || !code) return Boolean(callRef.current);
+
+      let credentials: { url: string; token: string };
+      try {
+        credentials = await watchPartyAPI.joinCall(code, identityRef.current);
+      } catch {
+        toast.error("Voice and video are unavailable right now.");
+        return false;
+      }
+
+      const { url, token } = credentials;
+
       try {
         const module = await import("@daily-co/daily-js");
         const factory = module.default as typeof DailyIframe;
@@ -695,14 +881,37 @@ export function useWatchPartySession(options: {
 
         readDailyPeople(call);
         return true;
+        transportRef.current = "daily";
+        setTransport("daily");
+        return true;
       } catch (joinError) {
         console.error("[watch-party] video chat unavailable:", joinError);
         callRef.current = null;
+        void watchPartyAPI.leaveCall(code, identityRef.current).catch(() => undefined);
         return false;
       }
     },
-    [getPlayer, handleEnvelope, readDailyPeople, send],
+    [code, getPlayer, handleEnvelope, readDailyPeople, send],
   );
+
+  /** Step out of the room without leaving the party. */
+  const disconnectCall = useCallback(async () => {
+    const call = callRef.current;
+    callRef.current = null;
+    stalledPeersRef.current.clear();
+    applyHold();
+    setDailyPeople([]);
+    setMicOn(false);
+    setCamOn(false);
+    setSomeoneSpeaking("");
+    transportRef.current = "polling";
+    setTransport("polling");
+
+    if (call) await call.destroy().catch(() => undefined);
+    if (code) {
+      await watchPartyAPI.leaveCall(code, identityRef.current).catch(() => undefined);
+    }
+  }, [applyHold, code]);
 
   // `app-message` and `participant-joined` close over `handleEnvelope`, which
   // changes as state does. Rebinding the listener each time keeps them current
@@ -829,7 +1038,12 @@ export function useWatchPartySession(options: {
 
     const call = callRef.current;
     callRef.current = null;
-    if (call) void call.destroy().catch(() => undefined);
+    if (call) {
+      void call.destroy().catch(() => undefined);
+      if (code) {
+        void watchPartyAPI.leaveCall(code, identityRef.current).catch(() => undefined);
+      }
+    }
 
     if (code) void watchPartyAPI.leave(code, identityRef.current).catch(() => undefined);
     onLeave();
@@ -904,21 +1118,72 @@ export function useWatchPartySession(options: {
     [code, handleEnvelope, send],
   );
 
+  const [isConnectingCall, setIsConnectingCall] = useState(false);
+  /** Whether anyone but us is in the voice/video room right now. */
+  const othersOnCallRef = useRef(false);
+
+  /**
+   * Turning a device on is what puts you in the room.
+   *
+   * Nobody is connected until they ask to be, so the first tap has two jobs:
+   * open the room, then switch the device on inside it. Turning the last one
+   * off leaves the room again rather than sitting there costing money for a
+   * silent, blank participant.
+   */
+  const setDevice = useCallback(
+    async (device: "mic" | "cam", enabled: boolean) => {
+      if (enabled && !callRef.current) {
+        setIsConnectingCall(true);
+        const connected = await connectCall();
+        setIsConnectingCall(false);
+        if (!connected) return;
+      }
+
+      const call = callRef.current;
+      if (!call) return;
+
+      // Going quiet only leaves the room if there is nobody left in it to
+      // hear. With someone else still talking, staying connected is the point.
+      const shouldLeaveRoom = (otherDeviceOn: boolean) =>
+        !enabled && !otherDeviceOn && !othersOnCallRef.current;
+
+      if (device === "mic") {
+        call.setLocalAudio(enabled);
+        setMicOn(enabled);
+        if (shouldLeaveRoom(camOn)) void disconnectCall();
+        return;
+      }
+
+      call.setLocalVideo(enabled);
+      setCamOn(enabled);
+      if (shouldLeaveRoom(micOn)) void disconnectCall();
+    },
+    [camOn, connectCall, disconnectCall, micOn],
+  );
+
   const toggleMic = useCallback(() => {
-    const call = callRef.current;
-    if (!call) return;
-    const next = !micOn;
-    call.setLocalAudio(next);
-    setMicOn(next);
-  }, [micOn]);
+    void setDevice("mic", !micOn);
+  }, [micOn, setDevice]);
 
   const toggleCam = useCallback(() => {
-    const call = callRef.current;
-    if (!call) return;
-    const next = !camOn;
-    call.setLocalVideo(next);
-    setCamOn(next);
-  }, [camOn]);
+    void setDevice("cam", !camOn);
+  }, [camOn, setDevice]);
+
+  /**
+   * Somebody else started talking. You cannot hear a room you are not in, so
+   * this client joins too — muted and dark, exactly as it was before.
+   */
+  const someoneElseIsOnCall = Boolean(
+    party?.members?.some(
+      (member) => member.inCall && member.pid !== self?.pid,
+    ),
+  );
+  othersOnCallRef.current = someoneElseIsOnCall;
+
+  useEffect(() => {
+    if (!someoneElseIsOnCall || callRef.current || status !== "connected") return;
+    void connectCall();
+  }, [connectCall, someoneElseIsOnCall, status]);
 
   const setControlMode = useCallback(
     (mode: WatchPartyControl) => {
@@ -1006,6 +1271,19 @@ export function useWatchPartySession(options: {
     });
   }, [dailyPeople, party, self?.pid]);
 
+  // A peer who leaves mid-stall cannot report recovery, so their hold leaves
+  // with them — otherwise a closed tab pauses the party indefinitely.
+  useEffect(() => {
+    const present = new Set(people.map((person) => person.pid));
+    let changed = false;
+    stalledPeersRef.current.forEach((_name, pid) => {
+      if (present.has(pid) || pid === selfRef.current?.pid) return;
+      stalledPeersRef.current.delete(pid);
+      changed = true;
+    });
+    if (changed) applyHold();
+  }, [applyHold, people]);
+
   if (!code) return emptySession("", "idle");
 
   return {
@@ -1024,7 +1302,8 @@ export function useWatchPartySession(options: {
     sendChat,
     reactions,
     sendReaction: sendReactionEmoji,
-    voiceAvailable: transport === "daily",
+    voiceAvailable: party?.canVideoChat !== false,
+    isConnectingCall,
     micOn,
     camOn,
     toggleMic,
@@ -1034,6 +1313,7 @@ export function useWatchPartySession(options: {
     someoneSpeaking,
     needsGesture,
     acceptGesture,
+    waitingFor,
     setControlMode,
     resync,
     broadcastNavigation,

@@ -13,10 +13,13 @@ import { PartyPerson } from "./useWatchPartySession";
 export function ParticipantTile({
   person,
   size = 84,
+  fill,
   speaking,
 }: {
   person: PartyPerson;
   size?: number;
+  /** Fill the parent instead of drawing at a fixed size — used by the grid. */
+  fill?: boolean;
   speaking?: boolean;
 }) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -40,9 +43,9 @@ export function ParticipantTile({
       title={`${person.displayName}${person.isHost ? " · host" : ""}`}
       sx={{
         position: "relative",
-        width: size,
-        height: size * 0.75,
-        borderRadius: "10px",
+        width: fill ? "100%" : size,
+        height: fill ? "100%" : size * 0.75,
+        borderRadius: fill ? "4px" : "10px",
         overflow: "hidden",
         flexShrink: 0,
         backgroundColor: "#111111",
@@ -76,7 +79,7 @@ export function ParticipantTile({
             justifyContent: "center",
             color: "#ededed",
             fontWeight: 600,
-            fontSize: size * 0.3,
+            fontSize: fill ? "2rem" : size * 0.3,
           }}
         >
           {person.displayName.slice(0, 1).toUpperCase()}

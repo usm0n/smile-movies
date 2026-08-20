@@ -39,6 +39,13 @@ import { isAnimeTitle } from "../../utilities/anime";
 import WatchPartyDock from "../../components/party/WatchPartyDock";
 import { useWatchPartySession } from "../../components/party/useWatchPartySession";
 import { readGuestName, readGuestPid } from "../../utilities/watchPartyIdentity";
+import {
+  PartyLayout,
+  THEATER_STRIP_PX,
+  readPartyLayout,
+  videoInsetFor,
+  writePartyLayout,
+} from "../../components/party/partyLayout";
 import { pickPreferredLogoPath } from "../../utilities/tmdbImages";
 import { buildSubtitleOffsetKey } from "../../utilities/subtitlePrefs";
 import { readAnimeVersion, writeAnimeVersion } from "../../utilities/animePrefs";
@@ -53,6 +60,8 @@ const MIN_PROGRESS_DELTA_MINUTES = 1;
 const MIN_PROGRESS_TO_SAVE_MINUTES = 0.25;
 const MOVIE_COMPLETION_THRESHOLD = 0.9;
 const AUTOPLAY_COUNTDOWN_SECONDS = 10;
+/** How long before the end of the file "Up next" appears. */
+const AUTOPLAY_LEAD_SECONDS = 25;
 const EPISODE_COMPLETION_THRESHOLD = 0.95;
 const LOCAL_ROUTE_PROGRESS_PREFIX = "watch-progress:";
 const LOCAL_RECENT_PROGRESS_PREFIX = "recent-progress:";
@@ -502,6 +511,10 @@ function Watch() {
     setSessionBaseProgress(0);
     setSessionBaseReady(false);
     setPlayerReloadToken(0);
+    if (autoplayTimerRef.current) clearInterval(autoplayTimerRef.current);
+    setAutoplayCountdown(null);
+    setAutoplayNextPath("");
+    loadedSourceRef.current = "";
     playbackSessionRef.current = {
       id: "",
       signature: "",
@@ -693,27 +706,38 @@ function Watch() {
    * countdown rather than an immediate jump because the credits are sometimes
    * the point, and "Cancel" has to be reachable without a race.
    */
+  /**
+   * Which episode a countdown has already been offered for, so finishing one
+   * episode cannot queue the next three.
+   */
+  const autoplayOfferedForRef = useRef("");
+
+  /**
+   * Moving on is one action with one implementation.
+   *
+   * The countdown used to `navigate` on its own, which meant it skipped
+   * everything `episodeChange` does — saving the position, carrying the
+   * provider and party in the query, telling the rest of the party the room is
+   * moving. A party would leave behind whoever pressed Cancel.
+   */
+  const episodeChangeRef = useRef<(path: string) => void>(() => undefined);
+
   const startAutoplay = useCallback((path: string) => {
     if (autoplayTimerRef.current) clearInterval(autoplayTimerRef.current);
 
-    // The provider, server and party the viewer is in all live in the query,
-    // so a bare path would drop them the moment the next episode started.
-    const query = window.location.search.replace(/^\?/, "");
-    const nextPath = query ? `${path}?${query}` : path;
-
-    setAutoplayNextPath(nextPath);
+    setAutoplayNextPath(path);
     setAutoplayCountdown(AUTOPLAY_COUNTDOWN_SECONDS);
     autoplayTimerRef.current = setInterval(() => {
       setAutoplayCountdown((remaining) => {
         if (remaining === null || remaining <= 1) {
           if (autoplayTimerRef.current) clearInterval(autoplayTimerRef.current);
-          navigate(nextPath);
+          episodeChangeRef.current(path);
           return null;
         }
         return remaining - 1;
       });
     }, 1000);
-  }, [navigate]);
+  }, []);
 
   const cancelAutoplay = useCallback(() => {
     if (autoplayTimerRef.current) clearInterval(autoplayTimerRef.current);
@@ -851,8 +875,22 @@ function Watch() {
         ? Math.min(rawProgressMinutes, durationMinutes)
         : rawProgressMinutes,
     );
+    /**
+     * "Have they finished it?" is a different question from "how long is it?".
+     *
+     * `durationMinutes` above deliberately grows to fit the position, so a
+     * stream that runs past its advertised runtime still saves sensibly. Judging
+     * completion against that number makes it unfalsifiable — progress is
+     * clamped to a duration that was just widened to match, so the ratio is
+     * always 1 and everything is "finished". The verdict needs a duration that
+     * was measured, not one derived from the very value being tested.
+     */
+    const measuredDurationMinutes =
+      Number(rawDurationMinutes) || fallbackDurationMinutes || 0;
     const progressRatio =
-      durationMinutes > 0 ? boundedProgressMinutes / durationMinutes : 0;
+      measuredDurationMinutes > 0
+        ? rawProgressMinutes / measuredDurationMinutes
+        : 0;
     const shouldAutoComplete =
       forceCompleted ||
       progressRatio >=
@@ -901,17 +939,8 @@ function Watch() {
     if (shouldAutoComplete && !playbackSessionRef.current.completionHandled) {
       playbackSessionRef.current.completionHandled = true;
       await flushRecentProgress({ force: true, payload });
-
-      if (movieType === "tv") {
-        const next = getNextEpisodeForSeries();
-        if (next.nextSeason && next.nextEpisode && movieId) {
-          startAutoplay(
-            `/tv/${movieId}/${next.nextSeason}/${next.nextEpisode}/watch`,
-          );
-        }
-      }
     }
-  }, [episodeId, fallbackDurationMinutes, flushRecentProgress, getNextEpisodeForSeries, mediaPoster, mediaTitle, movieId, movieType, recentProgressStorageKey, routeProgressStorageKey, seasonId, sessionBaseReady, startAutoplay]);
+  }, [episodeId, fallbackDurationMinutes, flushRecentProgress, getNextEpisodeForSeries, mediaPoster, mediaTitle, movieId, movieType, recentProgressStorageKey, routeProgressStorageKey, seasonId, sessionBaseReady]);
 
   const episodeChange = (nextPath: string) => {
     void (async () => {
@@ -936,6 +965,8 @@ function Watch() {
       navigate(target);
     })();
   };
+
+  episodeChangeRef.current = episodeChange;
 
   useEffect(() => {
     if (!movieId || !movieType) return;
@@ -1127,11 +1158,22 @@ function Watch() {
    * so it is spent once and not offered again until the source changes.
    */
   const resumedSourceRef = useRef("");
+  /**
+   * The source the media element has metadata for.
+   *
+   * Changing episode does not swap the player instantly — the old one keeps
+   * playing, and keeps firing `time-update`, until the next stream URL resolves.
+   * Those events used to be attributed to the episode the route had already
+   * moved to, which is how finishing one episode marked the *next* one finished
+   * too, and the one after that, all the way to the end of the season.
+   */
+  const loadedSourceRef = useRef("");
 
   const handlePlayerLoadedMetadata = useCallback(() => {
     if (!playerRef.current) return;
 
     const resumeKey = `${playbackSourceUrl}:${playerReloadToken}`;
+    loadedSourceRef.current = playbackSourceUrl;
     if (resumedSourceRef.current === resumeKey) return;
     resumedSourceRef.current = resumeKey;
 
@@ -1148,13 +1190,62 @@ function Watch() {
   }, [playbackSourceUrl, playerReloadToken, sessionBaseProgress, searchParams]);
 
   const handlePlayerTimeUpdate = useCallback(() => {
-    if (!playerRef.current) return;
-    const progressMinutes = Number(playerRef.current.currentTime || 0) / 60;
-    const durationMinutes = getPlayerDurationMinutes();
+    const player = playerRef.current;
+    if (!player) return;
+
+    // The player is still on the previous episode's file; its position says
+    // nothing about the one the route has moved to.
+    if (loadedSourceRef.current !== playbackSourceUrl) return;
+
+    const currentSeconds = Number(player.currentTime || 0);
+    const durationSeconds = Number(player.duration || 0);
+    const progressMinutes = currentSeconds / 60;
     progressRef.current.lastKnownProgressMinutes = progressMinutes;
     writeStoredNumber(routeProgressStorageKey, progressMinutes);
-    void persistProgress(progressMinutes, durationMinutes);
-  }, [getPlayerDurationMinutes, persistProgress, routeProgressStorageKey]);
+    void persistProgress(progressMinutes, getPlayerDurationMinutes());
+
+    // "Up next" is timed off the file itself, never off TMDB's runtime — the
+    // two disagree by minutes often enough that a countdown driven by the
+    // second one arrives mid-scene.
+    const remainingSeconds = durationSeconds - currentSeconds;
+
+    if (
+      movieType !== "tv" ||
+      durationSeconds <= 0 ||
+      currentSeconds <= 0 ||
+      remainingSeconds > AUTOPLAY_LEAD_SECONDS
+    ) {
+      // Seeking back into the episode withdraws an offer already on screen —
+      // the viewer has plainly not finished with it — and lets a fresh one be
+      // made if they do reach the end this time. Pressing Cancel does not:
+      // that answer stands for the rest of the episode.
+      if (remainingSeconds > AUTOPLAY_LEAD_SECONDS * 2) {
+        if (autoplayOfferedForRef.current === routeProgressStorageKey) {
+          autoplayOfferedForRef.current = "";
+          cancelAutoplay();
+        }
+      }
+      return;
+    }
+
+    if (autoplayOfferedForRef.current === routeProgressStorageKey) return;
+
+    const next = getNextEpisodeForSeries();
+    if (!next.nextSeason || !next.nextEpisode || !movieId) return;
+
+    autoplayOfferedForRef.current = routeProgressStorageKey;
+    startAutoplay(`/tv/${movieId}/${next.nextSeason}/${next.nextEpisode}/watch`);
+  }, [
+    cancelAutoplay,
+    getNextEpisodeForSeries,
+    getPlayerDurationMinutes,
+    movieId,
+    movieType,
+    persistProgress,
+    playbackSourceUrl,
+    routeProgressStorageKey,
+    startAutoplay,
+  ]);
 
   const handlePlayerPause = useCallback(() => {
     if (!playerRef.current) return;
@@ -1166,9 +1257,29 @@ function Watch() {
   }, [flushRecentProgress, getPlayerDurationMinutes, persistProgress]);
 
   const handlePlayerEnded = useCallback(() => {
+    if (loadedSourceRef.current !== playbackSourceUrl) return;
+
     const durationMinutes = getPlayerDurationMinutes();
     void persistProgress(durationMinutes, durationMinutes, true);
-  }, [getPlayerDurationMinutes, persistProgress]);
+
+    if (movieType !== "tv" || !movieId) return;
+    if (autoplayOfferedForRef.current === routeProgressStorageKey) return;
+
+    const next = getNextEpisodeForSeries();
+    if (!next.nextSeason || !next.nextEpisode) return;
+
+    autoplayOfferedForRef.current = routeProgressStorageKey;
+    startAutoplay(`/tv/${movieId}/${next.nextSeason}/${next.nextEpisode}/watch`);
+  }, [
+    getNextEpisodeForSeries,
+    getPlayerDurationMinutes,
+    movieId,
+    movieType,
+    persistProgress,
+    playbackSourceUrl,
+    routeProgressStorageKey,
+    startAutoplay,
+  ]);
 
   const requestStream = () => {
     if (!movieId || !movieType) return;
@@ -1418,6 +1529,22 @@ function Watch() {
     version,
   ]);
 
+  const [partyLayout, setPartyLayout] = useState<PartyLayout>(readPartyLayout);
+
+  const changePartyLayout = useCallback((layout: PartyLayout) => {
+    setPartyLayout(layout);
+    writePartyLayout(layout);
+  }, []);
+
+  /**
+   * Faces only take room from the picture while there are faces to show —
+   * before anyone turns a camera on, every layout is the full-screen one.
+   */
+  const partyTileCount = partyCode
+    ? party.people.filter((person) => person.sessionId).length
+    : 0;
+  const partyVideoInset = videoInsetFor(partyLayout, partyTileCount);
+
   const copyPartyInvite = useCallback(() => {
     if (!partyCode) return;
     copyToClipboard(`${window.location.origin}/party/${partyCode}`);
@@ -1639,6 +1766,10 @@ function Watch() {
         onPlaybackReady={handlePlaybackReady}
         reloadToken={playerReloadToken}
         subtitleOffsetKey={subtitleOffsetKey}
+        videoInset={partyVideoInset}
+        captionsLift={
+          partyLayout === "theater" && partyTileCount ? THEATER_STRIP_PX : 0
+        }
         chrome={{
           title: mediaTitle || "Preparing stream",
           titleLogo: mediaLogoUrl,
@@ -1874,7 +2005,7 @@ function Watch() {
                     startDecorator={<SkipNext sx={{ fontSize: 16 }} />}
                     onClick={() => {
                       cancelAutoplay();
-                      navigate(autoplayNextPath);
+                      episodeChange(autoplayNextPath);
                     }}
                   >
                     Play now
@@ -1900,7 +2031,12 @@ function Watch() {
               </Box>
             ) : null}
             {partyCode && party.status === "connected" ? (
-              <WatchPartyDock session={party} onExit={party.leave} />
+              <WatchPartyDock
+                session={party}
+                layout={partyLayout}
+                onLayoutChange={changePartyLayout}
+                onExit={party.leave}
+              />
             ) : null}
             {centerErrorMessage ? errorOverlay : null}
           </>
