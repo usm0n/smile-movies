@@ -13,10 +13,7 @@ import { Search as SearchIcon } from "../../components/ui/icons";
 import Pagination from "../../components/navigation/Pagination";
 import AISuggestions from "../../components/ai/AISuggestions";
 import { aiService } from "../../service/api/ai/ai.api.service";
-import {
-  ResolvedMedia,
-  resolveSuggestedMediaList,
-} from "../../utilities/resolveSuggestedMedia";
+import type { ResolvedMedia } from "../../utilities/resolveSuggestedMedia";
 
 type SearchSort = "popularity" | "rating" | "release" | "title";
 type SearchYearFilter = "all" | "2020s" | "2010s" | "2000s" | "classic";
@@ -62,6 +59,7 @@ function Search() {
   const [ratingFilter, setRatingFilter] = useState<SearchRatingFilter>("all");
   const [rescueResults, setRescueResults] = useState<ResolvedMedia[]>([]);
   const [rescueNote, setRescueNote] = useState("");
+  const [rescueStrategy, setRescueStrategy] = useState("");
   const [rescueLoading, setRescueLoading] = useState(false);
   const [rescueError, setRescueError] = useState("");
   const rescuedQueryRef = useRef("");
@@ -184,12 +182,25 @@ function Search() {
     setRescueLoading(true);
     setRescueError("");
     setRescueNote("");
+    setRescueStrategy("");
     setRescueResults([]);
 
     try {
       const assist = await aiService.searchAssist(rescueQuery);
       setRescueNote(assist.interpretation);
-      setRescueResults(await resolveSuggestedMediaList(assist.titles));
+      setRescueStrategy(assist.strategy);
+      // Results already carry real TMDB ids and posters, so unlike the
+      // assistant's recommendations there is nothing left to look up.
+      setRescueResults(
+        assist.results.map((item) => ({
+          id: item.id,
+          mediaType: item.mediaType,
+          title: item.title,
+          posterPath: item.posterPath,
+          year: item.year,
+          reason: item.matchedOn,
+        })),
+      );
     } catch {
       setRescueError("Couldn't work out what you meant. Try rewording it.");
     } finally {
@@ -210,6 +221,7 @@ function Search() {
       rescuedQueryRef.current = "";
       setRescueResults([]);
       setRescueNote("");
+      setRescueStrategy("");
       setRescueError("");
       return;
     }
@@ -328,6 +340,7 @@ function Search() {
         <AISuggestions
           heading="Did you mean one of these?"
           note={rescueNote}
+          strategy={rescueStrategy}
           items={rescueResults}
           loading={rescueLoading}
           error={rescueError}

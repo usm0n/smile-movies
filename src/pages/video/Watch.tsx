@@ -1639,6 +1639,7 @@ function Watch() {
                     .filter(Boolean) as string[]}
                   imdb={imdbInfo}
                   focusParentalGuide={shouldFocusParentalGuide}
+                  tmdbId={movieType === "tv" ? String(movieId || "") : undefined}
                   seasonNumber={movieType === "tv" ? Number(seasonId) : undefined}
                   episodeNumber={movieType === "tv" ? Number(episodeId) : undefined}
                   priorEpisodes={priorEpisodes}

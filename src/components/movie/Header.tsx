@@ -43,6 +43,7 @@ import { collectionsAPI, Collection } from "../../service/api/smb/collections.ap
 import RatingDialog from "../library/RatingDialog";
 import { providersAPI } from "../../service/api/smb/providers.api.service";
 import { tmdb } from "../../service/api/tmdb/tmdb.api.service";
+import EpisodeRecap from "../ai/EpisodeRecap";
 import {
   getPlaybackTarget,
   getStartOverTarget,
@@ -704,6 +705,20 @@ function Header({
                       </Dropdown>
                     ) : null}
                   </Box>
+                ) : null}
+                {/* Placed with the resume controls: this is the moment someone
+                    is deciding whether they remember where they left off. */}
+                {movieType === "tv" &&
+                hasStartedWatching &&
+                recentItem?.currentSeason &&
+                recentItem?.currentEpisode ? (
+                  <EpisodeRecap
+                    variant="hero"
+                    tmdbId={String(movieId)}
+                    title={movieTitle}
+                    seasonNumber={Number(recentItem.currentSeason)}
+                    episodeNumber={Number(recentItem.currentEpisode)}
+                  />
                 ) : null}
                 {playButtonNote ? (
                   <Typography level="body-sm" sx={{ color: "#a1a1a1" }}>

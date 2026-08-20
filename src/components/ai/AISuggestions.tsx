@@ -3,13 +3,16 @@ import { ReactNode } from "react";
 import EventMC from "../cards/EventMC";
 import { AutoAwesome, ReplayRounded } from "../ui/icons";
 import { TextSkeleton } from "../ui/Skeleton";
-import { tokens } from "../../theme";
+import { monoStack, tokens } from "../../theme";
 import type { ResolvedMedia } from "../../utilities/resolveSuggestedMedia";
 
 export type AISuggestionsProps = {
   heading: string;
   /** The model's own read on the request, shown above the results. */
   note?: string;
+  /** What was actually searched for — themes, genres, people. Kept visible so
+   *  the user can see why these came back and correct course if it misread. */
+  strategy?: string;
   items: ResolvedMedia[];
   loading?: boolean;
   error?: string;
@@ -30,6 +33,7 @@ export type AISuggestionsProps = {
 function AISuggestions({
   heading,
   note,
+  strategy,
   items,
   loading,
   error,
@@ -81,15 +85,39 @@ function AISuggestions({
       </Box>
 
       {note ? (
-        <Typography level="body-sm" sx={{ mb: 2 }}>
+        <Typography level="body-sm" sx={{ mb: strategy ? 1 : 2.5 }}>
           {note}
         </Typography>
       ) : null}
 
+      {strategy ? (
+        <Typography
+          level="body-xs"
+          sx={{
+            mb: 2.5,
+            fontSize: "0.6875rem",
+            fontFamily: monoStack,
+            color: tokens.textTertiary,
+          }}
+        >
+          {strategy}
+        </Typography>
+      ) : null}
+
       {loading ? (
-        <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
-          {Array.from({ length: 4 }).map((_, index) => (
-            <Box key={index} sx={{ width: 150 }}>
+        <Box
+          sx={{
+            display: "grid",
+            columnGap: { xs: 2, sm: 3 },
+            rowGap: { xs: 3, sm: 4 },
+            gridTemplateColumns: {
+              xs: "repeat(auto-fill, minmax(140px, 1fr))",
+              sm: "repeat(auto-fill, minmax(170px, 1fr))",
+            },
+          }}
+        >
+          {Array.from({ length: 6 }).map((_, index) => (
+            <Box key={index}>
               <Box
                 sx={{
                   width: "100%",
@@ -126,14 +154,20 @@ function AISuggestions({
         <Box
           sx={{
             display: "grid",
-            gap: 2,
-            gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))",
+            // Posters need room to breathe — at the old 150px/16px the cards
+            // read as one solid block with no gutter between them.
+            columnGap: { xs: 2, sm: 3 },
+            rowGap: { xs: 3, sm: 4 },
+            gridTemplateColumns: {
+              xs: "repeat(auto-fill, minmax(140px, 1fr))",
+              sm: "repeat(auto-fill, minmax(170px, 1fr))",
+            },
           }}
         >
           {items.map((media) => (
             <Box
               key={`${media.mediaType}-${media.id}`}
-              sx={{ display: "flex", flexDirection: "column", gap: 1 }}
+              sx={{ display: "flex", flexDirection: "column", gap: 1.25 }}
             >
               <EventMC
                 eventId={media.id}

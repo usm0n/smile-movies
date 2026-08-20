@@ -1081,16 +1081,25 @@ function AIAssistant() {
                         <Typography sx={{ ...sectionLabelSx, mb: 1.25 }}>
                           Quick picks
                         </Typography>
-                        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1.25 }}>
+                        <Box
+                          sx={{
+                            display: "flex",
+                            flexWrap: "wrap",
+                            // Posters sat almost edge to edge at the old 10px
+                            // gutter, so the row read as one block of artwork.
+                            columnGap: 2.5,
+                            rowGap: 3.5,
+                          }}
+                        >
                           {msg.relatedMedia.map((media) => (
                             <Box
                               key={`${msg.id}-${media.mediaType}-${media.id}`}
                               sx={{
-                                width: 200,
+                                width: 190,
                                 display: "flex",
                                 flexDirection: "column",
-                                gap: 0.8,
-                                "@media (max-width: 800px)": { width: 160 },
+                                gap: 1.25,
+                                "@media (max-width: 800px)": { width: 150 },
                               }}
                             >
                               <EventMC

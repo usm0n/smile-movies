@@ -70,9 +70,28 @@ export interface SuggestedTitle {
   reason: string;
 }
 
+/**
+ * A search-rescue hit. Unlike `SuggestedTitle` these come straight from TMDB's
+ * own index rather than from the model, so the id and title are real by
+ * construction and need no second lookup.
+ */
+export interface GroundedResult {
+  id: number;
+  mediaType: "movie" | "tv";
+  title: string;
+  posterPath: string;
+  year: number | null;
+  overview: string;
+  voteAverage: number;
+  /** Which signal surfaced it — "amnesia + revenge", "title match". */
+  matchedOn: string;
+}
+
 export interface SearchAssistResult {
   interpretation: string;
-  titles: SuggestedTitle[];
+  /** Human-readable account of what was actually searched for. */
+  strategy: string;
+  results: GroundedResult[];
   _cached?: boolean;
 }
 
