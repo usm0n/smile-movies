@@ -250,7 +250,9 @@ function WatchPartyDock({
             display: "grid",
             gridTemplateColumns: `repeat(${gridShape(inCall.length + 1).columns}, 1fr)`,
             gridTemplateRows: `repeat(${gridShape(inCall.length + 1).rows}, 1fr)`,
-            gap: "2px",
+            // No gutter: the video's inset is computed as an exact fraction of
+            // the player, so a gap here would put the cells out of step with it.
+            gap: 0,
             pointerEvents: "none",
           }}
         >

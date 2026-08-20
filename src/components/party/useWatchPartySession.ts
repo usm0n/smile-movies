@@ -44,7 +44,9 @@ import { toast } from "../ui/toast";
  */
 
 /** How far out of step before we correct, in seconds. */
-const DRIFT_TOLERANCE_SECONDS = 1.5;
+const DRIFT_TOLERANCE_SECONDS = 2;
+/** Minimum spacing between two drift corrections. */
+const CORRECTION_COOLDOWN_MS = 10000;
 /** Applying a remote change must not bounce back out as a local one. */
 const ECHO_GUARD_MS = 1200;
 /** Leader's unprompted correction interval. */
@@ -302,6 +304,7 @@ export function useWatchPartySession(options: {
   const holdStartedAtRef = useRef(0);
   const stallTimerRef = useRef(0);
   const localStalledRef = useRef(false);
+  const lastCorrectionAtRef = useRef(0);
   /**
    * What the party was last watching.
    *
@@ -396,7 +399,14 @@ export function useWatchPartySession(options: {
         return;
       }
 
-      // While playing, the position has moved on since the message was sent.
+      /**
+       * `at` is always on *our* clock by the time it gets here — see the note
+       * on `localiseArrival`. Two browsers' clocks differ by whole seconds
+       * routinely, and comparing a sender's `Date.now()` against ours turned
+       * that difference into a permanent apparent drift: every four-second
+       * heartbeat re-seeked by the size of the skew, so the film rebuffered
+       * every four seconds forever. That was the stutter.
+       */
       const elapsedSeconds =
         envelope.state === "playing"
           ? Math.max(0, (Date.now() - envelope.at) / 1000)
@@ -404,9 +414,22 @@ export function useWatchPartySession(options: {
       const target = Math.max(0, envelope.time + elapsedSeconds);
 
       lastStateRef.current = envelope;
+
+      const drift = Math.abs(Number(player.currentTime || 0) - target);
+      /**
+       * Correcting drift costs a rebuffer, so it is worth doing only when the
+       * gap is big enough to see, and never twice in quick succession — a
+       * correction that lands while the last one is still buffering measures
+       * the buffering, not the drift, and chases itself.
+       */
+      const canCorrect =
+        drift > DRIFT_TOLERANCE_SECONDS &&
+        Date.now() - lastCorrectionAtRef.current > CORRECTION_COOLDOWN_MS;
+
       echoGuardRef.current = Date.now() + ECHO_GUARD_MS;
 
-      if (Math.abs(Number(player.currentTime || 0) - target) > DRIFT_TOLERANCE_SECONDS) {
+      if (canCorrect) {
+        lastCorrectionAtRef.current = Date.now();
         player.currentTime = target;
       }
 
@@ -493,7 +516,16 @@ export function useWatchPartySession(options: {
       switch (envelope.t) {
         case "state":
           if (me && envelope.by === me.pid) return;
-          applyState(envelope);
+          /**
+           * Re-stamp on arrival.
+           *
+           * The data channel delivers in well under the drift tolerance, so
+           * treating "when it got here" as "when it was sent" loses nothing
+           * measurable — and it removes the sender's clock from the arithmetic
+           * entirely, which is the only way two machines whose clocks disagree
+           * can stay in step.
+           */
+          applyState({ ...envelope, at: Date.now() });
           return;
 
         case "hello": {
@@ -646,18 +678,11 @@ export function useWatchPartySession(options: {
       reportStall(false);
     };
 
-    // A seek is the one case worth reporting without waiting out the grace
-    // period: whoever did not initiate it is certain to be refilling a buffer.
-    const handleSeeking = () => {
-      handleWaiting();
-    };
-
     player.addEventListener("play", handleLocalChange);
     player.addEventListener("pause", handleLocalChange);
     player.addEventListener("seeked", handleLocalChange);
     player.addEventListener("can-play", catchUpOnLoad);
     player.addEventListener("waiting", handleWaiting);
-    player.addEventListener("seeking", handleSeeking);
     player.addEventListener("playing", handleRecovered);
     player.addEventListener("can-play", handleRecovered);
 
@@ -671,7 +696,6 @@ export function useWatchPartySession(options: {
       player.removeEventListener("seeked", handleLocalChange);
       player.removeEventListener("can-play", catchUpOnLoad);
       player.removeEventListener("waiting", handleWaiting);
-      player.removeEventListener("seeking", handleSeeking);
       player.removeEventListener("playing", handleRecovered);
       player.removeEventListener("can-play", handleRecovered);
     };
@@ -905,7 +929,6 @@ export function useWatchPartySession(options: {
         });
 
         readDailyPeople(call);
-        return true;
         transportRef.current = "daily";
         setTransport("daily");
         return true;

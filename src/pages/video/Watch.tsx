@@ -62,6 +62,8 @@ const MOVIE_COMPLETION_THRESHOLD = 0.9;
 const AUTOPLAY_COUNTDOWN_SECONDS = 10;
 /** How long before the end of the file "Up next" appears. */
 const AUTOPLAY_LEAD_SECONDS = 25;
+/** Minimum spacing between progress writes during playback. */
+const PROGRESS_WRITE_INTERVAL_MS = 5000;
 const EPISODE_COMPLETION_THRESHOLD = 0.95;
 const LOCAL_ROUTE_PROGRESS_PREFIX = "watch-progress:";
 const LOCAL_RECENT_PROGRESS_PREFIX = "recent-progress:";
@@ -511,6 +513,7 @@ function Watch() {
     setSessionBaseProgress(0);
     setSessionBaseReady(false);
     setPlayerReloadToken(0);
+    lastProgressWriteAtRef.current = 0;
     if (autoplayTimerRef.current) clearInterval(autoplayTimerRef.current);
     setAutoplayCountdown(null);
     setAutoplayNextPath("");
@@ -711,6 +714,8 @@ function Watch() {
    * episode cannot queue the next three.
    */
   const autoplayOfferedForRef = useRef("");
+  /** When progress was last written to disk — see `handlePlayerTimeUpdate`. */
+  const lastProgressWriteAtRef = useRef(0);
 
   /**
    * Moving on is one action with one implementation.
@@ -1200,9 +1205,24 @@ function Watch() {
     const currentSeconds = Number(player.currentTime || 0);
     const durationSeconds = Number(player.duration || 0);
     const progressMinutes = currentSeconds / 60;
+
+    // Cheap, and everything else reads it, so it stays current every tick.
     progressRef.current.lastKnownProgressMinutes = progressMinutes;
-    writeStoredNumber(routeProgressStorageKey, progressMinutes);
-    void persistProgress(progressMinutes, getPlayerDurationMinutes());
+
+    /**
+     * Saving, however, is not cheap. `time-update` fires roughly four times a
+     * second, and each pass wrote two `localStorage` keys and serialised a
+     * progress object to JSON — all synchronous, all on the main thread, ten
+     * thousand times over a film. Throttling it costs at most a few seconds of
+     * resume accuracy, and pause, navigation and page-hide all still force an
+     * immediate write, so nothing is actually lost.
+     */
+    const now = Date.now();
+    if (now - lastProgressWriteAtRef.current >= PROGRESS_WRITE_INTERVAL_MS) {
+      lastProgressWriteAtRef.current = now;
+      writeStoredNumber(routeProgressStorageKey, progressMinutes);
+      void persistProgress(progressMinutes, getPlayerDurationMinutes());
+    }
 
     // "Up next" is timed off the file itself, never off TMDB's runtime — the
     // two disagree by minutes often enough that a countdown driven by the

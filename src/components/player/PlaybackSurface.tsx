@@ -86,18 +86,18 @@ function PlaybackSurface({
    *
    * Some providers — AnimeKai above all — cannot be fetched by the browser
    * directly, so their segments are relayed through an edge worker. That relay
-   * adds latency and makes delivery bursty, and hls.js's defaults are built for
-   * a CDN answering from down the street: thirty seconds of buffer, an ABR
-   * estimate that starts optimistic, and few retries. The result is a stream
-   * that plays, drains its buffer on one slow segment, and stalls — the
-   * stuttering that made anime feel broken on desktop while the same player
-   * handled other providers fine.
+   * adds latency and makes delivery bursty, and the defaults assume a CDN
+   * answering from down the street: a couple of retries per fragment, and a
+   * stall at a buffer hole that is only nudged a few times before it gives up.
    *
-   * Everything here buys headroom: a deeper buffer to ride out a slow segment,
-   * a cautious opening bandwidth guess so the first fragments are small enough
-   * to arrive quickly, and enough retries that one failed segment is recovered
-   * from rather than fatal. The back buffer is capped in exchange, so the
-   * deeper forward buffer does not cost memory on a long film.
+   * Deliberately conservative. An earlier version of this also raised the
+   * buffer ceilings sharply, on the theory that a deeper buffer rides out a
+   * slow segment. On a bandwidth-constrained relay that reasoning is backwards:
+   * fetching far ahead competes with the fragment actually being played. So
+   * what is left is the part that is unambiguously right for a slow, lossy
+   * path — patience with individual fragments — plus a slightly deeper forward
+   * buffer paid for by a capped back buffer. Everything else is left to hls.js,
+   * which measures the connection rather than guessing at it.
    */
   const applyHlsConfig = useCallback((provider: unknown) => {
     if (!provider || (provider as { type?: string }).type !== "hls") return;
@@ -105,22 +105,15 @@ function PlaybackSurface({
     (provider as { config: Record<string, unknown> }).config = {
       lowLatencyMode: false,
       backBufferLength: 30,
-      maxBufferLength: 60,
-      maxMaxBufferLength: 180,
-      maxBufferSize: 120 * 1000 * 1000,
-      maxBufferHole: 0.5,
-      // A relayed segment can take a while; giving up after two tries turns a
-      // slow fetch into a playback error.
+      maxBufferLength: 45,
+      // A relayed fragment can take a while; giving up after two attempts
+      // turns a slow fetch into a playback error.
       fragLoadingMaxRetry: 8,
       fragLoadingRetryDelay: 500,
       fragLoadingMaxRetryTimeout: 8000,
       manifestLoadingMaxRetry: 4,
       levelLoadingMaxRetry: 4,
       nudgeMaxRetry: 8,
-      // Start conservative rather than picking 1080p off an unmeasured link and
-      // spending the first ten seconds rebuffering.
-      abrEwmaDefaultEstimate: 800_000,
-      startLevel: -1,
     };
   }, []);
 
@@ -420,19 +413,28 @@ function PlaybackSurface({
         // intrinsic size instead of growing to the screen. Taking the video out
         // of flow against the outlet sizes it from the player box directly,
         // whatever wrappers sit in between.
+        // The layout box belongs on the outlet, never on the `<video>`.
+        //
+        // A `<video>` is a *replaced* element, and for those `width: auto` does
+        // not mean "stretch to the inset box" the way it does for everything
+        // else — it means "use your intrinsic size". Setting an inset on the
+        // video itself therefore left it rendering at the file's own pixel
+        // dimensions, cropped by the box: the picture appeared zoomed in and
+        // stopped tracking the player at all. The outlet is an ordinary
+        // element, so it takes the inset correctly, and the video goes back to
+        // simply filling whatever it is given.
         "& media-outlet": {
-          position: "relative",
+          position: "absolute",
           display: "block",
-          width: "100%",
-          height: "100%",
+          inset: "var(--sm-video-inset, 0px)",
+          transition: "inset 220ms ease",
         },
         "& media-outlet video": {
           position: "absolute",
-          inset: "var(--sm-video-inset, 0px)",
-          width: "auto",
-          height: "auto",
+          inset: 0,
+          width: "100%",
+          height: "100%",
           objectFit: "contain",
-          transition: "inset 220ms ease",
         },
         // Captions ride above the control bar while it is visible, and above
         // the camera strip when a layout puts one there.
