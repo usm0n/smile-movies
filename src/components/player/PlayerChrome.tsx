@@ -165,19 +165,22 @@ function ControlButton({
 function PopoverSection({ title, children }: { title: string; children: ReactNode }) {
   return (
     <Box sx={{ px: 1, py: 1, "& + &": { borderTop: "1px solid #1f1f1f" } }}>
-      <Typography
-        level="body-xs"
-        sx={{
-          px: 1,
-          pb: 0.75,
-          textTransform: "uppercase",
-          letterSpacing: "0.06em",
-          fontWeight: 500,
-          color: "#707070",
-        }}
-      >
-        {title}
-      </Typography>
+      {/* A section can carry its own leading control instead of a heading. */}
+      {title ? (
+        <Typography
+          level="body-xs"
+          sx={{
+            px: 1,
+            pb: 0.75,
+            textTransform: "uppercase",
+            letterSpacing: "0.06em",
+            fontWeight: 500,
+            color: "#707070",
+          }}
+        >
+          {title}
+        </Typography>
+      ) : null}
       {children}
     </Box>
   );
@@ -315,6 +318,13 @@ function PlayerChrome({
     touchPointer,
   } = useMediaStore();
   const [popover, setPopover] = useState<PopoverId>(null);
+  /**
+   * Timing, size and background are three problems most viewers never have, and
+   * putting them under the track list turned "turn on subtitles" into a wall of
+   * settings. They are one tap away for the viewer whose subtitles are actually
+   * wrong, and invisible to everyone else.
+   */
+  const [showCaptionTuning, setShowCaptionTuning] = useState(false);
   // Keyed on the URL so moving to another title clears a previous failure:
   // one missing logo must not demote every later title to plain text.
   const [brokenLogo, setBrokenLogo] = useState("");
@@ -428,7 +438,10 @@ function PlayerChrome({
    * from under the viewer's cursor while they are still reading them.
    */
   useEffect(() => {
-    if (!popover) return;
+    if (!popover) {
+      setShowCaptionTuning(false);
+      return;
+    }
     remote.pauseUserIdle();
     return () => remote.resumeUserIdle();
   }, [popover, remote]);
@@ -911,6 +924,29 @@ function PlayerChrome({
                     )}
                   </PopoverSection>
 
+                  <PopoverSection title="">
+                    <Box
+                      component="button"
+                      type="button"
+                      aria-expanded={showCaptionTuning}
+                      onClick={() => setShowCaptionTuning((value) => !value)}
+                      sx={{
+                        ...controlButtonStyles,
+                        justifyContent: "flex-start",
+                        width: "100%",
+                        px: 1,
+                        color: "#a1a1a1",
+                        fontSize: "0.75rem",
+                      }}
+                    >
+                      {showCaptionTuning
+                        ? "Hide subtitle options"
+                        : "Wrong size or out of sync?"}
+                    </Box>
+                  </PopoverSection>
+
+                  {showCaptionTuning ? (
+                  <>
                   <PopoverSection title="Delay">
                     <Box
                       sx={{
@@ -1039,6 +1075,8 @@ function PlayerChrome({
                       ))}
                     </Box>
                   </PopoverSection>
+                  </>
+                  ) : null}
                 </Popover>
               ) : null}
             </Box>

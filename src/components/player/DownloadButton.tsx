@@ -33,7 +33,7 @@ function DownloadButton({ streamUrl, title, cacheKey }: Props) {
     }
     if (!streamUrl.toLowerCase().includes(".mp4")) {
       toast.error(
-        "Offline download requires MP4 source. Switch to Vixsrc provider and try again.",
+        "Downloads need a plain video file. Switch to the Standard source and try again.",
       );
       return;
     }

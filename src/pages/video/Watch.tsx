@@ -1,8 +1,8 @@
 import {
   ArrowBackIos,
+  Check,
   Close,
-  ContentCut,
-  Link as LinkIcon,
+  IosShare,
   People,
   SkipNext,
 } from "../../components/ui/icons";
@@ -36,19 +36,23 @@ import WatchSidePanel, {
   WatchPanelTab,
 } from "../../components/player/WatchSidePanel";
 import { isAnimeTitle } from "../../utilities/anime";
+import WatchPartyDock from "../../components/party/WatchPartyDock";
+import { useWatchPartySession } from "../../components/party/useWatchPartySession";
+import { readGuestName, readGuestPid } from "../../utilities/watchPartyIdentity";
 import { pickPreferredLogoPath } from "../../utilities/tmdbImages";
 import { buildSubtitleOffsetKey } from "../../utilities/subtitlePrefs";
 import { readAnimeVersion, writeAnimeVersion } from "../../utilities/animePrefs";
 import AnimeVersionPrompt from "../../components/player/AnimeVersionPrompt";
 import WatchInfoPanel from "../../components/player/WatchInfoPanel";
 import { useImdbWatchInfo } from "../../utilities/useImdbWatchInfo";
-import { Info as InfoIcon, FamilyRestroom, Star } from "../../components/ui/icons";
+import { Star } from "../../components/ui/icons";
 import { Chip } from "@mui/joy";
 
 const AUTO_SAVE_INTERVAL_MS = 60000;
 const MIN_PROGRESS_DELTA_MINUTES = 1;
 const MIN_PROGRESS_TO_SAVE_MINUTES = 0.25;
 const MOVIE_COMPLETION_THRESHOLD = 0.9;
+const AUTOPLAY_COUNTDOWN_SECONDS = 10;
 const EPISODE_COMPLETION_THRESHOLD = 0.95;
 const LOCAL_ROUTE_PROGRESS_PREFIX = "watch-progress:";
 const LOCAL_RECENT_PROGRESS_PREFIX = "recent-progress:";
@@ -58,11 +62,25 @@ const PROVIDER_OPTIONS: ProviderId[] = ["vixsrc", "showbox", "anikai", "ruvo"];
 const DEFAULT_PROVIDER: ProviderId = "vixsrc";
 const ANIME_PROVIDER: ProviderId = "anikai";
 
+/**
+ * What each source is called, and what it is for, in words a viewer already
+ * knows. The brand names — Vixsrc, ShowBox, AnimeKai — describe who runs the
+ * server, which is information nobody watching a film can act on. What they can
+ * act on is "this is the usual one" and "this is the one you try when the usual
+ * one won't play".
+ */
+const PROVIDER_LABELS: Record<ProviderId, string> = {
+  vixsrc: "Standard",
+  showbox: "Backup",
+  anikai: "Anime",
+  ruvo: "Русская озвучка",
+};
+
 const PROVIDER_DESCRIPTIONS: Record<ProviderId, string> = {
-  vixsrc: "Broad catalogue, multi-quality HLS",
-  showbox: "Direct files, several mirrors",
-  anikai: "Anime only — subbed and dubbed",
-  ruvo: "Russian dubs — several voiceovers",
+  vixsrc: "Works for most films and shows",
+  showbox: "Try this if Standard won't play",
+  anikai: "Anime, subbed or dubbed",
+  ruvo: "Russian voiceovers",
 };
 
 /** Returns the provider the URL explicitly asks for, or null when it says nothing. */
@@ -73,11 +91,8 @@ const parseProviderFromQuery = (value: string | null): ProviderId | null => {
     : null;
 };
 
-const getProviderLabel = (provider: ProviderId) => {
-  if (provider === "anikai") return "AnimeKai";
-  if (provider === "ruvo") return "Русская озвучка";
-  return provider === "showbox" ? "ShowBox" : "Vixsrc";
-};
+const getProviderLabel = (provider: ProviderId) =>
+  PROVIDER_LABELS[provider] || "Standard";
 
 const inferFormatFromUrl = (url: string): ProviderSourceFormat => {
   const normalized = String(url || "").toLowerCase();
@@ -670,21 +685,35 @@ function Watch() {
     };
   }, [episodeId, seasonId, tvSeasonsDetailsArr?.episodes, tvSeriesDetailsDataArr?.seasons]);
 
-  // Autoplay countdown logic
-  // const startAutoplay = useCallback((nextPath: string) => {
-  //   setAutoplayNextPath(nextPath);
-  //   setAutoplayCountdown(10);
-  //   autoplayTimerRef.current = setInterval(() => {
-  //     setAutoplayCountdown((prev) => {
-  //       if (prev === null || prev <= 1) {
-  //         clearInterval(autoplayTimerRef.current!);
-  //         navigate(nextPath);
-  //         return null;
-  //       }
-  //       return prev - 1;
-  //     });
-  //   }, 1000);
-  // }, [navigate]);
+  /**
+   * "Up next", the way every streaming service does it.
+   *
+   * Finishing an episode and being returned to a still frame is the moment a
+   * viewer leaves; ten seconds and the next one starts by itself. It is a
+   * countdown rather than an immediate jump because the credits are sometimes
+   * the point, and "Cancel" has to be reachable without a race.
+   */
+  const startAutoplay = useCallback((path: string) => {
+    if (autoplayTimerRef.current) clearInterval(autoplayTimerRef.current);
+
+    // The provider, server and party the viewer is in all live in the query,
+    // so a bare path would drop them the moment the next episode started.
+    const query = window.location.search.replace(/^\?/, "");
+    const nextPath = query ? `${path}?${query}` : path;
+
+    setAutoplayNextPath(nextPath);
+    setAutoplayCountdown(AUTOPLAY_COUNTDOWN_SECONDS);
+    autoplayTimerRef.current = setInterval(() => {
+      setAutoplayCountdown((remaining) => {
+        if (remaining === null || remaining <= 1) {
+          if (autoplayTimerRef.current) clearInterval(autoplayTimerRef.current);
+          navigate(nextPath);
+          return null;
+        }
+        return remaining - 1;
+      });
+    }, 1000);
+  }, [navigate]);
 
   const cancelAutoplay = useCallback(() => {
     if (autoplayTimerRef.current) clearInterval(autoplayTimerRef.current);
@@ -698,15 +727,36 @@ function Watch() {
     };
   }, []);
 
-  // Clip sharing
-  const shareCurrentTime = useCallback(() => {
+  /**
+   * Share the exact moment on screen.
+   *
+   * This used to be a pair of scissors, which nobody read as "share" — the
+   * clipboard was the only outcome and the icon promised something else. It is
+   * now the platform's own share sheet where there is one (every phone), and a
+   * copied link where there is not.
+   */
+  const shareCurrentTime = useCallback(async () => {
     const currentSecs = Math.floor(Number(playerRef.current?.currentTime || 0));
     const url = new URL(window.location.href);
     url.searchParams.set("t", String(currentSecs));
-    copyToClipboard(url.toString());
+    // A party link is personal to this session; sharing it would drag whoever
+    // opens it into the party rather than to the title.
+    url.searchParams.delete("party");
+    const link = url.toString();
+
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: mediaTitle, url: link });
+        return;
+      } catch {
+        // Dismissed, or unsupported for this payload — fall back to copying.
+      }
+    }
+
+    copyToClipboard(link);
     setClipCopied(true);
     setTimeout(() => setClipCopied(false), 2000);
-  }, []);
+  }, [mediaTitle]);
 
   const flushRecentProgress = useCallback(async (
     options?: {
@@ -848,29 +898,42 @@ function Watch() {
 
     writeStoredRecentProgress(recentProgressStorageKey, payload);
 
-    // if (shouldAutoComplete && !playbackSessionRef.current.completionHandled) {
-    //   playbackSessionRef.current.completionHandled = true;
-    //   await flushRecentProgress({ force: true, payload });
-    //   if (!ratingItem) {
-    //     setIsRatingOpen(true);
-    //   }
-    //   // Start autoplay countdown for TV episodes
-    //   if (movieType === "tv") {
-    //     const next = getNextEpisodeForSeries();
-    //     if (next.nextSeason && next.nextEpisode && movieId) {
-    //       const nextPath = `/tv/${movieId}/${next.nextSeason}/${next.nextEpisode}/watch`;
-    //       // startAutoplay(nextPath);
-    //     }
-    //   }
-    // }
-  }, [episodeId, fallbackDurationMinutes, flushRecentProgress, getNextEpisodeForSeries, mediaPoster, mediaTitle, movieId, movieType, ratingItem, recentProgressStorageKey, routeProgressStorageKey, seasonId, sessionBaseReady]);
+    if (shouldAutoComplete && !playbackSessionRef.current.completionHandled) {
+      playbackSessionRef.current.completionHandled = true;
+      await flushRecentProgress({ force: true, payload });
+
+      if (movieType === "tv") {
+        const next = getNextEpisodeForSeries();
+        if (next.nextSeason && next.nextEpisode && movieId) {
+          startAutoplay(
+            `/tv/${movieId}/${next.nextSeason}/${next.nextEpisode}/watch`,
+          );
+        }
+      }
+    }
+  }, [episodeId, fallbackDurationMinutes, flushRecentProgress, getNextEpisodeForSeries, mediaPoster, mediaTitle, movieId, movieType, recentProgressStorageKey, routeProgressStorageKey, seasonId, sessionBaseReady, startAutoplay]);
 
   const episodeChange = (nextPath: string) => {
     void (async () => {
       await persistProgress(getCurrentProgressMinutes(), getPlayerDurationMinutes());
       await flushRecentProgress({ force: true });
       const query = searchParams.toString();
-      navigate(query ? `${nextPath}?${query}` : nextPath);
+      const target = query ? `${nextPath}?${query}` : nextPath;
+
+      // In a party the episode belongs to everyone, so the room moves together
+      // rather than one person quietly ending up an episode ahead.
+      if (party.status === "connected" && party.canControl) {
+        const [, , mediaId, season, episode] = nextPath.split("/");
+        const isSeriesPath = movieType === "tv";
+        party.broadcastNavigation(target, {
+          mediaType: movieType || "movie",
+          mediaId: String(mediaId || movieId || ""),
+          season: isSeriesPath && season ? Number(season) : null,
+          episode: isSeriesPath && episode ? Number(episode) : null,
+        });
+      }
+
+      navigate(target);
     })();
   };
 
@@ -1072,6 +1135,11 @@ function Watch() {
     if (resumedSourceRef.current === resumeKey) return;
     resumedSourceRef.current = resumeKey;
 
+    // In a party the position belongs to the party, not to this viewer's own
+    // history. Resuming where *they* left off would drop them somewhere nobody
+    // else is, and the correction that followed would look like a glitch.
+    if (searchParams.get("party")) return;
+
     const tParam = Number(searchParams.get("t") || 0);
     const startAtMinutes = Math.max(0, tParam > 0 ? tParam / 60 : sessionBaseProgress);
     if (startAtMinutes > 0) {
@@ -1216,7 +1284,7 @@ function Watch() {
       !animeFallbackRef.current.used
     ) {
       animeFallbackRef.current.used = true;
-      const fallbackMessage = `AnimeKai had no stream for this title, so ${getProviderLabel(DEFAULT_PROVIDER)} is playing instead.`;
+      const fallbackMessage = "No anime source for this title, so the standard one is playing instead.";
       setAutoProviderNotice(fallbackMessage);
       toast.message(fallbackMessage);
       setProviderInQuery(DEFAULT_PROVIDER);
@@ -1267,16 +1335,119 @@ function Watch() {
     season: seasonId,
     episode: episodeId,
   });
-  /**
-   * The parental-guide button and the info button open the same tab; this is
-   * what tells the panel which of the two the viewer pressed.
-   */
-  const [shouldFocusParentalGuide, setShouldFocusParentalGuide] = useState(false);
+  const openInfoPanel = () => openPanel("info");
 
-  const openInfoPanel = (focusParentalGuide = false) => {
-    setShouldFocusParentalGuide(focusParentalGuide);
-    openPanel("info");
-  };
+  /* ── Watch together ─────────────────────────────────────────────────────── */
+
+  /**
+   * A party is just this page with `?party=CODE` on it.
+   *
+   * Everything below the party layer — provider selection, resume position,
+   * subtitles, skip timings — is the same code path a solo viewer runs, which
+   * is the point: the old implementation put the whole watch page in an iframe
+   * inside a second page, so nothing the player knew was available to the party
+   * and nothing the party knew reached the player.
+   */
+  const partyCode = String(searchParams.get("party") || "").toUpperCase() || null;
+  const partyIdentity = useMemo(
+    () =>
+      isLoggedIn
+        ? {}
+        : { pid: readGuestPid(), displayName: readGuestName() || "Guest" },
+    [],
+  );
+
+  const handlePartyNavigate = useCallback(
+    (path: string) => navigate(path),
+    [navigate],
+  );
+
+  const handlePartyLeave = useCallback(() => {
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.delete("party");
+    setSearchParams(nextParams, { replace: true });
+    toast.message("You left the watch party.");
+  }, [searchParams, setSearchParams]);
+
+  const party = useWatchPartySession({
+    code: partyCode,
+    playerRef,
+    identity: partyIdentity,
+    playerKey: `${playbackSourceUrl}:${playerReloadToken}`,
+    onNavigate: handlePartyNavigate,
+    onLeave: handlePartyLeave,
+  });
+
+  const startWatchParty = useCallback(async () => {
+    if (!isLoggedIn) {
+      toast.message("Sign in to start a watch party — guests can still join yours.");
+      navigate("/auth/login");
+      return;
+    }
+
+    try {
+      const created = await watchPartyAPI.create({
+        mediaType: movieType || "movie",
+        mediaId: movieId || "",
+        ...(seasonId && { season: Number(seasonId) }),
+        ...(episodeId && { episode: Number(episodeId) }),
+        provider: selectedProvider,
+        ...(activeSource?.id && { server: activeSource.id }),
+        ...(selectedProvider === ANIME_PROVIDER && { version }),
+      });
+
+      copyToClipboard(`${window.location.origin}/party/${created.code}`);
+      toast.success("Party started — the invite link is on your clipboard.");
+
+      const nextParams = new URLSearchParams(searchParams);
+      nextParams.set("party", created.code);
+      setSearchParams(nextParams);
+    } catch {
+      toast.error("Could not start the watch party.");
+    }
+  }, [
+    activeSource?.id,
+    episodeId,
+    movieId,
+    movieType,
+    navigate,
+    searchParams,
+    seasonId,
+    selectedProvider,
+    setSearchParams,
+    version,
+  ]);
+
+  const copyPartyInvite = useCallback(() => {
+    if (!partyCode) return;
+    copyToClipboard(`${window.location.origin}/party/${partyCode}`);
+    toast.success("Invite link copied.");
+  }, [partyCode]);
+
+  /**
+   * The one control a viewer who is stuck can use without understanding any of
+   * this: another copy of the same thing. Mirrors of the current source come
+   * first — they are the cheapest hop and usually enough — and only when they
+   * run out does it move to a different source entirely.
+   */
+  const tryAnotherSource = useCallback(() => {
+    if (tryNextServer()) {
+      toast.message("Switching to another server…");
+      return;
+    }
+
+    const order = PROVIDER_OPTIONS.filter(
+      (option) => option !== selectedProvider,
+    );
+    const nextProvider = order[0];
+    if (!nextProvider) {
+      toast.error("No other sources are available for this title.");
+      return;
+    }
+
+    setProviderInQuery(nextProvider);
+    toast.message(`Trying ${getProviderLabel(nextProvider)}…`);
+  }, [selectedProvider, tryNextServer]);
 
   const providerOptions: ProviderOption[] = PROVIDER_OPTIONS.map((providerOption) => ({
     id: providerOption,
@@ -1291,6 +1462,13 @@ function Watch() {
   const hasNextEpisode = Boolean(
     nextEpisodeMeta.nextSeason && nextEpisodeMeta.nextEpisode,
   );
+  const upNextEpisode =
+    movieType === "tv" && nextEpisodeMeta.nextSeason === Number(seasonId || 0)
+      ? (tvSeasonsDetailsArr?.episodes || []).find(
+        (episode) =>
+          Number(episode?.episode_number) === nextEpisodeMeta.nextEpisode,
+      )
+      : undefined;
   const chromeSubtitle =
     movieType === "tv"
       ? [
@@ -1326,28 +1504,6 @@ function Watch() {
       color: "#ffffff",
     },
   } as const;
-  /** Small pill used for the meta row under the title. */
-  const metaButtonStyles = {
-    display: "inline-flex",
-    alignItems: "center",
-    gap: 0.5,
-    height: 26,
-    px: 1,
-    borderRadius: "6px",
-    border: "1px solid rgba(255,255,255,0.16)",
-    backgroundColor: "rgba(10,10,10,0.55)",
-    backdropFilter: "blur(8px)",
-    color: "#ededed",
-    cursor: "pointer",
-    fontFamily: "body",
-    fontSize: "0.75rem",
-    fontWeight: 500,
-    "&:hover": {
-      backgroundColor: "rgba(26,26,26,0.85)",
-      borderColor: "rgba(255,255,255,0.28)",
-      color: "#ffffff",
-    },
-  } as const;
   const titleMeta = (
     <>
       {imdbInfo.rating > 0 ? (
@@ -1367,29 +1523,6 @@ function Watch() {
           {imdbInfo.rating.toFixed(1)}
         </Chip>
       ) : null}
-      <Box
-        component="button"
-        type="button"
-        aria-label="Parental guide"
-        title="Parental guide"
-        onClick={() => openInfoPanel(true)}
-        sx={metaButtonStyles}
-      >
-        <FamilyRestroom sx={{ fontSize: 14 }} />
-        <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
-          Parental guide
-        </Box>
-      </Box>
-      <Box
-        component="button"
-        type="button"
-        aria-label={movieType === "tv" ? "Episode info" : "About this film"}
-        title={movieType === "tv" ? "Episode info" : "About this film"}
-        onClick={() => openInfoPanel(false)}
-        sx={metaButtonStyles}
-      >
-        <InfoIcon sx={{ fontSize: 14 }} />
-      </Box>
     </>
   );
   const errorOverlay = (
@@ -1515,7 +1648,7 @@ function Watch() {
           skipSegments,
           sourcesLabel,
           onOpenSources: () => openPanel("sources"),
-          onOpenInfo: () => openInfoPanel(false),
+          onOpenInfo: openInfoPanel,
           ...(movieType === "tv"
             ? { onOpenEpisodes: () => openPanel("episodes") }
             : {}),
@@ -1530,42 +1663,56 @@ function Watch() {
           topRight: (
             <>
               <IconButton
-                aria-label="Copy a link that starts here"
+                aria-label="Share this moment"
+                title="Share this moment"
                 variant="plain"
                 onClick={shareCurrentTime}
                 sx={playerActionStyles}
               >
                 {clipCopied ? (
-                  <LinkIcon sx={{ fontSize: 18 }} />
+                  <Check sx={{ fontSize: 18 }} />
                 ) : (
-                  <ContentCut sx={{ fontSize: 18 }} />
+                  <IosShare sx={{ fontSize: 18 }} />
                 )}
               </IconButton>
-              <Button
-                size="sm"
-                variant="outlined"
-                color="neutral"
-                startDecorator={<People sx={{ fontSize: 15 }} />}
-                sx={{
-                  ...playerActionStyles,
-                  display: { xs: "none", sm: "inline-flex" },
-                }}
-                onClick={async () => {
-                  try {
-                    const r = await watchPartyAPI.create({
-                      mediaType: movieType || "movie",
-                      mediaId: movieId || "",
-                      ...(seasonId && { season: Number(seasonId) }),
-                      ...(episodeId && { episode: Number(episodeId) }),
-                    });
-                    navigate(`/party/${r.code}`);
-                  } catch {
-                    toast.error("Could not create watch party.");
-                  }
-                }}
-              >
-                Watch together
-              </Button>
+              {partyCode ? (
+                <Button
+                  size="sm"
+                  variant="outlined"
+                  color="neutral"
+                  startDecorator={<People sx={{ fontSize: 15 }} />}
+                  onClick={copyPartyInvite}
+                  title="Copy the invite link"
+                  sx={playerActionStyles}
+                >
+                  {party.people.length || 1}
+                  <Box
+                    component="span"
+                    sx={{
+                      display: { xs: "none", sm: "inline" },
+                      ml: 0.5,
+                      color: "rgba(255,255,255,0.6)",
+                      fontFamily: "code",
+                      fontSize: "0.75rem",
+                    }}
+                  >
+                    {partyCode}
+                  </Box>
+                </Button>
+              ) : (
+                <Button
+                  size="sm"
+                  variant="outlined"
+                  color="neutral"
+                  startDecorator={<People sx={{ fontSize: 15 }} />}
+                  sx={playerActionStyles}
+                  onClick={startWatchParty}
+                >
+                  <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
+                    Watch together
+                  </Box>
+                </Button>
+              )}
             </>
           ),
         }}
@@ -1608,6 +1755,10 @@ function Watch() {
                 setIsPanelOpen(false);
               }}
               isSourcesLoading={isPreparingPlayback}
+              onTryAnother={() => {
+                tryAnotherSource();
+                setIsPanelOpen(false);
+              }}
               showVersion={selectedProvider === ANIME_PROVIDER}
               version={version}
               onVersionChange={setVersionInQuery}
@@ -1638,7 +1789,6 @@ function Watch() {
                     .map((genre) => genre?.name)
                     .filter(Boolean) as string[]}
                   imdb={imdbInfo}
-                  focusParentalGuide={shouldFocusParentalGuide}
                   tmdbId={movieType === "tv" ? String(movieId || "") : undefined}
                   seasonNumber={movieType === "tv" ? Number(seasonId) : undefined}
                   episodeNumber={movieType === "tv" ? Number(episodeId) : undefined}
@@ -1646,6 +1796,112 @@ function Watch() {
                 />
               }
             />
+            {autoplayCountdown !== null ? (
+              <Box
+                sx={{
+                  position: "absolute",
+                  right: { xs: 12, md: 24 },
+                  bottom: { xs: 84, md: 104 },
+                  zIndex: 11,
+                  width: "min(340px, calc(100% - 24px))",
+                  p: 2,
+                  borderRadius: "12px",
+                  border: "1px solid #1f1f1f",
+                  background: "rgba(10,10,10,0.94)",
+                  backdropFilter: "blur(12px)",
+                  pointerEvents: "auto",
+                  animation: "sm-upnext-in 200ms ease",
+                  "@keyframes sm-upnext-in": {
+                    from: { transform: "translateY(12px)", opacity: 0 },
+                    to: { transform: "translateY(0)", opacity: 1 },
+                  },
+                }}
+              >
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    mb: 0.5,
+                  }}
+                >
+                  <Typography level="body-xs">Up next</Typography>
+                  <IconButton
+                    aria-label="Cancel autoplay"
+                    size="sm"
+                    variant="plain"
+                    onClick={cancelAutoplay}
+                  >
+                    <Close sx={{ fontSize: 16 }} />
+                  </IconButton>
+                </Box>
+                <Box sx={{ display: "flex", gap: 1.25, alignItems: "center" }}>
+                  {upNextEpisode?.still_path ? (
+                    <Box
+                      component="img"
+                      src={`https://image.tmdb.org/t/p/w300${upNextEpisode.still_path}`}
+                      alt=""
+                      sx={{
+                        width: 96,
+                        aspectRatio: "16 / 9",
+                        objectFit: "cover",
+                        borderRadius: "6px",
+                        border: "1px solid #1f1f1f",
+                        flexShrink: 0,
+                      }}
+                    />
+                  ) : null}
+                  <Box sx={{ minWidth: 0 }}>
+                    <Typography
+                      level="title-sm"
+                      sx={{
+                        color: "#ededed",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {upNextEpisode?.name || "Next episode"}
+                    </Typography>
+                    <Typography level="body-xs">
+                      {`S${nextEpisodeMeta.nextSeason} · E${nextEpisodeMeta.nextEpisode}`}
+                    </Typography>
+                  </Box>
+                </Box>
+                <Box sx={{ display: "flex", gap: 1, mt: 1.5 }}>
+                  <Button
+                    size="sm"
+                    startDecorator={<SkipNext sx={{ fontSize: 16 }} />}
+                    onClick={() => {
+                      cancelAutoplay();
+                      navigate(autoplayNextPath);
+                    }}
+                  >
+                    Play now
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outlined"
+                    color="neutral"
+                    onClick={cancelAutoplay}
+                  >
+                    {`Cancel (${autoplayCountdown}s)`}
+                  </Button>
+                </Box>
+                <LinearProgress
+                  determinate
+                  sx={{ mt: 1.5 }}
+                  value={
+                    ((AUTOPLAY_COUNTDOWN_SECONDS - autoplayCountdown) /
+                      AUTOPLAY_COUNTDOWN_SECONDS) *
+                    100
+                  }
+                />
+              </Box>
+            ) : null}
+            {partyCode && party.status === "connected" ? (
+              <WatchPartyDock session={party} onExit={party.leave} />
+            ) : null}
             {centerErrorMessage ? errorOverlay : null}
           </>
         }
@@ -1768,54 +2024,6 @@ function Watch() {
             : undefined
         }
       />
-      {autoplayCountdown !== null && (
-        <Box
-          sx={{
-            position: "fixed",
-            bottom: 110,
-            right: 32,
-            zIndex: 9999,
-            background: "rgba(10,10,10,0.94)",
-            borderRadius: "12px",
-            border: "1px solid #1f1f1f",
-            p: 2.5,
-            display: "flex",
-            flexDirection: "column",
-            gap: 1.5,
-            minWidth: 300,
-            backdropFilter: "blur(12px)",
-          }}
-        >
-          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <Typography level="body-xs">Up next</Typography>
-            <IconButton
-              aria-label="Cancel autoplay"
-              size="sm"
-              variant="plain"
-              onClick={cancelAutoplay}
-            >
-              <Close sx={{ fontSize: 16 }} />
-            </IconButton>
-          </Box>
-          <Typography level="title-md">Next episode</Typography>
-          <Box sx={{ display: "flex", gap: 1.5, mt: 0.5 }}>
-            <Button
-              size="sm"
-              startDecorator={<SkipNext sx={{ fontSize: 16 }} />}
-              onClick={() => {
-                cancelAutoplay();
-                navigate(autoplayNextPath);
-              }}
-            >
-              Play now
-            </Button>
-            <Button size="sm" variant="outlined" color="neutral" onClick={cancelAutoplay}>
-              Cancel ({autoplayCountdown}s)
-            </Button>
-          </Box>
-          <LinearProgress determinate value={((10 - autoplayCountdown) / 10) * 100} />
-        </Box>
-      )}
     </Box>
   );
 }

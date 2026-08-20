@@ -1,7 +1,14 @@
-import { ReactNode, useEffect, useRef } from "react";
+import { ReactNode, useEffect, useRef, useState } from "react";
 import { Box, Typography } from "@mui/joy";
 import { useMediaRemote } from "@vidstack/react";
-import { Check, Close, Loader, PlayArrow } from "../ui/icons";
+import {
+  ArrowDropDown,
+  Check,
+  Close,
+  Loader,
+  PlayArrow,
+  RefreshRounded,
+} from "../ui/icons";
 import { AnimeMode, ProviderId, VixsrcSourceOption } from "../../types/providers";
 
 export type WatchPanelTab = "episodes" | "sources" | "info";
@@ -25,6 +32,7 @@ type EpisodeOption = {
 
 export type ProviderOption = {
   id: ProviderId;
+  /** Plain-language name — "Standard", not "Vixsrc". */
   label: string;
   description: string;
   /** Marks the provider the title is best served by (AnimeKai for anime). */
@@ -51,6 +59,8 @@ export type WatchSidePanelProps = {
   activeSourceId: string;
   onSourceChange: (sourceId: string) => void;
   isSourcesLoading?: boolean;
+  /** One-tap escape from a source that will not play. */
+  onTryAnother: () => void;
   showVersion: boolean;
   version: AnimeMode;
   onVersionChange: (version: AnimeMode) => void;
@@ -212,6 +222,7 @@ function WatchSidePanel({
   activeSourceId,
   onSourceChange,
   isSourcesLoading,
+  onTryAnother,
   showVersion,
   version,
   onVersionChange,
@@ -220,6 +231,12 @@ function WatchSidePanel({
 }: WatchSidePanelProps) {
   const remote = useMediaRemote();
   const activeEpisodeRef = useRef<HTMLDivElement | null>(null);
+  /**
+   * Which mirror of a source is being played is a detail almost nobody needs —
+   * and one that reads as a decision when it is on screen. It stays folded away
+   * behind "Advanced" until someone goes looking for it.
+   */
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   // Hold the controls open while the sheet is — the chrome fading out beneath
   // an open panel reads as the player having crashed.
@@ -499,29 +516,37 @@ function WatchSidePanel({
             infoContent
           ) : (
             <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-              <Box>
-                <Typography
-                  level="body-xs"
-                  sx={{
-                    textTransform: "uppercase",
-                    letterSpacing: "0.06em",
-                    fontWeight: 500,
-                    mb: 1,
-                  }}
-                >
-                  Provider
-                </Typography>
-                <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
-                  {providers.map((provider) => (
-                    <OptionRow
-                      key={provider.id}
-                      title={provider.label}
-                      hint={provider.description}
-                      badge={provider.recommended ? "Recommended" : undefined}
-                      selected={provider.id === selectedProvider}
-                      onClick={() => onProviderChange(provider.id)}
-                    />
-                  ))}
+              {/* The one thing a stuck viewer actually wants: something else to
+                  try, without having to understand what any of it means. */}
+              <Box
+                component="button"
+                type="button"
+                onClick={onTryAnother}
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1,
+                  width: "100%",
+                  px: 1.5,
+                  py: 1.5,
+                  borderRadius: "8px",
+                  border: "1px solid #333333",
+                  backgroundColor: "#141414",
+                  color: "#ededed",
+                  fontFamily: "body",
+                  fontSize: "0.875rem",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  textAlign: "left",
+                  "&:hover": { backgroundColor: "#1a1a1a", borderColor: "#4d4d4d" },
+                }}
+              >
+                <RefreshRounded sx={{ fontSize: 18, flexShrink: 0 }} />
+                <Box sx={{ minWidth: 0 }}>
+                  Video not playing? Try another
+                  <Typography level="body-xs" sx={{ fontWeight: 400, mt: 0.25 }}>
+                    Switches to the next working copy of this title.
+                  </Typography>
                 </Box>
               </Box>
 
@@ -560,7 +585,7 @@ function WatchSidePanel({
                           "&:hover": { color: "#ededed", borderColor: "#333333" },
                         }}
                       >
-                        {option === "sub" ? "Subbed" : "Dubbed"}
+                        {option === "sub" ? "Original + subtitles" : "Dubbed"}
                       </Box>
                     ))}
                   </Box>
@@ -577,29 +602,20 @@ function WatchSidePanel({
                     mb: 1,
                   }}
                 >
-                  Server
+                  Video source
                 </Typography>
-                {isSourcesLoading ? (
-                  <Typography level="body-sm">Finding servers…</Typography>
-                ) : sources.length ? (
-                  <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
-                    {sources.map((source) => (
-                      <OptionRow
-                        key={source.id}
-                        title={source.name}
-                        hint={[source.quality, source.format?.toUpperCase()]
-                          .filter(Boolean)
-                          .join(" · ")}
-                        selected={source.id === activeSourceId}
-                        onClick={() => onSourceChange(source.id)}
-                      />
-                    ))}
-                  </Box>
-                ) : (
-                  <Typography level="body-sm">
-                    No servers reported for this provider yet.
-                  </Typography>
-                )}
+                <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
+                  {providers.map((provider) => (
+                    <OptionRow
+                      key={provider.id}
+                      title={provider.label}
+                      hint={provider.description}
+                      badge={provider.recommended ? "Best for this" : undefined}
+                      selected={provider.id === selectedProvider}
+                      onClick={() => onProviderChange(provider.id)}
+                    />
+                  ))}
+                </Box>
               </Box>
 
               {notice ? (
@@ -617,6 +633,71 @@ function WatchSidePanel({
                   {notice}
                 </Typography>
               ) : null}
+
+              <Box>
+                <Box
+                  component="button"
+                  type="button"
+                  aria-expanded={showAdvanced}
+                  onClick={() => setShowAdvanced((value) => !value)}
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 0.5,
+                    px: 0,
+                    py: 0.5,
+                    border: "none",
+                    background: "transparent",
+                    color: "#707070",
+                    fontFamily: "body",
+                    fontSize: "0.75rem",
+                    fontWeight: 500,
+                    letterSpacing: "0.06em",
+                    textTransform: "uppercase",
+                    cursor: "pointer",
+                    "&:hover": { color: "#ededed" },
+                  }}
+                >
+                  <ArrowDropDown
+                    sx={{
+                      fontSize: 16,
+                      transform: showAdvanced ? "none" : "rotate(-90deg)",
+                      transition: "transform 150ms ease",
+                    }}
+                  />
+                  Advanced
+                </Box>
+
+                {showAdvanced ? (
+                  <Box sx={{ mt: 1 }}>
+                    <Typography level="body-xs" sx={{ mb: 1 }}>
+                      Same video, different machine serving it. Worth changing
+                      only when playback keeps stalling.
+                    </Typography>
+                    {isSourcesLoading ? (
+                      <Typography level="body-sm">Finding servers…</Typography>
+                    ) : sources.length ? (
+                      <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
+                        {sources.map((source) => (
+                          <OptionRow
+                            key={source.id}
+                            title={source.name}
+                            hint={[source.quality, source.format?.toUpperCase()]
+                              .filter(Boolean)
+                              .join(" · ")}
+                            selected={source.id === activeSourceId}
+                            onClick={() => onSourceChange(source.id)}
+                          />
+                        ))}
+                      </Box>
+                    ) : (
+                      <Typography level="body-sm">
+                        No alternatives reported for this source yet.
+                      </Typography>
+                    )}
+                  </Box>
+                ) : null}
+              </Box>
             </Box>
           )}
         </Box>
