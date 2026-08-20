@@ -11,7 +11,6 @@ import {
   Send,
   Smile,
   Layers,
-  Loader,
   Videocam,
   VideocamOff,
 } from "../ui/icons";
@@ -418,11 +417,7 @@ function WatchPartyDock({
                 component="button"
                 type="button"
                 aria-label={session.micOn ? "Mute microphone" : "Unmute microphone"}
-                title={
-                  session.micOn
-                    ? "Mute microphone"
-                    : "Unmute — this starts voice chat for the party"
-                }
+                title={session.micOn ? "Mute microphone" : "Unmute microphone"}
                 onClick={session.toggleMic}
                 sx={{
                   ...roundButtonStyles,
@@ -432,15 +427,7 @@ function WatchPartyDock({
                   borderColor: session.micOn ? "rgba(62,207,142,0.5)" : roundButtonStyles.border,
                 }}
               >
-                {session.isConnectingCall ? (
-                  <Loader
-                    sx={{
-                      fontSize: 18,
-                      animation: "sm-spin 900ms linear infinite",
-                      "@keyframes sm-spin": { to: { transform: "rotate(360deg)" } },
-                    }}
-                  />
-                ) : session.micOn ? (
+                {session.micOn ? (
                   <Mic sx={{ fontSize: 18 }} />
                 ) : (
                   <MicOff sx={{ fontSize: 18 }} />

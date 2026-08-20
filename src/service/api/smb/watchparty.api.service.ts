@@ -9,8 +9,6 @@ export interface WatchPartyMember {
   isGuest: boolean;
   joinedAt: number;
   lastSeenAt: number;
-  /** In the voice/video room, as opposed to merely in the party. */
-  inCall?: boolean;
 }
 
 export interface WatchPartyMessage {
@@ -47,7 +45,7 @@ export interface WatchParty {
   updatedBy: string;
   createdAt: string;
   expiresAt: number;
-  /** Whether anyone in the party is currently on voice or video. */
+  /** Whether the party has a voice/video room to join. */
   hasVideoChat: boolean;
   /** Whether this deployment can offer voice and video at all. */
   canVideoChat: boolean;
@@ -67,6 +65,8 @@ export interface WatchPartySelf {
 export interface WatchPartyJoinResult {
   party: WatchParty;
   you: WatchPartySelf;
+  /** Room URL and a meeting token minted for this member, when available. */
+  daily: { url: string; token: string } | null;
 }
 
 /** Guests identify themselves on every call; signed-in users are read from the cookie. */
@@ -153,24 +153,6 @@ export const watchPartyAPI = {
       ...identity,
       emoji,
     });
-    return r.data;
-  },
-
-  /**
-   * Opens the voice/video room, creating it on the server if this is the first
-   * person to ask. Kept separate from `join` so a party that never turns a
-   * microphone on never provisions — or pays for — a WebRTC room.
-   */
-  joinCall: async (
-    code: string,
-    identity: GuestIdentity = {},
-  ): Promise<{ url: string; token: string }> => {
-    const r = await smbV1API.post(`/watchparty/${code}/call`, identity);
-    return r.data;
-  },
-
-  leaveCall: async (code: string, identity: GuestIdentity = {}) => {
-    const r = await smbV1API.post(`/watchparty/${code}/call/leave`, identity);
     return r.data;
   },
 

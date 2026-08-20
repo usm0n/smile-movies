@@ -149,8 +149,6 @@ export interface WatchPartySession {
   /** Voice and video, absent when the room could not be joined. */
   /** Voice and video can be offered at all in this deployment. */
   voiceAvailable: boolean;
-  /** Currently opening the room after a first tap on mic or camera. */
-  isConnectingCall: boolean;
   micOn: boolean;
   camOn: boolean;
   toggleMic: () => void;
@@ -209,7 +207,6 @@ const emptySession = (code: string, status: PartyStatus): WatchPartySession => (
   reactions: [],
   sendReaction: () => undefined,
   voiceAvailable: false,
-  isConnectingCall: false,
   micOn: false,
   camOn: false,
   toggleMic: () => undefined,
@@ -292,10 +289,28 @@ export function useWatchPartySession(options: {
    * someone pressing play.
    */
   const stalledPeersRef = useRef(new Map<string, string>());
+  /**
+   * Deliberately only ever holds *other* people.
+   *
+   * Holding yourself is a trap: the hold pauses the player, a paused player
+   * stops firing the events that would report recovery, and the client sits out
+   * the rest of the film ignoring everything the party sends it. Your own stall
+   * needs no local pause anyway — the video has already stopped, which is what
+   * a stall is. It only needs reporting, so everyone else waits for you.
+   */
   const heldRef = useRef(false);
   const holdStartedAtRef = useRef(0);
   const stallTimerRef = useRef(0);
   const localStalledRef = useRef(false);
+  /**
+   * What the party was last watching.
+   *
+   * Moving the room to the next episode is announced on the data channel, which
+   * the polling fallback does not have. Without this, a party that lost its
+   * WebRTC connection would leave everyone behind on the old episode with no
+   * sign anything had happened.
+   */
+  const partyMediaRef = useRef("");
   const identityRef = useRef(identity);
   const duckRef = useRef({ enabled: true, baseVolume: 1, timer: 0 });
   const leftRef = useRef(false);
@@ -332,13 +347,13 @@ export function useWatchPartySession(options: {
     if (call && transportRef.current === "daily") {
       try {
         call.sendAppMessage(envelope, "*");
-        return;
+        return true;
       } catch {
         // Fall through to the API — a failed send is not worth a lost pause.
       }
     }
 
-    if (!code) return;
+    if (!code) return false;
     if (envelope.t === "state") {
       void watchPartyAPI
         .sync(code, {
@@ -347,7 +362,12 @@ export function useWatchPartySession(options: {
           currentTime: envelope.time,
         })
         .catch(() => undefined);
+      return true;
     }
+
+    // Chat and reactions have their own persisted endpoints; the rest —
+    // buffering reports, hellos, navigation — exist only on the data channel.
+    return false;
   }, [code]);
 
   const broadcastLocalState = useCallback(() => {
@@ -391,8 +411,8 @@ export function useWatchPartySession(options: {
       }
 
       // A correction arriving mid-wait must not restart playback under the
-      // person we are all waiting for. The state is recorded either way, so the
-      // hold releases into the right one.
+      // person everyone is waiting for. The state is recorded either way, so
+      // the hold releases into the right one.
       if (envelope.state === "playing" && stalledPeersRef.current.size) return;
 
       if (envelope.state === "playing" && player.paused) {
@@ -455,13 +475,13 @@ export function useWatchPartySession(options: {
       if (!me || localStalledRef.current === stalled) return;
       localStalledRef.current = stalled;
 
-      if (stalled) stalledPeersRef.current.set(me.pid, me.displayName);
-      else stalledPeersRef.current.delete(me.pid);
-      applyHold();
-
+      // Without a data channel there is no way to say "I have caught up", so
+      // there must be no way to say "wait for me" either — a hold nobody can
+      // lift would strand the party.
+      if (transportRef.current !== "daily") return;
       send({ t: "buffering", by: me.pid, name: me.displayName, stalled });
     },
-    [applyHold, send],
+    [send],
   );
 
   /* ── Inbound messages, whichever transport carried them ─────────────────── */
@@ -522,6 +542,9 @@ export function useWatchPartySession(options: {
 
         case "nav":
           if (me && envelope.by === me.pid) return;
+          // Clearing this makes the next poll re-seed silently instead of
+          // announcing the same move a second time.
+          partyMediaRef.current = "";
           toast.message(`${envelope.name} moved the party to the next episode`);
           onNavigateRef.current(envelope.path);
           return;
@@ -718,16 +741,27 @@ export function useWatchPartySession(options: {
         setSelf({ pid: result.you.pid, displayName: result.you.displayName });
         selfRef.current = { pid: result.you.pid, displayName: result.you.displayName };
 
+        partyMediaRef.current = `${result.party.mediaType}:${result.party.mediaId}:${result.party.season ?? ""}:${result.party.episode ?? ""}`;
+
         (result.party.messages || []).forEach((message) =>
           seenIdsRef.current.add(message.id),
         );
         setMessages(result.party.messages || []);
 
-        // Nobody joins the WebRTC room just to watch a film. Playback sync and
-        // chat run over the API until somebody actually wants to be heard or
-        // seen, at which point `connectCall` takes over as the transport too.
-        transportRef.current = "polling";
-        setTransport("polling");
+        // Join the room straight away. It carries the playback sync, so a party
+        // that has not connected is a party where every pause arrives late.
+        if (result.daily) {
+          const connected = await connectCall(result.daily.url, result.daily.token);
+          if (cancelled) return;
+          if (!connected) {
+            transportRef.current = "polling";
+            setTransport("polling");
+            toast.message("Voice chat unavailable — syncing over the network instead.");
+          }
+        } else {
+          transportRef.current = "polling";
+          setTransport("polling");
+        }
 
         if (cancelled) return;
         setStatus("connected");
@@ -799,24 +833,15 @@ export function useWatchPartySession(options: {
   /**
    * Join the voice/video room.
    *
-   * Called the first time this client turns on a microphone or camera, and also
-   * when somebody *else* does — you cannot hear a room you are not in. While
-   * connected, the same channel carries playback sync, which is faster than
-   * polling; leaving it falls straight back.
+   * Everyone joins on arrival, muted and with the camera off. The room is not
+   * really about the cameras: `sendAppMessage` runs over the same connection,
+   * and it is the only transport here that delivers a pause in the time it
+   * takes to press the button. Polling is the fallback for when this fails, and
+   * it is noticeably slower — a party on it feels broken.
    */
   const connectCall = useCallback(
-    async (): Promise<boolean> => {
-      if (callRef.current || !code) return Boolean(callRef.current);
-
-      let credentials: { url: string; token: string };
-      try {
-        credentials = await watchPartyAPI.joinCall(code, identityRef.current);
-      } catch {
-        toast.error("Voice and video are unavailable right now.");
-        return false;
-      }
-
-      const { url, token } = credentials;
+    async (url: string, token: string): Promise<boolean> => {
+      if (callRef.current) return true;
 
       try {
         const module = await import("@daily-co/daily-js");
@@ -887,31 +912,13 @@ export function useWatchPartySession(options: {
       } catch (joinError) {
         console.error("[watch-party] video chat unavailable:", joinError);
         callRef.current = null;
-        void watchPartyAPI.leaveCall(code, identityRef.current).catch(() => undefined);
         return false;
       }
     },
-    [code, getPlayer, handleEnvelope, readDailyPeople, send],
+    [getPlayer, handleEnvelope, readDailyPeople, send],
   );
 
-  /** Step out of the room without leaving the party. */
-  const disconnectCall = useCallback(async () => {
-    const call = callRef.current;
-    callRef.current = null;
-    stalledPeersRef.current.clear();
-    applyHold();
-    setDailyPeople([]);
-    setMicOn(false);
-    setCamOn(false);
-    setSomeoneSpeaking("");
-    transportRef.current = "polling";
-    setTransport("polling");
 
-    if (call) await call.destroy().catch(() => undefined);
-    if (code) {
-      await watchPartyAPI.leaveCall(code, identityRef.current).catch(() => undefined);
-    }
-  }, [applyHold, code]);
 
   // `app-message` and `participant-joined` close over `handleEnvelope`, which
   // changes as state does. Rebinding the listener each time keeps them current
@@ -987,6 +994,19 @@ export function useWatchPartySession(options: {
               clockSkewRef.current = response.serverTime - Date.now();
             }
 
+            const mediaKey = `${next.mediaType}:${next.mediaId}:${next.season ?? ""}:${next.episode ?? ""}`;
+            if (partyMediaRef.current && partyMediaRef.current !== mediaKey) {
+              partyMediaRef.current = mediaKey;
+              const path =
+                next.mediaType === "tv"
+                  ? `/tv/${next.mediaId}/${next.season || 1}/${next.episode || 1}/watch`
+                  : `/movie/${next.mediaId}/watch`;
+              toast.message("The party moved to another episode.");
+              onNavigateRef.current(`${path}${window.location.search}`);
+              return;
+            }
+            partyMediaRef.current = mediaKey;
+
             if (!isPolling) return;
 
             // Only the polling transport carries content this way; over Daily
@@ -1038,12 +1058,7 @@ export function useWatchPartySession(options: {
 
     const call = callRef.current;
     callRef.current = null;
-    if (call) {
-      void call.destroy().catch(() => undefined);
-      if (code) {
-        void watchPartyAPI.leaveCall(code, identityRef.current).catch(() => undefined);
-      }
-    }
+    if (call) void call.destroy().catch(() => undefined);
 
     if (code) void watchPartyAPI.leave(code, identityRef.current).catch(() => undefined);
     onLeave();
@@ -1118,72 +1133,31 @@ export function useWatchPartySession(options: {
     [code, handleEnvelope, send],
   );
 
-  const [isConnectingCall, setIsConnectingCall] = useState(false);
-  /** Whether anyone but us is in the voice/video room right now. */
-  const othersOnCallRef = useRef(false);
-
   /**
-   * Turning a device on is what puts you in the room.
-   *
-   * Nobody is connected until they ask to be, so the first tap has two jobs:
-   * open the room, then switch the device on inside it. Turning the last one
-   * off leaves the room again rather than sitting there costing money for a
-   * silent, blank participant.
+   * Mic and camera are plain switches now: the room is already joined, so
+   * turning one on is a local device change rather than a connection dance.
    */
-  const setDevice = useCallback(
-    async (device: "mic" | "cam", enabled: boolean) => {
-      if (enabled && !callRef.current) {
-        setIsConnectingCall(true);
-        const connected = await connectCall();
-        setIsConnectingCall(false);
-        if (!connected) return;
-      }
-
-      const call = callRef.current;
-      if (!call) return;
-
-      // Going quiet only leaves the room if there is nobody left in it to
-      // hear. With someone else still talking, staying connected is the point.
-      const shouldLeaveRoom = (otherDeviceOn: boolean) =>
-        !enabled && !otherDeviceOn && !othersOnCallRef.current;
-
-      if (device === "mic") {
-        call.setLocalAudio(enabled);
-        setMicOn(enabled);
-        if (shouldLeaveRoom(camOn)) void disconnectCall();
-        return;
-      }
-
-      call.setLocalVideo(enabled);
-      setCamOn(enabled);
-      if (shouldLeaveRoom(micOn)) void disconnectCall();
-    },
-    [camOn, connectCall, disconnectCall, micOn],
-  );
-
   const toggleMic = useCallback(() => {
-    void setDevice("mic", !micOn);
-  }, [micOn, setDevice]);
+    const call = callRef.current;
+    if (!call) {
+      toast.message("Voice chat is still connecting.");
+      return;
+    }
+    const next = !micOn;
+    call.setLocalAudio(next);
+    setMicOn(next);
+  }, [micOn]);
 
   const toggleCam = useCallback(() => {
-    void setDevice("cam", !camOn);
-  }, [camOn, setDevice]);
-
-  /**
-   * Somebody else started talking. You cannot hear a room you are not in, so
-   * this client joins too — muted and dark, exactly as it was before.
-   */
-  const someoneElseIsOnCall = Boolean(
-    party?.members?.some(
-      (member) => member.inCall && member.pid !== self?.pid,
-    ),
-  );
-  othersOnCallRef.current = someoneElseIsOnCall;
-
-  useEffect(() => {
-    if (!someoneElseIsOnCall || callRef.current || status !== "connected") return;
-    void connectCall();
-  }, [connectCall, someoneElseIsOnCall, status]);
+    const call = callRef.current;
+    if (!call) {
+      toast.message("Video chat is still connecting.");
+      return;
+    }
+    const next = !camOn;
+    call.setLocalVideo(next);
+    setCamOn(next);
+  }, [camOn]);
 
   const setControlMode = useCallback(
     (mode: WatchPartyControl) => {
@@ -1213,6 +1187,10 @@ export function useWatchPartySession(options: {
     }) => {
       const me = selfRef.current;
       if (!code || !me) return;
+
+      partyMediaRef.current = `${media.mediaType}:${media.mediaId}:${
+        media.season ?? ""
+      }:${media.episode ?? ""}`;
 
       send({ t: "nav", by: me.pid, name: me.displayName, path });
       void watchPartyAPI
@@ -1302,8 +1280,7 @@ export function useWatchPartySession(options: {
     sendChat,
     reactions,
     sendReaction: sendReactionEmoji,
-    voiceAvailable: party?.canVideoChat !== false,
-    isConnectingCall,
+    voiceAvailable: transport === "daily",
     micOn,
     camOn,
     toggleMic,
