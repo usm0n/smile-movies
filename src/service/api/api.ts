@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
 import { toast } from "../../components/ui/toast";
 import { deviceId, isLoggedIn } from "../../utilities/defaults";
 
@@ -30,6 +30,75 @@ smbV1API.interceptors.request.use((config) => {
   return config;
 });
 
+/**
+ * Called when the API says this device is no longer on the account, so that
+ * the app can drop its session instead of retrying into a wall. Registered by
+ * the Users context, which owns the auth state.
+ */
+let onSessionRevoked: (() => void) | null = null;
+export const setSessionRevokedHandler = (handler: (() => void) | null) => {
+  onSessionRevoked = handler;
+};
+
+/**
+ * Shared failure handling for both API instances.
+ *
+ * `smbV1API` used to have only a request interceptor, so every `/api/v1`
+ * failure — QR approvals included — was swallowed with no message at all.
+ * Only the error half is shared: the success toast stays on `smbAPI`, since
+ * v1 callers already raise their own.
+ */
+interface ApiErrorBody {
+  message?: string;
+  code?: string;
+}
+
+const handleApiError = async (error: AxiosError<ApiErrorBody>) => {
+  const data = error.response?.data;
+  const status = error.response?.status;
+  const originalRequest = error.config as
+    | (InternalAxiosRequestConfig & { _retried?: boolean })
+    | undefined;
+
+  // The device was removed from the account. Refreshing cannot help — the
+  // server rejects that too — so tear the session down instead.
+  if (status === 401 && data?.code === "DEVICE_REVOKED") {
+    onSessionRevoked?.();
+    toast.error(data.message || "This device was signed out.");
+    return Promise.reject({ data, status, originalError: error });
+  }
+
+  // Auto-refresh JWT on 401 — only if user was logged in and this is not
+  // already a retry or a refresh/login/register call
+  const isAuthRoute = originalRequest?.url?.includes("/login") ||
+    originalRequest?.url?.includes("/register") ||
+    originalRequest?.url?.includes("/refresh");
+
+  if (originalRequest && status === 401 && !originalRequest._retried && isLoggedIn && !isAuthRoute) {
+    originalRequest._retried = true;
+    try {
+      await smbAPI.post("/users/auth/refresh");
+      return axios(originalRequest);
+    } catch (_) {
+      // Refresh also failed — silent, let the app handle auth state
+    }
+  }
+
+  // Show error toast — but skip silent 401s for non-logged-in users (e.g. getMyself on load)
+  const shouldSuppressToast =
+    status === 401 && !isLoggedIn;
+
+  if (!shouldSuppressToast && data?.message) {
+    if (status === 403 && data?.code === "DEVICE_NOT_ACTIVE") {
+      toast.error("This device needs approval. Go to Settings → Devices.");
+    } else {
+      toast.error(data.message);
+    }
+  }
+
+  return Promise.reject({ data, status, originalError: error });
+};
+
 smbAPI.interceptors.response.use(
   (response) => {
     // Only show success toast for mutation requests (POST/PUT/DELETE), not GET
@@ -38,42 +107,10 @@ smbAPI.interceptors.response.use(
     }
     return response;
   },
-  async (error) => {
-    const data = error.response?.data;
-    const status = error.response?.status;
-    const originalRequest = error.config;
-
-    // Auto-refresh JWT on 401 — only if user was logged in and this is not
-    // already a retry or a refresh/login/register call
-    const isAuthRoute = originalRequest?.url?.includes("/login") ||
-      originalRequest?.url?.includes("/register") ||
-      originalRequest?.url?.includes("/refresh");
-
-    if (status === 401 && !originalRequest._retried && isLoggedIn && !isAuthRoute) {
-      originalRequest._retried = true;
-      try {
-        await smbAPI.post("/users/auth/refresh");
-        return smbAPI(originalRequest);
-      } catch (_) {
-        // Refresh also failed — silent, let the app handle auth state
-      }
-    }
-
-    // Show error toast — but skip silent 401s for non-logged-in users (e.g. getMyself on load)
-    const shouldSuppressToast =
-      status === 401 && !isLoggedIn;
-
-    if (!shouldSuppressToast && data?.message) {
-      if (status === 403 && data?.code === "DEVICE_NOT_ACTIVE") {
-        toast.error("This device needs activation. Go to Settings → Devices.");
-      } else {
-        toast.error(data.message);
-      }
-    }
-
-    return Promise.reject({ data, status, originalError: error });
-  }
+  handleApiError
 );
+
+smbV1API.interceptors.response.use((response) => response, handleApiError);
 
 export const tmdbAPI = axios.create({
   baseURL: import.meta.env.VITE_TMDB_API_URL,

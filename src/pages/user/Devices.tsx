@@ -16,7 +16,7 @@ import {
   Mail,
   QrCode2,
 } from "../../components/ui/icons";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import DeviceCard from "../../components/cards/DeviceCard";
 import { useUsers } from "../../context/Users";
 import { qrAPI } from "../../service/api/smb/qr.api.service";
@@ -38,8 +38,14 @@ const LOCK_OPTIONS: { value: LockTiming; label: string }[] = [
   { value: "immediately", label: "Immediately" },
   { value: "5min", label: "After 5 min" },
   { value: "30min", label: "After 30 min" },
+  { value: "custom", label: "Custom" },
   { value: "never", label: "Never" },
 ];
+
+const DEFAULT_CUSTOM_LOCK_MINUTES = 15;
+
+/** How often a device still awaiting approval re-checks whether it got one. */
+const PENDING_POLL_MS = 10_000;
 
 function Devices({ myselfData }: { myselfData: ResponseType | null }) {
   const {
@@ -74,6 +80,28 @@ function Devices({ myselfData }: { myselfData: ResponseType | null }) {
   );
   const pending = devices.filter((d) => !d.isActive);
 
+  const isThisDevicePending = thisDevice.length > 0 && !thisDevice[0].isActive;
+
+  /**
+   * Approval usually happens on a *different* screen — someone taps Approve on
+   * their phone while this one sits on the waiting message. Nothing pushes
+   * that back, so poll for it; otherwise the only way out is a manual reload.
+   */
+  // `getMyself` is a fresh closure on every context render, so it is held in a
+  // ref rather than listed as a dependency — otherwise the interval would be
+  // torn down and recreated on each render and never actually fire.
+  const getMyselfRef = useRef(getMyself);
+  getMyselfRef.current = getMyself;
+
+  useEffect(() => {
+    if (!isThisDevicePending) return;
+    const id = setInterval(() => {
+      if (document.visibilityState !== "visible") return;
+      void getMyselfRef.current();
+    }, PENDING_POLL_MS);
+    return () => clearInterval(id);
+  }, [isThisDevicePending]);
+
   const closeDetail = () => {
     setDetailDeviceId("");
     setActivateStep("prompt");
@@ -102,7 +130,26 @@ function Devices({ myselfData }: { myselfData: ResponseType | null }) {
 
   const handleLockChange = async (targetId: string, value: LockTiming) => {
     const nextDevices = devices.map((d) =>
-      d.deviceId === targetId ? { ...d, requirePassword: value } : d,
+      d.deviceId === targetId
+        ? {
+            ...d,
+            requirePassword: value,
+            // The timer needs a number to count against the moment the mode is
+            // switched, otherwise "Custom" silently means "never".
+            customLockMinutes:
+              value === "custom"
+                ? d.customLockMinutes || DEFAULT_CUSTOM_LOCK_MINUTES
+                : d.customLockMinutes,
+          }
+        : d,
+    );
+    await updateMyself({ devices: nextDevices });
+    await getMyself();
+  };
+
+  const handleCustomMinutesChange = async (targetId: string, minutes: number) => {
+    const nextDevices = devices.map((d) =>
+      d.deviceId === targetId ? { ...d, customLockMinutes: minutes } : d,
     );
     await updateMyself({ devices: nextDevices });
     await getMyself();
@@ -117,11 +164,14 @@ function Devices({ myselfData }: { myselfData: ResponseType | null }) {
       if (res.success) {
         toast.success("Device approved — the other screen is signing in now.");
         setQrScanInput("");
+        // The approved device is added to the account at this point, so pull
+        // the list in rather than waiting for the next visit.
+        await getMyself();
       } else {
         toast.error("That QR code is invalid or has expired.");
       }
     } catch {
-      // Interceptor already surfaced the message.
+      // The response interceptor on smbV1API raises the server's message.
     } finally {
       setQrApproving(false);
     }
@@ -134,7 +184,7 @@ function Devices({ myselfData }: { myselfData: ResponseType | null }) {
       await getMyself();
       toast.success("Device approved.");
     } catch {
-      // Interceptor already surfaced the message.
+      // The response interceptor on smbV1API raises the server's message.
     } finally {
       setApprovingId("");
     }
@@ -315,16 +365,10 @@ function Devices({ myselfData }: { myselfData: ResponseType | null }) {
                 label="Last seen"
                 value={formatTimeAgo(selectedDevice.lastLogin)}
               />
-              {selectedDevice.location?.county && (
-                <DetailRow
-                  label="Location"
-                  value={[
-                    selectedDevice.location.county,
-                    selectedDevice.location.road,
-                  ]
-                    .filter(Boolean)
-                    .join(", ")}
-                />
+              {/* Gated on `county` alone this row vanished for any device that
+                  only ever resolved to a country — which is most of them. */}
+              {formatLocation(selectedDevice) && (
+                <DetailRow label="Location" value={formatLocation(selectedDevice)} />
               )}
             </Box>
 
@@ -378,12 +422,15 @@ function Devices({ myselfData }: { myselfData: ResponseType | null }) {
                       >
                         Approve
                       </Button>
+                      {/* This used to just bounce back to the previous step,
+                          so no second code was ever sent. */}
                       <Button
                         variant="plain"
                         color="neutral"
-                        onClick={() => {
-                          setActivateStep("prompt");
+                        loading={requestActivateDeviceData?.isLoading}
+                        onClick={async () => {
                           setActivateCode("");
+                          await requestActivateDevice(selectedDevice.deviceId);
                         }}
                       >
                         Resend
@@ -411,6 +458,29 @@ function Devices({ myselfData }: { myselfData: ResponseType | null }) {
                     }
                   />
                 </Box>
+
+                {selectedDevice.requirePassword === "custom" && (
+                  <Box sx={{ mt: 1, maxWidth: 220 }}>
+                    <Field label="Ask again after (minutes)">
+                      <Input
+                        type="number"
+                        slotProps={{ input: { min: 1, max: 1440 } }}
+                        value={
+                          selectedDevice.customLockMinutes ??
+                          DEFAULT_CUSTOM_LOCK_MINUTES
+                        }
+                        onChange={(event) => {
+                          const minutes = Number(event.target.value);
+                          if (!Number.isFinite(minutes) || minutes < 1) return;
+                          void handleCustomMinutesChange(
+                            selectedDevice.deviceId,
+                            Math.min(Math.round(minutes), 1440),
+                          );
+                        }}
+                      />
+                    </Field>
+                  </Box>
+                )}
               </Box>
             )}
           </Box>
@@ -421,7 +491,10 @@ function Devices({ myselfData }: { myselfData: ResponseType | null }) {
       <Dialog
         open={Boolean(deleteConfirmId)}
         onClose={() => setDeleteConfirmId("")}
-        title="Remove this device?"
+        title={`Remove ${
+          devices.find((d) => d.deviceId === deleteConfirmId)?.deviceName ||
+          "this device"
+        }?`}
         description="It is signed out immediately and has to be approved again next time it signs in."
         actions={
           <>
@@ -444,6 +517,17 @@ function Devices({ myselfData }: { myselfData: ResponseType | null }) {
       />
     </Box>
   );
+}
+
+function formatLocation(device: Device): string {
+  return [
+    device.location?.country,
+    device.location?.state,
+    device.location?.county,
+    device.location?.road,
+  ]
+    .filter(Boolean)
+    .join(", ");
 }
 
 function DeviceGroup({

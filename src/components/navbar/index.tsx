@@ -144,7 +144,14 @@ const Navbar: React.FC = () => {
         ? window.localStorage.getItem(DEVICE_ID_KEY) || ""
         : "";
     const currentDevice = user.devices?.find((d: any) => d.deviceId === currentDeviceId);
-    const requirePassword = currentDevice?.requirePassword || "never";
+    // `pinLockStore` reads a custom interval as a numeric string (see its
+    // `Number(requirePassword)` branch), so the literal "custom" parses as NaN
+    // and the device would never lock. Hand it the minutes instead.
+    const stored = currentDevice?.requirePassword || "never";
+    const requirePassword =
+      stored === "custom"
+        ? String(currentDevice?.customLockMinutes || 0)
+        : stored;
     if (user.accountPin?.enabled && pinLockStore.isLocked(requirePassword)) {
       setIsLocked(true);
     }

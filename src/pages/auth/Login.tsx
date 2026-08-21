@@ -28,7 +28,6 @@ function QRLoginPanel() {
   const [timeLeft, setTimeLeft] = useState(180);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const navigate = useNavigate();
 
   const qrUrl = qrToken ? `${window.location.origin}/qr-approve/${qrToken}` : null;
 
@@ -36,7 +35,14 @@ function QRLoginPanel() {
     setStatus("pending");
     setTimeLeft(180);
     try {
-      const data = await qrAPI.generate();
+      // Identify this screen up front: approving the code is what registers it
+      // on the account, and a session for an unregistered device gets signed
+      // straight back out again.
+      const data = await qrAPI.generate({
+        deviceId: deviceId(),
+        deviceName: deviceName(),
+        deviceType: deviceType(),
+      });
       setQrToken(data.token);
     } catch {
       setStatus("idle");
@@ -56,7 +62,9 @@ function QRLoginPanel() {
           setStatus("approved");
           clearInterval(pollRef.current!);
           clearInterval(timerRef.current!);
-          setTimeout(() => navigate("/"), 800);
+          // A full reload, like the federated path: the session cookie was set
+          // on this response, and the Users context only reads it on mount.
+          setTimeout(() => reload(), 800);
         } else if (res.status === "expired") {
           setStatus("expired");
           clearInterval(pollRef.current!);
@@ -76,7 +84,7 @@ function QRLoginPanel() {
       });
     }, 1000);
     return () => { clearInterval(pollRef.current!); clearInterval(timerRef.current!); };
-  }, [qrToken, status, navigate]);
+  }, [qrToken, status]);
 
   if (status === "approved") return (
     <Box sx={{ textAlign: "center", py: 4 }}>
@@ -108,7 +116,8 @@ function QRLoginPanel() {
         Expires in {Math.floor(timeLeft / 60)}:{String(timeLeft % 60).padStart(2, "0")}
       </Badge>
       <Typography level="body-xs" sx={{ textAlign: "center" }}>
-        Go to <strong>Settings → Devices</strong> on an active device and tap <strong>Scan QR</strong>.
+        Or open <strong>Settings → Devices</strong> on an approved device and paste
+        the link under <strong>Approve by QR code</strong>.
       </Typography>
     </Box>
   );

@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import * as userType from "../user";
 import { users } from "../service/api/smb/users.api.service";
+import { setSessionRevokedHandler } from "../service/api/api";
 import { savedAccountsManager } from "../utilities/savedAccounts";
 import {
   deviceId,
@@ -33,14 +34,12 @@ const UsersContext = createContext({
   upsertRecentlyWatchedData: null as userType.ResponseType | null,
   upsertRatingData: null as userType.ResponseType | null,
   deleteRatingData: null as userType.ResponseType | null,
-  addDeviceData: null as userType.ResponseType | null,
   deleteDeviceData: null as userType.ResponseType | null,
   signedInWithGoogle: null as boolean | null,
   isVerified: null as boolean | null,
   isAuthenticated: false,
   authResolved: false,
   logoutData: null as userType.ResponseType | null,
-  activateDeviceData: null as userType.ResponseType | null,
   requestActivateDeviceData: null as userType.ResponseType | null,
   verifyDeviceData: null as userType.ResponseType | null,
   setIsVerified: (_isVerified: boolean) => {},
@@ -99,13 +98,7 @@ const UsersContext = createContext({
     _rating: number,
   ) => {},
   deleteRating: async (_type: string, _id: string) => {},
-  addDevice: async (
-    _deviceId: string,
-    _deviceName: string,
-    _deviceType: string,
-  ) => {},
   deleteDevice: async (_deviceId: string) => {},
-  activateDevice: async (_deviceId: string) => {},
   requestActivateDevice: async (_deviceId: string) => {},
   verifyDevice: async (_deviceId: string, _token: string) => {},
 });
@@ -165,15 +158,11 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
     useState<userType.ResponseType | null>(null);
   const [deleteRatingData, setDeleteRatingData] =
     useState<userType.ResponseType | null>(null);
-  const [addDeviceData, setAddDeviceData] =
-    useState<userType.ResponseType | null>(null);
   const [deleteDeviceData, setDeleteDeviceData] =
     useState<userType.ResponseType | null>(null);
   const [isVerified, setIsVerified] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authResolved, setAuthResolved] = useState(false);
-  const [activateDeviceData, setActivateDeviceData] =
-    useState<userType.ResponseType | null>(null);
   const [requestActivateDeviceData, setRequestActivateDeviceData] =
     useState<userType.ResponseType | null>(null);
   const [verifyDeviceData, setVerifyDeviceData] =
@@ -766,32 +755,6 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  const addDevice = async (
-    deviceId: string,
-    deviceType: string,
-    deviceName: string,
-  ) => {
-    setAddDeviceData((prev) => ({ ...prev, isLoading: true }));
-    try {
-      const response = await users.addDevice(deviceId, deviceType, deviceName);
-      setAddDeviceData({
-        isLoading: false,
-        isError: false,
-        isSuccess: true,
-        data: response.data,
-        code: response.status,
-      });
-    } catch (error: unknown) {
-      setAddDeviceData({
-        isLoading: false,
-        isError: true,
-        isSuccess: false,
-        data: (error as userType.ErrorResponse)?.data,
-        code: (error as userType.ErrorResponse)?.status,
-      });
-    }
-  };
-
   const deleteDevice = async (deviceId: string) => {
     setDeleteDeviceData((prev) => ({ ...prev, isLoading: true }));
     try {
@@ -805,28 +768,6 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
       });
     } catch (error: unknown) {
       setDeleteDeviceData({
-        isLoading: false,
-        isError: true,
-        isSuccess: false,
-        data: (error as userType.ErrorResponse)?.data,
-        code: (error as userType.ErrorResponse)?.status,
-      });
-    }
-  };
-
-  const activateDevice = async (deviceId: string) => {
-    setActivateDeviceData((prev) => ({ ...prev, isLoading: true }));
-    try {
-      const response = await users.activateDevice(deviceId);
-      setActivateDeviceData({
-        isLoading: false,
-        isError: false,
-        isSuccess: true,
-        data: response.data,
-        code: response.status,
-      });
-    } catch (error) {
-      setActivateDeviceData({
         isLoading: false,
         isError: true,
         isSuccess: false,
@@ -896,6 +837,19 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     getMyself();
   }, []);
+
+  // The API answers 401 DEVICE_REVOKED once this device has been removed from
+  // the account elsewhere. Drop the session locally rather than letting the
+  // app keep firing requests that can never succeed.
+  useEffect(() => {
+    setSessionRevokedHandler(() => {
+      setIsAuthenticated(false);
+      setIsVerified(false);
+      setIsLoggedIn(false);
+      setMyselfData(null);
+    });
+    return () => setSessionRevokedHandler(null);
+  }, []);
   useEffect(() => {
     let intervalId: ReturnType<typeof setInterval> | null = null;
 
@@ -943,8 +897,6 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
   return (
     <UsersContext.Provider
       value={{
-        activateDevice,
-        activateDeviceData,
         requestActivateDevice,
         requestActivateDeviceData,
         verifyDevice,
@@ -998,8 +950,6 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
         upsertRatingData,
         deleteRating,
         deleteRatingData,
-        addDevice,
-        addDeviceData,
         deleteDevice,
         deleteDeviceData,
         setIsVerified,

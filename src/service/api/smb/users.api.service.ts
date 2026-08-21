@@ -143,16 +143,8 @@ export const users = {
     const response = await smbAPI.post(`/users/lastLogin/`, { deviceId });
     return response;
   },
-  addDevice: async (deviceId: string, deviceType: string, deviceName: string) => {
-    const response = await smbAPI.post(`/users/addDevice`, { deviceId, deviceType, deviceName });
-    return response;
-  },
   deleteDevice: async (deviceId: string) => {
     const response = await smbAPI.delete(`/users/deleteDevice/${deviceId}`);
-    return response;
-  },
-  activateDevice: async (deviceId: string) => {
-    const response = await smbAPI.post(`/users/activateDevice/${deviceId}`);
     return response;
   },
   requestActivateDevice: async (deviceId: string) => {
