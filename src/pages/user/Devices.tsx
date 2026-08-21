@@ -3,7 +3,6 @@ import Button from "../../components/ui/Button";
 import Dialog from "../../components/ui/Dialog";
 import Field from "../../components/ui/Field";
 import Panel from "../../components/ui/Panel";
-import SegmentedControl from "../../components/ui/SegmentedControl";
 import EmptyState from "../../components/ui/EmptyState";
 import { Device, ResponseType, User } from "../../user";
 import { deviceId, formatTimeAgo, smartText } from "../../utilities/defaults";
@@ -13,13 +12,17 @@ import {
   DevicesOther,
   Lock,
   LockOpen,
+  Logout,
   Mail,
   QrCode2,
+  QrCodeScanner,
 } from "../../components/ui/icons";
 import { useEffect, useRef, useState } from "react";
 import DeviceCard from "../../components/cards/DeviceCard";
 import { useUsers } from "../../context/Users";
-import { qrAPI } from "../../service/api/smb/qr.api.service";
+import { extractQRToken, qrAPI } from "../../service/api/smb/qr.api.service";
+import QRCodeDisplay from "../../components/utils/QRCodeDisplay";
+import QRScanner, { isQRScanSupported } from "../../components/utils/QRScanner";
 import { toast } from "../../components/ui/toast";
 
 /**
@@ -32,18 +35,6 @@ import { toast } from "../../components/ui/toast";
  * timing.
  */
 
-type LockTiming = NonNullable<Device["requirePassword"]>;
-
-const LOCK_OPTIONS: { value: LockTiming; label: string }[] = [
-  { value: "immediately", label: "Immediately" },
-  { value: "5min", label: "After 5 min" },
-  { value: "30min", label: "After 30 min" },
-  { value: "custom", label: "Custom" },
-  { value: "never", label: "Never" },
-];
-
-const DEFAULT_CUSTOM_LOCK_MINUTES = 15;
-
 /** How often a device still awaiting approval re-checks whether it got one. */
 const PENDING_POLL_MS = 10_000;
 
@@ -51,12 +42,13 @@ function Devices({ myselfData }: { myselfData: ResponseType | null }) {
   const {
     deleteDevice,
     deleteDeviceData,
+    deleteAllDevices,
+    deleteAllDevicesData,
     requestActivateDevice,
     requestActivateDeviceData,
     verifyDevice,
     verifyDeviceData,
     getMyself,
-    updateMyself,
   } = useUsers();
 
   const [detailDeviceId, setDetailDeviceId] = useState("");
@@ -67,6 +59,14 @@ function Devices({ myselfData }: { myselfData: ResponseType | null }) {
 
   const [qrScanInput, setQrScanInput] = useState("");
   const [qrApproving, setQrApproving] = useState(false);
+  const [scanning, setScanning] = useState(false);
+
+  const [grantToken, setGrantToken] = useState("");
+  const [grantExpiresAt, setGrantExpiresAt] = useState(0);
+  const [grantLoading, setGrantLoading] = useState(false);
+
+  const [signOutAllOpen, setSignOutAllOpen] = useState(false);
+  const [signOutAllIncludesCurrent, setSignOutAllIncludesCurrent] = useState(false);
 
   const user = myselfData?.data as User;
   const currentId = deviceId();
@@ -128,36 +128,12 @@ function Devices({ myselfData }: { myselfData: ResponseType | null }) {
     setDeleteConfirmId("");
   };
 
-  const handleLockChange = async (targetId: string, value: LockTiming) => {
-    const nextDevices = devices.map((d) =>
-      d.deviceId === targetId
-        ? {
-            ...d,
-            requirePassword: value,
-            // The timer needs a number to count against the moment the mode is
-            // switched, otherwise "Custom" silently means "never".
-            customLockMinutes:
-              value === "custom"
-                ? d.customLockMinutes || DEFAULT_CUSTOM_LOCK_MINUTES
-                : d.customLockMinutes,
-          }
-        : d,
-    );
-    await updateMyself({ devices: nextDevices });
-    await getMyself();
-  };
-
-  const handleCustomMinutesChange = async (targetId: string, minutes: number) => {
-    const nextDevices = devices.map((d) =>
-      d.deviceId === targetId ? { ...d, customLockMinutes: minutes } : d,
-    );
-    await updateMyself({ devices: nextDevices });
-    await getMyself();
-  };
-
-  const handleQRApprove = async () => {
-    const token = qrScanInput.trim().replace(/.*\/qr-approve\//, "");
-    if (!token) return;
+  const handleQRApprove = async (raw?: string) => {
+    const token = extractQRToken(raw ?? qrScanInput);
+    if (!token) {
+      toast.error("That doesn't look like a sign-in code.");
+      return;
+    }
     setQrApproving(true);
     try {
       const res = await qrAPI.approve(token);
@@ -174,6 +150,24 @@ function Devices({ myselfData }: { myselfData: ResponseType | null }) {
       // The response interceptor on smbV1API raises the server's message.
     } finally {
       setQrApproving(false);
+    }
+  };
+
+  /**
+   * The other direction: show a code here for a signed-out device to scan.
+   * Codes are single-use and last three minutes, so it is minted on demand
+   * rather than kept alive in the background.
+   */
+  const handleShowSignInCode = async () => {
+    setGrantLoading(true);
+    try {
+      const { token, expiresIn } = await qrAPI.grant();
+      setGrantToken(token);
+      setGrantExpiresAt(Date.now() + expiresIn);
+    } catch {
+      // The response interceptor on smbV1API raises the server's message.
+    } finally {
+      setGrantLoading(false);
     }
   };
 
@@ -274,30 +268,134 @@ function Devices({ myselfData }: { myselfData: ResponseType | null }) {
 
       <Panel
         title="Approve by QR code"
-        description="A signed-out device shows a QR code on its sign-in screen. Paste the code's link here to approve it from this device."
+        description="A signed-out device shows a code on its sign-in screen. Scan it with this device's camera, or paste the link."
         footerHint="Codes expire after three minutes."
         footer={
+          <>
+            {isQRScanSupported() && !scanning && (
+              <Button
+                variant="outlined"
+                color="neutral"
+                startDecorator={<QrCodeScanner sx={{ fontSize: 16 }} />}
+                onClick={() => setScanning(true)}
+              >
+                Scan with camera
+              </Button>
+            )}
+            <Button
+              loading={qrApproving}
+              disabled={!qrScanInput.trim()}
+              startDecorator={<QrCode2 sx={{ fontSize: 16 }} />}
+              onClick={() => handleQRApprove()}
+            >
+              Approve device
+            </Button>
+          </>
+        }
+      >
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+          {scanning && (
+            <QRScanner
+              onClose={() => setScanning(false)}
+              onScan={async (value) => {
+                setScanning(false);
+                await handleQRApprove(value);
+              }}
+            />
+          )}
+          <Field label="QR code link or token">
+            <Input
+              placeholder="https://smile-movies.uz/qr-approve/…"
+              value={qrScanInput}
+              onChange={(event) => setQrScanInput(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") void handleQRApprove();
+              }}
+            />
+          </Field>
+        </Box>
+      </Panel>
+
+      <Panel
+        title="Sign in another device"
+        description="Show a code for a signed-out device to scan. Whoever scans it is signed straight into this account, so only show it to a screen you trust."
+        footerHint="Single use, and expires after three minutes."
+        footer={
           <Button
-            loading={qrApproving}
-            disabled={!qrScanInput.trim()}
+            loading={grantLoading}
+            variant={grantToken ? "outlined" : "solid"}
+            color={grantToken ? "neutral" : "primary"}
             startDecorator={<QrCode2 sx={{ fontSize: 16 }} />}
-            onClick={handleQRApprove}
+            onClick={handleShowSignInCode}
           >
-            Approve device
+            {grantToken ? "New code" : "Show code"}
           </Button>
         }
       >
-        <Field label="QR code link or token">
-          <Input
-            placeholder="https://smile-movies.uz/qr-approve/…"
-            value={qrScanInput}
-            onChange={(event) => setQrScanInput(event.target.value)}
-            onKeyDown={(event) => {
-              if (event.key === "Enter") void handleQRApprove();
+        {grantToken ? (
+          <Box
+            sx={{
+              display: "flex", flexDirection: "column",
+              alignItems: "center", gap: 1.5, py: 1,
             }}
+          >
+            <QRCodeDisplay
+              value={`${window.location.origin}/qr-claim/${grantToken}`}
+              size={180}
+            />
+            <GrantCountdown
+              expiresAt={grantExpiresAt}
+              onExpire={() => setGrantToken("")}
+            />
+          </Box>
+        ) : (
+          <EmptyState
+            bare
+            icon={QrCode2}
+            title="No code showing"
+            description="Generate one, then scan it from the sign-in screen of the other device."
           />
-        </Field>
+        )}
       </Panel>
+
+      <Panel
+        title="Sign out everywhere"
+        description="Removes every other device from the account. They lose access immediately and have to be approved again."
+        footerHint={
+          otherActive.length + pending.length === 0
+            ? "No other devices are signed in."
+            : `${otherActive.length + pending.length} other device${
+                otherActive.length + pending.length > 1 ? "s" : ""
+              } would be signed out.`
+        }
+        footer={
+          <>
+            <Button
+              color="danger"
+              variant="outlined"
+              disabled={otherActive.length + pending.length === 0}
+              startDecorator={<Delete sx={{ fontSize: 16 }} />}
+              onClick={() => {
+                setSignOutAllIncludesCurrent(false);
+                setSignOutAllOpen(true);
+              }}
+            >
+              Sign out other devices
+            </Button>
+            <Button
+              color="danger"
+              variant="plain"
+              startDecorator={<Logout sx={{ fontSize: 16 }} />}
+              onClick={() => {
+                setSignOutAllIncludesCurrent(true);
+                setSignOutAllOpen(true);
+              }}
+            >
+              Include this one
+            </Button>
+          </>
+        }
+      />
 
       {/* ── Device detail ── */}
       <Dialog
@@ -441,51 +539,51 @@ function Devices({ myselfData }: { myselfData: ResponseType | null }) {
               </Box>
             )}
 
-            {selectedDevice.isActive && (
-              <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-                <Typography level="title-sm">Ask for the PIN</Typography>
-                <Typography level="body-xs" sx={{ color: "text.tertiary" }}>
-                  Applies only to this device. Requires PIN lock to be enabled
-                  under Account.
-                </Typography>
-                <Box sx={{ mt: 0.5 }}>
-                  <SegmentedControl
-                    ariaLabel="Require PIN"
-                    segments={LOCK_OPTIONS}
-                    value={selectedDevice.requirePassword || "never"}
-                    onChange={(value) =>
-                      handleLockChange(selectedDevice.deviceId, value as LockTiming)
-                    }
-                  />
-                </Box>
-
-                {selectedDevice.requirePassword === "custom" && (
-                  <Box sx={{ mt: 1, maxWidth: 220 }}>
-                    <Field label="Ask again after (minutes)">
-                      <Input
-                        type="number"
-                        slotProps={{ input: { min: 1, max: 1440 } }}
-                        value={
-                          selectedDevice.customLockMinutes ??
-                          DEFAULT_CUSTOM_LOCK_MINUTES
-                        }
-                        onChange={(event) => {
-                          const minutes = Number(event.target.value);
-                          if (!Number.isFinite(minutes) || minutes < 1) return;
-                          void handleCustomMinutesChange(
-                            selectedDevice.deviceId,
-                            Math.min(Math.round(minutes), 1440),
-                          );
-                        }}
-                      />
-                    </Field>
-                  </Box>
-                )}
-              </Box>
-            )}
           </Box>
         )}
       </Dialog>
+
+      {/* ── Sign out everywhere confirmation ── */}
+      <Dialog
+        open={signOutAllOpen}
+        onClose={() => setSignOutAllOpen(false)}
+        title={
+          signOutAllIncludesCurrent
+            ? "Sign out of every device?"
+            : "Sign out every other device?"
+        }
+        description={
+          signOutAllIncludesCurrent
+            ? "Every device is removed from the account, including this one. You will be signed out here and have to sign in again."
+            : `${otherActive.length + pending.length} device${
+                otherActive.length + pending.length === 1 ? "" : "s"
+              } lose access immediately. This device stays signed in.`
+        }
+        actions={
+          <>
+            <Button
+              variant="outlined"
+              color="neutral"
+              onClick={() => setSignOutAllOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              color="danger"
+              loading={deleteAllDevicesData?.isLoading}
+              onClick={async () => {
+                await deleteAllDevices(signOutAllIncludesCurrent);
+                setSignOutAllOpen(false);
+                // Signing this device out reloads, so only refresh the list
+                // when we are staying put.
+                if (!signOutAllIncludesCurrent) await getMyself();
+              }}
+            >
+              {signOutAllIncludesCurrent ? "Sign out everywhere" : "Sign out others"}
+            </Button>
+          </>
+        }
+      />
 
       {/* ── Remove confirmation ── */}
       <Dialog
@@ -516,6 +614,35 @@ function Devices({ myselfData }: { myselfData: ResponseType | null }) {
         }
       />
     </Box>
+  );
+}
+
+/** Ticks down the life of a displayed sign-in code and clears it on expiry. */
+function GrantCountdown({
+  expiresAt,
+  onExpire,
+}: {
+  expiresAt: number;
+  onExpire: () => void;
+}) {
+  const [remaining, setRemaining] = useState(() =>
+    Math.max(0, Math.round((expiresAt - Date.now()) / 1000)),
+  );
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      const next = Math.max(0, Math.round((expiresAt - Date.now()) / 1000));
+      setRemaining(next);
+      if (next === 0) onExpire();
+    }, 1000);
+    return () => clearInterval(id);
+  }, [expiresAt, onExpire]);
+
+  return (
+    <Typography level="body-xs" sx={{ color: "text.tertiary", fontFamily: "code" }}>
+      Expires in {Math.floor(remaining / 60)}:
+      {String(remaining % 60).padStart(2, "0")}
+    </Typography>
   );
 }
 

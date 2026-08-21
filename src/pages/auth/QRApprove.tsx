@@ -107,7 +107,7 @@ function QRApprove() {
       title="Approve QR sign-in"
       description={
         info
-          ? `${info.deviceName} (${smartText(info.deviceType)})${
+          ? `${info.deviceName} (${smartText(info.deviceType || "unknown")})${
               place ? ` · ${place}` : ""
             } is trying to sign in to your account. Approve only if this is you.`
           : "Another device is trying to sign in to your account with this QR code. Approve only if it's you."

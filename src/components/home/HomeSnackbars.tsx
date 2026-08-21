@@ -1,88 +1,235 @@
-import { Box, Button, IconButton, Snackbar, Typography } from "@mui/joy";
-import { Close, DevicesOther, CheckCircle, WarningRounded } from "../ui/icons";
+import { Box, Chip, Input, Snackbar, Typography, IconButton } from "@mui/joy";
+import Button from "../ui/Button";
+import Dialog from "../ui/Dialog";
+import { Close, DevicesOther, Lock, WarningRounded } from "../ui/icons";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUsers } from "../../context/Users";
 import { User, Device } from "../../user";
-import { deviceId } from "../../utilities/defaults";
+import { deviceId, formatTimeAgo, smartText } from "../../utilities/defaults";
+import { qrAPI } from "../../service/api/smb/qr.api.service";
+import { toast } from "../ui/toast";
+
+/**
+ * The two things the account needs to say out loud, unprompted.
+ *
+ * "This device is waiting for approval" is a modal, not a toast: until it is
+ * resolved the account is half-usable, and a corner notice that scrolls away
+ * left people stuck without knowing why streaming kept failing.
+ *
+ * "Some other device just joined" stays a snackbar — it is a security notice
+ * about something that already happened, and it must not block the screen.
+ */
+
+const APPROVAL_DISMISSED_KEY = "deviceApprovalDismissed";
+const NEW_DEVICE_WINDOW_MS = 10 * 60 * 1000;
 
 function HomeSnackbars() {
-  const { myselfData, isAuthenticated } = useUsers();
+  const { myselfData, isAuthenticated, getMyself, requestActivateDevice, verifyDevice } =
+    useUsers();
   const navigate = useNavigate();
   const user = myselfData?.data as User | undefined;
   const currentDeviceId = deviceId();
 
-  // Unverified device snackbar
-  const [showVerifyDevice, setShowVerifyDevice] = useState(false);
-  // New device notification (inactive device that joined recently)
+  const [approvalOpen, setApprovalOpen] = useState(false);
   const [newDeviceAlert, setNewDeviceAlert] = useState<Device | null>(null);
   const shownDevicesRef = useRef<Set<string>>(new Set());
+
+  // Email-code step, inline so the user never has to find the Devices page.
+  const [step, setStep] = useState<"choose" | "code">("choose");
+  const [code, setCode] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [approvingId, setApprovingId] = useState("");
+
+  const currentDevice = user?.devices?.find((d) => d.deviceId === currentDeviceId);
+  const isPending = Boolean(currentDevice && !currentDevice.isActive);
 
   useEffect(() => {
     if (!isAuthenticated || !user || !myselfData?.isSuccess) return;
 
-    // ── Unverified current device ─────────────────────────────────────────────
-    const currentDevice = user.devices?.find((d) => d.deviceId === currentDeviceId);
-    if (currentDevice && !currentDevice.isActive) {
-      const dismissed = sessionStorage.getItem("verifyDeviceDismissed");
-      if (!dismissed) setShowVerifyDevice(true);
+    if (isPending) {
+      if (!sessionStorage.getItem(APPROVAL_DISMISSED_KEY)) setApprovalOpen(true);
     } else {
-      setShowVerifyDevice(false);
+      setApprovalOpen(false);
+      sessionStorage.removeItem(APPROVAL_DISMISSED_KEY);
     }
 
-    // ── New inactive device joined recently (not current device) ─────────────
-    const tenMinAgo = Date.now() - 10 * 60 * 1000;
+    const joinedAfter = Date.now() - NEW_DEVICE_WINDOW_MS;
     const newDevice = (user.devices || []).find((d) => {
       if (d.deviceId === currentDeviceId) return false;
       if (d.isActive) return false;
       if (shownDevicesRef.current.has(d.deviceId)) return false;
       const joinedAt = new Date(d.lastLogin || d.createdAt || 0).getTime();
-      return joinedAt > tenMinAgo;
+      return joinedAt > joinedAfter;
     });
     if (newDevice) {
       shownDevicesRef.current.add(newDevice.deviceId);
       setNewDeviceAlert(newDevice);
     }
-  }, [isAuthenticated, myselfData?.isSuccess, user?.devices?.length, user?.isVerified]);
+  }, [isAuthenticated, myselfData?.isSuccess, isPending, user?.devices?.length]);
+
+  // While the dialog is up, someone is probably tapping Approve on another
+  // screen. Poll so this one lets itself in without a reload.
+  const getMyselfRef = useRef(getMyself);
+  getMyselfRef.current = getMyself;
+  useEffect(() => {
+    if (!approvalOpen || !isPending) return;
+    const id = setInterval(() => {
+      if (document.visibilityState !== "visible") return;
+      void getMyselfRef.current();
+    }, 5000);
+    return () => clearInterval(id);
+  }, [approvalOpen, isPending]);
+
+  const dismissApproval = () => {
+    setApprovalOpen(false);
+    sessionStorage.setItem(APPROVAL_DISMISSED_KEY, "1");
+  };
+
+  const sendCode = async () => {
+    if (!currentDevice) return;
+    setBusy(true);
+    try {
+      await requestActivateDevice(currentDevice.deviceId);
+      setStep("code");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const submitCode = async () => {
+    if (!currentDevice || code.trim().length < 6) return;
+    setBusy(true);
+    try {
+      await verifyDevice(currentDevice.deviceId, code.trim());
+      await getMyself();
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const approveOther = async (device: Device) => {
+    setApprovingId(device.deviceId);
+    try {
+      await qrAPI.approveDevice(device.deviceId);
+      await getMyself();
+      toast.success(`${device.deviceName} approved.`);
+      setNewDeviceAlert(null);
+    } catch {
+      // The response interceptor on smbV1API raises the server's message.
+    } finally {
+      setApprovingId("");
+    }
+  };
 
   if (!isAuthenticated) return null;
 
   return (
     <>
-      {/* Current device not activated */}
-      <Snackbar
-        open={showVerifyDevice}
-        anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
-        sx={{ maxWidth: 420, zIndex: 1400 }}
-        color="warning"
-        variant="soft"
-        startDecorator={<DevicesOther />}
-        endDecorator={
-          <IconButton size="sm" color="warning" variant="plain"
-            onClick={() => { setShowVerifyDevice(false); sessionStorage.setItem("verifyDeviceDismissed", "1"); }}>
-            <Close fontSize="small" />
-          </IconButton>
+      <Dialog
+        open={approvalOpen && isPending}
+        onClose={dismissApproval}
+        width={460}
+        title="Approve this device"
+        description="Until it's approved, this device can browse but can't stream or change your library."
+        actions={
+          <>
+            <Button variant="plain" color="neutral" onClick={dismissApproval}>
+              Not now
+            </Button>
+            <Button
+              variant="outlined"
+              color="neutral"
+              onClick={() => {
+                dismissApproval();
+                navigate("/user/devices");
+              }}
+            >
+              All devices
+            </Button>
+          </>
         }
       >
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
-          <Typography level="title-sm">This device isn't activated</Typography>
-          <Typography level="body-xs">
-            Streaming and watchlist are limited. Activate via email or ask an active device to approve it.
-          </Typography>
-          <Box sx={{ display: "flex", gap: 1, mt: 0.5 }}>
-            <Button size="sm" color="warning"
-              onClick={() => { setShowVerifyDevice(false); navigate("/user/devices"); }}>
-              Activate now
-            </Button>
-            <Button size="sm" variant="plain" color="warning"
-              onClick={() => { setShowVerifyDevice(false); sessionStorage.setItem("verifyDeviceDismissed", "1"); }}>
-              Skip for now
-            </Button>
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}>
+          <Box
+            sx={{
+              display: "flex", alignItems: "center", gap: 1.5,
+              p: 1.75, borderRadius: "md",
+              border: "1px solid", borderColor: "neutral.outlinedBorder",
+              backgroundColor: "background.level1",
+            }}
+          >
+            <DevicesOther sx={{ fontSize: 20, color: "text.secondary" }} />
+            <Box sx={{ flex: 1, minWidth: 0 }}>
+              <Typography level="title-sm" noWrap>
+                {currentDevice?.deviceName || "This device"}
+              </Typography>
+              <Typography level="body-xs" sx={{ color: "text.tertiary" }} noWrap>
+                {smartText(currentDevice?.deviceType || "unknown")}
+                {currentDevice?.location?.country ? ` · ${currentDevice.location.country}` : ""}
+                {currentDevice?.createdAt ? ` · first seen ${formatTimeAgo(currentDevice.createdAt)}` : ""}
+              </Typography>
+            </Box>
+            <Chip size="sm" variant="soft" color="warning" startDecorator={<Lock sx={{ fontSize: 12 }} />}>
+              Waiting
+            </Chip>
+          </Box>
+
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+            <Typography level="title-sm">Fastest way</Typography>
+            <Typography level="body-sm" sx={{ color: "text.secondary" }}>
+              On a device you're already signed in on, open{" "}
+              <strong>Settings → Devices</strong> and tap <strong>Approve</strong> next
+              to this one. This screen unlocks on its own within a few seconds.
+            </Typography>
+          </Box>
+
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+            <Typography level="title-sm">No other device handy?</Typography>
+            {step === "choose" ? (
+              <Button
+                variant="outlined"
+                color="neutral"
+                loading={busy}
+                onClick={sendCode}
+                sx={{ alignSelf: "flex-start" }}
+              >
+                Email me a code
+              </Button>
+            ) : (
+              <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+                <Typography level="body-sm" sx={{ color: "text.secondary" }}>
+                  Sent to {user?.email}. Enter the six characters.
+                </Typography>
+                <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
+                  <Input
+                    value={code}
+                    onChange={(event) => setCode(event.target.value.toUpperCase())}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter") void submitCode();
+                    }}
+                    placeholder="ABC123"
+                    slotProps={{ input: { maxLength: 6 } }}
+                    sx={{
+                      flex: "1 1 140px",
+                      minWidth: 0,
+                      fontFamily: "code",
+                      letterSpacing: "0.25em",
+                    }}
+                  />
+                  <Button loading={busy} disabled={code.trim().length < 6} onClick={submitCode}>
+                    Approve
+                  </Button>
+                  <Button variant="plain" color="neutral" loading={busy} onClick={sendCode}>
+                    Resend
+                  </Button>
+                </Box>
+              </Box>
+            )}
           </Box>
         </Box>
-      </Snackbar>
+      </Dialog>
 
-      {/* New device joined the account */}
       {newDeviceAlert && (
         <Snackbar
           open
@@ -102,11 +249,25 @@ function HomeSnackbars() {
             <Typography level="body-xs">
               <strong>{newDeviceAlert.deviceName}</strong>
               {newDeviceAlert.location?.country ? ` · ${newDeviceAlert.location.country}` : ""}
-              {" "}is waiting for activation.
+              {" "}is waiting for approval. Approve it only if it's you.
             </Typography>
             <Box sx={{ display: "flex", gap: 1, mt: 0.5 }}>
-              <Button size="sm" color="success" startDecorator={<CheckCircle sx={{ fontSize: 14 }} />}
-                onClick={() => { setNewDeviceAlert(null); navigate("/user/devices"); }}>
+              <Button
+                size="sm"
+                loading={approvingId === newDeviceAlert.deviceId}
+                onClick={() => approveOther(newDeviceAlert)}
+              >
+                Approve
+              </Button>
+              <Button
+                size="sm"
+                variant="outlined"
+                color="neutral"
+                onClick={() => {
+                  setNewDeviceAlert(null);
+                  navigate("/user/devices");
+                }}
+              >
                 Review
               </Button>
               <Button size="sm" variant="plain" color="neutral" onClick={() => setNewDeviceAlert(null)}>

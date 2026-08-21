@@ -12,6 +12,7 @@ const NotFound = lazy(() => import("../components/utils/NotFound"));
 const ForgotPassword = lazy(() => import("../pages/auth/forgot-password"));
 const Login = lazy(() => import("../pages/auth/Login"));
 const QRApprove = lazy(() => import("../pages/auth/QRApprove"));
+const QRClaim = lazy(() => import("../pages/auth/QRClaim"));
 const Register = lazy(() => import("../pages/auth/Register"));
 const ResetPassword = lazy(() => import("../pages/auth/ResetPassword"));
 const VerifyEmail = lazy(() => import("../pages/auth/VerifyEmail"));
@@ -85,6 +86,10 @@ export const mainRoutes = [
   {
     path: "/qr-approve/:token",
     element: <QRApprove />,
+  },
+  {
+    path: "/qr-claim/:token",
+    element: <QRClaim />,
   },
   {
     path: "/admin",

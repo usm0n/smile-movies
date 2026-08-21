@@ -9,11 +9,26 @@ export interface QRDevicePayload {
 }
 
 export interface QRTokenInfo {
+  kind: "login" | "grant";
   status: "pending" | "approved";
-  deviceName: string;
-  deviceType: string;
-  location: { country?: string; state?: string; county?: string; road?: string };
+  /** "login" codes only: the device asking to be let in. */
+  deviceName?: string;
+  deviceType?: string;
+  location?: { country?: string; state?: string; county?: string; road?: string };
+  /** "grant" codes only: whose account the scanner is about to sign into. */
+  accountName?: string;
 }
+
+/**
+ * Pulls the token out of whatever the user gave us: a scanned URL, a pasted
+ * link, or the bare 32-hex token itself. Returns "" when there is no token
+ * shaped value in there at all.
+ */
+export const extractQRToken = (input: string): string => {
+  const trimmed = String(input || "").trim();
+  const match = trimmed.match(/[a-f0-9]{32}/i);
+  return match ? match[0].toLowerCase() : "";
+};
 
 export const qrAPI = {
   /**
@@ -40,6 +55,23 @@ export const qrAPI = {
   },
   approveDevice: async (pendingDeviceId: string): Promise<{ success: boolean; message: string }> => {
     const r = await smbV1API.post("/qr/approve-device", { pendingDeviceId });
+    return r.data;
+  },
+
+  /**
+   * The other direction: an approved device mints a code and displays it, and
+   * a signed-out device scans it to sign in on the spot. No polling — the
+   * scanner claims the code itself.
+   */
+  grant: async (): Promise<{ token: string; expiresIn: number }> => {
+    const r = await smbV1API.post("/qr/grant");
+    return r.data;
+  },
+  claim: async (
+    token: string,
+    device: QRDevicePayload,
+  ): Promise<{ success: boolean; message: string }> => {
+    const r = await smbV1API.post("/qr/claim", { token, ...device });
     return r.data;
   },
 };

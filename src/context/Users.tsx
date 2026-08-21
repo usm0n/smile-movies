@@ -1,8 +1,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import * as userType from "../user";
-import { users } from "../service/api/smb/users.api.service";
+import { users, type SessionAccount } from "../service/api/smb/users.api.service";
 import { setSessionRevokedHandler } from "../service/api/api";
-import { savedAccountsManager } from "../utilities/savedAccounts";
 import {
   deviceId,
   reload,
@@ -35,6 +34,9 @@ const UsersContext = createContext({
   upsertRatingData: null as userType.ResponseType | null,
   deleteRatingData: null as userType.ResponseType | null,
   deleteDeviceData: null as userType.ResponseType | null,
+  deleteAllDevicesData: null as userType.ResponseType | null,
+  sessionAccounts: [] as SessionAccount[],
+  switchSessionData: null as userType.ResponseType | null,
   signedInWithGoogle: null as boolean | null,
   isVerified: null as boolean | null,
   isAuthenticated: false,
@@ -99,6 +101,9 @@ const UsersContext = createContext({
   ) => {},
   deleteRating: async (_type: string, _id: string) => {},
   deleteDevice: async (_deviceId: string) => {},
+  deleteAllDevices: async (_includeCurrent?: boolean) => {},
+  listSessions: async (): Promise<SessionAccount[]> => [],
+  switchSession: async (_uid: string) => {},
   requestActivateDevice: async (_deviceId: string) => {},
   verifyDevice: async (_deviceId: string, _token: string) => {},
 });
@@ -159,6 +164,11 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
   const [deleteRatingData, setDeleteRatingData] =
     useState<userType.ResponseType | null>(null);
   const [deleteDeviceData, setDeleteDeviceData] =
+    useState<userType.ResponseType | null>(null);
+  const [deleteAllDevicesData, setDeleteAllDevicesData] =
+    useState<userType.ResponseType | null>(null);
+  const [sessionAccounts, setSessionAccounts] = useState<SessionAccount[]>([]);
+  const [switchSessionData, setSwitchSessionData] =
     useState<userType.ResponseType | null>(null);
   const [isVerified, setIsVerified] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -777,6 +787,76 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  const deleteAllDevices = async (includeCurrent = false) => {
+    setDeleteAllDevicesData((prev) => ({ ...prev, isLoading: true }));
+    try {
+      const response = await users.deleteAllDevices(includeCurrent);
+      setDeleteAllDevicesData({
+        isLoading: false,
+        isError: false,
+        isSuccess: true,
+        data: response.data,
+        code: response.status,
+      });
+      // Signing this device out too ends the session server-side, so drop the
+      // local one rather than leaving the UI logged in against a dead cookie.
+      if (includeCurrent) {
+        setIsAuthenticated(false);
+        setIsVerified(false);
+        setIsLoggedIn(false);
+        setMyselfData(null);
+        reload();
+      }
+    } catch (error: unknown) {
+      setDeleteAllDevicesData({
+        isLoading: false,
+        isError: true,
+        isSuccess: false,
+        data: (error as userType.ErrorResponse)?.data,
+        code: (error as userType.ErrorResponse)?.status,
+      });
+    }
+  };
+
+  const listSessions = async (): Promise<SessionAccount[]> => {
+    try {
+      const { accounts } = await users.listSessions();
+      setSessionAccounts(accounts);
+      return accounts;
+    } catch {
+      setSessionAccounts([]);
+      return [];
+    }
+  };
+
+  /**
+   * Switching is a cookie swap on the server, so the whole app has to re-read
+   * its state afterwards — a reload is both the simplest and the most reliable
+   * way to do that.
+   */
+  const switchSession = async (uid: string) => {
+    setSwitchSessionData((prev) => ({ ...prev, isLoading: true }));
+    try {
+      const response = await users.switchSession(uid);
+      setSwitchSessionData({
+        isLoading: false,
+        isError: false,
+        isSuccess: true,
+        data: response.data,
+        code: response.status,
+      });
+      reload();
+    } catch (error: unknown) {
+      setSwitchSessionData({
+        isLoading: false,
+        isError: true,
+        isSuccess: false,
+        data: (error as userType.ErrorResponse)?.data,
+        code: (error as userType.ErrorResponse)?.status,
+      });
+    }
+  };
+
   const requestActivateDevice = async (deviceId: string) => {
     setRequestActivateDeviceData((prev) => ({ ...prev, isLoading: true }));
     try {
@@ -856,17 +936,9 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
     if (isAuthenticated && myselfData?.isSuccess && myselfData?.data) {
       const user = myselfData.data as userType.User;
 
-      // Save to switch-accounts list
-      if (user?.id) {
-        savedAccountsManager.upsert({
-          id: user.id,
-          email: user.email,
-          firstname: user.firstname,
-          lastname: user.lastname,
-          profilePic: user.profilePic,
-          handle: user.handle,
-        });
-      }
+      // The account switcher used to be fed from this localStorage mirror.
+      // It is now driven by the parked session cookies the server can verify,
+      // so there is nothing to keep in sync here.
 
       // Only perform device-based logout if we have confirmed data and devices array is present
       if (Array.isArray(user?.devices)) {
@@ -897,6 +969,12 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
   return (
     <UsersContext.Provider
       value={{
+        deleteAllDevices,
+        deleteAllDevicesData,
+        sessionAccounts,
+        listSessions,
+        switchSession,
+        switchSessionData,
         requestActivateDevice,
         requestActivateDeviceData,
         verifyDevice,

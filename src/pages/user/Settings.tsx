@@ -10,7 +10,6 @@ import {
   Delete,
   LaunchRounded,
   Lock,
-  LockOpen,
   Mail,
   Visibility,
   VisibilityOff,
@@ -21,7 +20,6 @@ import React, { useState } from "react";
 import { toast } from "../../components/ui/toast";
 import { useUsers } from "../../context/Users";
 import { useNavigate } from "react-router-dom";
-import PinLockModal from "../../components/account/PinLockModal";
 import { useTranslation } from "../../context/Locale";
 import { LOCALE_LABELS, SUPPORTED_LOCALES, type Locale } from "../../utilities/localePrefs";
 
@@ -60,8 +58,6 @@ function Settings({
   const [deleting, setDeleting] = useState(false);
   const [passwordVisibility, setPasswordVisibility] = useState(false);
   const [verifySent, setVerifySent] = useState(false);
-  const [pinModal, setPinModal] = useState<"setup" | "change" | null>(null);
-  const pinEnabled = userValue?.accountPin?.enabled;
 
   const [passwords, setPasswords] = useState({
     oldPassword: "",
@@ -365,51 +361,6 @@ function Settings({
         </Box>
       </Panel>
 
-      <Panel
-        title="PIN lock"
-        description={
-          pinEnabled
-            ? "Your account is protected with a PIN. The PIN is shared across devices; each device's lock timer lives in the Devices tab."
-            : "Set a 4-digit PIN to lock your account when you step away. Per-device timing lives in the Devices tab."
-        }
-        footerHint={pinEnabled ? "PIN lock is on." : "PIN lock is off."}
-        footer={
-          pinEnabled ? (
-            <>
-              <Button
-                startDecorator={<LockOpen sx={{ fontSize: 16 }} />}
-                color="danger"
-                variant="outlined"
-                onClick={async () => {
-                  const { profilesAPI } = await import(
-                    "../../service/api/smb/profiles.api.service"
-                  );
-                  await profilesAPI.disablePin();
-                  toast.success("PIN disabled");
-                  window.location.reload();
-                }}
-              >
-                Disable PIN
-              </Button>
-              <Button
-                startDecorator={<Lock sx={{ fontSize: 16 }} />}
-                variant="outlined"
-                color="neutral"
-                onClick={() => setPinModal("change")}
-              >
-                Change PIN
-              </Button>
-            </>
-          ) : (
-            <Button
-              startDecorator={<Lock sx={{ fontSize: 16 }} />}
-              onClick={() => setPinModal("setup")}
-            >
-              Set up PIN
-            </Button>
-          )
-        }
-      />
 
       {/* ── Danger zone ── */}
       <Box
@@ -654,18 +605,6 @@ function Settings({
         </Field>
       </Dialog>
 
-      {pinModal && (
-        <PinLockModal
-          open
-          mode={pinModal}
-          onSuccess={() => {
-            setPinModal(null);
-            toast.success("PIN saved");
-            window.location.reload();
-          }}
-          onCancel={() => setPinModal(null)}
-        />
-      )}
     </Box>
   );
 }

@@ -15,8 +15,10 @@ import {
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useUsers } from "../../context/Users";
 import { useOC } from "../../context/OC";
-import { qrAPI } from "../../service/api/smb/qr.api.service";
+import { extractQRToken, qrAPI } from "../../service/api/smb/qr.api.service";
 import QRCodeDisplay from "../../components/utils/QRCodeDisplay";
+import QRScanner, { isQRScanSupported } from "../../components/utils/QRScanner";
+import SegmentedControl from "../../components/ui/SegmentedControl";
 import { AppleMark, GoogleMark } from "../../components/auth/ProviderIcons";
 import { useFederatedSignIn } from "../../components/auth/useFederatedSignIn";
 import PhoneSignInPanel from "../../components/auth/PhoneSignInPanel";
@@ -29,7 +31,39 @@ function QRLoginPanel() {
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  // Two ways through, depending on which screen has the camera: show a code
+  // for an approved device to read, or read a code an approved device shows.
+  const [mode, setMode] = useState<"show" | "scan">("show");
+  const [claiming, setClaiming] = useState(false);
+  const [claimError, setClaimError] = useState("");
+
   const qrUrl = qrToken ? `${window.location.origin}/qr-approve/${qrToken}` : null;
+
+  const handleClaim = useCallback(async (raw: string) => {
+    const token = extractQRToken(raw);
+    if (!token) {
+      setClaimError("That doesn't look like a sign-in code.");
+      return;
+    }
+    setClaiming(true);
+    setClaimError("");
+    try {
+      await qrAPI.claim(token, {
+        deviceId: deviceId(),
+        deviceName: deviceName(),
+        deviceType: deviceType(),
+      });
+      // The session cookie came back on that response; reload so the Users
+      // context picks it up, exactly like the polling path does.
+      reload();
+    } catch (error) {
+      setClaimError(
+        (error as { data?: { message?: string } })?.data?.message ||
+          "That code could not be used.",
+      );
+      setClaiming(false);
+    }
+  }, []);
 
   const startQR = useCallback(async () => {
     setStatus("pending");
@@ -53,6 +87,7 @@ function QRLoginPanel() {
 
   // Poll for approval
   useEffect(() => {
+    if (mode !== "show") return;
     if (!qrToken || status !== "pending") return;
     pollRef.current = setInterval(async () => {
       if (document.visibilityState !== "visible") return;
@@ -84,7 +119,7 @@ function QRLoginPanel() {
       });
     }, 1000);
     return () => { clearInterval(pollRef.current!); clearInterval(timerRef.current!); };
-  }, [qrToken, status]);
+  }, [qrToken, status, mode]);
 
   if (status === "approved") return (
     <Box sx={{ textAlign: "center", py: 4 }}>
@@ -100,10 +135,55 @@ function QRLoginPanel() {
     </Box>
   );
 
+  const modeToggle = isQRScanSupported() ? (
+    <Box sx={{ width: "100%", maxWidth: 260 }}>
+      <SegmentedControl
+        ariaLabel="QR sign-in method"
+        segments={[
+          { value: "show", label: "Show code" },
+          { value: "scan", label: "Scan code" },
+        ]}
+        value={mode}
+        onChange={(value) => {
+          setClaimError("");
+          setMode(value as "show" | "scan");
+        }}
+      />
+    </Box>
+  ) : null;
+
+  if (mode === "scan") {
+    return (
+      <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
+        {modeToggle}
+        <Typography level="body-sm" sx={{ textAlign: "center" }}>
+          On a device you're already signed in on, open{" "}
+          <strong>Settings → Devices</strong> and tap{" "}
+          <strong>Show code</strong>. Then point this camera at it.
+        </Typography>
+        <Box sx={{ width: "100%" }}>
+          {claiming ? (
+            <Box sx={{ textAlign: "center", py: 4 }}>
+              <Typography level="title-sm">Signing in…</Typography>
+            </Box>
+          ) : (
+            <QRScanner onScan={handleClaim} />
+          )}
+        </Box>
+        {claimError && (
+          <Typography level="body-xs" sx={{ color: "danger.plainColor", textAlign: "center" }}>
+            {claimError}
+          </Typography>
+        )}
+      </Box>
+    );
+  }
+
   return (
     <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
+      {modeToggle}
       <Typography level="body-sm" sx={{ textAlign: "center" }}>
-        Scan this QR code with an active device that's already logged in.
+        Scan this QR code with a device that's already signed in.
       </Typography>
       {qrToken && qrUrl ? (
         <Box sx={{ p: 1.5, borderRadius: "8px", backgroundColor: "#fff" }}>

@@ -81,7 +81,6 @@ export interface User {
   notifications?: NotificationPreferences;
   notificationInterests?: NotificationInterests;
   privacy?: PrivacySettings;
-  accountPin?: { enabled: boolean; resetToken?: string | null; resetExpiresAt?: number | null };
 }
 
 export type Watchlist = WatchlistItem;
@@ -105,9 +104,6 @@ export interface Device {
   createdAt: string;
   lastLogin: string;
   location: Location;
-  requirePassword?: "immediately" | "5min" | "30min" | "never" | "custom";
-  customLockMinutes?: number;
-  lockedAt?: string | null;
 }
 
 export interface UserRegister {

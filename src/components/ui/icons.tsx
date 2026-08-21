@@ -162,6 +162,7 @@ export const Chat = icon(L.MessageSquare);
 export const Notifications = icon(L.Bell);
 export const NotificationsNone = Notifications;
 export const QrCode2 = icon(L.QrCode);
+export const QrCodeScanner = icon(L.ScanLine);
 
 /* ── Devices ─────────────────────────────────────────────────────────────── */
 export const LaptopMac = icon(L.Laptop);

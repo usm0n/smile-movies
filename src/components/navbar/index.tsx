@@ -5,8 +5,6 @@ import {
   Logout,
   Search,
   WarningRounded,
-  Lock,
-  LockOpen,
   SwitchAccount,
   PersonAdd,
   Menu as MenuIcon,
@@ -25,6 +23,8 @@ import highLogo from "../../assets/images/logo-1000.png";
 import {
   Avatar,
   Box,
+  Chip,
+  CircularProgress,
   Divider,
   Drawer,
   Dropdown,
@@ -39,15 +39,12 @@ import {
   Stack,
   Typography,
 } from "@mui/joy";
-import React, { useEffect, useMemo, useState, type ComponentType } from "react";
+import React, { useMemo, useState, type ComponentType } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useUsers } from "../../context/Users";
 import { User } from "../../user";
 import { useTMDB } from "../../context/TMDB";
 import { images, movieDetails, tvDetails } from "../../tmdb-res";
-import PinLockModal from "../../components/account/PinLockModal";
-import { savedAccountsManager, SavedAccount } from "../../utilities/savedAccounts";
-import { pinLockStore, DEVICE_ID_KEY } from "../../utilities/pinLockStore";
 import Button from "../ui/Button";
 import IconButton from "../ui/IconButton";
 import Dialog from "../ui/Dialog";
@@ -121,14 +118,12 @@ const isMac =
 const Navbar: React.FC = () => {
   const [logoutModal, setLogoutModal] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [pinModalMode, setPinModalMode] = useState<"setup" | "verify" | "change" | null>(
-    null,
-  );
-  // Initialize from persisted store so lock survives page refresh
-  const [isLocked, setIsLocked] = useState(false);
   const [showSwitchAccounts, setShowSwitchAccounts] = useState(false);
-  const [savedAccounts, setSavedAccounts] = useState<SavedAccount[]>([]);
-  const { myselfData, logout, logoutData, isAuthenticated, authResolved } = useUsers();
+  const {
+    myselfData, logout, logoutData, isAuthenticated, authResolved,
+    sessionAccounts, listSessions, switchSession, switchSessionData,
+  } = useUsers();
+  const [switchingUid, setSwitchingUid] = useState("");
   const { movieDetailsData, movieImagesData, tvSeriesDetailsData, tvImagesData } =
     useTMDB();
   const navigate = useNavigate();
@@ -136,44 +131,6 @@ const Navbar: React.FC = () => {
   const { t } = useTranslation();
   const user = myselfData?.data as User;
 
-  // Enforce persisted lock state on mount and when user/device data loads
-  useEffect(() => {
-    if (!isAuthenticated || !user) return;
-    const currentDeviceId =
-      typeof window !== "undefined"
-        ? window.localStorage.getItem(DEVICE_ID_KEY) || ""
-        : "";
-    const currentDevice = user.devices?.find((d: any) => d.deviceId === currentDeviceId);
-    // `pinLockStore` reads a custom interval as a numeric string (see its
-    // `Number(requirePassword)` branch), so the literal "custom" parses as NaN
-    // and the device would never lock. Hand it the minutes instead.
-    const stored = currentDevice?.requirePassword || "never";
-    const requirePassword =
-      stored === "custom"
-        ? String(currentDevice?.customLockMinutes || 0)
-        : stored;
-    if (user.accountPin?.enabled && pinLockStore.isLocked(requirePassword)) {
-      setIsLocked(true);
-    }
-
-    // When user leaves the tab/app, record the lock timestamp so timer works on return
-    const handleVisibilityChange = () => {
-      if (
-        document.visibilityState === "hidden" &&
-        user.accountPin?.enabled &&
-        requirePassword !== "never"
-      ) {
-        pinLockStore.lock();
-      }
-      if (document.visibilityState === "visible" && user.accountPin?.enabled) {
-        if (pinLockStore.isLocked(requirePassword)) {
-          setIsLocked(true);
-        }
-      }
-    };
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
-  }, [isAuthenticated, user?.id]);
 
   const detailMatch = location.pathname.match(DETAIL_PAGE_REGEX);
   const detailType = detailMatch?.[1] as "movie" | "tv" | undefined;
@@ -321,25 +278,9 @@ const Navbar: React.FC = () => {
 
           <Divider sx={{ my: 0.5 }} />
 
-          {user?.accountPin?.enabled ? (
-            <MenuItem
-              onClick={() => {
-                pinLockStore.lock();
-                setIsLocked(true);
-              }}
-            >
-              <Lock sx={{ fontSize: 16 }} />
-              <ListItemContent>{t("account.lock")}</ListItemContent>
-            </MenuItem>
-          ) : (
-            <MenuItem onClick={() => setPinModalMode("setup")}>
-              <LockOpen sx={{ fontSize: 16 }} />
-              <ListItemContent>{t("account.setupPin")}</ListItemContent>
-            </MenuItem>
-          )}
           <MenuItem
             onClick={() => {
-              setSavedAccounts(savedAccountsManager.getAll());
+              void listSessions();
               setShowSwitchAccounts(true);
             }}
           >
@@ -748,57 +689,85 @@ const Navbar: React.FC = () => {
         open={showSwitchAccounts}
         onClose={() => setShowSwitchAccounts(false)}
         title={t("account.switch")}
-        description="Pick a saved account to sign in with."
+        description="Switch instantly between accounts already signed in on this device."
         width={400}
       >
         <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-          {savedAccounts
-            .filter((account) => account.id !== (user as any)?.id)
-            .map((account) => (
-              <Box
-                key={account.id}
-                onClick={() => {
-                  setShowSwitchAccounts(false);
-                  navigate(`/auth/login?hint=${encodeURIComponent(account.email)}`);
-                }}
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 1.5,
-                  p: 1.5,
-                  borderRadius: "8px",
-                  border: "1px solid",
-                  borderColor: "neutral.outlinedBorder",
-                  cursor: "pointer",
-                  transition: "background-color 150ms ease",
-                  "&:hover": { backgroundColor: "background.level1" },
-                }}
+          {sessionAccounts.map((account) => (
+            <Box
+              key={account.uid}
+              component="button"
+              type="button"
+              disabled={account.isActive || Boolean(switchingUid)}
+              onClick={async () => {
+                if (account.isActive) return;
+                setSwitchingUid(account.uid);
+                await switchSession(account.uid);
+                setSwitchingUid("");
+              }}
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 1.5,
+                width: "100%",
+                p: 1.5,
+                font: "inherit",
+                textAlign: "left",
+                borderRadius: "8px",
+                border: "1px solid",
+                borderColor: account.isActive
+                  ? "primary.outlinedBorder"
+                  : "neutral.outlinedBorder",
+                backgroundColor: "transparent",
+                color: "text.primary",
+                cursor: account.isActive ? "default" : "pointer",
+                opacity: switchingUid && switchingUid !== account.uid ? 0.5 : 1,
+                transition: "background-color 150ms ease",
+                "&:hover:not(:disabled)": { backgroundColor: "background.level1" },
+              }}
+            >
+              <Avatar
+                src={account.profilePic}
+                sx={{ width: 36, height: 36, borderRadius: "999px" }}
               >
-                <Avatar
-                  src={account.profilePic}
-                  sx={{ width: 36, height: 36, borderRadius: "999px" }}
-                >
-                  {!account.profilePic && (
-                    <>
-                      {account.firstname?.slice(0, 1)}
-                      {account.lastname?.slice(0, 1)}
-                    </>
-                  )}
-                </Avatar>
-                <Box sx={{ flex: 1, minWidth: 0 }}>
-                  <Typography level="title-sm">
-                    {account.firstname} {account.lastname}
-                  </Typography>
-                  <Typography level="body-xs">{account.email}</Typography>
-                </Box>
+                {!account.profilePic && (
+                  <>
+                    {account.firstname?.slice(0, 1)}
+                    {account.lastname?.slice(0, 1)}
+                  </>
+                )}
+              </Avatar>
+              <Box sx={{ flex: 1, minWidth: 0 }}>
+                <Typography level="title-sm" noWrap>
+                  {account.firstname} {account.lastname}
+                </Typography>
+                <Typography level="body-xs" noWrap>
+                  {account.email}
+                </Typography>
               </Box>
-            ))}
-          {savedAccounts.filter((account) => account.id !== (user as any)?.id).length ===
-            0 && (
+              {account.isActive ? (
+                <Chip size="sm" variant="soft" color="primary">
+                  Current
+                </Chip>
+              ) : switchingUid === account.uid ? (
+                <CircularProgress size="sm" />
+              ) : null}
+            </Box>
+          ))}
+
+          {sessionAccounts.length <= 1 && (
             <Typography level="body-sm" sx={{ textAlign: "center", py: 2 }}>
-              No other saved accounts.
+              No other accounts are signed in on this device.
             </Typography>
           )}
+
+          {switchSessionData?.isError && (
+            <Typography level="body-xs" sx={{ color: "danger.plainColor" }}>
+              {(switchSessionData.data as { message?: string })?.message ||
+                "Could not switch account."}
+            </Typography>
+          )}
+
           <Button
             fullWidth
             startDecorator={<PersonAdd sx={{ fontSize: 16 }} />}
@@ -815,60 +784,6 @@ const Navbar: React.FC = () => {
         </Box>
       </Dialog>
 
-      {pinModalMode && (
-        <PinLockModal
-          open
-          mode={pinModalMode}
-          onSuccess={() => {
-            setPinModalMode(null);
-            if (pinModalMode === "verify") {
-              pinLockStore.unlock();
-              setIsLocked(false);
-            }
-          }}
-          onCancel={() => setPinModalMode(null)}
-        />
-      )}
-
-      {isLocked && (
-        <Box
-          sx={{
-            position: "fixed",
-            inset: 0,
-            zIndex: 99999,
-            backgroundColor: "#000",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            flexDirection: "column",
-            gap: 2,
-          }}
-        >
-          <Avatar
-            src={user?.profilePic}
-            sx={{ width: 64, height: 64, fontSize: 22, borderRadius: "999px" }}
-          >
-            {!user?.profilePic && (
-              <>
-                {user?.firstname?.slice(0, 1)}
-                {user?.lastname?.slice(0, 1)}
-              </>
-            )}
-          </Avatar>
-          <Typography level="h3">
-            {user?.firstname} {user?.lastname}
-          </Typography>
-          <Typography level="body-sm">{t("account.locked")}</Typography>
-          <Button
-            startDecorator={<LockOpen sx={{ fontSize: 16 }} />}
-            size="lg"
-            onClick={() => setPinModalMode("verify")}
-            sx={{ mt: 1 }}
-          >
-            Unlock
-          </Button>
-        </Box>
-      )}
     </>
   );
 };

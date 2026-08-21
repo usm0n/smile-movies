@@ -49,13 +49,10 @@ const ru: Dictionary = {
   "nav.sectionLibrary": "Библиотека",
   "nav.sectionApp": "Приложение",
 
-  "account.lock": "Заблокировать аккаунт",
-  "account.setupPin": "Настроить PIN-код",
   "account.switch": "Сменить аккаунт",
   "account.verify": "Подтвердить аккаунт",
   "account.publicProfile": "Публичный профиль",
   "account.admin": "Админ-панель",
-  "account.locked": "Аккаунт заблокирован",
 
   "settings.title": "Настройки",
   "settings.language.title": "Язык",

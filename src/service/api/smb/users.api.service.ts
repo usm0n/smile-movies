@@ -5,6 +5,16 @@ import {
 } from "../../../user";
 import { smbAPI } from "../api";
 
+export interface SessionAccount {
+  uid: string;
+  firstname: string;
+  lastname: string;
+  email: string;
+  profilePic: string;
+  handle: string;
+  isActive: boolean;
+}
+
 export const users = {
   getAll: async () => {
     const response = await smbAPI.get("/users");
@@ -54,8 +64,11 @@ export const users = {
     const response = await smbAPI.post("/users/login", user);
     return response;
   },
-  logout: async () => {
-    const response = await smbAPI.post("/users/logout");
+  /** Signs out this account only; `allAccounts` forgets every parked one too. */
+  logout: async (allAccounts = false) => {
+    const response = await smbAPI.post(
+      `/users/logout${allAccounts ? "?all=true" : ""}`,
+    );
     return response;
   },
   verify: async (token: string) => {
@@ -143,8 +156,25 @@ export const users = {
     const response = await smbAPI.post(`/users/lastLogin/`, { deviceId });
     return response;
   },
+  /** Accounts with a live parked session on this browser. */
+  listSessions: async () => {
+    const response = await smbAPI.get(`/users/sessions`);
+    return response.data as { accounts: SessionAccount[] };
+  },
+  /** Makes a parked account active — no password. */
+  switchSession: async (uid: string) => {
+    const response = await smbAPI.post(`/users/sessions/switch`, { uid });
+    return response;
+  },
   deleteDevice: async (deviceId: string) => {
     const response = await smbAPI.delete(`/users/deleteDevice/${deviceId}`);
+    return response;
+  },
+  /** Signs out every other device; `includeCurrent` signs this one out too. */
+  deleteAllDevices: async (includeCurrent = false) => {
+    const response = await smbAPI.delete(
+      `/users/devices${includeCurrent ? "?all=true" : ""}`,
+    );
     return response;
   },
   requestActivateDevice: async (deviceId: string) => {

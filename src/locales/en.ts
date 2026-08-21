@@ -63,13 +63,10 @@ const en = {
   "nav.sectionApp": "App",
 
   // Account menu.
-  "account.lock": "Lock account",
-  "account.setupPin": "Set up PIN lock",
   "account.switch": "Switch account",
   "account.verify": "Verify your account",
   "account.publicProfile": "Public profile",
   "account.admin": "Admin",
-  "account.locked": "Account locked",
 
   // Settings.
   "settings.title": "Settings",
