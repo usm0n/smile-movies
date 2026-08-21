@@ -23,6 +23,8 @@ import { toast } from "../ui/toast";
 
 const APPROVAL_DISMISSED_KEY = "deviceApprovalDismissed";
 const NEW_DEVICE_WINDOW_MS = 10 * 60 * 1000;
+/** Only runs while the approval dialog is open, so it can afford to be calm. */
+const APPROVAL_POLL_MS = 10_000;
 
 function HomeSnackbars() {
   const { myselfData, isAuthenticated, getMyself, requestActivateDevice, verifyDevice } =
@@ -69,15 +71,16 @@ function HomeSnackbars() {
   }, [isAuthenticated, myselfData?.isSuccess, isPending, user?.devices?.length]);
 
   // While the dialog is up, someone is probably tapping Approve on another
-  // screen. Poll so this one lets itself in without a reload.
+  // screen. Poll so this one lets itself in without a reload — silently, or
+  // the whole page drops into its loading state every few seconds.
   const getMyselfRef = useRef(getMyself);
   getMyselfRef.current = getMyself;
   useEffect(() => {
     if (!approvalOpen || !isPending) return;
     const id = setInterval(() => {
       if (document.visibilityState !== "visible") return;
-      void getMyselfRef.current();
-    }, 5000);
+      void getMyselfRef.current({ silent: true });
+    }, APPROVAL_POLL_MS);
     return () => clearInterval(id);
   }, [approvalOpen, isPending]);
 
@@ -90,8 +93,10 @@ function HomeSnackbars() {
     if (!currentDevice) return;
     setBusy(true);
     try {
-      await requestActivateDevice(currentDevice.deviceId);
-      setStep("code");
+      // Advancing regardless of the result was the bug: when mail delivery is
+      // down the request 502s, and the user was still shown a code box for an
+      // email that was never sent.
+      if (await requestActivateDevice(currentDevice.deviceId)) setStep("code");
     } finally {
       setBusy(false);
     }
@@ -101,8 +106,9 @@ function HomeSnackbars() {
     if (!currentDevice || code.trim().length < 6) return;
     setBusy(true);
     try {
-      await verifyDevice(currentDevice.deviceId, code.trim());
-      await getMyself();
+      if (await verifyDevice(currentDevice.deviceId, code.trim())) {
+        await getMyself();
+      }
     } finally {
       setBusy(false);
     }

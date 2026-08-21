@@ -39,7 +39,7 @@ import {
   Stack,
   Typography,
 } from "@mui/joy";
-import React, { useMemo, useState, type ComponentType } from "react";
+import React, { useEffect, useMemo, useRef, useState, type ComponentType } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useUsers } from "../../context/Users";
 import { User } from "../../user";
@@ -124,6 +124,16 @@ const Navbar: React.FC = () => {
     sessionAccounts, listSessions, switchSession, switchSessionData,
   } = useUsers();
   const [switchingUid, setSwitchingUid] = useState("");
+  const hasOtherAccounts = sessionAccounts.filter((a) => !a.isActive).length > 0;
+
+  // The logout dialog's wording depends on whether another account is parked,
+  // so the list has to be known before the switcher is ever opened.
+  const listSessionsRef = useRef(listSessions);
+  listSessionsRef.current = listSessions;
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    void listSessionsRef.current();
+  }, [isAuthenticated]);
   const { movieDetailsData, movieImagesData, tvSeriesDetailsData, tvImagesData } =
     useTMDB();
   const navigate = useNavigate();
@@ -531,7 +541,11 @@ const Navbar: React.FC = () => {
         open={logoutModal}
         onClose={() => setLogoutModal(false)}
         title={t("nav.signOut")}
-        description="You'll need to sign in again to sync your watchlist and progress."
+        description={
+          hasOtherAccounts
+            ? "You'll be switched to your other signed-in account. Sign out of everything to leave completely."
+            : "You'll need to sign in again to sync your watchlist and progress."
+        }
         width={420}
         actions={
           <>
@@ -542,6 +556,16 @@ const Navbar: React.FC = () => {
             >
               Cancel
             </Button>
+            {hasOtherAccounts && (
+              <Button
+                variant="outlined"
+                color="danger"
+                loading={logoutData?.isLoading}
+                onClick={() => logout(true)}
+              >
+                Sign out of all
+              </Button>
+            )}
             <Button
               color="danger"
               loading={logoutData?.isLoading}
@@ -776,7 +800,9 @@ const Navbar: React.FC = () => {
             sx={{ mt: 0.5 }}
             onClick={() => {
               setShowSwitchAccounts(false);
-              navigate("/auth/login");
+              // `add=1` keeps the login page from bouncing back home: this
+              // account stays signed in while another one is added alongside.
+              navigate("/auth/login?add=1");
             }}
           >
             Add account

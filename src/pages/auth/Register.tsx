@@ -94,8 +94,11 @@ function Register() {
   });
 
   useEffect(() => {
+    // Same carve-out as the login page: "Add account" arrives here still
+    // signed in, and redirecting home would cancel the flow before it starts.
+    if (searchParams.get("add") === "1") return;
     if (myselfData?.isSuccess) navigate("/");
-  }, [myselfData?.isSuccess, navigate]);
+  }, [searchParams, myselfData?.isSuccess, navigate]);
 
   useEffect(() => {
     setUserValue((prev) => ({ ...prev, deviceLocation: locationData.data }));

@@ -48,7 +48,7 @@ const UsersContext = createContext({
   getUsers: async () => {},
   getUserById: async (_id: string) => {},
   getUserByEmail: async (_email: string) => {},
-  getMyself: async () => {},
+  getMyself: async (_options?: { silent?: boolean }) => {},
   updateUserById: async (_id: string, _user: userType.User) => {},
   updateUserByEmail: async (_email: string, _user: userType.User) => {},
   updateMyself: async (_user: Partial<userType.User>) => {},
@@ -61,7 +61,7 @@ const UsersContext = createContext({
     _type: "email" | "google",
     _registerUser?: userType.UserRegister,
   ) => {},
-  logout: () => {},
+  logout: (_allAccounts?: boolean) => {},
   verify: async (_token: string) => {},
   resendTokenVerification: async () => {},
   forgotPassword: async (_email: string) => {},
@@ -104,8 +104,8 @@ const UsersContext = createContext({
   deleteAllDevices: async (_includeCurrent?: boolean) => {},
   listSessions: async (): Promise<SessionAccount[]> => [],
   switchSession: async (_uid: string) => {},
-  requestActivateDevice: async (_deviceId: string) => {},
-  verifyDevice: async (_deviceId: string, _token: string) => {},
+  requestActivateDevice: async (_deviceId: string): Promise<boolean> => false,
+  verifyDevice: async (_deviceId: string, _token: string): Promise<boolean> => false,
 });
 
 export const useUsers = () => useContext(UsersContext);
@@ -244,22 +244,46 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
       });
     }
   };
-  const getMyself = async () => {
-    setMyselfData((prev) => ({ ...prev, isLoading: true }));
+  /**
+   * `silent` is for background polling — waiting on another device to approve
+   * this one, mostly.
+   *
+   * Without it every poll flips `isLoading` on and hands back a brand new
+   * object, so every screen reading `myselfData` drops into its loading state
+   * and re-renders. At a few seconds apart that reads as the page refreshing
+   * itself over and over. A silent refresh never touches `isLoading`, keeps the
+   * previous object when nothing actually changed, and leaves auth state alone
+   * on a transient failure — a dropped poll is not a sign-out. Real revocation
+   * still arrives as 401 DEVICE_REVOKED through the interceptor.
+   */
+  const getMyself = async ({ silent = false }: { silent?: boolean } = {}) => {
+    if (!silent) setMyselfData((prev) => ({ ...prev, isLoading: true }));
     try {
       const response = await users.getMyself();
       const user = response.data as userType.User;
-      setMyselfData({
-        isLoading: false,
-        isError: false,
-        isSuccess: true,
-        data: user,
-        code: response.status,
+      setMyselfData((prev) => {
+        if (
+          silent &&
+          prev?.data &&
+          JSON.stringify(prev.data) === JSON.stringify(user)
+        ) {
+          // Nothing moved — keep the same object so nothing downstream
+          // re-renders.
+          return prev;
+        }
+        return {
+          isLoading: false,
+          isError: false,
+          isSuccess: true,
+          data: user,
+          code: response.status,
+        };
       });
       setIsAuthenticated(true);
       setIsLoggedIn(true);
       setIsVerified(!!user?.isVerified);
     } catch (error: unknown) {
+      if (silent) return;
       setMyselfData({
         isLoading: false,
         isError: true,
@@ -271,7 +295,7 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
       setIsVerified(false);
       setIsLoggedIn(false);
     } finally {
-      setAuthResolved(true);
+      if (!silent) setAuthResolved(true);
     }
   };
   const updateUserById = async (id: string, user: userType.User) => {
@@ -466,10 +490,15 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  const logout = async () => {
+  /**
+   * Signs out the active account. If another account is still signed in on
+   * this browser the server promotes it, and the reload below lands on it —
+   * `allAccounts` is the way to leave entirely.
+   */
+  const logout = async (allAccounts = false) => {
     setLogoutData((prev) => ({ ...prev, isLoading: true }));
     try {
-      const response = await users.logout();
+      const response = await users.logout(allAccounts);
       setIsAuthenticated(false);
       setIsVerified(false);
       setIsLoggedIn(false);
@@ -857,7 +886,12 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  const requestActivateDevice = async (deviceId: string) => {
+  /**
+   * Returns whether the code actually went out. Callers move the UI to the
+   * "enter the code" step, and doing that after a failed send strands the user
+   * in front of an input for a code that was never sent.
+   */
+  const requestActivateDevice = async (deviceId: string): Promise<boolean> => {
     setRequestActivateDeviceData((prev) => ({ ...prev, isLoading: true }));
     try {
       const response = await users.requestActivateDevice(deviceId);
@@ -868,6 +902,7 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
         data: response.data,
         code: response.status,
       });
+      return true;
     } catch (error) {
       setRequestActivateDeviceData({
         isLoading: false,
@@ -876,13 +911,15 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
         data: (error as userType.ErrorResponse)?.data,
         code: (error as userType.ErrorResponse)?.status,
       });
+      return false;
     }
   };
 
+  /** Returns whether the code was accepted, so callers can keep the form open. */
   const verifyDevice = async (
     deviceId: string,
     token: string,
-  ) => {
+  ): Promise<boolean> => {
     setVerifyDeviceData((prev) => ({ ...prev, isLoading: true }));
     try {
       const response = await users.verifyDevice(deviceId, token);
@@ -893,6 +930,7 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
         data: response.data,
         code: response.status,
       });
+      return true;
     } catch (error) {
       setVerifyDeviceData({
         isLoading: false,
@@ -901,6 +939,7 @@ const UsersProvider = ({ children }: { children: React.ReactNode }) => {
         data: (error as userType.ErrorResponse)?.data,
         code: (error as userType.ErrorResponse)?.status,
       });
+      return false;
     }
   };
 

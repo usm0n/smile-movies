@@ -217,6 +217,16 @@ function Login() {
   // carried over from a registration attempt on an already-known number.
   const emailHint = searchParams.get("hint") || "";
   const phoneHint = searchParams.get("phone") || "";
+  /**
+   * "Add account" sends you here while you are still signed in, which the
+   * redirect below would otherwise undo the moment `getMyself` resolves —
+   * bouncing you straight back home and making the switcher's Add button do
+   * nothing at all.
+   */
+  const isAddingAccount = searchParams.get("add") === "1";
+  const signedInAs = myselfData?.isSuccess
+    ? (myselfData.data as { firstname?: string; email?: string } | undefined)
+    : undefined;
   const [activeTab, setActiveTab] = useState(phoneHint ? 1 : 0);
   const [userValue, setUserValue] = useState<UserLogin>({
     email: emailHint, password: "",
@@ -233,8 +243,9 @@ function Login() {
   }, [locationData.data]);
 
   useEffect(() => {
+    if (isAddingAccount) return;
     if (myselfData?.isSuccess) navigate("/");
-  }, [myselfData?.isSuccess, navigate]);
+  }, [isAddingAccount, myselfData?.isSuccess, navigate]);
 
   // Google and Apple both run through Firebase Auth: the popup returns an ID
   // token, the API verifies it and sets our own session cookie.
@@ -257,9 +268,35 @@ function Login() {
       }}
     >
       <Box sx={{ width: "100%", maxWidth: 400 }}>
+        {isAddingAccount && signedInAs && (
+          <Box
+            sx={{
+              display: "flex", alignItems: "center", gap: 1.5, mb: 2.5,
+              p: 1.5, borderRadius: "md",
+              border: "1px solid", borderColor: "neutral.outlinedBorder",
+              backgroundColor: "background.level1",
+            }}
+          >
+            <Box sx={{ flex: 1, minWidth: 0 }}>
+              <Typography level="title-sm">Adding another account</Typography>
+              <Typography level="body-xs" sx={{ color: "text.tertiary" }} noWrap>
+                {signedInAs.firstname || signedInAs.email} stays signed in — you can
+                switch back any time.
+              </Typography>
+            </Box>
+            <Button
+              size="sm"
+              variant="plain"
+              color="neutral"
+              onClick={() => navigate("/")}
+            >
+              Cancel
+            </Button>
+          </Box>
+        )}
         <Box sx={{ textAlign: "center", mb: 3 }}>
           <Typography level="h2" sx={{ fontSize: "1.75rem" }}>
-            Sign in to Smile Movies
+            {isAddingAccount ? "Add an account" : "Sign in to Smile Movies"}
           </Typography>
           <Typography level="body-sm" sx={{ mt: 1 }}>
             Pick up your watchlist and progress on any device.
@@ -404,7 +441,12 @@ function Login() {
         >
           <Typography level="body-sm">
             No account?{" "}
-            <Link onClick={() => navigate("/auth/register")} sx={{ cursor: "pointer" }}>
+            <Link
+              onClick={() =>
+                navigate(isAddingAccount ? "/auth/register?add=1" : "/auth/register")
+              }
+              sx={{ cursor: "pointer" }}
+            >
               Create one
             </Link>
           </Typography>

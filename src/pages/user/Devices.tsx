@@ -97,7 +97,7 @@ function Devices({ myselfData }: { myselfData: ResponseType | null }) {
     if (!isThisDevicePending) return;
     const id = setInterval(() => {
       if (document.visibilityState !== "visible") return;
-      void getMyselfRef.current();
+      void getMyselfRef.current({ silent: true });
     }, PENDING_POLL_MS);
     return () => clearInterval(id);
   }, [isThisDevicePending]);
@@ -110,13 +110,16 @@ function Devices({ myselfData }: { myselfData: ResponseType | null }) {
 
   const handleRequestActivation = async () => {
     if (!selectedDevice) return;
-    await requestActivateDevice(selectedDevice.deviceId);
-    setActivateStep("code");
+    // Only move to the code step if a code actually went out — otherwise the
+    // user is left staring at an input for an email that never arrives.
+    if (await requestActivateDevice(selectedDevice.deviceId)) {
+      setActivateStep("code");
+    }
   };
 
   const handleVerifyActivation = async () => {
     if (!selectedDevice || !activateCode.trim()) return;
-    await verifyDevice(selectedDevice.deviceId, activateCode.trim());
+    if (!(await verifyDevice(selectedDevice.deviceId, activateCode.trim()))) return;
     await getMyself();
     closeDetail();
   };
