@@ -21,6 +21,46 @@ import { notificationsAPI } from "../service/api/smb/notifications.api.service";
 
 const VAPID_KEY = import.meta.env.VITE_FIREBASE_VAPID_KEY as string | undefined;
 
+const SW_READY_TIMEOUT_MS = 10_000;
+const TOKEN_TIMEOUT_MS = 15_000;
+
+const withTimeout = <T,>(promise: Promise<T>, ms: number, message: string): Promise<T> => {
+  let timer: number;
+  return Promise.race([
+    promise.finally(() => window.clearTimeout(timer)),
+    new Promise<T>((_, reject) => {
+      timer = window.setTimeout(() => reject(new Error(message)), ms);
+    }),
+  ]);
+};
+
+/**
+ * The service worker registration to mint the push token against.
+ *
+ * `navigator.serviceWorker.ready` is a trap here: when no worker is registered
+ * it neither resolves nor rejects — it waits forever. Development is exactly
+ * that state, because `registerServiceWorker` deliberately unregisters the app
+ * shell on localhost to avoid serving stale cached assets. Awaiting `.ready`
+ * there left the Enable button spinning with no error and no way out.
+ *
+ * So: use an existing active worker, register `/sw.js` if there is none, and
+ * put a ceiling on the wait either way.
+ */
+const getPushRegistration = async (): Promise<ServiceWorkerRegistration> => {
+  const existing = await navigator.serviceWorker.getRegistration();
+  if (existing?.active) return existing;
+
+  if (!existing) {
+    await navigator.serviceWorker.register("/sw.js");
+  }
+
+  return withTimeout(
+    navigator.serviceWorker.ready,
+    SW_READY_TIMEOUT_MS,
+    "The service worker did not start in time. Reload the page and try again.",
+  );
+};
+
 export type PushSupport =
   | { supported: true }
   | { supported: false; reason: string; needsInstall?: boolean };
@@ -102,12 +142,16 @@ export const enablePushOnThisDevice = async (): Promise<
     // Reuse the app-shell worker rather than registering a second one — FCM
     // defaults to looking for `/firebase-messaging-sw.js`, which does not exist
     // here on purpose; the push handlers live in `/sw.js`.
-    const registration = await navigator.serviceWorker.ready;
+    const registration = await getPushRegistration();
 
-    const token = await getToken(getMessaging(getFirebaseApp()), {
-      vapidKey: VAPID_KEY,
-      serviceWorkerRegistration: registration,
-    });
+    const token = await withTimeout(
+      getToken(getMessaging(getFirebaseApp()), {
+        vapidKey: VAPID_KEY,
+        serviceWorkerRegistration: registration,
+      }),
+      TOKEN_TIMEOUT_MS,
+      "Timed out asking the browser for a push token. Check that the VAPID key matches this Firebase project.",
+    );
 
     if (!token) {
       return { ok: false, reason: "Could not obtain a push token from the browser." };
@@ -134,11 +178,13 @@ export const disablePushOnThisDevice = async (): Promise<boolean> => {
     let token = "";
     if (VAPID_KEY && isFirebaseConfigured && (await isSupported())) {
       const messaging = getMessaging(getFirebaseApp());
-      const registration = await navigator.serviceWorker.ready;
-      token = await getToken(messaging, {
-        vapidKey: VAPID_KEY,
-        serviceWorkerRegistration: registration,
-      }).catch(() => "");
+      const registration = await getPushRegistration().catch(() => null);
+      token = registration
+        ? await getToken(messaging, {
+            vapidKey: VAPID_KEY,
+            serviceWorkerRegistration: registration,
+          }).catch(() => "")
+        : "";
       if (token) await deleteToken(messaging).catch(() => undefined);
     }
 
@@ -168,11 +214,15 @@ export const refreshPushTokenIfEnabled = async (): Promise<void> => {
     const { getMessaging, getToken, isSupported } = await import("firebase/messaging");
     if (!(await isSupported())) return;
 
-    const registration = await navigator.serviceWorker.ready;
-    const token = await getToken(getMessaging(getFirebaseApp()), {
-      vapidKey: VAPID_KEY,
-      serviceWorkerRegistration: registration,
-    });
+    const registration = await getPushRegistration();
+    const token = await withTimeout(
+      getToken(getMessaging(getFirebaseApp()), {
+        vapidKey: VAPID_KEY,
+        serviceWorkerRegistration: registration,
+      }),
+      TOKEN_TIMEOUT_MS,
+      "token refresh timed out",
+    );
     if (token) await notificationsAPI.registerPushToken({ token });
   } catch {
     // Never surface this: it runs in the background and a failure just means
