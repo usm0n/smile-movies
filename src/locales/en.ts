@@ -55,6 +55,7 @@ const en = {
   "nav.discover": "Discover",
   // Product name — deliberately identical in every locale.
   "nav.smileAI": "SmileAI",
+  "nav.notifications": "Notifications",
   "nav.watchlist": "Watchlist",
   "nav.myLists": "My Lists",
   "nav.downloads": "Downloads",

@@ -9,6 +9,7 @@ import HomeLayout from "../layouts/HomeLayout";
  * dashboard, and the watch party, none of which a browsing user ever touches.
  */
 const NotFound = lazy(() => import("../components/utils/NotFound"));
+const Notifications = lazy(() => import("../pages/notifications/Notifications"));
 const ForgotPassword = lazy(() => import("../pages/auth/forgot-password"));
 const Login = lazy(() => import("../pages/auth/Login"));
 const QRApprove = lazy(() => import("../pages/auth/QRApprove"));
@@ -190,6 +191,10 @@ export const mainRoutes = [
   {
     path: "/watchlist",
     element: <Watchlist />,
+  },
+  {
+    path: "/notifications",
+    element: <Notifications />,
   },
   {
     path: "/auth/forgot-password",

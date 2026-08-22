@@ -22,8 +22,10 @@ export interface AdminUserSummary {
 export interface AdminNotificationOverview {
   totalUsers: number;
   emailEnabled: number;
+  pushEnabled: number;
   productAnnouncements: number;
   newMovieReleases: number;
+  newSeriesPremieres: number;
   newEpisodeReleases: number;
   newSeasonReleases: number;
   returningShows: number;
@@ -37,15 +39,17 @@ export interface AdminNotificationOverview {
   queue: {
     status: string;
     queuedCandidates: number;
+    registeredPushTokens: number;
     pendingDigests: number;
     deliveryFailures: number;
     sentDeliveries: number;
     releaseEvents: number;
     lastRunAt?: string;
-    deliveryMode: "smtp" | "log";
+    deliveryMode: "resend" | "smtp" | "log" | "fcm";
     readiness: {
       tmdbConfigured: boolean;
       mailConfigured: boolean;
+      pushConfigured: boolean;
       schedulerConfigured: boolean;
       clientUrlConfigured: boolean;
     };

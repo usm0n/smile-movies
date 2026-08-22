@@ -1,4 +1,4 @@
-import { AdminPanelSettingsRounded, ArrowForwardRounded, ContentCopyRounded, KeyRounded, MarkEmailReadRounded, ShieldRounded, VerifiedRounded } from "../../components/ui/icons";
+import { AdminPanelSettingsRounded, ArrowForwardRounded, ContentCopyRounded, KeyRounded, MarkEmailReadRounded, NotificationsActiveRounded, ShieldRounded, VerifiedRounded } from "../../components/ui/icons";
 import { Shimmer } from "../../components/ui/Skeleton";
 import {
   Box,
@@ -12,6 +12,7 @@ import {
   TabList,
   TabPanel,
   Tabs,
+  Textarea,
   Typography,
 } from "@mui/joy";
 import { useEffect, useMemo, useState } from "react";
@@ -42,6 +43,8 @@ function AdminDashboard() {
   const [bootstrapStatus, setBootstrapStatus] = useState<AdminBootstrapStatus | null>(null);
   const [search, setSearch] = useState("");
   const [busyKey, setBusyKey] = useState("");
+  const [announcementTitle, setAnnouncementTitle] = useState("");
+  const [announcementSummary, setAnnouncementSummary] = useState("");
 
   const loadAdminData = async () => {
     setLoading(true);
@@ -266,6 +269,11 @@ function AdminDashboard() {
                     icon: <MarkEmailReadRounded />,
                     label: "Email enabled",
                     value: notifications?.emailEnabled || 0,
+                  },
+                  {
+                    icon: <NotificationsActiveRounded />,
+                    label: "Push enabled",
+                    value: notifications?.pushEnabled || 0,
                   },
                 ].map((item) => (
                   <Card
@@ -502,7 +510,7 @@ function AdminDashboard() {
                 <Card sx={{ p: 2 }}>
                   <Typography level="title-sm">Queue health</Typography>
                   <Typography level="body-sm" textColor="neutral.300" sx={{ mt: 1 }}>
-                    Status: {notifications.queue.status} · Candidates {notifications.queue.queuedCandidates} · Pending digests {notifications.queue.pendingDigests} · Delivery failures {notifications.queue.deliveryFailures} · Sent {notifications.queue.sentDeliveries} · Release events {notifications.queue.releaseEvents}
+                    Status: {notifications.queue.status} · Candidates {notifications.queue.queuedCandidates} · Push devices {notifications.queue.registeredPushTokens} · Pending digests {notifications.queue.pendingDigests} · Delivery failures {notifications.queue.deliveryFailures} · Sent {notifications.queue.sentDeliveries} · Release events {notifications.queue.releaseEvents}
                   </Typography>
                   <Typography level="body-xs" textColor="neutral.500" sx={{ mt: 0.75 }}>
                     Last job run: {notifications.queue.lastRunAt || "No recorded runs yet"}
@@ -519,6 +527,9 @@ function AdminDashboard() {
                     </Chip>
                     <Chip size="sm" color={notifications.queue.readiness.mailConfigured ? "success" : "warning"}>
                       Mail {notifications.queue.readiness.mailConfigured ? "ready" : "missing"}
+                    </Chip>
+                    <Chip size="sm" color={notifications.queue.readiness.pushConfigured ? "success" : "warning"}>
+                      Push {notifications.queue.readiness.pushConfigured ? "ready" : "missing"}
                     </Chip>
                     <Chip size="sm" color={notifications.queue.readiness.schedulerConfigured ? "success" : "warning"}>
                       Scheduler {notifications.queue.readiness.schedulerConfigured ? "ready" : "missing"}
@@ -674,6 +685,56 @@ function AdminDashboard() {
                       Process pending emails
                     </Button>
                   </Stack>
+
+                  <Divider sx={{ my: 2 }} />
+                  <Typography level="title-sm" sx={{ mb: 0.5 }}>
+                    Send an announcement
+                  </Typography>
+                  <Typography level="body-xs" textColor="neutral.400" sx={{ mb: 1.5 }}>
+                    Goes to every user with "Product announcements" enabled, on
+                    whichever channels they have on. There is no undo.
+                  </Typography>
+                  <Stack spacing={1.25}>
+                    <Input
+                      placeholder="Title"
+                      value={announcementTitle}
+                      onChange={(event) => setAnnouncementTitle(event.target.value)}
+                    />
+                    <Textarea
+                      minRows={2}
+                      placeholder="What changed, in a sentence or two."
+                      value={announcementSummary}
+                      onChange={(event) => setAnnouncementSummary(event.target.value)}
+                    />
+                    <Button
+                      sx={{ alignSelf: "flex-start" }}
+                      loading={busyKey === "announce"}
+                      disabled={!announcementTitle.trim() || !announcementSummary.trim()}
+                      onClick={async () => {
+                        setBusyKey("announce");
+                        try {
+                          const response = await notificationsAPI.adminAnnounce({
+                            title: announcementTitle.trim(),
+                            summary: announcementSummary.trim(),
+                          });
+                          setAnnouncementTitle("");
+                          setAnnouncementSummary("");
+                          toast.success(
+                            `Announcement queued for ${response.data?.queued ?? 0} recipient(s).`,
+                          );
+                          await loadAdminData();
+                        } catch (error) {
+                          console.error(error);
+                          toast.error("Failed to queue the announcement.");
+                        } finally {
+                          setBusyKey("");
+                        }
+                      }}
+                    >
+                      Queue announcement
+                    </Button>
+                  </Stack>
+
                   <Divider sx={{ my: 2 }} />
                   <Typography level="title-sm" sx={{ mb: 1 }}>
                     Recent job runs

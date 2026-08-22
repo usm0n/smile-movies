@@ -374,19 +374,23 @@ function Header({
       ? "Checking video availability..."
       : "";
 
+  // Shows and movies are followed into separate lists so the API can tell a
+  // TMDB tv id from a movie id — the two id spaces overlap, and matching the
+  // wrong one would announce an unrelated title.
+  const followKey = movieType === "tv" ? "followedShows" : "followedMovies";
   const isFollowing = Boolean(
-    (myselfData?.data as unknown as User)?.notificationInterests?.followedShows?.includes(
-      String(movieId),
-    ),
+    (
+      myselfData?.data as unknown as User
+    )?.notificationInterests?.[followKey]?.includes(String(movieId)),
   );
 
   const toggleFollow = () => {
     const interests = (myselfData?.data as unknown as User)?.notificationInterests;
-    const followed = interests?.followedShows || [];
+    const followed = interests?.[followKey] || [];
     updateMyself({
       notificationInterests: {
         ...interests,
-        followedShows: isFollowing
+        [followKey]: isFollowing
           ? followed.filter((id: string) => id !== String(movieId))
           : [...followed, String(movieId)],
       },
@@ -899,7 +903,7 @@ function Header({
                         )}
                         {watchlistItem ? "Remove from Watchlist" : "Add to Watchlist"}
                       </MenuItem>
-                      {movieType === "tv" && isLoggedIn && (
+                      {isLoggedIn && (
                         <MenuItem
                           onClick={() => {
                             toggleFollow();
@@ -913,7 +917,9 @@ function Header({
                           )}
                           {isFollowing
                             ? "Stop following"
-                            : "Follow for new episodes"}
+                            : movieType === "tv"
+                              ? "Follow for new episodes"
+                              : "Follow for release news"}
                         </MenuItem>
                       )}
                       {collections.length > 0 && (

@@ -11,7 +11,14 @@ import {
   peopleDetails,
   peopleImages,
 } from "../../tmdb-res";
-import { Person as PersonIcon } from "../../components/ui/icons";
+import {
+  Notifications,
+  NotificationsNone,
+  Person as PersonIcon,
+} from "../../components/ui/icons";
+import { useUsers } from "../../context/Users";
+import { User } from "../../user";
+import { toast } from "../../components/ui/toast";
 import { useState } from "react";
 import { Button } from "@mui/joy";
 import EventMC from "../../components/cards/EventMC";
@@ -27,6 +34,45 @@ function Person() {
     peopleImagesData,
   } = useTMDB();
   const [isExpanded, setIsExpanded] = useState(false);
+  const { isAuthenticated, myselfData, updateMyself } = useUsers();
+
+  /**
+   * Following a person is what drives the credits-based release sync on the
+   * API: it stores the TMDB person id, and the notification job then looks up
+   * that person's upcoming titles directly. Typing a name into Settings only
+   * matches people already listed on a release we happened to ingest, so this
+   * button is the one that actually surfaces new work.
+   */
+  const followedPeople =
+    (myselfData?.data as unknown as User)?.notificationInterests?.followedPeople || [];
+  const isFollowingPerson = Boolean(personId && followedPeople.includes(String(personId)));
+  const [followBusy, setFollowBusy] = useState(false);
+
+  const toggleFollowPerson = async () => {
+    if (!personId || followBusy) return;
+    setFollowBusy(true);
+
+    const interests = (myselfData?.data as unknown as User)?.notificationInterests;
+    try {
+      await updateMyself({
+        notificationInterests: {
+          ...interests,
+          followedPeople: isFollowingPerson
+            ? followedPeople.filter((id: string) => id !== String(personId))
+            : [...followedPeople, String(personId)],
+        },
+      } as never);
+      toast.success(
+        isFollowingPerson
+          ? `Stopped following ${peopleDetailsDataArr?.name || "this person"}.`
+          : `Following ${peopleDetailsDataArr?.name || "this person"} — we'll tell you about new releases.`,
+      );
+    } catch {
+      toast.error("Could not update who you follow. Please try again.");
+    } finally {
+      setFollowBusy(false);
+    }
+  };
 
   const peopleDetailsDataArr = peopleDetailsData?.data as peopleDetails;
   const peopleImagesDataArr = peopleImagesData?.data as peopleImages;
@@ -129,12 +175,37 @@ function Person() {
           </AspectRatio>
         )}
         <Box>
-          <Typography
-            level="h2"
-            sx={{ fontSize: "2rem", fontWeight: "bold", marginTop: "20px" }}
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: "16px",
+              flexWrap: "wrap",
+              marginTop: "20px",
+            }}
           >
-            {peopleDetailsDataArr?.name}
-          </Typography>
+            <Typography level="h2" sx={{ fontSize: "2rem", fontWeight: "bold" }}>
+              {peopleDetailsDataArr?.name}
+            </Typography>
+            {isAuthenticated && (
+              <Button
+                size="sm"
+                loading={followBusy}
+                variant={isFollowingPerson ? "solid" : "outlined"}
+                color={isFollowingPerson ? "primary" : "neutral"}
+                startDecorator={
+                  isFollowingPerson ? (
+                    <Notifications sx={{ fontSize: 16 }} />
+                  ) : (
+                    <NotificationsNone sx={{ fontSize: 16 }} />
+                  )
+                }
+                onClick={() => void toggleFollowPerson()}
+              >
+                {isFollowingPerson ? "Following" : "Follow"}
+              </Button>
+            )}
+          </Box>
           <Typography
             level="body-md"
             sx={{

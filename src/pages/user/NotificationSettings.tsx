@@ -1,48 +1,44 @@
-import { Box, Chip, Input, Option, Select, Switch, Typography } from "@mui/joy";
+import { Box, Chip, Option, Select, Switch, Typography } from "@mui/joy";
 import Button from "../../components/ui/Button";
 import Field from "../../components/ui/Field";
 import Panel from "../../components/ui/Panel";
 import { Shimmer } from "../../components/ui/Skeleton";
 import EmptyState from "../../components/ui/EmptyState";
 import { Inbox } from "../../components/ui/icons";
-import { NotificationInterests, NotificationPreferences, User } from "../../user";
+import { NotificationPreferences, User } from "../../user";
 import {
-  defaultNotificationInterests,
   defaultNotificationPreferences,
+  notificationChannelOptions,
   notificationDigestOptions,
   notificationToggleOptions,
 } from "../../utilities/notificationPreferences";
+import {
+  disablePushOnThisDevice,
+  enablePushOnThisDevice,
+  getPermissionState,
+  getPushSupport,
+} from "../../pwa/push";
 import { useCallback, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { notificationsAPI } from "../../service/api/smb/notifications.api.service";
+import FollowManager from "../../components/notifications/FollowManager";
 import { NotificationHistoryItem } from "../../types/notifications";
 import { toast } from "../../components/ui/toast";
 
 /**
  * Settings → Notifications.
  *
- * Preferences and interests are saved together by one button, because they are
- * two halves of the same question ("what should we email you about"). Delivery
- * history sits below, read-only, so a user can check whether something actually
- * went out before changing anything.
+ * Reads top to bottom as one question answered in order: where should we reach
+ * you, what should we tell you about, how often, and what are you following.
+ *
+ * The preference toggles are saved by the button that sits with them. Follows
+ * are not — `FollowManager` saves each one as it is pressed, because a Follow
+ * button that needs a separate Save afterwards does not behave like a Follow
+ * button anywhere else.
+ *
+ * Delivery history sits at the bottom, read-only, so a user can check whether
+ * something actually went out before changing anything.
  */
-
-const INTEREST_FIELDS = [
-  ["followedShows", "Shows", "Game of Thrones, Severance"],
-  ["followedGenres", "Genres", "Sci-Fi, Thriller, Animation"],
-  ["followedActors", "Actors", "Cillian Murphy, Zendaya"],
-  ["followedDirectors", "Directors", "Denis Villeneuve, Greta Gerwig"],
-  ["tasteKeywords", "Keywords", "time travel, courtroom, heist"],
-] as const;
-
-const parseList = (value: string) =>
-  Array.from(
-    new Set(
-      value
-        .split(",")
-        .map((item) => item.trim())
-        .filter(Boolean),
-    ),
-  );
 
 function NotificationSettings({
   userValue,
@@ -59,13 +55,12 @@ function NotificationSettings({
   const [history, setHistory] = useState<NotificationHistoryItem[]>([]);
   const [historyLoading, setHistoryLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [interestDraft, setInterestDraft] = useState({
-    followedShows: "",
-    followedGenres: "",
-    followedActors: "",
-    followedDirectors: "",
-    tasteKeywords: "",
-  });
+  const [pushBusy, setPushBusy] = useState(false);
+  // Support is a property of the browser, not the account, so it is read once
+  // per mount rather than stored.
+  const pushSupport = getPushSupport();
+  const pushBlocked = getPermissionState() === "denied";
+  const navigate = useNavigate();
 
   useEffect(() => {
     notificationsAPI
@@ -74,23 +69,6 @@ function NotificationSettings({
       .catch(() => undefined)
       .finally(() => setHistoryLoading(false));
   }, []);
-
-  // Seed the comma-separated inputs once from the saved interests. Keying off
-  // the user id rather than the arrays avoids clobbering what the user is
-  // typing every time the parent re-renders with a new array identity.
-  useEffect(() => {
-    const interests = {
-      ...defaultNotificationInterests,
-      ...(userValue?.notificationInterests || {}),
-    };
-    setInterestDraft({
-      followedShows: interests.followedShows.join(", "),
-      followedGenres: interests.followedGenres.join(", "),
-      followedActors: interests.followedActors.join(", "),
-      followedDirectors: interests.followedDirectors.join(", "),
-      tasteKeywords: interests.tasteKeywords.join(", "),
-    });
-  }, [userValue?.id]);
 
   const setPreference = useCallback(
     (key: keyof NotificationPreferences, value: unknown) =>
@@ -105,19 +83,41 @@ function NotificationSettings({
     [setUserValue],
   );
 
+  /**
+   * The push switch is not a plain preference: turning it on has to go through
+   * the browser's permission prompt and mint a device token, and either can
+   * fail. So it saves immediately rather than waiting for the Save button —
+   * leaving the switch on while the token never registered would be a lie.
+   */
+  const handlePushToggle = async () => {
+    if (pushBusy) return;
+    setPushBusy(true);
+
+    try {
+      if (preferences.pushNotifications) {
+        await disablePushOnThisDevice();
+        setPreference("pushNotifications", false);
+        toast.success("Push notifications turned off.");
+        return;
+      }
+
+      const result = await enablePushOnThisDevice();
+      if (result.ok) {
+        setPreference("pushNotifications", true);
+        toast.success("Push notifications enabled on this device.");
+      } else {
+        setPreference("pushNotifications", false);
+        toast.error(result.reason);
+      }
+    } finally {
+      setPushBusy(false);
+    }
+  };
+
   const handleSave = async () => {
     setSaving(true);
     try {
       await notificationsAPI.updatePreferences(preferences);
-      const nextInterests: NotificationInterests = {
-        followedShows: parseList(interestDraft.followedShows),
-        followedGenres: parseList(interestDraft.followedGenres),
-        followedActors: parseList(interestDraft.followedActors),
-        followedDirectors: parseList(interestDraft.followedDirectors),
-        tasteKeywords: parseList(interestDraft.tasteKeywords),
-      };
-      await notificationsAPI.updateInterests(nextInterests);
-      setUserValue((prev) => ({ ...prev, notificationInterests: nextInterests }));
       toast.success("Notification settings saved.");
     } catch {
       toast.error("Failed to save notification settings.");
@@ -133,8 +133,65 @@ function NotificationSettings({
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
       <Panel
+        title="How we reach you"
+        description="Updates always appear in the bell in the top bar. These are the extra ways we can reach you when you're not in the app."
+        footerHint={
+          pushSupport.supported
+            ? "Push is per-device — enable it again on each browser or phone you use."
+            : pushSupport.reason
+        }
+      >
+        <Box sx={{ display: "flex", flexDirection: "column" }}>
+          {notificationChannelOptions.map(({ key, label, description }, index) => {
+            const isPush = key === "pushNotifications";
+            const disabled = isPush && (!pushSupport.supported || pushBusy);
+
+            return (
+              <Box
+                key={key}
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: 2,
+                  py: 2,
+                  borderTop: index === 0 ? "none" : "1px solid",
+                  borderColor: "neutral.outlinedBorder",
+                  opacity: disabled ? 0.6 : 1,
+                }}
+              >
+                <Box sx={{ minWidth: 0 }}>
+                  <Typography level="title-sm">{label}</Typography>
+                  <Typography
+                    level="body-xs"
+                    sx={{ color: "text.tertiary", mt: 0.25 }}
+                  >
+                    {isPush && pushBlocked
+                      ? "Blocked in your browser settings. Allow notifications for this site, then try again."
+                      : isPush && !pushSupport.supported
+                        ? pushSupport.reason
+                        : description}
+                  </Typography>
+                </Box>
+                <Switch
+                  checked={Boolean(preferences[key])}
+                  disabled={disabled}
+                  onChange={() =>
+                    isPush
+                      ? void handlePushToggle()
+                      : setPreference(key, !preferences[key])
+                  }
+                  slotProps={{ input: { "aria-label": label } }}
+                />
+              </Box>
+            );
+          })}
+        </Box>
+      </Panel>
+
+      <Panel
         title="What we send you"
-        description="Turn off anything you don't want to hear about. Everything is delivered by email."
+        description="Turn off anything you don't want to hear about. This applies to every channel, including the bell."
         footerHint={`${enabledCount} of ${notificationToggleOptions.length} enabled.`}
         footer={
           <Button loading={saving} onClick={handleSave}>
@@ -178,7 +235,7 @@ function NotificationSettings({
       <Panel
         title="Delivery cadence"
         description="Send each alert as it happens, or batch them into one digest."
-        footerHint="Applies to every notification type above."
+        footerHint="Applies to email only — push notifications always arrive instantly."
         footer={
           <Button loading={saving} onClick={handleSave}>
             Save changes
@@ -202,37 +259,16 @@ function NotificationSettings({
         </Field>
       </Panel>
 
-      <Panel
-        title="Release interests"
-        description="Follow shows, people and themes so we alert you about new releases even when they aren't on your watchlist."
-        footerHint="Comma-separated. Saved together with your preferences."
-        footer={
-          <Button loading={saving} onClick={handleSave}>
-            Save changes
-          </Button>
-        }
-      >
-        <Box sx={{ display: "grid", gap: 2 }}>
-          {INTEREST_FIELDS.map(([key, label, placeholder]) => (
-            <Field key={key} label={label}>
-              <Input
-                value={interestDraft[key]}
-                placeholder={placeholder}
-                onChange={(event) =>
-                  setInterestDraft((prev) => ({
-                    ...prev,
-                    [key]: event.target.value,
-                  }))
-                }
-              />
-            </Field>
-          ))}
-        </Box>
-      </Panel>
+      <FollowManager userValue={userValue} setUserValue={setUserValue} />
 
       <Panel
         title="Delivery history"
-        description="The last notifications we attempted to send to you."
+        description="The last emails and push notifications we tried to send you. Everything you've been notified about lives in the bell."
+        footer={
+          <Button variant="outlined" onClick={() => navigate("/notifications")}>
+            Open notifications
+          </Button>
+        }
       >
         {historyLoading ? (
           <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
@@ -269,19 +305,24 @@ function NotificationSettings({
                   <Typography level="title-sm" sx={{ minWidth: 0 }}>
                     {item.subject}
                   </Typography>
-                  <Chip
-                    size="sm"
-                    variant="soft"
-                    color={
-                      item.status === "sent"
-                        ? "success"
-                        : item.status === "failed"
-                          ? "danger"
-                          : "neutral"
-                    }
-                  >
-                    {item.status}
-                  </Chip>
+                  <Box sx={{ display: "flex", gap: 0.75, flexShrink: 0 }}>
+                    <Chip size="sm" variant="outlined" color="neutral">
+                      {item.channel === "push" ? "push" : "email"}
+                    </Chip>
+                    <Chip
+                      size="sm"
+                      variant="soft"
+                      color={
+                        item.status === "sent"
+                          ? "success"
+                          : item.status === "failed"
+                            ? "danger"
+                            : "neutral"
+                      }
+                    >
+                      {item.status}
+                    </Chip>
+                  </Box>
                 </Box>
                 <Typography level="body-sm">
                   {item.title} · {item.bodyPreview}

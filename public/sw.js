@@ -56,3 +56,71 @@ self.addEventListener("fetch", (event) => {
     );
   }
 });
+
+
+// ── Web push ─────────────────────────────────────────────────────────────────
+//
+// The API sends FCM **data-only** messages, deliberately. A message carrying a
+// `notification` block is rendered by the browser's FCM layer before this code
+// ever runs, which means no control over the click target, the tag, or the
+// actions. Data-only means the payload lands here and we render it ourselves.
+//
+// Payload shape (every value is a string — FCM requires that for data messages):
+//   { title, body, url, image, tag }
+
+const NOTIFICATION_ICON = "/icons/logo-192.png";
+const NOTIFICATION_BADGE = "/icons/logo-192.png";
+
+self.addEventListener("push", (event) => {
+  if (!event.data) return;
+
+  let payload = {};
+  try {
+    const parsed = event.data.json();
+    // FCM nests data-only payloads under `data`; a direct Web Push send would
+    // not. Accept both so this keeps working if the transport ever changes.
+    payload = parsed.data || parsed || {};
+  } catch {
+    payload = { title: "Smile Movies", body: event.data.text() };
+  }
+
+  const title = payload.title || "Smile Movies";
+  const options = {
+    body: payload.body || "",
+    icon: NOTIFICATION_ICON,
+    badge: NOTIFICATION_BADGE,
+    // Same tag replaces rather than stacks, so a re-run of the delivery job
+    // cannot leave three copies of one episode alert on a lock screen.
+    tag: payload.tag || "smile-movies",
+    renotify: Boolean(payload.tag),
+    data: { url: payload.url || "/" },
+  };
+
+  if (payload.image) {
+    options.image = payload.image;
+  }
+
+  event.waitUntil(self.registration.showNotification(title, options));
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+
+  const target = new URL(event.notification.data?.url || "/", self.location.origin).href;
+
+  event.waitUntil(
+    self.clients
+      .matchAll({ type: "window", includeUncontrolled: true })
+      .then((clientList) => {
+        // Focus an already-open tab and route it, rather than opening a second
+        // copy of the app every time a notification is tapped.
+        for (const client of clientList) {
+          if (new URL(client.url).origin === self.location.origin && "focus" in client) {
+            client.postMessage({ type: "notification-click", url: target });
+            return client.focus();
+          }
+        }
+        return self.clients.openWindow(target);
+      })
+  );
+});

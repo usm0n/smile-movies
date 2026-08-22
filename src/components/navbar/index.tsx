@@ -17,6 +17,7 @@ import {
   AdminPanelSettingsRounded,
   Person as PersonIcon,
   PhoneIphone,
+  NotificationsNone,
   type IconProps,
 } from "../ui/icons";
 import highLogo from "../../assets/images/logo-1000.png";
@@ -42,6 +43,7 @@ import {
 import React, { useEffect, useMemo, useRef, useState, type ComponentType } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useUsers } from "../../context/Users";
+import NotificationBell from "../notifications/NotificationBell";
 import { User } from "../../user";
 import { useTMDB } from "../../context/TMDB";
 import { images, movieDetails, tvDetails } from "../../tmdb-res";
@@ -88,6 +90,7 @@ const DRAWER_SECTIONS: {
   {
     titleKey: "nav.sectionLibrary",
     links: [
+      { labelKey: "nav.notifications", to: "/notifications", icon: NotificationsNone },
       { labelKey: "nav.watchlist", to: "/watchlist", icon: Bookmark },
       { labelKey: "nav.myLists", to: "/collections", icon: Layers },
       { labelKey: "nav.downloads", to: "/downloads", icon: Download },
@@ -533,6 +536,10 @@ const Navbar: React.FC = () => {
         >
           <Search sx={{ fontSize: 20 }} />
         </IconButton>
+
+        {/* Left of the avatar, the position people already reach for. Hidden
+            while signed out, where there is nothing to notify about. */}
+        {authResolved && isAuthenticated && <NotificationBell />}
 
         {renderAuthControls()}
       </Box>

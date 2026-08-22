@@ -42,6 +42,7 @@ const ru: Dictionary = {
   "nav.profile": "Профиль",
   "nav.discover": "Обзор",
   "nav.smileAI": "SmileAI",
+  "nav.notifications": "Уведомления",
   "nav.watchlist": "Смотреть позже",
   "nav.myLists": "Мои подборки",
   "nav.downloads": "Загрузки",

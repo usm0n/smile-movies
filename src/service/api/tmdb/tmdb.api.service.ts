@@ -74,6 +74,23 @@ export const tmdb = {
       return error;
     }
   },
+  movieGenres: async () => {
+    try {
+      const response = await tmdbAPI.get("/genre/movie/list");
+      return response.data;
+    } catch (error) {
+      return error;
+    }
+  },
+  tvGenres: async () => {
+    try {
+      const response = await tmdbAPI.get("/genre/tv/list");
+      return response.data;
+    } catch (error) {
+      return error;
+    }
+  },
+
   searchMulti: async (query: string, page: number) => {
     try {
       const response = await tmdbAPI.get(

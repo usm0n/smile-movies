@@ -1,17 +1,29 @@
 export interface NotificationPreferences {
+  /** Master switch for the email channel. */
   emailNotifications: boolean;
+  /** Master switch for web push. Only true once a device has granted it. */
+  pushNotifications: boolean;
   productAnnouncements: boolean;
   newMovieReleases: boolean;
+  newSeriesPremieres: boolean;
   newEpisodeReleases: boolean;
   newSeasonReleases: boolean;
   returningShows: boolean;
+  /** Gates the inferred matches — genre, keyword and taste-profile hits. */
   recommendations: boolean;
+  /** Gates the watchlist and recently-watched matches. */
   watchlistUpdates: boolean;
+  /** Digest batching applies to email only; push is always instant. */
   digestMode: "instant" | "daily" | "weekly";
 }
 
 export interface NotificationInterests {
+  /** TMDB tv ids from the follow button, or free-text show names. */
   followedShows: string[];
+  /** TMDB movie ids from the follow button, or free-text titles. */
+  followedMovies: string[];
+  /** TMDB person ids from the follow button on a person page. */
+  followedPeople: string[];
   followedGenres: string[];
   followedActors: string[];
   followedDirectors: string[];

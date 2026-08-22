@@ -158,6 +158,7 @@ export const Settings = icon(L.Settings);
 export const Mail = icon(L.Mail);
 export const Email = Mail;
 export const MarkEmailReadRounded = icon(L.MailCheck);
+export const NotificationsActiveRounded = icon(L.BellRing);
 export const Chat = icon(L.MessageSquare);
 export const Notifications = icon(L.Bell);
 export const NotificationsNone = Notifications;

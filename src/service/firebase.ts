@@ -46,13 +46,20 @@ let auth: Auth | null = null;
 /**
  * Initialised lazily so a deployment without Firebase env vars still boots —
  * the Google/Apple buttons simply report that sign-in is unavailable.
+ *
+ * Shared with the push registration in `src/pwa/push.ts`: FCM must run on the
+ * same app instance, and initialising Firebase twice throws.
  */
-const getFirebaseAuth = (): Auth => {
+export const getFirebaseApp = (): FirebaseApp => {
   if (!isFirebaseConfigured) {
     throw new Error("Firebase is not configured");
   }
   if (!app) app = initializeApp(firebaseConfig);
-  if (!auth) auth = getAuth(app);
+  return app;
+};
+
+const getFirebaseAuth = (): Auth => {
+  if (!auth) auth = getAuth(getFirebaseApp());
   return auth;
 };
 
